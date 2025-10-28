@@ -6,45 +6,126 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 
 ```
 /src
-├── app/                  # Next.js App Router (라우팅 및 페이지)
-│   ├── (auth)/           # 인증 관련 페이지 (로그인, 회원가입)
-│   │   ├── sign-in/      
-│   │   └── sign-up/      
-│   ├── (main)/           # 메인 서비스 페이지 (로그인 후 접근)
-│   │   ├── layout.jsx    # 메인 레이아웃 (사이드바, 헤더 포함)
-│   │   ├── studies/      # 스터디 관련 페이지
-│   │   │   ├── [studyId]/ # 스터디 상세 페이지 (대시보드, 채팅, 관리 등)
-│   │   │   │   ├── layout.jsx
-│   │   │   │   ├── page.jsx
-│   │   │   │   ├── chat/
-│   │   │   │   └── settings/
-│   │   │   └── page.jsx    # 스터디 탐색 페이지
-│   │   └── me/             # 마이페이지
-│   ├── api/              # Next.js API Routes (백엔드 로직)
-│   ├── layout.jsx        # 최상위 루트 레이아웃
-│   └── page.jsx          # 랜딩 페이지
+├── app/                                # Next.js App Router (라우팅 및 페이지)
+│   ├── (auth)/                         # 인증 관련 라우트 그룹 (URL에 영향 없음, 레이아웃 분리)
+│   │   ├── sign-in/                    # 로그인 페이지
+│   │   │   └── page.jsx
+│   │   ├── sign-up/                    # 회원가입 페이지
+│   │   │   └── page.jsx
+│   │   └── layout.jsx                  # 인증 관련 페이지들의 공통 레이아웃
+│   ├── (main)/                         # 로그인 후 접근하는 메인 서비스 라우트 그룹
+│   │   ├── layout.jsx                  # 메인 서비스의 공통 레이아웃 (사이드바, 헤더 포함)
+│   │   ├── page.jsx                    # 로그인 후 랜딩 페이지 (예: 대시보드)
+│   │   ├── studies/                    # 스터디 관련 페이지
+│   │   │   ├── page.jsx                # 스터디 탐색/목록 페이지
+│   │   │   ├── create/                 # 스터디 생성 페이지
+│   │   │   │   └── page.jsx
+│   │   │   ├── [studyId]/              # 동적 라우팅: 특정 스터디 상세 페이지
+│   │   │   │   ├── layout.jsx          # 스터디 상세 페이지의 공통 레이아웃 (탭 네비게이션 등)
+│   │   │   │   ├── page.jsx            # 스터디 개요/대시보드 페이지
+│   │   │   │   ├── chat/               # 스터디 채팅 페이지
+│   │   │   │   │   └── page.jsx
+│   │   │   │   ├── notices/            # 스터디 공지사항 페이지
+│   │   │   │   │   └── page.jsx
+│   │   │   │   ├── files/              # 스터디 파일 공유 페이지
+│   │   │   │   │   └── page.jsx
+│   │   │   │   ├── calendar/           # 스터디 캘린더 페이지
+│   │   │   │   │   └── page.jsx
+│   │   │   │   └── settings/           # 스터디 설정/관리 페이지 (그룹원 관리, 정보 수정 등)
+│   │   │   │       └── page.jsx
+│   │   ├── me/                         # 마이페이지 (프로필 관리)
+│   │   │   └── page.jsx
+│   │   ├── notifications/              # 알림 목록 페이지
+│   │   │   └── page.jsx
+│   ├── api/                            # Next.js API Routes (백엔드 로직 - MVP에서는 NextAuth.js 콜백 등 제한적으로 사용)
+│   │   └── auth/
+│   │       └── [...nextauth]/
+│   │           └── route.js
+│   ├── layout.jsx                      # 최상위 루트 레이아웃 (<html>, <body> 태그 포함)
+│   └── page.jsx                        # 랜딩 페이지 (로그인 전 사용자에게 보여지는 초기 페이지)
 │
-├── components/           # 재사용 가능한 UI 컴포넌트
-│   ├── ui/               # 원자적(Atomic) 컴포넌트 (shadcn/ui 기반: Button, Input...)
-│   ├── common/           # 조합(Composite) 컴포넌트 (Header, Footer, Sidebar...)
-│   └── domain/           # 특정 도메인에 종속된 컴포넌트 (StudyCard, UserProfile...)
+├── components/                         # 재사용 가능한 UI 컴포넌트
+│   ├── ui/                             # 원자적(Atomic) 컴포넌트 (shadcn/ui 기반: Button, Input, Card 등)
+│   │   ├── button.jsx
+│   │   ├── input.jsx
+│   │   └── ...
+│   ├── common/                         # 애플리케이션 전반에서 사용되는 조합(Composite) 컴포넌트
+│   │   ├── Header.jsx
+│   │   ├── Sidebar.jsx
+│   │   ├── Footer.jsx
+│   │   ├── LayoutProvider.jsx          # Context Provider 등을 포함하는 레이아웃 관련 컴포넌트
+│   │   ├── ConfirmationModal.jsx       # 범용 확인 모달
+│   │   └── ...
+│   ├── domain/                         # 특정 도메인에 종속된 컴포넌트 (비즈니스 로직 포함 가능)
+│   │   ├── auth/                       # 인증 관련 컴포넌트
+│   │   │   ├── SocialLoginButtons.jsx
+│   │   │   └── AuthForm.jsx
+│   │   ├── study/                      # 스터디 관련 컴포넌트
+│   │   │   ├── StudyCard.jsx           # 스터디 목록에서 보여지는 카드
+│   │   │   ├── StudyCreationForm.jsx
+│   │   │   ├── StudyDetailHeader.jsx   # 스터디 상세 페이지 헤더
+│   │   │   ├── StudyMemberList.jsx
+│   │   │   └── ...
+│   │   ├── chat/                       # 채팅 관련 컴포넌트
+│   │   │   ├── ChatWindow.jsx
+│   │   │   ├── MessageInput.jsx
+│   │   │   └── ...
+│   │   ├── notice/                     # 공지사항 관련 컴포넌트
+│   │   │   ├── NoticeList.jsx
+│   │   │   ├── NoticeItem.jsx
+│   │   │   └── ...
+│   │   ├── file/                       # 파일 공유 관련 컴포넌트
+│   │   │   ├── FileUploader.jsx
+│   │   │   ├── FileList.jsx
+│   │   │   └── FileItem.jsx
+│   │   ├── calendar/                   # 캘린더 관련 컴포넌트
+│   │   │   ├── StudyCalendar.jsx
+│   │   │   ├── EventItem.jsx
+│   │   │   └── ...
+│   │   └── notification/               # 알림 관련 컴포넌트
+│   │       ├── NotificationList.jsx
+│   │       ├── NotificationItem.jsx
+│   │       └── ...
+│   ├── modals/                         # 모달 컴포넌트
+│   │   ├── NoticeCreateEditModal.jsx   # 공지사항 작성/수정 모달
+│   │   ├── EventAddEditModal.jsx       # 일정 추가/수정 모달
+│   │   └── ProfileImageChangeModal.jsx # 프로필 이미지 변경 모달
+│   └── providers/                      # 전역 Context Provider (예: ThemeProvider, QueryClientProvider)
+│       ├── QueryProvider.jsx
+│       └── AuthProvider.jsx
 │
-├── lib/                  # 라이브러리, 헬퍼 함수, 유틸리티
-│   ├── api.js            # API 요청 관련 함수 (React Query와 연동)
-│   ├── auth.js           # NextAuth.js 설정
-│   ├── prisma.js         # Prisma 클라이언트 인스턴스
-│   └── utils.js          # 범용 헬퍼 함수 (날짜 포맷팅, 유효성 검사 등)
+├── lib/                                # 라이브러리, 헬퍼 함수, 유틸리티
+│   ├── api/                            # API 요청 관련 함수 및 클라이언트
+│   │   ├── index.js                    # API 클라이언트 인스턴스
+│   │   ├── queries/                    # React Query 쿼리 키 및 함수
+│   │   │   ├── auth.js
+│   │   │   ├── studies.js
+│   │   │   └── ...
+│   │   └── mutations/                  # React Query 뮤테이션 함수
+│   │       ├── auth.js
+│   │       ├── studies.js
+│   │       └── ...
+│   ├── auth.js                         # NextAuth.js 설정 및 헬퍼
+│   ├── constants.js                    # 전역 상수
+│   └── utils.js                        # 범용 헬퍼 함수 (날짜 포맷팅, 유효성 검사 등)
 │
-├── hooks/                # 커스텀 React Hooks
-│   ├── use-auth.js       # 사용자 인증 상태 관련 훅
-│   └── use-socket.js     # WebSocket 연결 및 이벤트 처리 훅
+├── hooks/                              # 커스텀 React Hooks
+│   ├── useAuth.js                      # 사용자 인증 상태 관련 훅
+│   ├── useSocket.js                    # WebSocket 연결 및 이벤트 처리 훅
+│   ├── useDebounce.js
+│   └── ...
 │
-├── store/                # 전역 상태 관리 (Zustand)
-│   ├── userStore.js     # 사용자 정보 스토어
-│   └── uiStore.js       # UI 상태 스토어 (예: 사이드바 열림/닫힘)
+├── store/                              # 전역 클라이언트 상태 관리 (Zustand)
+│   ├── userStore.js                    # 사용자 정보 스토어
+│   ├── uiStore.js                      # UI 상태 스토어 (예: 사이드바 열림/닫힘)
+│   └── ...
 │
-└── styles/               # 전역 스타일
-    └── globals.css       # Tailwind CSS 기본 설정 및 전역 스타일
+├── styles/                             # 전역 스타일
+│   └── globals.css                     # Tailwind CSS 기본 설정 및 전역 스타일
+│
+└── public/                             # 정적 파일 (이미지, 폰트 등)
+    ├── images/
+    └── icons/
 ```
 
 ## 2. 컴포넌트 설계 철학 (Component Design Philosophy)
@@ -56,6 +137,8 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 - **`components/common` (Organisms)**: `ui` 컴포넌트들을 조합하여 만들어진 더 큰 단위의 컴포넌트. 예: `Header`, `Sidebar`, `PageTitle`. 애플리케이션 전반에서 재사용됩니다.
 
 - **`components/domain` (Organisms/Templates)**: 특정 도메인(스터디, 사용자 등)에 특화된 컴포넌트. 비즈니스 로직을 포함할 수 있습니다. 예: `StudyCard`, `StudyMemberList`, `UserProfileForm`.
+
+- **`components/modals`**: 애플리케이션 전반에서 사용될 수 있는 모달 컴포넌트들을 모아둡니다.
 
 - **`app/**/page.jsx` (Pages)**: 각 라우팅 경로에 해당하는 페이지 컴포넌트. 여러 컴포넌트들을 조합하여 실제 페이지를 구성하고, 서버 컴포넌트를 통해 데이터를 페칭하여 하위 클라이언트 컴포넌트로 전달하는 역할을 주로 수행합니다.
 

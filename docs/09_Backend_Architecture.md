@@ -12,23 +12,157 @@ CoUp의 백엔드는 **Spring Boot** 프레임워크를 기반으로 구축됩�
 
 ```
 com.coup
-├── domain/
-│   ├── user/
-│   │   ├── UserController.java
-│   │   ├── UserService.java
-│   │   ├── UserRepository.java      // MyBatis Mapper 인터페이스
-│   │   └── dto/
-│   │       └── UserDto.java
-│   └── study/
+├── domain/                             # 비즈니스 도메인별 패키지 (DDD 원칙)
+│   ├── auth/                           # 인증 및 인가 관련 도메인
+│   │   ├── controller/
+│   │   │   └── AuthController.java
+│   │   ├── service/
+│   │   │   └── AuthService.java
+│   │   ├── dto/
+│   │   │   ├── request/                # API 요청 DTO
+│   │   │   │   ├── AuthRequest.java
+│   │   │   │   └── ...
+│   │   │   └── response/               # API 응답 DTO
+│   │   │       ├── AuthResponse.java
+│   │   │       └── ...
+│   │   └── handler/
+│   │       ├── OAuth2AuthenticationSuccessHandler.java
+│   │       └── OAuth2AuthenticationFailureHandler.java
+│   ├── user/                           # 사용자 관련 도메인
+│   │   ├── controller/
+│   │   │   └── UserController.java
+│   │   ├── service/
+│   │   │   └── UserService.java
+│   │   ├── repository/
+│   │   │   └── UserRepository.java
+│   │   ├── dto/
+│   │   │   ├── request/                # API 요청 DTO
+│   │   │   │   └── UserUpdateRequest.java
+│   │   │   ├── response/               # API 응답 DTO
+│   │   │   │   └── UserProfileResponse.java
+│   │   │   └── UserDto.java            # 내부 서비스/DB 매핑용 DTO (필요시)
+│   │   └── model/                      # 도메인 모델 (필요시)
+│   │       └── User.java
+│   ├── study/                          # 스터디 그룹 관련 도메인
+│   │   ├── controller/
+│   │   │   └── StudyController.java
+│   │   ├── service/
+│   │   │   └── StudyService.java
+│   │   ├── repository/
+│   │   │   ├── StudyRepository.java
+│   │   │   └── StudyMemberRepository.java
+│   │   ├── dto/
+│   │   │   ├── request/
+│   │   │   │   └── StudyCreationRequest.java
+│   │   │   │   └── ...
+│   │   │   ├── response/
+│   │   │   │   ├── StudyResponse.java
+│   │   │   │   └── ...
+│   │   │   └── StudyDto.java           # 내부 서비스/DB 매핑용 DTO
+│   │   │   └── StudyMemberDto.java
+│   │   └── event/
+│   │       └── StudyEventPublisher.java
+│   ├── chat/                           # 채팅 관련 도메인 (내부 API용)
+│   │   ├── controller/
+│   │   │   └── InternalChatController.java
+│   │   ├── service/
+│   │   │   └── ChatService.java
+│   │   ├── repository/
+│   │   │   └── ChatMessageRepository.java
+│   │   ├── dto/
+│   │   │   ├── request/
+│   │   │   │   └── ChatMessageRequest.java
+│   │   │   │   └── ...
+│   │   │   └── response/
+│   │   │       ├── ChatMessageResponse.java
+│   │   │       └── ...
+│   │   │   └── ChatMessageDto.java     # 내부 서비스/DB 매핑용 DTO
+│   ├── notice/                         # 공지사항 관련 도메인
+│   │   ├── controller/
+│   │   │   └── NoticeController.java
+│   │   ├── service/
+│   │   │   └── NoticeService.java
+│   │   ├── repository/
+│   │   │   └── NoticeRepository.java
+│   │   ├── dto/
+│   │   │   ├── request/
+│   │   │   │   └── NoticeCreateRequest.java
+│   │   │   │   └── NoticeUpdateRequest.java
+│   │   │   │   └── ...
+│   │   │   └── response/
+│   │   │       ├── NoticeResponse.java
+│   │   │       └── ...
+│   │   │   └── NoticeDto.java          # 내부 서비스/DB 매핑용 DTO
+│   ├── file/                           # 파일 공유 관련 도메인
+│   │   ├── controller/
+│   │   │   └── FileController.java
+│   │   ├── service/
+│   │   │   └── FileService.java
+│   │   ├── repository/
+│   │   │   └── FileRepository.java
+│   │   ├── dto/
+│   │   │   ├── request/
+│   │   │   │   └── FileUploadRequest.java
+│   │   │   │   └── ...
+│   │   │   └── response/
+│   │   │       ├── FileResponse.java
+│   │   │       └── ...
+│   │   │   └── FileDto.java            # 내부 서비스/DB 매핑용 DTO
+│   ├── calendar/                       # 캘린더/일정 관련 도메인
+│   │   ├── controller/
+│   │   │   └── CalendarController.java
+│   │   ├── service/
+│   │   │   └── CalendarService.java
+│   │   ├── repository/
+│   │   │   └── CalendarEventRepository.java
+│   │   ├── dto/
+│   │   │   ├── request/
+│   │   │   │   └── CalendarEventCreateRequest.java
+│   │   │   │   └── ...
+│   │   │   └── response/
+│   │   │       ├── CalendarEventResponse.java
+│   │   │       └── ...
+│   │   │   └── CalendarEventDto.java   # 내부 서비스/DB 매핑용 DTO
+│   └── notification/                   # 알림 관련 도메인
+│       ├── service/
+│       │   └── NotificationService.java
+│       ├── repository/
+│       │   └── NotificationRepository.java
+│       ├── dto/
+│   │   │   ├── request/
+│   │   │   │   └── NotificationRequest.java
+│   │   │   │   └── ...
+│   │   │   └── response/
+│   │   │       ├── NotificationResponse.java
+│   │   │       └── ...
+│   │   │   └── NotificationDto.java    # 내부 서비스/DB 매핑용 DTO
 │
-├── common/
-│   ├── exception/
-│   └── response/
+├── common/                             # 공통 유틸리티 및 기반 클래스
+│   ├── exception/                      # 전역 예외 처리
+│   │   ├── GlobalExceptionHandler.java
+│   │   ├── CustomException.java
+│   │   └── ErrorCode.java
+│   ├── response/                       # 공통 API 응답 형식
+│   │   └── ApiResponse.java
+│   ├── security/                       # JWT 관련 공통 유틸리티
+│   │   ├── JwtTokenProvider.java
+│   │   └── ...
+│   └── util/                           # 기타 범용 유틸리티
+│       └── DateUtils.java
 │
-└── config/
-    ├── security/
-    └── mybatis/
-        └── MyBatisConfig.java
+├── config/                             # 애플리케이션 설정
+│   ├── security/                       # Spring Security 설정
+│   │   ├── SecurityConfig.java
+│   │   ├── JwtAuthenticationFilter.java
+│   │   └── ...
+│   ├── mybatis/                        # MyBatis 설정
+│   │   └── MyBatisConfig.java
+│   ├── redis/                          # Redis 설정
+│   │   └── RedisConfig.java
+│   └── web/                            # Web 관련 설정 (CORS 등)
+│       └── WebConfig.java
+│
+└── CoupApplication.java                # Spring Boot 메인 애플리케이션
 ```
 
 ## 3. 계층별 역할 정의 (Layer Definitions)
