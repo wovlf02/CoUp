@@ -42,6 +42,13 @@
 - **US-4.4**: 그룹장 또는 관리자는 기존 일정을 수정하거나 삭제할 수 있다.
 - **US-4.5**: 일정 시작 시간에 임박하면 관련 멤버들에게 알림을 보낼 수 있다. (Post-MVP)
 
+### 2.5. 할 일/체크리스트
+
+- **US-5.1**: 그룹 멤버는 '할 일' 탭에서 스터디 관련 할 일 목록을 볼 수 있다.
+- **US-5.2**: 그룹 멤버는 새로운 할 일을 추가하고, 완료 여부를 체크할 수 있다.
+- **US-5.3**: 그룹장 또는 관리자는 모든 할 일을 수정하거나 삭제할 수 있다.
+- **US-5.4**: 할 일은 담당자를 지정할 수 있으며, 마감일을 설정할 수 있다.
+
 ## 3. API 명세 (요약)
 
 ### REST API (Business Server)
@@ -53,6 +60,10 @@
 - `POST /api/v1/studies/{studyId}/files`: 파일 업로드 (Presigned-URL 방식 등)
 - `GET /api/v1/studies/{studyId}/events`: 캘린더 일정 조회
 - `POST /api/v1/studies/{studyId}/events`: 캘린더 일정 생성
+- `GET /api/v1/studies/{studyId}/tasks`: 할 일 목록 조회
+- `POST /api/v1/studies/{studyId}/tasks`: 할 일 생성
+- `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 (완료 여부, 담당자, 마감일 등)
+- `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제
 
 ### WebSocket API (Signaling Server)
 - `emit('send_message', ...)`: 클라이언트가 메시지 전송
