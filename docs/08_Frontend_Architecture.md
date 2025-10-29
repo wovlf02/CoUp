@@ -105,6 +105,15 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 │   │       ├── auth.js
 │   │       ├── studies.js
 │   │       └── ...
+│   ├── mocks/                          # 목업 데이터 및 목업 API 핸들러
+│   │   ├── data/                       # 각 도메인별 목업 데이터 정의
+│   │   │   ├── users.js
+│   │   │   ├── studies.js
+│   │   │   ├── notifications.js
+│   │   │   ├── chat.js
+│   │   │   └── ...
+│   │   ├── apiHandlers.js              # 목업 API 응답을 시뮬레이션하는 함수들
+│   │   └── index.js                    # (선택 사항) 목업 API 활성화/비활성화 로직을 중앙에서 관리
 │   ├── auth.js                         # NextAuth.js 설정 및 헬퍼
 │   ├── constants.js                    # 전역 상수
 │   └── utils.js                        # 범용 헬퍼 함수 (날짜 포맷팅, 유효성 검사 등)
@@ -175,3 +184,59 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 - **`Tailwind CSS`**를 기본 스타일링 방식으로 사용합니다.
 - **`clsx`** 또는 **`tailwind-merge`** 라이브러리를 함께 사용하여 조건부 클래스를 쉽게 관리합니다.
 - 전역적으로 필요한 스타일이나 CSS 변수는 `styles/globals.css`에 정의합니다.
+
+## 6. 목업 데이터 관리 (Mock Data Management)
+
+프론트엔드 개발 시 백엔드 API가 준비되지 않았거나, 특정 시나리오 테스트를 위해 목업 데이터가 필요할 경우를 대비하여 목업 데이터 관리 전략을 정의합니다. 이 전략은 기존 `lib/api` 구조를 활용하여 실제 API와 목업 API 간의 전환을 유연하게 지원합니다.
+
+### 6.1. 디렉토리 구조
+
+```
+/src
+├── lib/
+│   ├── api/                            # 실제 API 요청 관련 함수 및 클라이언트
+│   │   ├── index.js                    # API 클라이언트 인스턴스 (axios 등)
+│   │   ├── queries/                    # React Query 쿼리 키 및 함수 (실제/목업 조건부 사용)
+│   │   │   ├── auth.js
+│   │   │   ├── studies.js
+│   │   │   └── ...
+│   │   └── mutations/                  # React Query 뮤테이션 함수 (실제/목업 조건부 사용)
+│   │       ├── auth.js
+│   │       ├── studies.js
+│   │       └── ...
+│   ├── mocks/                          # 목업 데이터 및 목업 API 핸들러
+│   │   ├── data/                       # 각 도메인별 목업 데이터 정의 (JSON/JS 객체)
+│   │   │   ├── users.js                # 사용자 목업 데이터
+│   │   │   ├── studies.js              # 스터디 목업 데이터
+│   │   │   ├── notifications.js        # 알림 목업 데이터
+│   │   │   ├── chat.js                 # 채팅 목업 데이터
+│   │   │   └── ...
+│   │   ├── apiHandlers.js              # 목업 API 응답을 시뮬레이션하는 함수들
+│   │   └── index.js                    # (선택 사항) 목업 API 활성화/비활성화 로직을 중앙에서 관리
+│   └── ...
+```
+
+### 6.2. 목업 데이터 활용 방안
+
+1.  **목업 데이터 정의**: `lib/mocks/data` 내에 각 도메인 엔티티(예: `users.js`, `studies.js`)에 대한 목업 데이터를 실제 백엔드 API 응답 형태와 유사하게 정의합니다.
+2.  **목업 API 핸들러 구현**: `lib/mocks/apiHandlers.js` 파일에 실제 API 호출 함수와 동일한 인터페이스를 가지는 함수들을 구현합니다. 이 함수들은 `lib/mocks/data`의 데이터를 반환하며, `Promise`와 `setTimeout`을 사용하여 네트워크 지연을 시뮬레이션할 수 있습니다.
+3.  **조건부 API 호출 로직**: `lib/api/queries` 및 `lib/api/mutations` 내의 각 파일에서 환경 변수(예: `process.env.NEXT_PUBLIC_USE_MOCK_API`)의 값에 따라 실제 API 클라이언트 또는 목업 API 핸들러 중 하나를 선택하여 사용하도록 로직을 구현합니다.
+    *   **예시 (`lib/api/queries/studies.js`)**:
+        ```javascript
+        // lib/api/queries/studies.js
+        import { useQuery } from '@tanstack/react-query';
+        import { getStudies as fetchRealStudies } from '../index'; // 실제 API 클라이언트
+        import { getStudies as fetchMockStudies } from '../../mocks/apiHandlers'; // 목업 API 핸들러
+
+        const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === 'true';
+
+        export const useStudiesQuery = (params) => {
+          return useQuery({
+            queryKey: ['studies', params],
+            queryFn: () => useMockApi ? fetchMockStudies(params) : fetchRealStudies(params),
+          });
+        };
+        ```
+4.  **환경 변수 설정**: `.env.local` 파일에 `NEXT_PUBLIC_USE_MOCK_API=true` 또는 `false`를 설정하여 목업 데이터 사용 여부를 제어합니다.
+
+이러한 방식을 통해 프론트엔드 컴포넌트는 `useQuery`나 `useMutation` 훅을 평소와 같이 사용하면서, 개발 환경 설정에 따라 실제 백엔드 데이터 또는 목업 데이터를 유연하게 활용할 수 있습니다.
