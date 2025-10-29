@@ -1,12 +1,10 @@
-# 08. 프론트엔드 아키텍처
-
-CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니다. 이는 서버 컴포넌트와 클라이언트 컴포넌트의 장점을 모두 활용하여 최적의 성능과 개발 경험을 제공하기 위함입니다. 본 문서는 프론트엔드 개발의 일관성과 효율성을 위한 구조와 규칙을 정의합니다.
+CoUp 프로젝트는 Next.js를 사용하여 프론트엔드와 백엔드를 통합하여 개발됩니다. 따라서, 파일 구조는 단일 `src` 디렉토리 내에서 프론트엔드 컴포넌트와 백엔드 API 라우트가 함께 관리됩니다.
 
 ## 1. 디렉토리 구조 (Directory Structure)
 
 ```
 /src
-├── app/                                # Next.js App Router (라우팅 및 페이지)
+├── app/                                # Next.js App Router (라우팅 및 페이지 및 API Routes)
 │   ├── (auth)/                         # 인증 관련 라우트 그룹 (URL에 영향 없음, 레이아웃 분리)
 │   │   ├── sign-in/                    # 로그인 페이지
 │   │   │   └── page.jsx
@@ -37,10 +35,35 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 │   │   │   └── page.jsx
 │   │   ├── notifications/              # 알림 목록 페이지
 │   │   │   └── page.jsx
-│   ├── api/                            # Next.js API Routes (백엔드 로직 - MVP에서는 NextAuth.js 콜백 등 제한적으로 사용)
-│   │   └── auth/
-│   │       └── [...nextauth]/
-│   │           └── route.js
+│   ├── api/                                # Next.js API Routes (백엔드 로직)
+│   │   ├── auth/                           # 인증 관련 API (NextAuth.js 콜백 등)
+│   │   │   └── [...nextauth]/
+│   │   │       └── route.ts
+│   │   ├── v1/                             # API 버전 관리 (예: /api/v1)
+│   │   │   ├── users/                      # 사용자 관련 API
+│   │   │   │   ├── route.ts                # GET /api/v1/users (목록 조회), POST /api/v1/users (생성)
+│   │   │   │   ├── [userId]/               # 동적 라우팅: 특정 사용자 관련 API
+│   │   │   │   │   ├── route.ts            # GET /api/v1/users/[userId] (상세 조회), PATCH /api/v1/users/[userId] (수정), DELETE /api/v1/users/[userId] (삭제)
+│   │   │   │   └── me/                     # 현재 로그인 사용자 관련 API
+│   │   │   │       └── route.ts            # GET /api/v1/users/me, PATCH /api/v1/users/me
+│   │   │   ├── studies/                    # 스터디 그룹 관련 API
+│   │   │   │   ├── route.ts                # GET /api/v1/studies, POST /api/v1/studies
+│   │   │   │   ├── [studyId]/              # 특정 스터디 그룹 관련 API
+│   │   │   │   │   ├── route.ts            # GET /api/v1/studies/[studyId], PATCH /api/v1/studies/[studyId], DELETE /api/v1/studies/[studyId]
+│   │   │   │   │   ├── members/            # 스터디 멤버 관련 API
+│   │   │   │   │   │   ├── route.ts        # GET /api/v1/studies/[studyId]/members
+│   │   │   │   │   │   └── [memberId]/     # 특정 멤버 관련 API
+│   │   │   │   │   │       └── route.ts    # PATCH /api/v1/studies/[studyId]/members/[memberId] (역할 변경), DELETE /api/v1/studies/[studyId]/members/[memberId] (강퇴)
+│   │   │   │   │   └── join/               # 스터디 가입 신청 API
+│   │   │   │   │       └── route.ts        # POST /api/v1/studies/[studyId]/join
+│   │   │   │   └── internal/               # 내부 통신용 API (시그널링 서버 등에서 호출)
+│   │   │   │       ├── messages/           # 채팅 메시지 저장 API
+│   │   │   │       │   └── route.ts        # POST /api/v1/studies/internal/messages
+│   │   │   │       └── users/              # 사용자 상태 변경 API
+│   │   │   │           └── status/         # POST /api/v1/studies/internal/users/status
+│   │   │   │               └── route.ts
+│   │   │   └── ...                         # 기타 도메인별 API (notices, files, calendar, tasks, notifications 등)
+│   │   └── route.ts                        # (선택 사항) /api/v1/ 루트 API
 │   ├── layout.jsx                      # 최상위 루트 레이아웃 (<html>, <body> 태그 포함)
 │   └── page.jsx                        # 랜딩 페이지 (로그인 전 사용자에게 보여지는 초기 페이지)
 │
@@ -94,7 +117,7 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 │       ├── QueryProvider.jsx
 │       └── AuthProvider.jsx
 │
-├── lib/                                # 라이브러리, 헬퍼 함수, 유틸리티
+├── lib/                                # 공통 로직, 유틸리티, 데이터 접근
 │   ├── api/                            # API 요청 관련 함수 및 클라이언트
 │   │   ├── index.js                    # API 클라이언트 인스턴스
 │   │   ├── queries/                    # React Query 쿼리 키 및 함수
@@ -105,17 +128,28 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 │   │       ├── auth.js
 │   │       ├── studies.js
 │   │       └── ...
-│   ├── mocks/                          # 목업 데이터 및 목업 API 핸들러
-│   │   ├── data/                       # 각 도메인별 목업 데이터 정의
-│   │   │   ├── users.js
-│   │   │   ├── studies.js
-│   │   │   ├── notifications.js
-│   │   │   ├── chat.js
-│   │   │   └── ...
-│   │   ├── apiHandlers.js              # 목업 API 응답을 시뮬레이션하는 함수들
-│   │   └── index.js                    # (선택 사항) 목업 API 활성화/비활성화 로직을 중앙에서 관리
+│   ├── db/                                 # 데이터베이스 관련
+│   │   └── prisma.ts                       # Prisma Client 인스턴스
+│   ├── services/                           # 비즈니스 로직을 담는 서비스 계층
+│   │   ├── auth.ts
+│   │   ├── user.ts
+│   │   ├── study.ts
+│   │   ├── chat.ts
+│   │   ├── notice.ts
+│   │   ├── file.ts
+│   │   ├── calendar.ts
+│   │   └── notification.ts
+│   ├── utils/                              # 범용 유틸리티 함수
+│   │   ├── apiResponse.ts                  # API 응답 형식 헬퍼
+│   │   ├── auth.ts                         # 인증 관련 헬퍼 (NextAuth.js 세션 관리 등)
+│   │   ├── errors.ts                       # 커스텀 에러 정의
+│   │   └── redis.ts                        # Redis 클라이언트 인스턴스 및 Pub/Sub 헬퍼
 │   ├── auth.js                         # NextAuth.js 설정 및 헬퍼
 │   ├── constants.js                    # 전역 상수
+│   └── types/                              # 공통 타입 정의 (DTO, 인터페이스 등)
+│       ├── auth.ts
+│       ├── user.ts
+│       └── ...
 │   └── utils.js                        # 범용 헬퍼 함수 (날짜 포맷팅, 유효성 검사 등)
 │
 ├── hooks/                              # 커스텀 React Hooks
@@ -132,9 +166,11 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 ├── styles/                             # 전역 스타일
 │   └── globals.css                     # Tailwind CSS 기본 설정 및 전역 스타일
 │
-└── public/                             # 정적 파일 (이미지, 폰트 등)
-    ├── images/
-    └── icons/
+├── public/                             # 정적 파일 (이미지, 폰트 등)
+│   ├── images/
+│   └── icons/
+│
+└── middleware.ts                           # 전역 미들웨어 (인증, 로깅 등)
 ```
 
 ## 2. 컴포넌트 설계 철학 (Component Design Philosophy)
@@ -151,7 +187,7 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 
 - **`app/**/page.jsx` (Pages)**: 각 라우팅 경로에 해당하는 페이지 컴포넌트. 여러 컴포넌트들을 조합하여 실제 페이지를 구성하고, 서버 컴포넌트를 통해 데이터를 페칭하여 하위 클라이언트 컴포넌트로 전달하는 역할을 주로 수행합니다.
 
-- **Props 검증**: **`prop-types`** 라이브러리를 사용하여 개발 중에 컴포넌트로 전달되는 props의 타입을 검증합니다. 이는 런타임 에러를 줄이고 컴포넌트의 API를 명확히 하는 데 도움을 줍니다.
+- **Props 검증**: TypeScript 인터페이스 또는 타입을 사용하여 컴포넌트의 props를 검증합니다. (`prop-types` 대신 TypeScript 사용)
 
 ## 3. 상태 관리 (State Management)
 
@@ -239,3 +275,23 @@ CoUp의 프론트엔드는 **Next.js (App Router)**를 기반으로 구축됩니
 4.  **환경 변수 설정**: `.env.local` 파일에 `NEXT_PUBLIC_USE_MOCK_API=true` 또는 `false`를 설정하여 목업 데이터 사용 여부를 제어합니다.
 
 이러한 방식을 통해 프론트엔드 컴포넌트는 `useQuery`나 `useMutation` 훅을 평소와 같이 사용하면서, 개발 환경 설정에 따라 실제 백엔드 데이터 또는 목업 데이터를 유연하게 활용할 수 있습니다.
+
+## 7. 계층별 역할 정의 (Layer Definitions)
+
+- **API Routes (`app/api/**/*.ts`)**: HTTP 요청을 수신하고, 요청 데이터를 파싱하며, 적절한 서비스 계층의 메서드를 호출하는 진입점입니다. 응답 데이터를 클라이언트에 반환합니다.
+  - 요청 유효성 검사, 인증/인가 처리, 에러 핸들링 등을 담당합니다.
+- **Service (`lib/services/*.ts`)**: 핵심 비즈니스 로직을 처리하는 계층입니다. 여러 Prisma Client 호출을 조합하여 복잡한 로직을 수행하고, 도메인 규칙을 적용합니다.
+  - API Routes와 Prisma Client 사이의 중재자 역할을 합니다.
+- **Prisma Client (`lib/db/prisma.ts`)**: 데이터베이스와의 상호작용을 담당하는 데이터 접근 계층입니다. Prisma Schema를 기반으로 생성된 타입 안전한 클라이언트를 통해 CRUD 작업을 수행합니다.
+- **Middleware (`middleware.ts`)**: 모든 요청에 대해 공통적으로 적용되는 로직(예: 인증 확인, 로깅, CORS 처리)을 처리합니다.
+
+## 8. 인증 및 인가 (Authentication & Authorization)
+
+- **`NextAuth.js`**를 사용하여 사용자 인증을 처리하고, API Routes 내에서 세션 정보를 기반으로 인가를 수행합니다.
+- **흐름**: 클라이언트가 로그인하면 NextAuth.js를 통해 세션이 생성되고 JWT가 발급됩니다. 이후 API 요청 시 이 JWT를 검증하여 사용자의 인증 상태를 확인하고, 필요한 경우 역할 기반의 인가 로직을 적용합니다.
+
+## 9. 시그널링 서버와의 연동
+
+- Next.js API Routes는 실시간 통신을 직접 처리하지 않고, **내부 REST API**와 **Redis Pub/Sub**을 통해 시그널링 서버와 상호작용합니다.
+- **Inbound (시그널링 -> Next.js API Routes)**: 시그널링 서버가 DB 저장을 요청할 수 있도록 `/api/v1/internal/**` 경로의 내부 API를 제공합니다.
+- **Outbound (Next.js API Routes -> 시그널링)**: Next.js API Routes에서 발생한 실시간 알림 필요 이벤트를 `lib/utils/redis.ts`의 Redis 클라이언트를 통해 Redis 채널에 발행(Publish)합니다.

@@ -32,12 +32,12 @@
 - `PATCH /api/v1/users/me`: 내 정보 수정
 - `POST /api/v1/auth/logout`: 로그아웃
 - `DELETE /api/v1/users/me`: 회원 탈퇴
-- 소셜 로그인 관련 엔드포인트는 Spring Security OAuth2 클라이언트가 처리한다.
+- 소셜 로그인 관련 엔드포인트는 NextAuth.js가 처리한다.
 
 ## 4. 데이터 모델
 
 - `User` 테이블
-  - `id`: Long (PK)
+  - `id`: Int (PK)
   - `email`: String (Unique)
   - `name`: String (닉네임)
   - `imageUrl`: String

@@ -59,5 +59,10 @@
 ## 4. 데이터 모델
 
 - `StudyGroup` 테이블
+  - `id`: Int (PK)
+  - `ownerId`: Int (FK)
 - `StudyMember` 테이블
+  - `id`: Int (PK)
+  - `userId`: Int (FK)
+  - `groupId`: Int (FK)
 - 관련 Enum: `GroupVisibility`, `GroupStatus`, `MemberRole`

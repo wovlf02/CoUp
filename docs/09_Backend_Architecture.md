@@ -1,195 +1,90 @@
-# 09. 백엔드 아키텍처 (Spring Boot)
+# 09. 백엔드 아키텍처 (Next.js API Routes)
 
-CoUp의 백엔드는 **Spring Boot** 프레임워크를 기반으로 구축됩니다. Java 언어의 안정성과 Spring 생태계의 강력한 기능들을 활용하여, **핵심 비즈니스 로직** 처리에만 집중하고, 대규모 트래픽 처리가 가능하며, 유지보수와 확장이 용이한 견고한 서버 애플리케이션을 구축하는 것을 목표로 합니다.
+CoUp의 백엔드는 **Next.js API Routes**를 기반으로 구축됩니다. TypeScript의 타입 안전성과 Next.js의 통합된 개발 환경을 활용하여, **핵심 비즈니스 로직** 처리에 집중하고, 유지보수와 확장이 용이한 견고한 서버리스 함수 기반의 API를 구축하는 것을 목표로 합니다.
 
 ## 1. 아키텍처 원칙
 
-- **계층형 아키텍처 (Layered Architecture)**: **Controller - Service - Repository(Mapper)**의 3-Tier 아키텍처를 기본 구조로 하여 각 계층의 역할을 명확히 분리합니다.
-- **의존성 주입 (Dependency Injection)**: Spring의 DI를 통해 객체 간의 의존성을 외부(IoC 컨테이너)에서 주입받아 코드의 결합도를 낮추고 유연성을 극대화합니다.
-- **SQL 중심의 데이터 접근**: MyBatis를 사용하여 SQL 쿼리를 코드와 명확하게 분리하고, SQL에 대한 완전한 제어권을 확보합니다.
+- **서버리스 함수 (Serverless Functions)**: 각 API Route는 독립적인 서버리스 함수로 동작하여, 필요할 때만 실행되고 사용량에 따라 자동으로 확장됩니다.
+- **파일 시스템 기반 라우팅**: `app/api` 디렉토리 구조가 곧 API 엔드포인트가 되어 직관적인 라우팅 관리가 가능합니다.
+- **타입 안전성**: TypeScript를 적극 활용하여 API 요청/응답 데이터, 데이터베이스 모델 등 모든 계층에서 타입 안전성을 확보합니다.
+- **ORM 기반 데이터 접근**: Prisma를 사용하여 데이터베이스 스키마를 관리하고, 타입 안전한 Prisma Client를 통해 데이터베이스와 상호작용합니다.
 
 ## 2. 패키지 구조 (Package Structure)
 
 ```
-com.coup
-├── domain/                             # 비즈니스 도메인별 패키지 (DDD 원칙)
-│   ├── auth/                           # 인증 및 인가 관련 도메인
-│   │   ├── controller/
-│   │   │   └── AuthController.java
-│   │   ├── service/
-│   │   │   └── AuthService.java
-│   │   ├── dto/
-│   │   │   ├── request/                # API 요청 DTO
-│   │   │   │   ├── AuthRequest.java
-│   │   │   │   └── ...
-│   │   │   └── response/               # API 응답 DTO
-│   │   │       ├── AuthResponse.java
-│   │   │       └── ...
-│   │   └── handler/
-│   │       ├── OAuth2AuthenticationSuccessHandler.java
-│   │       └── OAuth2AuthenticationFailureHandler.java
-│   ├── user/                           # 사용자 관련 도메인
-│   │   ├── controller/
-│   │   │   └── UserController.java
-│   │   ├── service/
-│   │   │   └── UserService.java
-│   │   ├── repository/
-│   │   │   └── UserRepository.java
-│   │   ├── dto/
-│   │   │   ├── request/                # API 요청 DTO
-│   │   │   │   └── UserUpdateRequest.java
-│   │   │   ├── response/               # API 응답 DTO
-│   │   │   │   └── UserProfileResponse.java
-│   │   │   └── UserDto.java            # 내부 서비스/DB 매핑용 DTO (필요시)
-│   │   └── model/                      # 도메인 모델 (필요시)
-│   │       └── User.java
-│   ├── study/                          # 스터디 그룹 관련 도메인
-│   │   ├── controller/
-│   │   │   └── StudyController.java
-│   │   ├── service/
-│   │   │   └── StudyService.java
-│   │   ├── repository/
-│   │   │   ├── StudyRepository.java
-│   │   │   └── StudyMemberRepository.java
-│   │   ├── dto/
-│   │   │   ├── request/
-│   │   │   │   └── StudyCreationRequest.java
-│   │   │   │   └── ...
-│   │   │   ├── response/
-│   │   │   │   ├── StudyResponse.java
-│   │   │   │   └── ...
-│   │   │   └── StudyDto.java           # 내부 서비스/DB 매핑용 DTO
-│   │   │   └── StudyMemberDto.java
-│   │   └── event/
-│   │       └── StudyEventPublisher.java
-│   ├── chat/                           # 채팅 관련 도메인 (내부 API용)
-│   │   ├── controller/
-│   │   │   └── InternalChatController.java
-│   │   ├── service/
-│   │   │   └── ChatService.java
-│   │   ├── repository/
-│   │   │   └── ChatMessageRepository.java
-│   │   ├── dto/
-│   │   │   ├── request/
-│   │   │   │   └── ChatMessageRequest.java
-│   │   │   │   └── ...
-│   │   │   └── response/
-│   │   │       ├── ChatMessageResponse.java
-│   │   │       └── ...
-│   │   │   └── ChatMessageDto.java     # 내부 서비스/DB 매핑용 DTO
-│   ├── notice/                         # 공지사항 관련 도메인
-│   │   ├── controller/
-│   │   │   └── NoticeController.java
-│   │   ├── service/
-│   │   │   └── NoticeService.java
-│   │   ├── repository/
-│   │   │   └── NoticeRepository.java
-│   │   ├── dto/
-│   │   │   ├── request/
-│   │   │   │   └── NoticeCreateRequest.java
-│   │   │   │   └── NoticeUpdateRequest.java
-│   │   │   │   └── ...
-│   │   │   └── response/
-│   │   │       ├── NoticeResponse.java
-│   │   │       └── ...
-│   │   │   └── NoticeDto.java          # 내부 서비스/DB 매핑용 DTO
-│   ├── file/                           # 파일 공유 관련 도메인
-│   │   ├── controller/
-│   │   │   └── FileController.java
-│   │   ├── service/
-│   │   │   └── FileService.java
-│   │   ├── repository/
-│   │   │   └── FileRepository.java
-│   │   ├── dto/
-│   │   │   ├── request/
-│   │   │   │   └── FileUploadRequest.java
-│   │   │   │   └── ...
-│   │   │   └── response/
-│   │   │       ├── FileResponse.java
-│   │   │       └── ...
-│   │   │   └── FileDto.java            # 내부 서비스/DB 매핑용 DTO
-│   ├── calendar/                       # 캘린더/일정 관련 도메인
-│   │   ├── controller/
-│   │   │   └── CalendarController.java
-│   │   ├── service/
-│   │   │   └── CalendarService.java
-│   │   ├── repository/
-│   │   │   └── CalendarEventRepository.java
-│   │   ├── dto/
-│   │   │   ├── request/
-│   │   │   │   └── CalendarEventCreateRequest.java
-│   │   │   │   └── ...
-│   │   │   └── response/
-│   │   │       ├── CalendarEventResponse.java
-│   │   │       └── ...
-│   │   │   └── CalendarEventDto.java   # 내부 서비스/DB 매핑용 DTO
-│   └── notification/                   # 알림 관련 도메인
-│       ├── service/
-│       │   └── NotificationService.java
-│       ├── repository/
-│       │   └── NotificationRepository.java
-│       ├── dto/
-│   │   │   ├── request/
-│   │   │   │   └── NotificationRequest.java
-│   │   │   │   └── ...
-│   │   │   └── response/
-│   │   │       ├── NotificationResponse.java
-│   │   │       └── ...
-│   │   │   └── NotificationDto.java    # 내부 서비스/DB 매핑용 DTO
+/src
+├── app/
+│   ├── api/                                # Next.js API Routes
+│   │   ├── auth/                           # 인증 관련 API (NextAuth.js 콜백 등)
+│   │   │   └── [...nextauth]/
+│   │   │       └── route.ts
+│   │   ├── v1/                             # API 버전 관리 (예: /api/v1)
+│   │   │   ├── users/                      # 사용자 관련 API
+│   │   │   │   ├── route.ts                # GET /api/v1/users (목록 조회), POST /api/v1/users (생성)
+│   │   │   │   ├── [userId]/               # 동적 라우팅: 특정 사용자 관련 API
+│   │   │   │   │   ├── route.ts            # GET /api/v1/users/[userId] (상세 조회), PATCH /api/v1/users/[userId] (수정), DELETE /api/v1/users/[userId] (삭제)
+│   │   │   │   └── me/                     # 현재 로그인 사용자 관련 API
+│   │   │   │       └── route.ts            # GET /api/v1/users/me, PATCH /api/v1/users/me
+│   │   │   ├── studies/                    # 스터디 그룹 관련 API
+│   │   │   │   ├── route.ts                # GET /api/v1/studies, POST /api/v1/studies
+│   │   │   │   ├── [studyId]/              # 특정 스터디 그룹 관련 API
+│   │   │   │   │   ├── route.ts            # GET /api/v1/studies/[studyId], PATCH /api/v1/studies/[studyId], DELETE /api/v1/studies/[studyId]
+│   │   │   │   │   ├── members/            # 스터디 멤버 관련 API
+│   │   │   │   │   │   ├── route.ts        # GET /api/v1/studies/[studyId]/members
+│   │   │   │   │   │   └── [memberId]/     # 특정 멤버 관련 API
+│   │   │   │   │   │       └── route.ts    # PATCH /api/v1/studies/[studyId]/members/[memberId] (역할 변경), DELETE /api/v1/studies/[studyId]/members/[memberId] (강퇴)
+│   │   │   │   │   └── join/               # 스터디 가입 신청 API
+│   │   │   │   │       └── route.ts        # POST /api/v1/studies/[studyId]/join
+│   │   │   │   └── internal/               # 내부 통신용 API (시그널링 서버 등에서 호출)
+│   │   │   │       ├── messages/           # 채팅 메시지 저장 API
+│   │   │   │       │   └── route.ts        # POST /api/v1/studies/internal/messages
+│   │   │   │       └── users/              # 사용자 상태 변경 API
+│   │   │   │           └── status/         # POST /api/v1/studies/internal/users/status
+│   │   │   │               └── route.ts
+│   │   │   └── ...                         # 기타 도메인별 API (notices, files, calendar, tasks, notifications 등)
+│   │   └── route.ts                        # (선택 사항) /api/v1/ 루트 API
 │
-├── common/                             # 공통 유틸리티 및 기반 클래스
-│   ├── exception/                      # 전역 예외 처리
-│   │   ├── GlobalExceptionHandler.java
-│   │   ├── CustomException.java
-│   │   └── ErrorCode.java
-│   ├── response/                       # 공통 API 응답 형식
-│   │   └── ApiResponse.java
-│   ├── security/                       # JWT 관련 공통 유틸리티
-│   │   ├── JwtTokenProvider.java
-│   │   └── ...
-│   └── util/                           # 기타 범용 유틸리티
-│       └── DateUtils.java
+├── lib/                                    # 공통 로직, 유틸리티, 데이터 접근
+│   ├── db/                                 # 데이터베이스 관련
+│   │   └── prisma.ts                       # Prisma Client 인스턴스
+│   ├── services/                           # 비즈니스 로직을 담는 서비스 계층
+│   │   ├── auth.ts
+│   │   ├── user.ts
+│   │   ├── study.ts
+│   │   ├── chat.ts
+│   │   ├── notice.ts
+│   │   ├── file.ts
+│   │   ├── calendar.ts
+│   │   └── notification.ts
+│   ├── utils/                              # 범용 유틸리티 함수
+│   │   ├── apiResponse.ts                  # API 응답 형식 헬퍼
+│   │   ├── auth.ts                         # 인증 관련 헬퍼 (NextAuth.js 세션 관리 등)
+│   │   ├── errors.ts                       # 커스텀 에러 정의
+│   │   └── redis.ts                        # Redis 클라이언트 인스턴스 및 Pub/Sub 헬퍼
+│   └── types/                              # 공통 타입 정의 (DTO, 인터페이스 등)
+│       ├── auth.ts
+│       ├── user.ts
+│       └── ...
 │
-├── config/                             # 애플리케이션 설정
-│   ├── security/                       # Spring Security 설정
-│   │   ├── SecurityConfig.java
-│   │   ├── JwtAuthenticationFilter.java
-│   │   └── ...
-│   ├── mybatis/                        # MyBatis 설정
-│   │   └── MyBatisConfig.java
-│   ├── redis/                          # Redis 설정
-│   │   └── RedisConfig.java
-│   └── web/                            # Web 관련 설정 (CORS 등)
-│       └── WebConfig.java
-│
-└── CoupApplication.java                # Spring Boot 메인 애플리케이션
+└── middleware.ts                           # 전역 미들웨어 (인증, 로깅 등)
 ```
 
 ## 3. 계층별 역할 정의 (Layer Definitions)
 
-- **Controller (`@RestController`)**: HTTP 요청을 수신하고, 적절한 Service 메서드를 호출하는 진입점입니다.
-  - `@RequestBody`를 통해 DTO로 요청 데이터를 바인딩하고 유효성을 검사(`@Valid`)합니다.
-  - Service로부터 받은 결과를 `ApiResponse` 형태로 감싸 클라이언트에게 반환합니다.
-
-- **Service (`@Service`)**: 핵심 비즈니스 로직을 처리하는 계층입니다.
-  - `@Transactional` 어노테이션을 통해 트랜잭션을 관리합니다.
-  - 여러 매퍼(Mapper)를 조합하여 복잡한 로직을 수행합니다.
-  - Controller와 Repository(Mapper) 사이의 중재자 역할을 합니다.
-
-- **Repository / Mapper (`@Mapper`)**: 데이터베이스와의 상호작용을 담당하는 데이터 접근 계층입니다.
-  - MyBatis의 매퍼 인터페이스로 작성됩니다.
-  - 인터페이스의 메서드에 어노테이션이나 별도의 XML 파일을 통해 실행할 SQL 쿼리를 직접 매핑합니다.
-  - Service 계층은 이 매퍼 인터페이스를 주입받아, 정의된 메서드를 호출함으로써 데이터베이스와 통신합니다.
-
-- **DTO (Data Transfer Object)**: 계층 간, 특히 데이터베이스의 쿼리 결과와 서비스 계층 간의 데이터 전송에 사용되는 객체입니다. Controller의 요청/응답 객체로도 사용됩니다.
+- **API Routes (`app/api/**/*.ts`)**: HTTP 요청을 수신하고, 요청 데이터를 파싱하며, 적절한 서비스 계층의 메서드를 호출하는 진입점입니다. 응답 데이터를 클라이언트에 반환합니다.
+  - 요청 유효성 검사, 인증/인가 처리, 에러 핸들링 등을 담당합니다.
+- **Service (`lib/services/*.ts`)**: 핵심 비즈니스 로직을 처리하는 계층입니다. 여러 Prisma Client 호출을 조합하여 복잡한 로직을 수행하고, 도메인 규칙을 적용합니다.
+  - API Routes와 Prisma Client 사이의 중재자 역할을 합니다.
+- **Prisma Client (`lib/db/prisma.ts`)**: 데이터베이스와의 상호작용을 담당하는 데이터 접근 계층입니다. Prisma Schema를 기반으로 생성된 타입 안전한 클라이언트를 통해 CRUD 작업을 수행합니다.
+- **Middleware (`middleware.ts`)**: 모든 요청에 대해 공통적으로 적용되는 로직(예: 인증 확인, 로깅, CORS 처리)을 처리합니다.
 
 ## 4. 인증 및 인가 (Authentication & Authorization)
 
-- **`Spring Security`** 와 **JWT (JSON Web Token)**를 조합하여 모든 REST API의 접근을 제어합니다.
-- **흐름**: 클라이언트가 API 요청 시 보낸 JWT를 `JwtAuthenticationFilter`가 검증하고, 유효한 경우 `SecurityContextHolder`에 인증 정보를 저장합니다.
+- **`NextAuth.js`**를 사용하여 사용자 인증을 처리하고, API Routes 내에서 세션 정보를 기반으로 인가를 수행합니다.
+- **흐름**: 클라이언트가 로그인하면 NextAuth.js를 통해 세션이 생성되고 JWT가 발급됩니다. 이후 API 요청 시 이 JWT를 검증하여 사용자의 인증 상태를 확인하고, 필요한 경우 역할 기반의 인가 로직을 적용합니다.
 
 ## 5. 시그널링 서버와의 연동
 
-- 비즈니스 서버는 실시간 통신을 직접 처리하지 않고, **내부 REST API**와 **Redis Pub/Sub**을 통해 시그널링 서버와 상호작용합니다.
-- **Inbound (시그널링 -> 비즈니스)**: 시그널링 서버가 DB 저장을 요청할 수 있도록 `/api/internal/**` 경로의 내부 API를 제공합니다.
-- **Outbound (비즈니스 -> 시그널링)**: 비즈니스 서버에서 발생한 실시간 알림 필요 이벤트를 `RedisTemplate`을 통해 Redis 채널에 발행(Publish)합니다.
+- Next.js API Routes는 실시간 통신을 직접 처리하지 않고, **내부 REST API**와 **Redis Pub/Sub**을 통해 시그널링 서버와 상호작용합니다.
+- **Inbound (시그널링 -> Next.js API Routes)**: 시그널링 서버가 DB 저장을 요청할 수 있도록 `/api/v1/internal/**` 경로의 내부 API를 제공합니다.
+- **Outbound (Next.js API Routes -> 시그널링)**: Next.js API Routes에서 발생한 실시간 알림 필요 이벤트를 `lib/utils/redis.ts`의 Redis 클라이언트를 통해 Redis 채널에 발행(Publish)합니다.

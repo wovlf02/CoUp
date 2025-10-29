@@ -29,12 +29,12 @@
 
 ## 3. 아키텍처 및 흐름
 
-1.  **이벤트 발생 (Business Server)**: Spring Boot 서버에서 알림을 유발하는 이벤트(예: `studyService.approveJoinRequest()`)가 발생한다.
-2.  **이벤트 발행 (Business Server -> Redis)**: 비즈니스 로직 처리 후, `EventPublisher`가 알림에 필요한 정보를 담아 Redis의 특정 채널(예: `notifications:user:123`)에 메시지를 발행(Publish)한다.
+1.  **이벤트 발생 (Next.js API Routes)**: Next.js API Routes에서 알림을 유발하는 이벤트(예: `studyService.approveJoinRequest()`)가 발생한다.
+2.  **이벤트 발행 (Next.js API Routes -> Redis)**: 비즈니스 로직 처리 후, 알림에 필요한 정보를 담아 Redis의 특정 채널(예: `notifications:user:123`)에 메시지를 발행(Publish)한다.
 3.  **이벤트 수신 (Signaling Server)**: Redis 채널을 구독(Subscribe)하고 있던 Node.js 시그널링 서버가 메시지를 수신한다.
 4.  **실시간 푸시 (Signaling Server -> Client)**: 시그널링 서버는 수신한 메시지를 WebSocket을 통해 해당 사용자(user:123)의 클라이언트에게 `notification` 이벤트로 전송한다.
 5.  **알림 표시 (Client)**: 프론트엔드 클라이언트는 `notification` 이벤트를 받아 사용자에게 실시간 알림(예: Toast UI)을 보여주고, 상단 알림 아이콘의 상태를 업데이트한다.
-6.  **알림 저장 (Business Server)**: 발행된 알림 내용은 별도의 `Notification` 테이블에 저장되어, 사용자가 나중에 알림 목록을 조회할 수 있도록 한다.
+6.  **알림 저장 (Next.js API Routes)**: 발행된 알림 내용은 별도의 `Notification` 테이블에 저장되어, 사용자가 나중에 알림 목록을 조회할 수 있도록 한다.
 
 ## 4. API 명세 (요약)
 
@@ -45,7 +45,7 @@
 ## 5. 데이터 모델
 
 - `Notification` 테이블
-  - `id`: Long (PK)
+  - `id`: Int (PK)
   - `recipient`: User (FK, 알림을 받는 사람)
   - `type`: Enum (알림 종류, e.g., `STUDY_JOIN_APPROVED`, `NEW_NOTICE`)
   - `message`: String (알림 내용)

@@ -51,9 +51,9 @@
 
 ## 3. API 명세 (요약)
 
-### REST API (Business Server)
+### REST API (Next.js API Routes)
 - `GET /api/v1/studies/{studyId}/messages`: 이전 채팅 내역 조회
-- `POST /api/internal/v1/messages`: (내부) 채팅 메시지 저장
+- `POST /api/v1/internal/messages`: (내부) 채팅 메시지 저장
 - `GET /api/v1/studies/{studyId}/notices`: 공지사항 목록 조회
 - `POST /api/v1/studies/{studyId}/notices`: 공지사항 생성
 - `GET /api/v1/studies/{studyId}/files`: 파일 목록 조회
