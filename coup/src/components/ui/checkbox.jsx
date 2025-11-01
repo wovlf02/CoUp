@@ -1,24 +1,13 @@
 import React from 'react';
 import styles from './checkbox.module.css';
 
-const Checkbox = ({ id, label, checked, onChange, ...props }) => {
+const Checkbox = ({ id, label, className, ...props }) => {
   return (
-    <div className={styles.checkboxContainer}>
-      <input
-        type="checkbox"
-        id={id}
-        checked={checked}
-        onChange={onChange}
-        className={styles.checkboxInput}
-        {...props}
-      />
-      {label && (
-        <label htmlFor={id} className={styles.checkboxLabel}>
-          {label}
-        </label>
-      )}
+    <div className={`${styles.checkboxWrapper} ${className || ''}`}>
+      <input type="checkbox" id={id} className={styles.checkbox} {...props} />
+      {label && <label htmlFor={id} className={styles.checkboxLabel}>{label}</label>}
     </div>
   );
 };
 
-export default Checkbox;
+export { Checkbox };

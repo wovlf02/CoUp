@@ -1,10 +1,6 @@
 import React from 'react';
 
-interface HeaderSearchProps {
-  // Define props here if any
-}
-
-const HeaderSearch: React.FC<HeaderSearchProps> = () => {
+const HeaderSearch = () => {
   return (
     <div className="header-search-container">
       <input

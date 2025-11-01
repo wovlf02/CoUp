@@ -1,45 +1,51 @@
 import React, { useState } from 'react';
 import styles from './tabs.module.css';
 
-const Tabs = ({ children, defaultActiveTab }) => {
-  const [activeTab, setActiveTab] = useState(defaultActiveTab || (children[0] && children[0].props.label));
+const Tabs = ({ children, defaultValue }) => {
+  const [activeTab, setActiveTab] = useState(defaultValue);
 
-  const handleTabClick = (label) => {
-    setActiveTab(label);
+  const handleTabClick = (value) => {
+    setActiveTab(value);
   };
 
   return (
-    <div className={styles.tabsContainer}>
+    <div className={styles.tabs}>
       <div className={styles.tabList}>
         {React.Children.map(children, (child) => {
-          if (!child) return null;
-          const { label } = child.props;
-          return (
-            <button
-              key={label}
-              className={`${styles.tabButton} ${activeTab === label ? styles.active : ''}`}
-              onClick={() => handleTabClick(label)}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-      <div className={styles.tabContent}>
-        {React.Children.map(children, (child) => {
-          if (!child) return null;
-          if (child.props.label === activeTab) {
-            return child;
+          if (child.type === TabTrigger) {
+            return React.cloneElement(child, {
+              isActive: child.props.value === activeTab,
+              onClick: () => handleTabClick(child.props.value),
+            });
           }
           return null;
         })}
       </div>
+      {React.Children.map(children, (child) => {
+        if (child.type === TabContent) {
+          return React.cloneElement(child, {
+            isActive: child.props.value === activeTab,
+          });
+        }
+        return null;
+      })}
     </div>
   );
 };
 
-const TabPanel = ({ children, label }) => {
-  return <div className={styles.tabPanel}>{children}</div>;
+const TabTrigger = ({ value, isActive, onClick, children }) => {
+  return (
+    <button
+      className={`${styles.tabTrigger} ${isActive ? styles.active : ''}`}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
 };
 
-export { Tabs, TabPanel };
+const TabContent = ({ value, isActive, children }) => {
+  return isActive ? <div className={styles.tabContent}>{children}</div> : null;
+};
+
+export { Tabs, TabTrigger, TabContent };

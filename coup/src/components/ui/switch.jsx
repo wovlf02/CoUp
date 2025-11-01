@@ -1,9 +1,9 @@
 import React from 'react';
 import styles from './switch.module.css';
 
-const Switch = ({ id, checked, onChange, label, ...props }) => {
+const Switch = ({ id, checked, onChange, label, className, ...props }) => {
   return (
-    <div className={styles.switchContainer}>
+    <div className={`${styles.switchWrapper} ${className || ''}`}>
       <input
         type="checkbox"
         id={id}
@@ -14,10 +14,10 @@ const Switch = ({ id, checked, onChange, label, ...props }) => {
       />
       <label htmlFor={id} className={styles.switchLabel}>
         <span className={styles.switchToggle} />
-        {label && <span className={styles.switchText}>{label}</span>}
       </label>
+      {label && <span className={styles.switchText}>{label}</span>}
     </div>
   );
 };
 
-export default Switch;
+export { Switch };

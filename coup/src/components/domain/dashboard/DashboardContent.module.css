@@ -1,0 +1,16 @@
+.dashboardContainer {
+  padding: 20px;
+}
+
+.welcomeMessage {
+  font-size: 2rem;
+  color: var(--color-text-primary);
+  margin-bottom: 30px;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}

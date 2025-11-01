@@ -1,0 +1,38 @@
+.socialLoginButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.socialLoginButtons button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.googleButton {
+  background-color: white;
+  color: #4285f4; /* Google Blue */
+  border: 1px solid #ddd;
+}
+
+.googleButton:hover {
+  background-color: #f0f0f0;
+}
+
+.githubButton {
+  background-color: #24292e; /* GitHub Dark */
+  color: white;
+  border: 1px solid #24292e;
+}
+
+.githubButton:hover {
+  background-color: #333;
+}

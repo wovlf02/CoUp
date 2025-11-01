@@ -1,0 +1,58 @@
+.recommendedStudiesCard {
+  /* Add card specific styles if needed */
+}
+
+.studyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+}
+
+.studyCardLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.studyCard {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.studyCard:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.studyCardImage {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.studyCardTitle {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: var(--color-text-primary);
+}
+
+.studyCardCategory,
+.studyCardMembers {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.viewAllStudies {
+  display: block;
+  text-align: right;
+  margin-top: 15px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.viewAllStudies:hover {
+  text-decoration: underline;
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import HeaderSearch from './HeaderSearch';
+import HeaderSearch from './HeaderSearch.jsx';
 import NotificationBell from './NotificationBell';
 import UserProfileDropdown from './UserProfileDropdown';
 import styles from './Header.module.css';

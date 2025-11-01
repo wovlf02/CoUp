@@ -1,69 +1,77 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import styles from './calendar.module.css';
 
-const Calendar = ({ selectedDate, onSelectDate }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+const Calendar = ({ date = new Date(), onDateSelect, className, ...props }) => {
+  const [currentDate, setCurrentDate] = useState(date);
 
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-    const days = [];
+  const { year, month, daysInMonth, firstDayOfMonth, weeks } = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 for Sunday, 1 for Monday, etc.
 
-    // Add leading empty days
-    const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push(null);
+    const weeks = [];
+    let currentWeek = [];
+
+    // Fill leading empty days
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      currentWeek.push(null);
     }
 
-    // Add days of the month
-    for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
-      days.push(new Date(year, month, i));
+    // Fill days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      currentWeek.push(day);
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
     }
 
-    return days;
+    // Fill trailing empty days
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.push(null);
+      }
+      weeks.push(currentWeek);
+    }
+
+    return { year, month, daysInMonth, firstDayOfMonth, weeks };
+  }, [currentDate]);
+
+  const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(currentDate);
+
+  const handlePrevMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   };
 
-  const days = getDaysInMonth(currentMonth);
-
-  const goToPreviousMonth = () => {
-    setCurrentMonth(prevMonth => new Date(prevMonth.getFullYear(), prevMonth.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentMonth(prevMonth => new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 1));
-  };
-
-  const isSameDay = (date1, date2) => {
-    if (!date1 || !date2) return false;
-    return (
-      date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate()
-    );
+  const handleNextMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
   return (
-    <div className={styles.calendar}>
+    <div className={`${styles.calendar} ${className || ''}`} {...props}>
       <div className={styles.header}>
-        <button onClick={goToPreviousMonth}>&lt;</button>
-        <h2>{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
-        <button onClick={goToNextMonth}>&gt;</button>
+        <button onClick={handlePrevMonth} className={styles.navButton}>&lt;</button>
+        <h2 className={styles.monthYear}>{monthName} {year}</h2>
+        <button onClick={handleNextMonth} className={styles.navButton}>&gt;</button>
       </div>
       <div className={styles.weekdays}>
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+        {'Sun Mon Tue Wed Thu Fri Sat'.split(' ').map(day => (
           <div key={day} className={styles.weekday}>{day}</div>
         ))}
       </div>
       <div className={styles.daysGrid}>
-        {days.map((day, index) => (
-          <div
-            key={index}
-            className={`${styles.day} ${day && isSameDay(day, new Date()) ? styles.currentDay : ''} ${day && isSameDay(day, selectedDate) ? styles.selectedDay : ''} ${!day ? styles.empty : ''}`}
-            onClick={() => day && onSelectDate(day)}
-          >
-            {day ? day.getDate() : ''}
+        {weeks.map((week, weekIndex) => (
+          <div key={weekIndex} className={styles.weekRow}>
+            {week.map((day, dayIndex) => (
+              <div
+                key={dayIndex}
+                className={`${styles.day} ${day ? '' : styles.empty}`}
+                onClick={() => day && onDateSelect && onDateSelect(new Date(year, month, day))}
+              >
+                {day}
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -71,4 +79,4 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
   );
 };
 
-export default Calendar;
+export { Calendar };

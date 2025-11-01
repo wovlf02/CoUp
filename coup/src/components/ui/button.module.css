@@ -8,12 +8,12 @@
 }
 
 .primary {
-  background-color: #007bff;
+  background-color: #0070f3;
   color: white;
 }
 
 .primary:hover {
-  background-color: #0056b3;
+  background-color: #005cbf;
 }
 
 .secondary {
@@ -22,26 +22,30 @@
 }
 
 .secondary:hover {
-  background-color: #545b62;
+  background-color: #5a6268;
 }
 
 .outline {
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: #0070f3;
+  border: 1px solid #0070f3;
 }
 
 .outline:hover {
-  background-color: #e9f5ff;
+  background-color: rgba(0, 112, 243, 0.1);
 }
 
-.icon {
-  background-color: transparent;
-  color: #333;
-  padding: 8px;
-  border-radius: 50%;
+.medium {
+  padding: 10px 20px;
+  font-size: 16px;
 }
 
-.icon:hover {
-  background-color: #f0f0f0;
+.small {
+  padding: 8px 15px;
+  font-size: 14px;
+}
+
+.large {
+  padding: 12px 25px;
+  font-size: 18px;
 }

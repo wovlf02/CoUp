@@ -60,6 +60,7 @@ model StudyGroup {
   description String?
   imageUrl    String?
   creatorId   String // ID of the user who created the study group
+  visibility  StudyVisibility @default(PUBLIC)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -76,6 +77,8 @@ model StudyMember {
 
   user       User       @relation(fields: [userId], references: [id])
   studyGroup StudyGroup @relation(fields: [studyGroupId], references: [id])
+  status     StudyMemberStatus @default(PENDING)
+  joinMessage String?
 
   @@unique([userId, studyGroupId])
 }
@@ -84,3 +87,16 @@ enum StudyRole {
   ADMIN
   MEMBER
 }
+
+enum StudyMemberStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  LEFT
+}
+
+enum StudyVisibility {
+  PUBLIC
+  PRIVATE
+}
+

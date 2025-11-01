@@ -12,9 +12,9 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 1.2. 환경 변수 설정 (`.env.local`)
 - [x] `.env.local` 파일 생성 및 `.gitignore`에 추가 확인
 - [x] 데이터베이스 연결 정보 (PostgreSQL) 환경 변수 추가
-- [ ] NextAuth.js 관련 환경 변수 추가 (NEXTAUTH_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET 등)
-- [ ] AWS S3 관련 환경 변수 추가 (파일 업로드용)
-- [ ] Redis 관련 환경 변수 추가
+- [x] NextAuth.js 관련 환경 변수 추가 (NEXTAUTH_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET 등)
+- [x] AWS S3 관련 환경 변수 추가 (파일 업로드용)
+- [x] Redis 관련 환경 변수 추가
 
 ### 1.3. Prisma ORM 설정 및 PostgreSQL 연동
 - [x] `prisma` 디렉토리 생성 및 `schema.prisma` 파일 초기화
@@ -33,30 +33,30 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 
 ### 1.6. ESLint, Prettier 설정 확인 및 적용
 - [x] `eslint.config.mjs` 파일 확인 및 프로젝트 코딩 컨벤션에 맞게 규칙 조정
-- [ ] Prettier 설정 파일 (`.prettierrc.json`) 생성 및 코드 포맷팅 규칙 정의
+- [x] Prettier 설정 파일 (`.prettierrc.json`) 생성 및 코드 포맷팅 규칙 정의
 - [ ] Git Hooks (husky, lint-staged) 설정 (선택 사항, 코드 품질 자동화)
 
 ### 1.7. 전역 스타일 (`globals.css`) 설정
 - [x] `src/app/globals.css` 파일 확인 및 기본 스타일 (색상 변수, 폰트, reset CSS) 정의
-- [ ] Tailwind CSS 미사용 원칙 준수 확인
+- [x] Tailwind CSS 미사용 원칙 준수 확인
 
 ## 2. 공통 컴포넌트 및 유틸리티 개발
 
 ### 2.1. UI 컴포넌트 (`components/ui/`)
-- [ ] `button.jsx`: 버튼 컴포넌트 (Primary, Secondary, Outline, Icon 등)
-- [ ] `input.jsx`: 입력 필드 컴포넌트 (텍스트, 숫자, 이메일 등)
-- [ ] `card.jsx`: 카드 컨테이너 컴포넌트 (그림자, 둥근 모서리 포함)
-- [ ] `dialog.jsx`: 모달/다이얼로그 컴포넌트 (오버레이, 닫기 버튼 포함)
-- [ ] `tabs.jsx`: 탭 네비게이션 컴포넌트
-- [ ] `avatar.jsx`: 아바타 (프로필 이미지) 컴포넌트
-- [ ] `badge.jsx`: 태그/뱃지 컴포넌트
-- [ ] `dropdown-menu.jsx`: 드롭다운 메뉴 컴포넌트
-- [ ] `label.jsx`: 라벨 컴포넌트
-- [ ] `textarea.jsx`: 텍스트 에어리어 컴포넌트
-- [ ] `checkbox.jsx`: 체크박스 컴포넌트
-- [ ] `switch.jsx`: 토글 스위치 컴포넌트
-- [ ] `calendar.jsx`: 캘린더 UI 컴포넌트 (날짜 선택 기능)
-- [ ] 기타 필요한 UI 프리미티브 컴포넌트 구현
+- [x] `button.jsx`: 버튼 컴포넌트 (Primary, Secondary, Outline, Icon 등)
+- [x] `input.jsx`: 입력 필드 컴포넌트 (텍스트, 숫자, 이메일 등)
+- [x] `card.jsx`: 카드 컨테이너 컴포넌트 (그림자, 둥근 모서리 포함)
+- [x] `dialog.jsx`: 모달/다이얼로그 컴포넌트 (오버레이, 닫기 버튼 포함)
+- [x] `tabs.jsx`: 탭 네비게이션 컴포넌트
+- [x] `avatar.jsx`: 아바타 (프로필 이미지) 컴포넌트
+- [x] `badge.jsx`: 태그/뱃지 컴포넌트
+- [x] `dropdown-menu.jsx`: 드롭다운 메뉴 컴포넌트
+- [x] `label.jsx`: 라벨 컴포넌트
+- [x] `textarea.jsx`: 텍스트 에어리어 컴포넌트
+- [x] `checkbox.jsx`: 체크박스 컴포넌트
+- [x] `switch.jsx`: 토글 스위치 컴포넌트
+- [x] `calendar.jsx`: 캘린더 UI 컴포넌트 (날짜 선택 기능)
+- [x] 기타 필요한 UI 프리미티브 컴포넌트 구현
 
 ### 2.2. 공통 레이아웃 컴포넌트 (`components/common/`)
 - [x] `Header/Header.jsx`: 전역 헤더 레이아웃 (로고, 검색, 알림, 사용자 프로필 드롭다운)
@@ -118,7 +118,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [x] `id`, `ownerId`, `name`, `description`, `goal`, `category`, `rules`, `visibility`, `maxMembers`, `currentMembersCount`, `status`, `createdAt`, `updatedAt` 필드 정의
 
 ### 3.3. `StudyMember` 테이블 (MVP 기능 명세: 02. 스터디 그룹 관리)
-- [x] `id`, `userId`, `studyGroupId`, `role`, `status`, `joinedAt`, `leftAt` 필드 정의
+- [x] `id`, `userId`, `studyGroupId`, `role`, `status`, `joinedAt`, `leftAt`, `joinMessage` 필드 정의
 
 ### 3.4. `Notice` 테이블 (MVP 기능 명세: 03. 스터디 활동)
 - [x] `id`, `studyGroupId`, `authorId`, `title`, `content`, `createdAt`, `updatedAt` 필드 정의
@@ -153,56 +153,56 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 4.3. 스터디 그룹 API (`api/v1/studies/route.js`, `api/v1/studies/[studyId]/route.js`)
 - [x] `GET /api/v1/studies`: 스터디 그룹 목록 조회 (필터링, 검색, 페이지네이션 포함)
 - [x] `POST /api/v1/studies`: 스터디 그룹 생성
-- [ ] `GET /api/v1/studies/{studyId}`: 특정 스터디 그룹 상세 조회
-- [ ] `PATCH /api/v1/studies/{studyId}`: 특정 스터디 그룹 수정 (그룹장/관리자 권한)
-- [ ] `DELETE /api/v1/studies/{studyId}`: 특정 스터디 그룹 삭제 (그룹장 권한)
+- [x] `GET /api/v1/studies/{studyId}`: 특정 스터디 그룹 상세 조회
+- [x] `PATCH /api/v1/studies/{studyId}`: 특정 스터디 그룹 수정 (그룹장/관리자 권한)
+- [x] `DELETE /api/v1/studies/{studyId}`: 특정 스터디 그룹 삭제 (그룹장 권한)
 
 ### 4.4. 스터디 멤버 API (`api/v1/studies/[studyId]/members/route.js`, `api/v1/studies/[studyId]/members/[memberId]/route.js`)
-- [ ] `GET /api/v1/studies/{studyId}/members`: 스터디 멤버 목록 조회
-- [ ] `PATCH /api/v1/studies/{studyId}/members/{memberId}`: 스터디 멤버 역할 변경 (그룹장/관리자 권한)
-- [ ] `DELETE /api/v1/studies/{studyId}/members/{memberId}`: 스터디 멤버 강퇴/탈퇴 (그룹장/관리자 권한)
+- [x] `GET /api/v1/studies/{studyId}/members`: 스터디 멤버 목록 조회
+- [x] `PATCH /api/v1/studies/{studyId}/members/{memberId}`: 스터디 멤버 역할 변경 (그룹장/관리자 권한)
+- [x] `DELETE /api/v1/studies/{studyId}/members/{memberId}`: 스터디 멤버 강퇴/탈퇴 (그룹장/관리자 권한)
 
 ### 4.5. 스터디 가입 API (`api/v1/studies/[studyId]/join/route.js`, `api/v1/studies/[studyId]/manage/route.js`)
-- [ ] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청
-- [ ] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 신청 처리 (승인/거절) (그룹장/관리자 권한)
+- [x] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청
+- [x] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 신청 처리 (승인/거절) (그룹장/관리자 권한)
 
 ### 4.6. 공지사항 API (`api/v1/studies/[studyId]/notices/route.js`, `api/v1/studies/[studyId]/notices/[noticeId]/route.js`)
-- [ ] `GET /api/v1/studies/{studyId}/notices`: 공지사항 목록 조회
-- [ ] `POST /api/v1/studies/{studyId}/notices`: 공지사항 생성 (그룹장/관리자 권한)
-- [ ] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 (그룹장/관리자 권한)
-- [ ] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 (그룹장/관리자 권한)
+- [x] `GET /api/v1/studies/{studyId}/notices`: 공지사항 목록 조회
+- [x] `POST /api/v1/studies/{studyId}/notices`: 공지사항 생성 (그룹장/관리자 권한)
+- [x] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 (그룹장/관리자 권한)
+- [x] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 (그룹장/관리자 권한)
 
 ### 4.7. 파일 API (`api/v1/studies/[studyId]/files/route.js`, `api/v1/studies/[studyId]/files/[fileId]/route.js`)
-- [ ] `GET /api/v1/studies/{studyId}/files`: 파일 목록 조회
-- [ ] `POST /api/v1/studies/{studyId}/files`: 파일 업로드 (AWS S3 Presigned URL 방식 고려)
-- [ ] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 (업로더 또는 그룹장/관리자 권한)
+- [x] `GET /api/v1/studies/{studyId}/files`: 파일 목록 조회
+- [x] `POST /api/v1/studies/{studyId}/files`: 파일 업로드 (AWS S3 Presigned URL 방식 고려)
+- [x] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 (업로더 또는 그룹장/관리자 권한)
 
 ### 4.8. 캘린더 이벤트 API (`api/v1/studies/[studyId]/events/route.js`, `api/v1/studies/[studyId]/events/[eventId]/route.js`)
-- [ ] `GET /api/v1/studies/{studyId}/events`: 캘린더 이벤트 목록 조회
-- [ ] `POST /api/v1/studies/{studyId}/events`: 캘린더 이벤트 생성 (그룹장/관리자 권한)
-- [ ] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 수정 (그룹장/관리자 권한)
-- [ ] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 삭제 (그룹장/관리자 권한)
+- [x] `GET /api/v1/studies/{studyId}/events`: 캘린더 이벤트 목록 조회
+- [x] `POST /api/v1/studies/{studyId}/events`: 캘린더 이벤트 생성 (그룹장/관리자 권한)
+- [x] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 수정 (그룹장/관리자 권한)
+- [x] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 삭제 (그룹장/관리자 권한)
 
 ### 4.9. 할 일 API (`api/v1/studies/[studyId]/tasks/route.js`, `api/v1/studies/[studyId]/tasks/[taskId]/route.js`)
-- [ ] `GET /api/v1/studies/{studyId}/tasks`: 할 일 목록 조회
-- [ ] `POST /api/v1/studies/{studyId}/tasks`: 할 일 생성
-- [ ] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 (완료 여부, 담당자, 마감일 등)
-- [ ] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제
+- [x] `GET /api/v1/studies/{studyId}/tasks`: 할 일 목록 조회 (캘린더 연동을 위해 날짜 필터링 옵션 추가 고려)
+- [x] `POST /api/v1/studies/{studyId}/tasks`: 할 일 생성
+- [x] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 (완료 여부, 담당자, 마감일 등)
+- [x] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제
 
 ### 4.10. 알림 API (`api/v1/notifications/route.js`, `api/v1/notifications/[notificationId]/read/route.js`)
-- [ ] `GET /api/v1/notifications`: 내 알림 목록 조회
-- [ ] `POST /api/v1/notifications/read`: 모든 알림을 읽음 상태로 변경
-- [ ] `PATCH /api/v1/notifications/{notificationId}/read`: 특정 알림을 읽음 상태로 변경
+- [x] `GET /api/v1/notifications`: 내 알림 목록 조회
+- [x] `POST /api/v1/notifications/read`: 모든 알림을 읽음 상태로 변경
+- [x] `PATCH /api/v1/notifications/{notificationId}/read`: 특정 알림을 읽음 상태로 변경
 
 ### 4.11. 내부 통신 API (`api/v1/internal/messages/route.js`, `api/v1/internal/users/status/route.js`)
-- [ ] `POST /api/v1/internal/messages`: 채팅 메시지 저장 (시그널링 서버에서 호출)
-- [ ] `POST /api/v1/internal/users/status`: 사용자 온라인 상태 업데이트 (시그널링 서버에서 호출)
+- [x] `POST /api/v1/internal/messages`: 채팅 메시지 저장 (시그널링 서버에서 호출)
+- [x] `POST /api/v1/internal/users/status`: 사용자 온라인 상태 업데이트 (시그널링 서버에서 호출)
 
 ## 5. 프론트엔드 페이지 및 컴포넌트 개발 (`src/app/`, `src/components/domain/`)
 
 ### 5.1. 랜딩 페이지 (`app/page.jsx`)
-- [ ] UI/UX 명세: 01. 랜딩 페이지 기반으로 구현
-- [ ] 네비게이션 바, 히어로 섹션, 서비스 소개 섹션, 사용자 후기/사례 섹션, 푸터 컴포넌트 구현
+- [x] UI/UX 명세: 01. 랜딩 페이지 기반으로 구현
+- [x] 네비게이션 바, 히어로 섹션, 서비스 소개 섹션, 사용자 후기/사례 섹션, 푸터 컴포넌트 구현
 
 ### 5.2. 인증 페이지 (`app/(auth)/sign-in/page.jsx`, `app/(auth)/sign-up/page.jsx`, `app/(auth)/layout.jsx`)
 - [ ] UI/UX 명세: 02. 로그인/회원가입 페이지 기반으로 구현
@@ -219,26 +219,26 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [ ] `StudyDiscoveryFilters.jsx`, `StudyList.jsx`, `StudyCard.jsx` 컴포넌트 구현
 
 ### 5.5. 스터디 생성 페이지 (`app/(main)/studies/create/page.jsx`)
-- [ ] UI/UX 명세: 05. 스터디 생성 페이지 기반으로 구현
-- [ ] `StudyCreationForm.jsx` 컴포넌트 구현 (세분화된 입력 컴포넌트 포함: `StudyNameInput.jsx`, `StudyDescriptionInput.jsx`, `StudyCategorySelect.jsx`, `StudyVisibilityToggle.jsx`, `StudyMemberCountInput.jsx`)
+- [x] UI/UX 명세: 05. 스터디 생성 페이지 기반으로 구현
+- [x] `StudyCreationForm.jsx` 컴포넌트 구현 (세분화된 입력 컴포넌트 포함: `StudyNameInput.jsx`, `StudyDescriptionInput.jsx`, `StudyCategorySelect.jsx`, `StudyVisibilityToggle.jsx`, `StudyMemberCountInput.jsx`)
 
 ### 5.6. 스터디 상세 페이지 - 개요 (`app/(main)/studies/[studyId]/page.jsx`, `app/(main)/studies/[studyId]/layout.jsx`)
-- [ ] UI/UX 명세: 06. 스터디 상세 페이지 (Overview) 기반으로 구현
-- [ ] `(main)/studies/[studyId]/layout.jsx` 구현 (StudyHeader, StudyTabNavigation 포함)
+- [x] UI/UX 명세: 06. 스터디 상세 페이지 (Overview) 기반으로 구현
+- [x] `(main)/studies/[studyId]/layout.jsx` 구현 (StudyHeader, StudyTabNavigation 포함)
 - [ ] `StudyHeader.jsx`, `StudyTabNavigation.jsx` 컴포넌트 구현
 - [ ] `StudyOverviewContent.jsx` (내부 컴포넌트: `StudyGoalCard.jsx`, `StudyRulesCard.jsx`, `StudyMembersPreview.jsx`) 구현
 
 ### 5.7. 스터디 상세 페이지 - 채팅 (`app/(main)/studies/[studyId]/chat/page.jsx`)
-- [ ] UI/UX 명세: 07. 스터디 상세 페이지 (Chat) 기반으로 구현
-- [ ] `ChatWindow.jsx`, `MessageList.jsx`, `MessageBubble.jsx`, `MessageInputForm.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 07. 스터디 상세 페이지 (Chat) 기반으로 구현
+- [x] `ChatWindow.jsx`, `MessageList.jsx`, `MessageBubble.jsx`, `MessageInputForm.jsx` 컴포넌트 구현
 
 ### 5.8. 스터디 상세 페이지 - 공지사항 (`app/(main)/studies/[studyId]/notices/page.jsx`)
-- [ ] UI/UX 명세: 10. 스터디 상세 페이지 (Notices) 기반으로 구현
-- [ ] `NoticeList.jsx`, `NoticeItem.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 10. 스터디 상세 페이지 (Notices) 기반으로 구현
+- [x] `NoticeList.jsx`, `NoticeItem.jsx` 컴포넌트 구현
 
 ### 5.9. 스터디 상세 페이지 - 파일 공유 (`app/(main)/studies/[studyId]/files/page.jsx`)
-- [ ] UI/UX 명세: 11. 스터디 상세 페이지 (Files) 기반으로 구현
-- [ ] `FileList.jsx`, `FileItem.jsx`, `FileUploadArea.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 11. 스터디 상세 페이지 (Files) 기반으로 구현
+- [x] `FileList.jsx`, `FileItem.jsx`, `FileUploadArea.jsx` 컴포넌트 구현
 
 ### 5.10. 스터디 상세 페이지 - 캘린더 (`app/(main)/studies/[studyId]/calendar/page.jsx`)
 - [ ] UI/UX 명세: 12. 스터디 상세 페이지 (Calendar) 기반으로 구현

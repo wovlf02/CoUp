@@ -1,0 +1,9 @@
+.filtersCard {
+  /* Add card specific styles if needed */
+}
+
+.filtersContent {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}

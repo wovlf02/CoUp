@@ -1,0 +1,11 @@
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}

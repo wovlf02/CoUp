@@ -1,0 +1,28 @@
+.messageInputForm {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-background-primary);
+  gap: 10px;
+}
+
+.messageTextarea {
+  flex: 1;
+  resize: none;
+  min-height: 40px;
+  max-height: 120px; /* Limit to about 3-4 lines */
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.sendButton {
+  padding: 10px 15px;
+  border-radius: 5px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}

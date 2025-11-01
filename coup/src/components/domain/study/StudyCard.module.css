@@ -1,0 +1,66 @@
+.studyCardLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.studyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.2s ease-in-out;
+}
+
+.studyCard:hover {
+  transform: translateY(-5px);
+}
+
+.studyImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.cardContent {
+  width: 100%;
+}
+
+.studyName {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: var(--color-text-primary);
+}
+
+.studyDescription {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+  height: 40px; /* Limit description to 2 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.studyMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.studyCategory,
+.studyMembers,
+.studyOwner,
+.studyDate {
+  background-color: var(--color-background-secondary);
+  padding: 5px 10px;
+  border-radius: 5px;
+}

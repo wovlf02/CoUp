@@ -1,0 +1,11 @@
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.switchGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}

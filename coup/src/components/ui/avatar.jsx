@@ -1,18 +1,16 @@
 import React from 'react';
 import styles from './avatar.module.css';
 
-const Avatar = ({ src, alt, fallback, size = 'medium', className, ...props }) => {
-  const avatarClassName = `${styles.avatar} ${styles[size]} ${className || ''}`;
-
+const Avatar = ({ src, alt, fallback, className, ...props }) => {
   return (
-    <div className={avatarClassName} {...props}>
+    <div className={`${styles.avatar} ${className || ''}`} {...props}>
       {src ? (
-        <img src={src} alt={alt} className={styles.image} />
+        <img src={src} alt={alt} className={styles.avatarImage} />
       ) : (
-        <span className={styles.fallback}>{fallback || alt?.charAt(0) || ''}</span>
+        <div className={styles.avatarFallback}>{fallback}</div>
       )}
     </div>
   );
 };
 
-export default Avatar;
+export { Avatar };
