@@ -1,0 +1,7 @@
+.label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin-bottom: 5px;
+  display: block;
+}

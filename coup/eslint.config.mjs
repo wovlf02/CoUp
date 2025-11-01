@@ -11,6 +11,8 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals"),
+  // Prettier 통합을 위한 설정 추가
+  ...compat.extends("plugin:prettier/recommended"), // eslint-plugin-prettier와 eslint-config-prettier를 함께 사용
   {
     ignores: [
       "node_modules/**",

@@ -1,0 +1,44 @@
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkboxInput {
+  /* Hide default checkbox */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkboxInput:checked {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.checkboxInput:checked::after {
+  content: '\2713'; /* Checkmark character */
+  color: white;
+  font-size: 14px;
+}
+
+.checkboxInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.checkboxLabel {
+  font-size: 1rem;
+  color: var(--foreground);
+  cursor: pointer;
+}

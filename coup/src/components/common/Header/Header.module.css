@@ -1,0 +1,32 @@
+.header {
+  width: 100%;
+  background-color: var(--color-background-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding: 1rem 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1.5rem;
+}
+
+.header-logo a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.header-search {
+  flex-grow: 1;
+  margin: 0 2rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}

@@ -1,0 +1,102 @@
+.calendar {
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  padding: 15px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.header h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.header button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--foreground);
+}
+
+.header button:hover {
+  color: #007bff;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.weekday {
+  padding: 5px 0;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  text-align: center;
+}
+
+.day {
+  padding: 8px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 0.9rem;
+}
+
+.day:hover {
+  background-color: #f0f0f0;
+}
+
+.empty {
+  visibility: hidden;
+}
+
+.currentDay {
+  background-color: #e0f2f7;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.selectedDay {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+@media (prefers-color-scheme: dark) {
+  .calendar {
+    border-color: #333;
+  }
+  .header button:hover {
+    color: #66b3ff;
+  }
+  .day:hover {
+    background-color: #333;
+  }
+  .currentDay {
+    background-color: #003366;
+    color: #66b3ff;
+  }
+  .selectedDay {
+    background-color: #0056b3;
+    color: white;
+  }
+}

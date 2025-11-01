@@ -5,39 +5,39 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ## 1. 프로젝트 초기 설정 및 환경 구성
 
 ### 1.1. Next.js 프로젝트 기본 설정 확인
-- [ ] `Coup` 디렉토리 내 Next.js 프로젝트 (`coup`)의 기본 설정 (TypeScript, ESLint, `src` 디렉토리, App Router, `@/*` import alias) 확인
-- [ ] `package.json` 스크립트 확인 (`dev`, `build`, `start`, `lint`)
-- [ ] `next.config.mjs` 기본 설정 확인
+- [x] `Coup` 디렉토리 내 Next.js 프로젝트 (`coup`)의 기본 설정 (JavaScript, ESLint, `src` 디렉토리, App Router, `@/*` import alias) 확인
+- [x] `package.json` 스크립트 확인 (`dev`, `build`, `start`, `lint`)
+- [x] `next.config.mjs` 기본 설정 확인
 
 ### 1.2. 환경 변수 설정 (`.env.local`)
-- [ ] `.env.local` 파일 생성 및 `.gitignore`에 추가 확인
-- [ ] 데이터베이스 연결 정보 (PostgreSQL) 환경 변수 추가
+- [x] `.env.local` 파일 생성 및 `.gitignore`에 추가 확인
+- [x] 데이터베이스 연결 정보 (PostgreSQL) 환경 변수 추가
 - [ ] NextAuth.js 관련 환경 변수 추가 (NEXTAUTH_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET 등)
 - [ ] AWS S3 관련 환경 변수 추가 (파일 업로드용)
 - [ ] Redis 관련 환경 변수 추가
 
 ### 1.3. Prisma ORM 설정 및 PostgreSQL 연동
-- [ ] `prisma` 디렉토리 생성 및 `schema.prisma` 파일 초기화
-- [ ] `datasource` 및 `generator` 설정 (PostgreSQL, `prisma-client-js`)
-- [ ] `lib/db/prisma.js` 파일 생성 및 Prisma Client 인스턴스 초기화 로직 구현
-- [ ] 초기 데이터베이스 마이그레이션 설정
+- [x] `prisma` 디렉토리 생성 및 `schema.prisma` 파일 초기화
+- [x] `datasource` 및 `generator` 설정 (PostgreSQL, `prisma-client-js`)
+- [x] `lib/db/prisma.js` 파일 생성 및 Prisma Client 인스턴스 초기화 로직 구현
+- [x] 초기 데이터베이스 마이그레이션 설정
 
 ### 1.4. Redis 설정 및 연동
-- [ ] `lib/utils/redis.js` 파일 생성 및 Redis 클라이언트 인스턴스 초기화
-- [ ] Redis Pub/Sub 헬퍼 함수 구현 (채팅, 알림 등)
+- [x] `lib/utils/redis.js` 파일 생성 및 Redis 클라이언트 인스턴스 초기화
+- [x] Redis Pub/Sub 헬퍼 함수 구현 (채팅, 알림 등)
 
 ### 1.5. NextAuth.js 설정 (Google, GitHub Provider)
-- [ ] `src/app/api/auth/[...nextauth]/route.ts` 파일 생성 및 NextAuth.js 핸들러 설정
-- [ ] Google, GitHub OAuth Provider 설정
-- [ ] NextAuth.js 콜백 (signIn, session, jwt) 구현 (사용자 정보 저장 및 세션 관리)
+- [x] `src/app/api/auth/[...nextauth]/route.js` 파일 생성 및 NextAuth.js 핸들러 설정
+- [x] Google, GitHub OAuth Provider 설정
+- [x] NextAuth.js 콜백 (signIn, session, jwt) 구현 (사용자 정보 저장 및 세션 관리)
 
 ### 1.6. ESLint, Prettier 설정 확인 및 적용
-- [ ] `eslint.config.mjs` 파일 확인 및 프로젝트 코딩 컨벤션에 맞게 규칙 조정
+- [x] `eslint.config.mjs` 파일 확인 및 프로젝트 코딩 컨벤션에 맞게 규칙 조정
 - [ ] Prettier 설정 파일 (`.prettierrc.json`) 생성 및 코드 포맷팅 규칙 정의
 - [ ] Git Hooks (husky, lint-staged) 설정 (선택 사항, 코드 품질 자동화)
 
 ### 1.7. 전역 스타일 (`globals.css`) 설정
-- [ ] `src/app/globals.css` 파일 확인 및 기본 스타일 (색상 변수, 폰트, reset CSS) 정의
+- [x] `src/app/globals.css` 파일 확인 및 기본 스타일 (색상 변수, 폰트, reset CSS) 정의
 - [ ] Tailwind CSS 미사용 원칙 준수 확인
 
 ## 2. 공통 컴포넌트 및 유틸리티 개발
@@ -59,142 +59,142 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [ ] 기타 필요한 UI 프리미티브 컴포넌트 구현
 
 ### 2.2. 공통 레이아웃 컴포넌트 (`components/common/`)
-- [ ] `Header/Header.jsx`: 전역 헤더 레이아웃 (로고, 검색, 알림, 사용자 프로필 드롭다운)
-- [ ] `Header/HeaderSearch.tsx`: 헤더 내 검색 바 컴포넌트
-- [ ] `Header/NotificationBell.jsx`: 알림 아이콘 및 알림 수 표시 컴포넌트
-- [ ] `Header/UserProfileDropdown.jsx`: 사용자 프로필 이미지와 드롭다운 메뉴 컴포넌트
-- [ ] `Sidebar/Sidebar.jsx`: 전역 사이드바 레이아웃
-- [ ] `Sidebar/SidebarNav.jsx`: 사이드바 네비게이션 링크 목록 컴포넌트
-- [ ] `Footer/Footer.jsx`: 전역 푸터 컴포넌트
-- [ ] `LayoutProvider.jsx`: Context Provider 등을 포함하는 레이아웃 관련 컴포넌트
-- [ ] `LoadingSpinner.jsx`: 로딩 스피너 컴포넌트
+- [x] `Header/Header.jsx`: 전역 헤더 레이아웃 (로고, 검색, 알림, 사용자 프로필 드롭다운)
+- [x] `Header/HeaderSearch.tsx`: 헤더 내 검색 바 컴포넌트
+- [x] `Header/NotificationBell.jsx`: 알림 아이콘 및 알림 수 표시 컴포넌트
+- [x] `Header/UserProfileDropdown.jsx`: 사용자 프로필 이미지와 드롭다운 메뉴 컴포넌트
+- [x] `Sidebar/Sidebar.jsx`: 전역 사이드바 레이아웃
+- [x] `Sidebar/SidebarNav.jsx`: 사이드바 네비게이션 링크 목록 컴포넌트
+- [x] `Footer/Footer.jsx`: 전역 푸터 컴포넌트
+- [x] `LayoutProvider.jsx`: Context Provider 등을 포함하는 레이아웃 관련 컴포넌트
+- [x] `LoadingSpinner.jsx`: 로딩 스피너 컴포넌트
 
 ### 2.3. 전역 Context Provider (`components/providers/`)
-- [ ] `QueryProvider.jsx`: React Query Provider 설정 및 클라이언트 인스턴스 제공
-- [ ] `AuthProvider.jsx`: NextAuth.js Session Provider 설정
-- [ ] `SocketProvider.jsx`: Socket.IO 클라이언트 인스턴스 및 컨텍스트 제공
+- [x] `QueryProvider.jsx`: React Query Provider 설정 및 클라이언트 인스턴스 제공
+- [x] `AuthProvider.jsx`: NextAuth.js Session Provider 설정
+- [x] `SocketProvider.jsx`: Socket.IO 클라이언트 인스턴스 및 컨텍스트 제공
 
 ### 2.4. 유틸리티 함수 (`lib/utils/`)
-- [ ] `apiResponse.js`: API 응답 형식 표준화 헬퍼
-- [ ] `auth.js`: NextAuth.js 세션 관리 및 권한 확인 헬퍼
-- [ ] `errors.js`: 커스텀 에러 클래스 정의
-- [ ] `redis.js`: Redis 클라이언트 인스턴스 및 Pub/Sub 헬퍼
-- [ ] `date.js`: 날짜/시간 포맷팅 및 처리 유틸리티
-- [ ] `validation.js`: 폼 데이터 유효성 검사 헬퍼 (Zod 등)
-- [ ] `constants.js`: 애플리케이션 전반에서 사용되는 상수 정의
+- [x] `apiResponse.js`: API 응답 형식 표준화 헬퍼
+- [x] `auth.js`: NextAuth.js 세션 관리 및 권한 확인 헬퍼
+- [x] `errors.js`: 커스텀 에러 클래스 정의
+- [x] `redis.js`: Redis 클라이언트 인스턴스 및 Pub/Sub 헬퍼
+- [x] `date.js`: 날짜/시간 포맷팅 및 처리 유틸리티
+- [x] `validation.js`: 폼 데이터 유효성 검사 헬퍼 (Zod 등)
+- [x] `constants.js`: 애플리케이션 전반에서 사용되는 상수 정의
 
 ### 2.5. 커스텀 Hooks (`lib/hooks/`)
-- [ ] `useAuth.js`: 사용자 인증 상태 및 정보 접근 훅
-- [ ] `useSocket.js`: WebSocket 연결 및 이벤트 처리 훅
-- [ ] `useDebounce.js`: 디바운스 로직 훅
-- [ ] `useForm.js`: 폼 상태 관리 및 유효성 검사 훅
-- [ ] `useMediaQuery.js`: 미디어 쿼리 상태를 감지하는 훅
+- [x] `useAuth.js`: 사용자 인증 상태 및 정보 접근 훅
+- [x] `useSocket.js`: WebSocket 연결 및 이벤트 처리 훅
+- [x] `useDebounce.js`: 디바운스 로직 훅
+- [x] `useForm.js`: 폼 상태 관리 및 유효성 검사 훅
+- [x] `useMediaQuery.js`: 미디어 쿼리 상태를 감지하는 훅
 
 ### 2.6. API 클라이언트 및 React Query 설정 (`lib/api/`)
-- [ ] `index.js`: API 클라이언트 인스턴스 (axios 또는 fetch 래퍼) 및 인증 토큰 처리 로직
-- [ ] `queries/auth.js`: 인증 관련 쿼리 (예: 사용자 세션 정보)
-- [ ] `queries/studies.js`: 스터디 목록, 상세 정보 쿼리
-- [ ] `queries/users.js`: 사용자 정보 쿼리
-- [ ] `queries/notifications.js`: 알림 목록 쿼리
-- [ ] `queries/notices.js`: 공지사항 목록, 상세 쿼리
-- [ ] `queries/files.js`: 파일 목록 쿼리
-- [ ] `queries/events.js`: 캘린더 이벤트 목록 쿼리
-- [ ] `queries/tasks.js`: 할 일 목록 쿼리
-- [ ] `mutations/auth.js`: 로그인, 회원가입 뮤테이션
-- [ ] `mutations/studies.js`: 스터디 생성, 수정, 삭제, 가입 뮤테이션
-- [ ] `mutations/users.js`: 사용자 프로필 수정 뮤테이션
-- [ ] `mutations/notifications.js`: 알림 읽음 처리 뮤테이션
-- [ ] `mutations/notices.js`: 공지사항 생성, 수정, 삭제 뮤테이션
-- [ ] `mutations/files.js`: 파일 업로드, 삭제 뮤테이션
-- [ ] `mutations/events.js`: 캘린더 이벤트 생성, 수정, 삭제 뮤테이션
-- [ ] `mutations/tasks.js`: 할 일 생성, 수정, 삭제 뮤테이션
+- [x] `index.js`: API 클라이언트 인스턴스 (axios 또는 fetch 래퍼) 및 인증 토큰 처리 로직
+- [x] `queries/auth.js`: 인증 관련 쿼리 (예: 사용자 세션 정보)
+- [x] `queries/studies.js`: 스터디 목록, 상세 정보 쿼리
+- [x] `queries/users.js`: 사용자 정보 쿼리
+- [x] `queries/notifications.js`: 알림 목록 쿼리
+- [x] `queries/notices.js`: 공지사항 목록, 상세 쿼리
+- [x] `queries/files.js`: 파일 목록 쿼리
+- [x] `queries/events.js`: 캘린더 이벤트 목록 쿼리
+- [x] `queries/tasks.js`: 할 일 목록 쿼리
+- [x] `mutations/auth.js`: 로그인, 회원가입 뮤테이션
+- [x] `mutations/studies.js`: 스터디 생성, 수정, 삭제, 가입 뮤테이션
+- [x] `mutations/users.js`: 사용자 프로필 수정 뮤테이션
+- [x] `mutations/notifications.js`: 알림 읽음 처리 뮤테이션
+- [x] `mutations/notices.js`: 공지사항 생성, 수정, 삭제 뮤테이션
+- [x] `mutations/files.js`: 파일 업로드, 삭제 뮤테이션
+- [x] `mutations/events.js`: 캘린더 이벤트 생성, 수정, 삭제 뮤테이션
+- [x] `mutations/tasks.js`: 할 일 생성, 수정, 삭제 뮤테이션
 
 ## 3. 데이터베이스 스키마 설계 및 Prisma Migration
 
 ### 3.1. `User` 테이블 (MVP 기능 명세: 01. 사용자 인증 및 프로필)
-- [ ] `id`, `email`, `name`, `imageUrl`, `provider`, `providerId`, `role`, `createdAt`, `updatedAt` 필드 정의
+- [x] `id`, `email`, `name`, `imageUrl`, `provider`, `providerId`, `role`, `createdAt`, `updatedAt` 필드 정의
 
 ### 3.2. `StudyGroup` 테이블 (MVP 기능 명세: 02. 스터디 그룹 관리)
-- [ ] `id`, `ownerId`, `name`, `description`, `goal`, `category`, `rules`, `visibility`, `maxMembers`, `currentMembersCount`, `status`, `createdAt`, `updatedAt` 필드 정의
+- [x] `id`, `ownerId`, `name`, `description`, `goal`, `category`, `rules`, `visibility`, `maxMembers`, `currentMembersCount`, `status`, `createdAt`, `updatedAt` 필드 정의
 
 ### 3.3. `StudyMember` 테이블 (MVP 기능 명세: 02. 스터디 그룹 관리)
-- [ ] `id`, `userId`, `studyGroupId`, `role`, `status`, `joinedAt`, `leftAt` 필드 정의
+- [x] `id`, `userId`, `studyGroupId`, `role`, `status`, `joinedAt`, `leftAt` 필드 정의
 
 ### 3.4. `Notice` 테이블 (MVP 기능 명세: 03. 스터디 활동)
-- [ ] `id`, `studyGroupId`, `authorId`, `title`, `content`, `createdAt`, `updatedAt` 필드 정의
+- [x] `id`, `studyGroupId`, `authorId`, `title`, `content`, `createdAt`, `updatedAt` 필드 정의
 
 ### 3.5. `File` 테이블 (MVP 기능 명세: 03. 스터디 활동)
-- [ ] `id`, `studyGroupId`, `uploaderId`, `fileName`, `fileUrl`, `fileSize`, `fileType`, `createdAt` 필드 정의
+- [x] `id`, `studyGroupId`, `uploaderId`, `fileName`, `fileUrl`, `fileSize`, `fileType`, `createdAt` 필드 정의
 
 ### 3.6. `Event` 테이블 (MVP 기능 명세: 03. 스터디 활동)
-- [ ] `id`, `studyGroupId`, `creatorId`, `title`, `description`, `startTime`, `endTime`, `createdAt`, `updatedAt` 필드 정의
+- [x] `id`, `studyGroupId`, `creatorId`, `title`, `description`, `startTime`, `endTime`, `createdAt`, `updatedAt` 필드 정의
 
 ### 3.7. `Task` 테이블 (MVP 기능 명세: 03. 스터디 활동)
-- [ ] `id`, `studyGroupId`, `creatorId`, `assigneeId`, `title`, `description`, `dueDate`, `isCompleted`, `createdAt`, `updatedAt` 필드 정의
+- [x] `id`, `studyGroupId`, `creatorId`, `assigneeId`, `title`, `description`, `dueDate`, `isCompleted`, `createdAt`, `updatedAt` 필드 정의
 
 ### 3.8. `Notification` 테이블 (MVP 기능 명세: 04. 알림)
-- [ ] `id`, `recipientId`, `type`, `message`, `link`, `isRead`, `createdAt` 필드 정의
+- [x] `id`, `recipientId`, `type`, `message`, `link`, `isRead`, `createdAt` 필드 정의
 
 ### 3.9. Prisma Schema 정의 및 Migration 실행
-- [ ] `schema.prisma` 파일에 모든 모델 정의
-- [ ] `npx prisma migrate dev --name initial_migration` 명령어를 통해 초기 마이그레이션 실행
+- [x] `schema.prisma` 파일에 모든 모델 정의
+- [x] `npx prisma migrate dev --name initial_migration` 명령어를 통해 초기 마이그레이션 실행
 
 ## 4. 백엔드 API 개발 (Next.js API Routes & `lib/services/`)
 
-### 4.1. 인증 API (`api/auth/[...nextauth]/route.ts`)
-- [ ] NextAuth.js 콜백 (signIn, session, jwt) 구현
-- [ ] 사용자 정보 조회 및 세션 관리 로직
+### 4.1. 인증 API (`api/auth/[...nextauth]/route.js`)
+- [x] NextAuth.js 콜백 (signIn, session, jwt) 구현
+- [x] 사용자 정보 조회 및 세션 관리 로직
 
-### 4.2. 사용자 API (`api/v1/users/me/route.ts`)
-- [ ] `GET /api/v1/users/me`: 현재 로그인 사용자 정보 조회
-- [ ] `PATCH /api/v1/users/me`: 현재 로그인 사용자 정보 수정 (닉네임, 프로필 이미지)
-- [ ] `DELETE /api/v1/users/me`: 회원 탈퇴
+### 4.2. 사용자 API (`api/v1/users/me/route.js`)
+- [x] `GET /api/v1/users/me`: 현재 로그인 사용자 정보 조회
+- [x] `PATCH /api/v1/users/me`: 현재 로그인 사용자 정보 수정 (닉네임, 프로필 이미지)
+- [x] `DELETE /api/v1/users/me`: 회원 탈퇴
 
-### 4.3. 스터디 그룹 API (`api/v1/studies/route.ts`, `api/v1/studies/[studyId]/route.ts`)
-- [ ] `GET /api/v1/studies`: 스터디 그룹 목록 조회 (필터링, 검색, 페이지네이션 포함)
-- [ ] `POST /api/v1/studies`: 스터디 그룹 생성
+### 4.3. 스터디 그룹 API (`api/v1/studies/route.js`, `api/v1/studies/[studyId]/route.js`)
+- [x] `GET /api/v1/studies`: 스터디 그룹 목록 조회 (필터링, 검색, 페이지네이션 포함)
+- [x] `POST /api/v1/studies`: 스터디 그룹 생성
 - [ ] `GET /api/v1/studies/{studyId}`: 특정 스터디 그룹 상세 조회
 - [ ] `PATCH /api/v1/studies/{studyId}`: 특정 스터디 그룹 수정 (그룹장/관리자 권한)
 - [ ] `DELETE /api/v1/studies/{studyId}`: 특정 스터디 그룹 삭제 (그룹장 권한)
 
-### 4.4. 스터디 멤버 API (`api/v1/studies/[studyId]/members/route.ts`, `api/v1/studies/[studyId]/members/[memberId]/route.ts`)
+### 4.4. 스터디 멤버 API (`api/v1/studies/[studyId]/members/route.js`, `api/v1/studies/[studyId]/members/[memberId]/route.js`)
 - [ ] `GET /api/v1/studies/{studyId}/members`: 스터디 멤버 목록 조회
 - [ ] `PATCH /api/v1/studies/{studyId}/members/{memberId}`: 스터디 멤버 역할 변경 (그룹장/관리자 권한)
 - [ ] `DELETE /api/v1/studies/{studyId}/members/{memberId}`: 스터디 멤버 강퇴/탈퇴 (그룹장/관리자 권한)
 
-### 4.5. 스터디 가입 API (`api/v1/studies/[studyId]/join/route.ts`, `api/v1/studies/[studyId]/manage/route.ts`)
+### 4.5. 스터디 가입 API (`api/v1/studies/[studyId]/join/route.js`, `api/v1/studies/[studyId]/manage/route.js`)
 - [ ] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청
 - [ ] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 신청 처리 (승인/거절) (그룹장/관리자 권한)
 
-### 4.6. 공지사항 API (`api/v1/studies/[studyId]/notices/route.ts`, `api/v1/studies/[studyId]/notices/[noticeId]/route.ts`)
+### 4.6. 공지사항 API (`api/v1/studies/[studyId]/notices/route.js`, `api/v1/studies/[studyId]/notices/[noticeId]/route.js`)
 - [ ] `GET /api/v1/studies/{studyId}/notices`: 공지사항 목록 조회
 - [ ] `POST /api/v1/studies/{studyId}/notices`: 공지사항 생성 (그룹장/관리자 권한)
 - [ ] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 (그룹장/관리자 권한)
 - [ ] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 (그룹장/관리자 권한)
 
-### 4.7. 파일 API (`api/v1/studies/[studyId]/files/route.ts`, `api/v1/studies/[studyId]/files/[fileId]/route.ts`)
+### 4.7. 파일 API (`api/v1/studies/[studyId]/files/route.js`, `api/v1/studies/[studyId]/files/[fileId]/route.js`)
 - [ ] `GET /api/v1/studies/{studyId}/files`: 파일 목록 조회
 - [ ] `POST /api/v1/studies/{studyId}/files`: 파일 업로드 (AWS S3 Presigned URL 방식 고려)
 - [ ] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 (업로더 또는 그룹장/관리자 권한)
 
-### 4.8. 캘린더 이벤트 API (`api/v1/studies/[studyId]/events/route.ts`, `api/v1/studies/[studyId]/events/[eventId]/route.ts`)
+### 4.8. 캘린더 이벤트 API (`api/v1/studies/[studyId]/events/route.js`, `api/v1/studies/[studyId]/events/[eventId]/route.js`)
 - [ ] `GET /api/v1/studies/{studyId}/events`: 캘린더 이벤트 목록 조회
 - [ ] `POST /api/v1/studies/{studyId}/events`: 캘린더 이벤트 생성 (그룹장/관리자 권한)
 - [ ] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 수정 (그룹장/관리자 권한)
 - [ ] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 삭제 (그룹장/관리자 권한)
 
-### 4.9. 할 일 API (`api/v1/studies/[studyId]/tasks/route.ts`, `api/v1/studies/[studyId]/tasks/[taskId]/route.ts`)
+### 4.9. 할 일 API (`api/v1/studies/[studyId]/tasks/route.js`, `api/v1/studies/[studyId]/tasks/[taskId]/route.js`)
 - [ ] `GET /api/v1/studies/{studyId}/tasks`: 할 일 목록 조회
 - [ ] `POST /api/v1/studies/{studyId}/tasks`: 할 일 생성
 - [ ] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 (완료 여부, 담당자, 마감일 등)
 - [ ] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제
 
-### 4.10. 알림 API (`api/v1/notifications/route.ts`, `api/v1/notifications/[notificationId]/read/route.ts`)
+### 4.10. 알림 API (`api/v1/notifications/route.js`, `api/v1/notifications/[notificationId]/read/route.js`)
 - [ ] `GET /api/v1/notifications`: 내 알림 목록 조회
 - [ ] `POST /api/v1/notifications/read`: 모든 알림을 읽음 상태로 변경
 - [ ] `PATCH /api/v1/notifications/{notificationId}/read`: 특정 알림을 읽음 상태로 변경
 
-### 4.11. 내부 통신 API (`api/v1/internal/messages/route.ts`, `api/v1/internal/users/status/route.ts`)
+### 4.11. 내부 통신 API (`api/v1/internal/messages/route.js`, `api/v1/internal/users/status/route.js`)
 - [ ] `POST /api/v1/internal/messages`: 채팅 메시지 저장 (시그널링 서버에서 호출)
 - [ ] `POST /api/v1/internal/users/status`: 사용자 온라인 상태 업데이트 (시그널링 서버에서 호출)
 
@@ -211,7 +211,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 
 ### 5.3. 메인 대시보드 (`app/(main)/page.jsx`, `app/(main)/layout.jsx`)
 - [ ] UI/UX 명세: 03. 메인 대시보드 기반으로 구현
-- [ ] `(main)/layout.jsx` 구현 (Header, Sidebar 포함, AuthProvider, QueryProvider 래핑)
+- [x] `(main)/layout.jsx` 구현 (Header, Sidebar 포함, AuthProvider, QueryProvider 래핑)
 - [ ] `DashboardContent.jsx`, `MyStudiesSummary.jsx`, `RecommendedStudies.jsx`, `RecentActivityFeed.jsx` 컴포넌트 구현
 
 ### 5.4. 스터디 탐색/목록 페이지 (`app/(main)/studies/page.jsx`)

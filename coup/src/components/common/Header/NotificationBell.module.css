@@ -1,0 +1,28 @@
+.notification-bell {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+}
+
+.notification-bell .icon {
+  display: block;
+}
+
+.notification-bell .badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--color-danger);
+  color: white;
+  border-radius: 50%;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  min-width: 1.5rem;
+  text-align: center;
+  transform: translate(50%, -50%);
+}
