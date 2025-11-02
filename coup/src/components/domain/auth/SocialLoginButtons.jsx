@@ -1,30 +1,26 @@
-import React from 'react';
-import { signIn } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import styles from './SocialLoginButtons.module.css';
+"use client";
 
-function SocialLoginButtons() {
+import Image from "next/image";
+import { signIn } from "next-auth/react";
+import styles from "../../../app/(auth)/auth.module.css";
+
+export default function SocialLoginButtons() {
   return (
     <div className={styles.socialLoginButtons}>
-      <Button
-        variant="outline"
-        onClick={() => signIn('google')}
-        className={styles.googleButton}
+      <button
+        className={`${styles.socialLoginButton} ${styles.google}`}
+        onClick={() => signIn("google")}
       >
         <Image src="/google.svg" alt="Google Logo" width={20} height={20} />
         Google로 로그인
-      </Button>
-      <Button
-        variant="outline"
-        onClick={() => signIn('github')}
-        className={styles.githubButton}
+      </button>
+      <button
+        className={`${styles.socialLoginButton} ${styles.github}`}
+        onClick={() => signIn("github")}
       >
         <Image src="/github.svg" alt="GitHub Logo" width={20} height={20} />
         GitHub으로 로그인
-      </Button>
+      </button>
     </div>
   );
 }
-
-export default SocialLoginButtons;

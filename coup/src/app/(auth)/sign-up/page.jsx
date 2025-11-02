@@ -1,22 +1,31 @@
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import styles from './signup.module.css';
+import Link from "next/link";
+import Image from "next/image";
+import SocialLoginButtons from "../../../components/domain/auth/SocialLoginButtons";
+import SignUpForm from "../../../components/domain/auth/SignUpForm";
+import styles from "../auth.module.css";
 
 export default function SignUpPage() {
   return (
-    <Card className={styles.authCard}>
-      <CardHeader className={styles.authCardHeader}>
-        <Image src="/next.svg" alt="CoUp Logo" width={100} height={40} /> {/* Replace with actual CoUp Logo */}
-        <CardTitle className={styles.authTitle}>회원가입</CardTitle>
-      </CardHeader>
-      <CardContent className={styles.authCardContent}>
-        <p className={styles.message}>현재 소셜 로그인만 지원합니다. 로그인 페이지로 이동해주세요.</p>
-        <Link href="/sign-in" passHref>
-          <button className={styles.signInButton}>로그인 페이지로 이동</button>
-        </Link>
-      </CardContent>
-    </Card>
+    <div className={styles.authCard}>
+      <Image
+        src="/next.svg" // Placeholder for CoUp Logo
+        alt="CoUp Logo"
+        className={styles.authLogo}
+        width={100}
+        height={40}
+        priority
+      />
+      <h2 className={styles.authTitle}>회원가입</h2>
+      <SocialLoginButtons />
+      <div className={styles.divider}>
+        <span className={styles.dividerLine}></span>
+        <span className={styles.dividerText}>또는</span>
+        <span className={styles.dividerLine}></span>
+      </div>
+      <SignUpForm />
+      <p className={styles.toggleLink}>
+        이미 계정이 있으신가요? <Link href="/sign-in">로그인</Link>
+      </p>
+    </div>
   );
 }

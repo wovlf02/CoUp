@@ -1,0 +1,40 @@
+.calendarPageContainer {
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.5rem; /* space-x-2 */
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr; /* grid-cols-1 */
+  gap: 1.5rem; /* gap-6 */
+}
+
+@media (min-width: 1024px) { /* lg */
+  .contentGrid {
+    grid-template-columns: repeat(3, 1fr); /* lg:grid-cols-3 */
+  }
+
+  .calendarViewWrapper {
+    grid-column: span 2 / span 2; /* lg:col-span-2 */
+  }
+
+  .eventListWrapper {
+    grid-column: span 1 / span 1; /* lg:col-span-1 */
+  }
+}

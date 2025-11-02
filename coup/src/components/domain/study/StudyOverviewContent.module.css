@@ -1,0 +1,11 @@
+.overviewContentContainer {
+  display: grid;
+  grid-template-columns: 1fr; /* Default to single column */
+  gap: 1.5rem; /* gap-6 */
+}
+
+@media (min-width: 1024px) { /* lg */
+  .overviewContentContainer {
+    grid-template-columns: repeat(2, 1fr); /* lg:grid-cols-2 */
+  }
+}

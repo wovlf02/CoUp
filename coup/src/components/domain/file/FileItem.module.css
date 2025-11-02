@@ -1,0 +1,62 @@
+.fileItemContainer {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fileItemContainer:last-child {
+  border-bottom: none;
+}
+
+.fileIcon {
+  margin-right: 1rem;
+}
+
+.fileInfo {
+  flex-grow: 1;
+}
+
+.fileName {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.fileName:hover {
+  text-decoration: underline;
+}
+
+.fileMeta {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+.uploader,
+.date,
+.size {
+  margin-right: 0.75rem;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.downloadButton,
+.deleteButton {
+  background: none;
+  border: 1px solid var(--color-border);
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.downloadButton:hover,
+.deleteButton:hover {
+  background-color: var(--color-background-secondary);
+}

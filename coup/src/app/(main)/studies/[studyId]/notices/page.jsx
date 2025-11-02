@@ -8,6 +8,16 @@ export default function StudyNoticesPage({ params }) {
   // In a real application, you would check user role to conditionally render the button
   const canCreateNotice = true; // Placeholder
 
+  const handleEditNotice = (noticeId) => {
+    console.log('Edit notice:', noticeId);
+    // TODO: Open edit modal
+  };
+
+  const handleDeleteNotice = (noticeId) => {
+    console.log('Delete notice:', noticeId);
+    // TODO: Implement delete logic
+  };
+
   return (
     <div className={styles.noticesPageContainer}>
       <div className={styles.header}>
@@ -18,7 +28,7 @@ export default function StudyNoticesPage({ params }) {
           </Button>
         )}
       </div>
-      <NoticeList studyId={studyId} />
+      <NoticeList studyId={studyId} onEdit={handleEditNotice} onDelete={handleDeleteNotice} />
     </div>
   );
 }

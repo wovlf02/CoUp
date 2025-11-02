@@ -1,0 +1,20 @@
+.dialogContent {
+  max-width: 400px; /* sm:max-w-[400px] */
+  text-align: center;
+}
+
+.messageContainer {
+  padding-top: 1rem; /* py-4 */
+  padding-bottom: 1rem; /* py-4 */
+}
+
+.messageText {
+  font-size: 1rem; /* text-base */
+  color: var(--color-text-primary); /* text-gray-800 */
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: center;
+  gap: 1rem; /* space-x-4 */
+}

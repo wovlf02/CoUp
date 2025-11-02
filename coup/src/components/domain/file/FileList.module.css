@@ -1,0 +1,13 @@
+.fileListContainer {
+  background-color: var(--color-background-primary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-top: 1.5rem; /* mt-6 */
+}
+
+.emptyMessage {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+}

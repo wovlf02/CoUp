@@ -1,0 +1,12 @@
+.noticeListContainer {
+  background-color: var(--color-background-primary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.emptyMessage {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+}

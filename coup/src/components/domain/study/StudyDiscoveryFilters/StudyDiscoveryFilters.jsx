@@ -9,7 +9,7 @@ function StudyDiscoveryFilters() {
   return (
     <Card className={styles.filtersCard}>
       <CardHeader>
-        <CardTitle>필터</CardTitle>
+        <CardTitle className={styles.cardTitle}>필터</CardTitle>
       </CardHeader>
       <CardContent className={styles.filtersContent}>
         <CategoryFilter />

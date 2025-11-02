@@ -1,0 +1,26 @@
+.studyHeaderCard {
+  padding: 1rem; /* p-4 */
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* space-x-4 */
+  margin-bottom: 1.5rem; /* mb-6 */
+  background-color: var(--color-background-primary);
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+}
+
+.studyLogo {
+  border-radius: 12px; /* More rounded for claymorphism */
+  object-fit: cover;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Subtle claymorphism for logo */
+}
+
+.studyName {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+  color: var(--color-text-primary);
+}
+
+.studyDescription {
+  color: var(--color-text-secondary); /* text-gray-600 */
+}

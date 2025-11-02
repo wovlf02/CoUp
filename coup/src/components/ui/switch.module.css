@@ -11,34 +11,36 @@
 .switchLabel {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
-  background-color: #ccc;
-  border-radius: 24px;
+  width: 48px; /* Slightly wider */
+  height: 28px; /* Slightly taller */
+  background-color: var(--color-neutral-medium); /* Neutral background for off state */
+  border-radius: 14px; /* Half of height for pill shape */
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05), inset -2px -2px 5px rgba(255, 255, 255, 0.5); /* Inset claymorphism */
 }
 
 .switchInput:checked + .switchLabel {
-  background-color: #0070f3;
+  background-color: var(--color-primary); /* Primary color for on state */
 }
 
 .switchToggle {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 4px; /* Center vertically */
+  left: 4px; /* Initial position */
   width: 20px;
   height: 20px;
-  background-color: #fff;
+  background-color: var(--color-background-primary); /* White toggle */
   border-radius: 50%;
-  transition: transform 0.3s;
+  transition: transform 0.3s ease;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Small claymorphism shadow for toggle */
 }
 
 .switchInput:checked + .switchLabel .switchToggle {
-  transform: translateX(20px);
+  transform: translateX(20px); /* Move to the right */
 }
 
 .switchText {
   font-size: 1rem;
-  color: #333;
+  color: var(--color-text-primary);
 }

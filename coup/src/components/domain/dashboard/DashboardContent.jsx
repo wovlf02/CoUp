@@ -1,24 +1,23 @@
-import React from 'react';
-import MyStudiesSummary from './MyStudiesSummary';
-import RecommendedStudies from './RecommendedStudies';
-import RecentActivityFeed from './RecentActivityFeed';
-import QuickStartButtons from './QuickStartButtons';
+import MyStudiesSummary from "./MyStudiesSummary";
+import RecommendedStudies from "./RecommendedStudies";
+import RecentActivityFeed from "./RecentActivityFeed";
 import styles from './DashboardContent.module.css';
 
-function DashboardContent() {
-  const userName = "사용자"; // Replace with actual user name from auth context
-
+export default function DashboardContent() {
   return (
     <div className={styles.dashboardContainer}>
-      <h1 className={styles.welcomeMessage}>{userName}님, 환영합니다!</h1>
+      <h1 className={styles.welcomeMessage}>OOO님, 환영합니다!</h1> {/* Placeholder for user's name */}
       <div className={styles.dashboardGrid}>
         <MyStudiesSummary />
         <RecommendedStudies />
         <RecentActivityFeed />
       </div>
-      <QuickStartButtons />
+      {/* Quick Start Buttons */}
+      <div className={styles.quickStartButtons}>
+        {/* TODO: Implement actual Button components */}
+        <button className={styles.createStudyButton}>새 스터디 만들기</button>
+        <button className={styles.exploreStudiesButton}>스터디 탐색하기</button>
+      </div>
     </div>
   );
 }
-
-export default DashboardContent;

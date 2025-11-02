@@ -1,5 +1,14 @@
 .filtersCard {
-  /* Add card specific styles if needed */
+  padding: 1rem; /* p-4 */
+  background-color: var(--color-background-primary);
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+}
+
+.cardTitle {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  color: var(--color-text-primary);
 }
 
 .filtersContent {
@@ -7,3 +16,4 @@
   flex-direction: column;
   gap: 15px;
 }
+

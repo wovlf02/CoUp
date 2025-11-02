@@ -1,5 +1,15 @@
 .myStudiesCard {
-  /* Add card specific styles if needed */
+  padding: 1rem; /* p-4 */
+  background-color: var(--color-background-primary);
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+}
+
+.cardTitle {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 1rem; /* mb-4 */
+  color: var(--color-text-primary);
 }
 
 .studyList {

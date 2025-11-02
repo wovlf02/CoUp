@@ -1,0 +1,14 @@
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.toggleGroup {
+  display: flex;
+  gap: 1rem;
+}
+
+.errorMessage {
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}

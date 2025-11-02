@@ -1,0 +1,9 @@
+.controlBarContainer {
+  display: flex;
+  justify-content: center;
+  padding: 1rem; /* p-4 */
+  background-color: var(--color-background-primary); /* Use primary background */
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+  gap: 1rem; /* space-x-4 */
+}

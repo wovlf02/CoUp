@@ -1,34 +1,108 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Pastel Colors */
+  --color-pastel-pink: #FFD1DC; /* Light Pink */
+  --color-pastel-pink-rgb: 255, 209, 220;
+  --color-pastel-blue: #A7D9F0; /* Light Blue */
+  --color-pastel-blue-rgb: 167, 217, 240;
+  --color-pastel-green: #D4EDDA; /* Light Green */
+  --color-pastel-green-rgb: 212, 237, 218;
+  --color-pastel-yellow: #FFF3CD; /* Light Yellow */
+  --color-pastel-yellow-rgb: 255, 243, 205;
+  --color-pastel-purple: #E0BBE4; /* Light Purple */
+  --color-pastel-purple-rgb: 224, 187, 228;
+
+  /* Neutral Colors */
+  --color-neutral-lightest: #F8F9FA;
+  --color-neutral-light: #E9ECEF;
+  --color-neutral-medium: #DEE2E6;
+  --color-neutral-dark: #495057;
+  --color-neutral-darkest: #212529;
+
+  /* Semantic Colors */
+  --color-primary: var(--color-pastel-blue);
+  --color-primary-rgb: var(--color-pastel-blue-rgb);
+  --color-primary-dark: #87C3E0;
+  --color-secondary: var(--color-pastel-purple);
+  --color-secondary-rgb: var(--color-pastel-purple-rgb);
+  --color-secondary-dark: #C09ED0;
+  --color-success: var(--color-pastel-green);
+  --color-danger: #F08080; /* Coral */
+  --color-warning: var(--color-pastel-yellow);
+  --color-info: #87CEEB; /* Sky Blue */
+
+  /* Backgrounds */
+  --background: var(--color-neutral-lightest);
+  --foreground: var(--color-neutral-darkest);
   --color-background-primary: #ffffff;
-  --color-background-secondary: #f0f2f5;
-  --color-border: #e0e0e0;
-  --color-text-primary: #171717;
-  --color-text-secondary: #555555;
-  --color-primary: #007bff;
-  --color-secondary: #6c757d;
-  --color-success: #28a745;
-  --color-danger: #dc3545;
-  --color-warning: #ffc107;
-  --color-info: #17a2b8;
+  --color-background-secondary: var(--color-neutral-light);
+  --color-border: var(--color-neutral-medium);
+
+  /* Text Colors */
+  --color-text-primary: var(--color-neutral-darkest);
+  --color-text-secondary: var(--color-neutral-dark);
+
+  /* Shadows for Claymorphism */
+  --shadow-clay-light: 5px 5px 10px rgba(0, 0, 0, 0.1), -5px -5px 10px rgba(255, 255, 255, 0.7);
+  --shadow-clay-dark: 5px 5px 10px rgba(0, 0, 0, 0.3), -5px -5px 10px rgba(255, 255, 255, 0.1);
+
+  /* Glassmorphism effect */
+  --glass-background: rgba(255, 255, 255, 0.2);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+  --glass-backdrop-filter: blur(10px);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --color-background-primary: #1a1a1a;
-    --color-background-secondary: #2d2d2d;
-    --color-border: #444444;
-    --color-text-primary: #ededed;
-    --color-text-secondary: #bbbbbb;
-    --color-primary: #66b3ff;
-    --color-secondary: #99aab5;
-    --color-success: #4caf50;
-    --color-danger: #ef5350;
-    --color-warning: #ffeb3b;
-    --color-info: #29b6f6;
+    /* Dark mode pastel adjustments */
+    --color-pastel-pink: #8B455F;
+    --color-pastel-pink-rgb: 139, 69, 95;
+    --color-pastel-blue: #4682B4;
+    --color-pastel-blue-rgb: 70, 130, 180;
+    --color-pastel-green: #5F9EA0;
+    --color-pastel-green-rgb: 95, 158, 160;
+    --color-pastel-yellow: #B8860B;
+    --color-pastel-yellow-rgb: 184, 134, 11;
+    --color-pastel-purple: #6A5ACD;
+    --color-pastel-purple-rgb: 106, 90, 205;
+
+    /* Neutral Colors for Dark Mode */
+    --color-neutral-lightest: #212529;
+    --color-neutral-light: #343A40;
+    --color-neutral-medium: #495057;
+    --color-neutral-dark: #CED4DA;
+    --color-neutral-darkest: #F8F9FA;
+
+    /* Semantic Colors for Dark Mode */
+    --color-primary: var(--color-pastel-blue);
+    --color-primary-rgb: var(--color-pastel-blue-rgb);
+    --color-primary-dark: #36648B;
+    --color-secondary: var(--color-pastel-purple);
+    --color-secondary-rgb: var(--color-pastel-purple-rgb);
+    --color-secondary-dark: #5A4BBD;
+    --color-success: var(--color-pastel-green);
+    --color-danger: #CD5C5C;
+    --color-warning: var(--color-pastel-yellow);
+    --color-info: #6A5ACD;
+
+    /* Backgrounds for Dark Mode */
+    --background: var(--color-neutral-lightest);
+    --foreground: var(--color-neutral-darkest);
+    --color-background-primary: var(--color-neutral-light);
+    --color-background-secondary: var(--color-neutral-medium);
+    --color-border: #6C757D;
+
+    /* Text Colors for Dark Mode */
+    --color-text-primary: var(--color-neutral-darkest);
+    --color-text-secondary: var(--color-neutral-dark);
+
+    /* Shadows for Claymorphism in Dark Mode */
+    --shadow-clay-light: 5px 5px 10px rgba(0, 0, 0, 0.5), -5px -5px 10px rgba(50, 50, 50, 0.3);
+    --shadow-clay-dark: 5px 5px 10px rgba(0, 0, 0, 0.7), -5px -5px 10px rgba(50, 50, 50, 0.1);
+
+    /* Glassmorphism effect for Dark Mode */
+    --glass-background: rgba(0, 0, 0, 0.2);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --glass-backdrop-filter: blur(10px);
   }
 }
 
@@ -41,7 +115,7 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -78,4 +152,3 @@ a {
     color-scheme: dark;
   }
 }
-

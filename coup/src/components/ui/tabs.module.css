@@ -4,28 +4,39 @@
 
 .tabList {
   display: flex;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 16px;
+  background-color: var(--color-background-secondary); /* Subtle background for the tab list */
+  border-radius: 12px; /* Rounded corners for the tab container */
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05), inset -2px -2px 5px rgba(255, 255, 255, 0.5); /* Inset claymorphism */
+  overflow: hidden; /* Ensures rounded corners are visible */
 }
 
 .tabTrigger {
+  flex: 1; /* Distribute space evenly */
   padding: 10px 15px;
   border: none;
   background-color: transparent;
   cursor: pointer;
   font-size: 16px;
-  color: #666;
-  transition: color 0.3s ease, border-bottom 0.3s ease;
-  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  transition: all 0.3s ease;
+  position: relative; /* For the active indicator */
+  z-index: 1; /* Ensure active indicator is above background */
 }
 
 .tabTrigger:hover {
-  color: #333;
+  color: var(--color-text-primary);
+  background-color: rgba(var(--color-primary-rgb), 0.05); /* Subtle hover effect */
 }
 
 .tabTrigger.active {
-  color: #0070f3;
-  border-bottom: 2px solid #0070f3;
+  color: var(--color-primary);
+  font-weight: 600;
+  background-color: var(--color-background-primary); /* Active tab background */
+  box-shadow: var(--shadow-clay-light); /* Outset claymorphism for active tab */
+  border-radius: 12px; /* Match container */
+  margin: 4px; /* Create a visual separation */
 }
 
 .tabContent {

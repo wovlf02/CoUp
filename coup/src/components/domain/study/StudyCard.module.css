@@ -4,63 +4,77 @@
 }
 
 .studyCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  text-align: center;
-  transition: transform 0.2s ease-in-out;
+  width: 100%; /* w-full */
+  cursor: pointer;
+  transition: all 0.3s ease; /* transition-shadow duration-200 */
+  background-color: var(--color-background-primary);
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+  overflow: hidden;
 }
 
 .studyCard:hover {
-  transform: translateY(-5px);
+  box-shadow: var(--shadow-clay-dark); /* Deeper shadow on hover */
+  transform: translateY(-2px); /* Slight lift effect */
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%; /* w-full */
+  height: 8rem; /* h-32 */
 }
 
 .studyImage {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  border-top-left-radius: 16px; /* rounded-t-lg */
+  border-top-right-radius: 16px; /* rounded-t-lg */
   object-fit: cover;
-  margin-bottom: 15px;
 }
 
 .cardContent {
-  width: 100%;
+  padding: 1rem; /* p-4 */
 }
 
 .studyName {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 0.5rem; /* mb-2 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--color-text-primary);
 }
 
 .studyDescription {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  margin-bottom: 10px;
-  height: 40px; /* Limit description to 2 lines */
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.875rem; /* text-sm */
+  color: var(--color-text-secondary); /* text-gray-600 */
+  margin-bottom: 0.75rem; /* mb-3 */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.studyMeta {
+.badgeContainer {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
+  gap: 0.5rem; /* gap-2 */
+  margin-bottom: 0.75rem; /* mb-3 */
 }
 
-.studyCategory,
-.studyMembers,
-.studyOwner,
-.studyDate {
-  background-color: var(--color-background-secondary);
-  padding: 5px 10px;
-  border-radius: 5px;
+.ownerInfo {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem; /* text-sm */
+  color: var(--color-text-secondary); /* text-gray-500 */
+}
+
+.ownerImage {
+  border-radius: 9999px; /* rounded-full */
+  margin-right: 0.5rem; /* mr-2 */
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1); /* Subtle claymorphism for image */
+}
+
+.createdAt {
+  margin-left: auto; /* ml-auto */
+  font-size: 0.75rem; /* text-xs */
 }

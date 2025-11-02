@@ -1,0 +1,52 @@
+.dialogContent {
+  max-width: 450px; /* sm:max-w-[450px] */
+}
+
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 1rem; /* py-4 */
+  padding-bottom: 1rem; /* py-4 */
+}
+
+.imagePreviewContainer {
+  position: relative;
+  width: 6rem; /* w-24 */
+  height: 6rem; /* h-24 */
+  border-radius: 9999px; /* rounded-full */
+  overflow: hidden;
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+.imagePreview {
+  object-fit: cover;
+}
+
+.uploadArea {
+  width: 100%;
+  margin-bottom: 1rem; /* mb-4 */
+  padding: 1.5rem; /* p-6 */
+  border: 2px dashed var(--color-border); /* border-2 border-dashed border-gray-300 */
+  border-radius: 0.5rem; /* rounded-lg */
+  text-align: center;
+}
+
+.uploadText {
+  color: var(--color-text-secondary); /* text-gray-500 */
+  margin-bottom: 0.5rem; /* mb-2 */
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.deleteButton {
+  margin-top: 1rem; /* mt-4 */
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem; /* space-x-4 */
+}

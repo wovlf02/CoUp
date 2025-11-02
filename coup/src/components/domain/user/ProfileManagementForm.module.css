@@ -1,0 +1,23 @@
+.profileManagementCard {
+  padding: 1.5rem; /* p-6 */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* space-y-6 */
+}
+
+.emailSection {
+  /* No specific styles needed for the div itself */
+}
+
+.emailLabel {
+  margin-bottom: 0.5rem; /* mb-2 */
+  display: block;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+  color: var(--color-text-secondary); /* text-gray-700 */
+}
+
+.emailText {
+  font-size: 1rem; /* text-base */
+  color: var(--color-text-secondary); /* text-gray-600 */
+}

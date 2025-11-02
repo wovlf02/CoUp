@@ -1,0 +1,8 @@
+.bioTextareaContainer {
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+.bioLabel {
+  margin-bottom: 0.5rem; /* mb-2 */
+  display: block;
+}

@@ -3,6 +3,8 @@
   flex-direction: column;
   height: 100%;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 16px; /* More rounded for claymorphism */
   overflow: hidden;
+  background-color: var(--color-background-primary); /* Ensure background is primary */
+  box-shadow: var(--shadow-clay-light); /* Subtle claymorphism shadow */
 }

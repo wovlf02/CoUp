@@ -1,0 +1,9 @@
+.videoCallPageContainer {
+  padding: 1rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 700; /* font-bold */
+  margin-bottom: 1.5rem; /* mb-6 */
+}

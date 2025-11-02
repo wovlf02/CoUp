@@ -9,30 +9,32 @@
 
 .dropdownContent {
   position: absolute;
-  background-color: #fff;
+  background-color: var(--color-background-primary);
   min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-  border-radius: 4px;
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+  z-index: 1000; /* Ensure it's above other content */
+  border-radius: 12px; /* More rounded for claymorphism */
   overflow: hidden;
   right: 0; /* Align to the right of the trigger */
-  margin-top: 8px; /* Space between trigger and content */
+  margin-top: 10px; /* Space between trigger and content */
+  border: 1px solid var(--color-border); /* Subtle border */
 }
 
 .dropdownMenuItem {
-  color: black;
+  color: var(--color-text-primary);
   padding: 12px 16px;
   text-decoration: none;
   display: block;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .dropdownMenuItem:hover {
-  background-color: #f1f1f1;
+  background-color: var(--color-background-secondary);
 }
 
 .dropdownMenuSeparator {
   height: 1px;
-  background-color: #eee;
+  background-color: var(--color-border);
   margin: 4px 0;
 }

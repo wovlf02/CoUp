@@ -22,6 +22,7 @@
 .senderAvatar {
   border-radius: 50%;
   object-fit: cover;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1); /* Subtle claymorphism for avatar */
 }
 
 .senderName {
@@ -38,20 +39,22 @@
 .messageText {
   background-color: var(--color-background-secondary);
   padding: 10px 15px;
-  border-radius: 15px;
+  border-radius: 18px; /* More rounded for claymorphism bubble */
   font-size: 0.9rem;
   color: var(--color-text-primary);
   word-break: break-word;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05), -2px -2px 5px rgba(255, 255, 255, 0.5); /* Claymorphism effect */
 }
 
 .ownMessage .messageText {
   background-color: var(--color-primary);
   color: white;
-  border-bottom-right-radius: 0;
+  border-bottom-right-radius: 6px; /* Adjust corner for bubble tail */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1), -2px -2px 5px rgba(255, 255, 255, 0.7); /* Slightly stronger shadow for own message */
 }
 
 .otherMessage .messageText {
-  border-bottom-left-radius: 0;
+  border-bottom-left-radius: 6px; /* Adjust corner for bubble tail */
 }
 
 .messageTime {

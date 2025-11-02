@@ -1,0 +1,39 @@
+.dialogContent {
+  max-width: 600px; /* sm:max-w-[600px] */
+  background-color: var(--color-background-primary); /* Ensure background is primary */
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+}
+
+.formGrid {
+  display: grid;
+  gap: 1rem; /* gap-4 */
+  padding-top: 1rem; /* py-4 */
+  padding-bottom: 1rem; /* py-4 */
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* grid-cols-4 */
+  align-items: center;
+  gap: 1rem; /* gap-4 */
+}
+
+.formRowStart {
+  align-items: flex-start;
+}
+
+.labelRight {
+  text-align: right;
+  color: var(--color-text-primary);
+}
+
+.colSpan3 {
+  grid-column: span 3 / span 3;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem; /* space-x-4 */
+}

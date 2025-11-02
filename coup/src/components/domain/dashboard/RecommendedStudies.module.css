@@ -1,5 +1,15 @@
 .recommendedStudiesCard {
-  /* Add card specific styles if needed */
+  padding: 1rem; /* p-4 */
+  background-color: var(--color-background-primary);
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+}
+
+.cardTitle {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 1rem; /* mb-4 */
+  color: var(--color-text-primary);
 }
 
 .studyGrid {
@@ -15,14 +25,16 @@
 
 .studyCard {
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 12px; /* More rounded for claymorphism */
   padding: 10px;
   text-align: center;
-  transition: box-shadow 0.2s ease-in-out;
+  transition: all 0.3s ease;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05), inset -2px -2px 5px rgba(255, 255, 255, 0.5); /* Inset claymorphism */
 }
 
 .studyCard:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-clay-dark); /* Deeper shadow on hover */
+  transform: translateY(1px); /* Slight press effect */
 }
 
 .studyCardImage {

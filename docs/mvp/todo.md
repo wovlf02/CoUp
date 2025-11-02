@@ -34,40 +34,43 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 1.6. ESLint, Prettier 설정 확인 및 적용
 - [x] `eslint.config.mjs` 파일 확인 및 프로젝트 코딩 컨벤션에 맞게 규칙 조정
 - [x] Prettier 설정 파일 (`.prettierrc.json`) 생성 및 코드 포맷팅 규칙 정의
+- [x] `prettier-plugin-tailwindcss` 제거 (Tailwind CSS 미사용 원칙 준수)
 - [ ] Git Hooks (husky, lint-staged) 설정 (선택 사항, 코드 품질 자동화)
 
 ### 1.7. 전역 스타일 (`globals.css`) 설정
 - [x] `src/app/globals.css` 파일 확인 및 기본 스타일 (색상 변수, 폰트, reset CSS) 정의
-- [x] Tailwind CSS 미사용 원칙 준수 확인
+- [x] Tailwind CSS 미사용 원칙 준수 확인 (인라인 Tailwind 클래스 제거 및 CSS Modules 전환)
+- [x] 파스텔 톤 색상 팔레트, 클레이모피즘/글래스모피즘 CSS 변수 정의 및 폰트 업데이트
 
 ## 2. 공통 컴포넌트 및 유틸리티 개발
 
 ### 2.1. UI 컴포넌트 (`components/ui/`)
-- [x] `button.jsx`: 버튼 컴포넌트 (Primary, Secondary, Outline, Icon 등)
-- [x] `input.jsx`: 입력 필드 컴포넌트 (텍스트, 숫자, 이메일 등)
-- [x] `card.jsx`: 카드 컨테이너 컴포넌트 (그림자, 둥근 모서리 포함)
-- [x] `dialog.jsx`: 모달/다이얼로그 컴포넌트 (오버레이, 닫기 버튼 포함)
-- [x] `tabs.jsx`: 탭 네비게이션 컴포넌트
-- [x] `avatar.jsx`: 아바타 (프로필 이미지) 컴포넌트
-- [x] `badge.jsx`: 태그/뱃지 컴포넌트
-- [x] `dropdown-menu.jsx`: 드롭다운 메뉴 컴포넌트
-- [x] `label.jsx`: 라벨 컴포넌트
-- [x] `textarea.jsx`: 텍스트 에어리어 컴포넌트
-- [x] `checkbox.jsx`: 체크박스 컴포넌트
-- [x] `switch.jsx`: 토글 스위치 컴포넌트
-- [x] `calendar.jsx`: 캘린더 UI 컴포넌트 (날짜 선택 기능)
+- [x] `button.jsx`: 버튼 컴포넌트 (Primary, Secondary, Outline, Icon 등) - **스타일링 개선 완료**
+- [x] `input.jsx`: 입력 필드 컴포넌트 (텍스트, 숫자, 이메일 등) - **스타일링 개선 완료**
+- [x] `card.jsx`: 카드 컨테이너 컴포넌트 (그림자, 둥근 모서리 포함) - **스타일링 개선 완료**
+- [x] `dialog.jsx`: 모달/다이얼로그 컴포넌트 (오버레이, 닫기 버튼 포함) - **스타일링 개선 완료**
+- [x] `tabs.jsx`: 탭 네비게이션 컴포넌트 - **스타일링 개선 완료**
+- [x] `avatar.jsx`: 아바타 (프로필 이미지) 컴포넌트 - **스타일링 개선 완료**
+- [x] `badge.jsx`: 태그/뱃지 컴포넌트 - **스타일링 개선 완료**
+- [x] `dropdown-menu.jsx`: 드롭다운 메뉴 컴포넌트 - **스타일링 개선 완료**
+- [x] `label.jsx`: 라벨 컴포넌트 - **스타일링 개선 완료**
+- [x] `textarea.jsx`: 텍스트 에어리어 컴포넌트 - **스타일링 개선 완료**
+- [x] `checkbox.jsx`: 체크박스 컴포넌트 - **스타일링 개선 완료**
+- [x] `switch.jsx`: 토글 스위치 컴포넌트 - **스타일링 개선 완료**
+- [x] `calendar.jsx`: 캘린더 UI 컴포넌트 (날짜 선택 기능) - **스타일링 개선 완료**
+- [x] `MarkdownEditor.jsx`: Markdown 에디터 컴포넌트 구현
 - [x] 기타 필요한 UI 프리미티브 컴포넌트 구현
 
 ### 2.2. 공통 레이아웃 컴포넌트 (`components/common/`)
-- [x] `Header/Header.jsx`: 전역 헤더 레이아웃 (로고, 검색, 알림, 사용자 프로필 드롭다운)
-- [x] `Header/HeaderSearch.tsx`: 헤더 내 검색 바 컴포넌트
-- [x] `Header/NotificationBell.jsx`: 알림 아이콘 및 알림 수 표시 컴포넌트
-- [x] `Header/UserProfileDropdown.jsx`: 사용자 프로필 이미지와 드롭다운 메뉴 컴포넌트
-- [x] `Sidebar/Sidebar.jsx`: 전역 사이드바 레이아웃
-- [x] `Sidebar/SidebarNav.jsx`: 사이드바 네비게이션 링크 목록 컴포넌트
-- [x] `Footer/Footer.jsx`: 전역 푸터 컴포넌트
+- [x] `Header/Header.jsx`: 전역 헤더 레이아웃 (로고, 검색, 알림, 사용자 프로필 드롭다운) - **스타일링 개선 완료**
+- [x] `Header/HeaderSearch.tsx`: 헤더 내 검색 바 컴포넌트 - **스타일링 개선 완료**
+- [x] `Header/NotificationBell.jsx`: 알림 아이콘 및 알림 수 표시 컴포넌트 - **스타일링 개선 완료**
+- [x] `Header/UserProfileDropdown.jsx`: 사용자 프로필 이미지와 드롭다운 메뉴 컴포넌트 - **스타일링 개선 완료**
+- [x] `Sidebar/Sidebar.jsx`: 전역 사이드바 레이아웃 - **스타일링 개선 완료**
+- [x] `Sidebar/SidebarNav.jsx`: 사이드바 네비게이션 링크 목록 컴포넌트 - **스타일링 개선 완료**
+- [x] `Footer/Footer.jsx`: 전역 푸터 컴포넌트 - **스타일링 개선 완료**
 - [x] `LayoutProvider.jsx`: Context Provider 등을 포함하는 레이아웃 관련 컴포넌트
-- [x] `LoadingSpinner.jsx`: 로딩 스피너 컴포넌트
+- [x] `LoadingSpinner.jsx`: 로딩 스피너 컴포넌트 - **스타일링 개선 완료**
 
 ### 2.3. 전역 Context Provider (`components/providers/`)
 - [x] `QueryProvider.jsx`: React Query Provider 설정 및 클라이언트 인스턴스 제공
@@ -205,18 +208,19 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [x] 네비게이션 바, 히어로 섹션, 서비스 소개 섹션, 사용자 후기/사례 섹션, 푸터 컴포넌트 구현
 
 ### 5.2. 인증 페이지 (`app/(auth)/sign-in/page.jsx`, `app/(auth)/sign-up/page.jsx`, `app/(auth)/layout.jsx`)
-- [ ] UI/UX 명세: 02. 로그인/회원가입 페이지 기반으로 구현
-- [ ] `SignInForm.jsx`, `SignUpForm.jsx` (Post-MVP), `SocialLoginButtons.jsx` 컴포넌트 구현
-- [ ] `(auth)/layout.jsx` 구현 (중앙 정렬, 배경 스타일)
+- [x] UI/UX 명세: 02. 로그인/회원가입 페이지 기반으로 구현
+- [x] `SignInForm.jsx`, `SignUpForm.jsx` (Post-MVP) 컴포넌트 구현
+- [x] `SocialLoginButtons.jsx` 컴포넌트 구현
+- [x] `(auth)/layout.jsx` 구현 (중앙 정렬, 배경 스타일) - **스타일링 개선 완료**
 
 ### 5.3. 메인 대시보드 (`app/(main)/page.jsx`, `app/(main)/layout.jsx`)
-- [ ] UI/UX 명세: 03. 메인 대시보드 기반으로 구현
+- [x] UI/UX 명세: 03. 메인 대시보드 기반으로 구현
 - [x] `(main)/layout.jsx` 구현 (Header, Sidebar 포함, AuthProvider, QueryProvider 래핑)
-- [ ] `DashboardContent.jsx`, `MyStudiesSummary.jsx`, `RecommendedStudies.jsx`, `RecentActivityFeed.jsx` 컴포넌트 구현
+- [x] `DashboardContent.jsx`, `MyStudiesSummary.jsx`, `RecommendedStudies.jsx`, `RecentActivityFeed.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
 
 ### 5.4. 스터디 탐색/목록 페이지 (`app/(main)/studies/page.jsx`)
-- [ ] UI/UX 명세: 04. 스터디 탐색/목록 페이지 기반으로 구현
-- [ ] `StudyDiscoveryFilters.jsx`, `StudyList.jsx`, `StudyCard.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 04. 스터디 탐색/목록 페이지 기반으로 구현
+- [x] `StudyDiscoveryFilters.jsx`, `StudyList.jsx`, `StudyCard.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
 
 ### 5.5. 스터디 생성 페이지 (`app/(main)/studies/create/page.jsx`)
 - [x] UI/UX 명세: 05. 스터디 생성 페이지 기반으로 구현
@@ -224,13 +228,13 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 
 ### 5.6. 스터디 상세 페이지 - 개요 (`app/(main)/studies/[studyId]/page.jsx`, `app/(main)/studies/[studyId]/layout.jsx`)
 - [x] UI/UX 명세: 06. 스터디 상세 페이지 (Overview) 기반으로 구현
-- [x] `(main)/studies/[studyId]/layout.jsx` 구현 (StudyHeader, StudyTabNavigation 포함)
-- [ ] `StudyHeader.jsx`, `StudyTabNavigation.jsx` 컴포넌트 구현
-- [ ] `StudyOverviewContent.jsx` (내부 컴포넌트: `StudyGoalCard.jsx`, `StudyRulesCard.jsx`, `StudyMembersPreview.jsx`) 구현
+- [x] `(main)/studies/[studyId]/layout.jsx` 구현 (StudyHeader, StudyTabNavigation 포함) - **스타일링 개선 완료**
+- [x] `StudyHeader.jsx`, `StudyTabNavigation.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
+- [x] `StudyOverviewContent.jsx` (내부 컴포넌트: `StudyGoalCard.jsx`, `StudyRulesCard.jsx`, `StudyMembersPreview.jsx`) 구현
 
 ### 5.7. 스터디 상세 페이지 - 채팅 (`app/(main)/studies/[studyId]/chat/page.jsx`)
 - [x] UI/UX 명세: 07. 스터디 상세 페이지 (Chat) 기반으로 구현
-- [x] `ChatWindow.jsx`, `MessageList.jsx`, `MessageBubble.jsx`, `MessageInputForm.jsx` 컴포넌트 구현
+- [x] `ChatWindow.jsx`, `MessageList.jsx`, `MessageBubble.jsx`, `MessageInputForm.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
 
 ### 5.8. 스터디 상세 페이지 - 공지사항 (`app/(main)/studies/[studyId]/notices/page.jsx`)
 - [x] UI/UX 명세: 10. 스터디 상세 페이지 (Notices) 기반으로 구현
@@ -241,45 +245,45 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [x] `FileList.jsx`, `FileItem.jsx`, `FileUploadArea.jsx` 컴포넌트 구현
 
 ### 5.10. 스터디 상세 페이지 - 캘린더 (`app/(main)/studies/[studyId]/calendar/page.jsx`)
-- [ ] UI/UX 명세: 12. 스터디 상세 페이지 (Calendar) 기반으로 구현
-- [ ] `StudyCalendarView.jsx`, `CalendarControls.jsx`, `EventListForDate.jsx`, `CalendarEventItem.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 12. 스터디 상세 페이지 (Calendar) 기반으로 구현
+- [x] `StudyCalendarView.jsx`, `CalendarControls.jsx`, `EventListForDate.jsx`, `CalendarEventItem.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
 
 ### 5.11. 스터디 상세 페이지 - 할 일 (`app/(main)/studies/[studyId]/tasks/page.jsx`)
-- [ ] UI/UX 명세: 18. 스터디 상세 페이지 (Tasks) 기반으로 구현
-- [ ] `TaskList.jsx`, `TaskItem.jsx`, `TaskInput.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 18. 스터디 상세 페이지 (Tasks) 기반으로 구현
+- [x] `TaskList.jsx`, `TaskItem.jsx`, `TaskInput.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
 
 ### 5.12. 스터디 상세 페이지 - 화상 스터디 (`app/(main)/studies/[studyId]/video-call/page.jsx`)
-- [ ] UI/UX 명세: 19. 스터디 상세 페이지 (Video Call) 기반으로 구현
-- [ ] `VideoCallInterface.jsx`, `VideoGrid.jsx`, `ControlBar.jsx`, `ParticipantList.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 19. 스터디 상세 페이지 (Video Call) 기반으로 구현
+- [x] `VideoCallInterface.jsx`, `VideoGrid.jsx`, `ControlBar.jsx`, `ParticipantList.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
 
 ### 5.13. 마이페이지 (`app/(main)/me/page.jsx`)
-- [ ] UI/UX 명세: 08. 마이페이지 기반으로 구현
-- [ ] `ProfileManagementForm.jsx` (내부 컴포넌트: `ProfileImageSection.jsx`, `NicknameInput.jsx`, `BioTextarea.jsx`, `AccountActions.jsx`) 구현
+- [x] UI/UX 명세: 08. 마이페이지 기반으로 구현
+- [x] `ProfileManagementForm.jsx` (내부 컴포넌트: `ProfileImageSection.jsx`, `NicknameInput.jsx`, `BioTextarea.jsx`, `AccountActions.jsx`) 구현 - **스타일링 개선 완료**
 
 ### 5.14. 알림 목록 페이지 (`app/(main)/notifications/page.jsx`)
-- [ ] UI/UX 명세: 09. 알림 목록 페이지 기반으로 구현
-- [ ] `NotificationList.jsx`, `NotificationItem.jsx` 컴포넌트 구현
+- [x] UI/UX 명세: 09. 알림 목록 페이지 기반으로 구현
+- [x] `NotificationList.jsx`, `NotificationItem.jsx` 컴포넌트 구현 - **스타일링 개선 완료**
 
 ## 6. 모달 컴포넌트 개발 (`src/components/modals/`)
 
 ### 6.1. 공지사항 작성/수정 모달 (`NoticeCreateEditModal.jsx`)
-- [ ] UI/UX 명세: 14. 공지사항 작성/수정 모달 기반으로 구현
-- [ ] Markdown 에디터 통합 (라이브러리 선택 및 적용)
+- [x] UI/UX 명세: 14. 공지사항 작성/수정 모달 기반으로 구현
+- [x] Markdown 에디터 통합 (라이브러리 선택 및 적용) - **스타일링 개선 완료**
 
 ### 6.2. 일정 추가/수정 모달 (`EventAddEditModal.jsx`)
-- [ ] UI/UX 명세: 15. 일정 추가/수정 모달 기반으로 구현
-- [ ] 날짜/시간 선택 컴포넌트 통합
+- [x] UI/UX 명세: 15. 일정 추가/수정 모달 기반으로 구현
+- [x] 날짜/시간 선택 컴포넌트 통합 - **스타일링 개선 완료**
 
 ### 6.3. 프로필 이미지 변경 모달 (`ProfileImageChangeModal.jsx`)
-- [ ] UI/UX 명세: 16. 프로필 이미지 변경 모달 기반으로 구현
-- [ ] 이미지 업로드 기능 구현 (클라이언트 측 미리보기, S3 업로드 연동)
+- [x] UI/UX 명세: 16. 프로필 이미지 변경 모달 기반으로 구현
+- [x] 이미지 업로드 기능 구현 (클라이언트 측 미리보기, S3 업로드 연동) - **스타일링 개선 완료**
 
 ### 6.4. 범용 확인 모달 (`GeneralConfirmationModal.jsx`)
-- [ ] UI/UX 명세: 17. 범용 확인 모달 기반으로 구현
-- [ ] 재사용 가능한 메시지 및 액션 버튼 설정
+- [x] UI/UX 명세: 17. 범용 확인 모달 기반으로 구현
+- [x] 재사용 가능한 메시지 및 액션 버튼 설정 - **스타일링 개선 완료**
 
-### 6.5. 할 일 상세 정보 및 수정 모달 (`TaskDetailModal.jsx`)
-- [ ] 할 일 상세 정보 표시 및 수정 폼 구현
+- [x] 할 일 상세 정보 및 수정 모달 (`TaskDetailModal.jsx`)
+- [x] 할 일 상세 정보 표시 및 수정 폼 구현 - **스타일링 개선 완료**
 
 ## 7. 시그널링 서버 개발 (Node.js/Express.js/Socket.IO)
 

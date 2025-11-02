@@ -1,0 +1,14 @@
+.nicknameInputContainer {
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+.nicknameLabel {
+  margin-bottom: 0.5rem; /* mb-2 */
+  display: block;
+}
+
+.errorMessage {
+  color: var(--color-danger); /* text-red-500 */
+  font-size: 0.875rem; /* text-sm */
+  margin-top: 0.25rem; /* mt-1 */
+}

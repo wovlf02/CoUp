@@ -1,0 +1,18 @@
+.eventListContainer {
+  margin-top: 1.5rem; /* mt-6 */
+  background-color: var(--color-background-primary); /* Ensure background is primary */
+  border-radius: 16px; /* More rounded for claymorphism */
+  box-shadow: var(--shadow-clay-light); /* Claymorphism shadow */
+  padding: 1rem; /* Add padding */
+}
+
+.dateTitle {
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 0.75rem; /* mb-3 */
+  color: var(--color-text-primary);
+}
+
+.emptyMessage {
+  color: var(--color-text-secondary); /* text-gray-500 */
+}

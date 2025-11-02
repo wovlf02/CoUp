@@ -1,0 +1,86 @@
+.markdownEditorContainer {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-background-secondary);
+}
+
+.editorTextarea {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: var(--color-background-primary);
+}
+
+.editorTextarea:focus {
+  box-shadow: none;
+}
+
+.previewArea {
+  padding: 1rem;
+  background-color: var(--color-background-primary);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+.previewArea h1, .previewArea h2, .previewArea h3, .previewArea h4, .previewArea h5, .previewArea h6 {
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.previewArea h1 { font-size: 2em; }
+.previewArea h2 { font-size: 1.5em; }
+.previewArea h3 { font-size: 1.17em; }
+
+.previewArea p {
+  margin-bottom: 1em;
+}
+
+.previewArea ul,
+.previewArea ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.previewArea ul {
+  list-style-type: disc;
+}
+
+.previewArea ol {
+  list-style-type: decimal;
+}
+
+.previewArea code {
+  background-color: var(--color-neutral-light);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', 'monospace';
+  font-size: 0.9em;
+}
+
+.previewArea pre {
+  background-color: var(--color-neutral-light);
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.previewArea blockquote {
+  border-left: 4px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding-left: 1em;
+  margin-left: 0;
+  margin-bottom: 1em;
+}

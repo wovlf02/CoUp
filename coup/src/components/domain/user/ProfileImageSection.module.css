@@ -1,0 +1,19 @@
+.profileImageSectionContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem; /* mb-6 */
+}
+
+.imageWrapper {
+  position: relative;
+  width: 8rem; /* w-32 */
+  height: 8rem; /* h-32 */
+  border-radius: 9999px; /* rounded-full */
+  overflow: hidden;
+  margin-bottom: 0.75rem; /* mb-3 */
+}
+
+.profileImage {
+  object-fit: cover;
+}
