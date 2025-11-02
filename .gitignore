@@ -1,2 +1,4 @@
 .idea/
 commit_message.txt
+node_modules/
+dist/
