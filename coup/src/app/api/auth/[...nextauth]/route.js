@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
+import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 
 const prisma = new PrismaClient();
 
@@ -30,12 +31,19 @@ export const authOptions = {
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.picture;
+        session.accessToken = token.accessToken; // Add accessToken to session
       }
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        // Sign a JWT with user info
+        token.accessToken = jwt.sign(
+          { id: user.id, email: user.email, name: user.name, image: user.image },
+          process.env.JWT_SECRET, // Use a separate secret for the access token
+          { expiresIn: '1h' } // Token expiration
+        );
       }
       return token;
     },

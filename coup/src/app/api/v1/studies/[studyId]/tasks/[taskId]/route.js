@@ -1,6 +1,7 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import prisma, { StudyMemberStatus, StudyRole } from '@/lib/db/prisma';
+import { publishMessage } from '@/lib/utils/redis';
 
 export async function PATCH(request, { params }) {
   try {
@@ -16,7 +17,7 @@ export async function PATCH(request, { params }) {
     // Check if the user is a member of the study group and has rights to update
     const existingTask = await prisma.task.findUnique({
       where: { id: taskId, studyGroupId: studyId },
-      select: { creatorId: true, assigneeId: true },
+      select: { creatorId: true, assigneeId: true, isCompleted: true }, // Select isCompleted to check for changes
     });
 
     if (!existingTask) {
@@ -25,7 +26,7 @@ export async function PATCH(request, { params }) {
 
     const studyGroup = await prisma.studyGroup.findUnique({
       where: { id: studyId },
-      select: { creatorId: true },
+      select: { creatorId: true, name: true }, // Select name for notification
     });
 
     if (!studyGroup) {
@@ -35,11 +36,11 @@ export async function PATCH(request, { params }) {
     const isCreator = studyGroup.creatorId === user.id;
 
     const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
+      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
       select: { role: true },
     });
 
-    const isAdmin = studyMember && studyMember.role === 'ADMIN';
+    const isAdmin = studyMember && studyMember.role === StudyRole.ADMIN;
 
     // Only creator, assignee, owner, or admin can update the task
     if (existingTask.creatorId !== user.id && existingTask.assigneeId !== user.id && !isCreator && !isAdmin) {
@@ -56,6 +57,20 @@ export async function PATCH(request, { params }) {
         isCompleted,
       },
     });
+
+    // Publish notification if isCompleted status changed and there's an assignee
+    if (isCompleted !== undefined && isCompleted !== existingTask.isCompleted && existingTask.assigneeId) {
+      const notificationMessage = isCompleted
+        ? `${studyGroup.name} 스터디의 할 일 [${updatedTask.title}]이(가) 완료되었습니다.`
+        : `${studyGroup.name} 스터디의 할 일 [${updatedTask.title}]이(가) 다시 열렸습니다.`;
+
+      await publishMessage(`notifications:${existingTask.assigneeId}`, {
+        type: isCompleted ? 'TASK_COMPLETED' : 'TASK_REOPENED',
+        message: notificationMessage,
+        link: `/studies/${studyId}/tasks/${taskId}`,
+        recipientId: existingTask.assigneeId,
+      });
+    }
 
     return successResponse(updatedTask, 'Task updated successfully');
   } catch (error) {
@@ -95,11 +110,11 @@ export async function DELETE(request, { params }) {
     const isCreator = studyGroup.creatorId === user.id;
 
     const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
+      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
       select: { role: true },
     });
 
-    const isAdmin = studyMember && studyMember.role === 'ADMIN';
+    const isAdmin = studyMember && studyMember.role === StudyRole.ADMIN;
 
     if (existingTask.creatorId !== user.id && !isCreator && !isAdmin) {
       return errorResponse('You are not authorized to delete this task', 403);

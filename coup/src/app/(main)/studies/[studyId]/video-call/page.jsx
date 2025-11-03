@@ -7,7 +7,7 @@ export default function StudyVideoCallPage({ params }) {
   return (
     <div className={styles.videoCallPageContainer}>
       <h2 className={styles.pageTitle}>화상 스터디</h2>
-      <VideoCallInterface />
+      <VideoCallInterface studyId={studyId} /> {/* Pass studyId here */}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import prisma, { StudyMemberStatus, StudyRole } from '@/lib/db/prisma';
 
 export async function PATCH(request, { params }) {
   try {
@@ -30,11 +30,11 @@ export async function PATCH(request, { params }) {
     const isCreator = studyGroup.creatorId === user.id;
 
     const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
+      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
       select: { role: true },
     });
 
-    const isAdmin = studyMember && studyMember.role === 'ADMIN';
+    const isAdmin = studyMember && studyMember.role === StudyRole.ADMIN;
 
     if (!isCreator && !isAdmin) {
       return errorResponse('You are not authorized to update events in this study group', 403);
@@ -79,11 +79,11 @@ export async function DELETE(request, { params }) {
     const isCreator = studyGroup.creatorId === user.id;
 
     const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
+      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
       select: { role: true },
     });
 
-    const isAdmin = studyMember && studyMember.role === 'ADMIN';
+    const isAdmin = studyMember && studyMember.role === StudyRole.ADMIN;
 
     if (!isCreator && !isAdmin) {
       return errorResponse('You are not authorized to delete events from this study group', 403);

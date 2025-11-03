@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import CalendarControls from "./CalendarControls";
 import styles from './StudyCalendarView.module.css';
+import { useStudyEvents } from '@/lib/api/queries/events'; // Import the hook
+import { isSameDay, format } from 'date-fns'; // For date comparison and formatting
 
-export default function StudyCalendarView({ events }) {
+export default function StudyCalendarView({ studyId }) { // Accept studyId as prop
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("month"); // month, week, day
+
+  // Fetch events for the current month
+  const { data: eventsData, isLoading, isError } = useStudyEvents(studyId, {
+    startDate: format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd'),
+    endDate: format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd'),
+  });
+
+  const events = eventsData || [];
 
   const getMonthName = (date) => {
     return date.toLocaleString("ko-KR", { year: "numeric", month: "long" });
@@ -32,12 +42,25 @@ export default function StudyCalendarView({ events }) {
         {blanks.map((_, i) => (
           <div key={`blank-${i}`} className={styles.emptyDayCell}></div>
         ))}
-        {days.map((day) => (
-          <div key={day} className={styles.dayCell}>
-            {day}
-            {/* TODO: Display events for this day */}
-          </div>
-        ))}
+        {days.map((day) => {
+          const dayDate = new Date(year, month, day);
+          const eventsForDay = events.filter(event =>
+            isSameDay(new Date(event.startTime), dayDate)
+          );
+
+          return (
+            <div key={day} className={styles.dayCell}>
+              {day}
+              <div className={styles.eventsForDay}>
+                {eventsForDay.map(event => (
+                  <div key={event.id} className={styles.eventItem}>
+                    {event.title}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -49,6 +72,9 @@ export default function StudyCalendarView({ events }) {
   const handleNext = () => {
     setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
+
+  if (isLoading) return <div>Loading calendar...</div>;
+  if (isError) return <div>Error loading calendar: {error.message}</div>;
 
   return (
     <div className={styles.studyCalendarViewContainer}>

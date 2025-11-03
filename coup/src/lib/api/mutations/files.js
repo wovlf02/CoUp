@@ -4,13 +4,8 @@ import api from '../index';
 export const useUploadFileMutation = (studyId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (fileData) => {
-      // Assuming fileData is FormData for file uploads
-      const { data } = await api.post(`/studies/${studyId}/files`, fileData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+    mutationFn: async (fileMetadata) => { // Changed to accept fileMetadata
+      const { data } = await api.post(`/studies/${studyId}/files`, fileMetadata); // No multipart/form-data header needed
       return data;
     },
     onSuccess: () => {

@@ -1,6 +1,8 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import { publishMessage } from '@/lib/utils/redis';
+import { StudyService } from '@/lib/services/StudyService';
+import { StudyMemberStatus } from '@/lib/db/prisma';
 
 export async function GET(request, { params }) {
   try {
@@ -11,25 +13,12 @@ export async function GET(request, { params }) {
 
     const { studyId } = params;
 
-    // Check if the user is an active member of the study group
-    const isMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
-    });
-
-    if (!isMember) {
-      return errorResponse('You are not a member of this study group', 403);
-    }
-
-    const events = await prisma.event.findMany({
-      where: { studyGroupId: studyId },
-      include: { creator: { select: { id: true, name: true, imageUrl: true } } },
-      orderBy: { startTime: 'asc' },
-    });
+    const events = await StudyService.getEvents(studyId, user.id);
 
     return successResponse(events);
   } catch (error) {
     console.error('[API/studies/[studyId]/events/GET]', error);
-    return errorResponse('Failed to fetch events', 500);
+    return errorResponse(error.message, 500);
   }
 }
 
@@ -48,43 +37,29 @@ export async function POST(request, { params }) {
       return errorResponse('Missing required fields: title, startTime, endTime', 400);
     }
 
-    // Check if the user is the creator or an admin of the study group
-    const studyGroup = await prisma.studyGroup.findUnique({
-      where: { id: studyId },
-      select: { creatorId: true },
+    const { newEvent, studyGroup } = await StudyService.createEvent(studyId, user.id, title, description, startTime, endTime);
+
+    // Get all active members of the study group
+    const activeMembers = await prisma.studyMember.findMany({
+      where: { studyGroupId: studyId, status: StudyMemberStatus.ACTIVE },
+      select: { userId: true },
     });
 
-    if (!studyGroup) {
-      return errorResponse('Study group not found', 404);
+    // Publish notification to all active members
+    for (const member of activeMembers) {
+      if (member.userId !== user.id) { // Don't notify the author
+        await publishMessage(`notifications:${member.userId}`, {
+          type: 'NEW_EVENT',
+          message: `${studyGroup.name} 스터디에 새 이벤트 [${title}]가 등록되었습니다.`, 
+          link: `/studies/${studyId}/events/${newEvent.id}`,
+          recipientId: member.userId,
+        });
+      }
     }
-
-    const isCreator = studyGroup.creatorId === user.id;
-
-    const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
-      select: { role: true },
-    });
-
-    const isAdmin = studyMember && studyMember.role === 'ADMIN';
-
-    if (!isCreator && !isAdmin) {
-      return errorResponse('You are not authorized to create events in this study group', 403);
-    }
-
-    const newEvent = await prisma.event.create({
-      data: {
-        studyGroupId: studyId,
-        creatorId: user.id,
-        title,
-        description,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-      },
-    });
 
     return successResponse(newEvent, 'Event created successfully', 201);
   } catch (error) {
     console.error('[API/studies/[studyId]/events/POST]', error);
-    return errorResponse('Failed to create event', 500);
+    return errorResponse(error.message, 500);
   }
 }

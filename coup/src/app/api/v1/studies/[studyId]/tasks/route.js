@@ -1,6 +1,7 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import prisma, { StudyMemberStatus } from '@/lib/db/prisma';
+import { publishMessage } from '@/lib/utils/redis';
 
 export async function GET(request, { params }) {
   try {
@@ -13,7 +14,7 @@ export async function GET(request, { params }) {
 
     // Check if the user is an active member of the study group
     const isMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
+      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
     });
 
     if (!isMember) {
@@ -53,7 +54,7 @@ export async function POST(request, { params }) {
 
     // Check if the user is a member of the study group
     const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id },
+      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
     });
 
     if (!studyMember) {
@@ -71,6 +72,33 @@ export async function POST(request, { params }) {
         isCompleted: false,
       },
     });
+
+    if (assigneeId) {
+      const assignedUser = await prisma.user.findUnique({
+        where: { id: assigneeId },
+        select: { name: true },
+      });
+      const studyGroup = await prisma.studyGroup.findUnique({
+        where: { id: studyId },
+        select: { name: true },
+      });
+
+      if (assignedUser && studyGroup) {
+        await publishMessage(`notifications:${assigneeId}`, {
+          type: 'NEW_TASK_ASSIGNED',
+          message: `${studyGroup.name} 스터디에서 새로운 할 일 [${title}]이(가) 당신에게 할당되었습니다.`, 
+          link: `/studies/${studyId}/tasks/${newTask.id}`,
+          recipientId: assigneeId,
+        });
+      }
+    }
+
+    return successResponse(newTask, 'Task created successfully', 201);
+  } catch (error) {
+    console.error('[API/studies/[studyId]/tasks/POST]', error);
+    return errorResponse('Failed to create task', 500);
+  }
+}
 
     return successResponse(newTask, 'Task created successfully', 201);
   } catch (error) {

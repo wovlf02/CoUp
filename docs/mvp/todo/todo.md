@@ -15,12 +15,15 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [x] NextAuth.js 관련 환경 변수 추가 (NEXTAUTH_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET 등)
 - [x] AWS S3 관련 환경 변수 추가 (파일 업로드용)
 - [x] Redis 관련 환경 변수 추가
+- [ ] `docs/env.md` 문서에 `REDIS_TOKEN` 환경 변수 추가 및 설명 보완
 
 ### 1.3. Prisma ORM 설정 및 PostgreSQL 연동
 - [x] `prisma` 디렉토리 생성 및 `schema.prisma` 파일 초기화
 - [x] `datasource` 및 `generator` 설정 (PostgreSQL, `prisma-client-js`)
 - [x] `lib/db/prisma.js` 파일 생성 및 Prisma Client 인스턴스 초기화 로직 구현
 - [x] 초기 데이터베이스 마이그레이션 설정
+- [x] `prisma/schema.prisma` 파일에 `User` 모델에 `bio` 또는 `description` 필드 추가 (자기소개 기능 지원)
+- [x] `prisma/schema.prisma` 파일 내 `StudyRole`, `StudyMemberStatus`, `StudyVisibility` enum 사용 시 문자열 리터럴 대신 실제 enum 타입 활용하도록 코드 수정
 
 ### 1.4. Redis 설정 및 연동
 - [x] `lib/utils/redis.js` 파일 생성 및 Redis 클라이언트 인스턴스 초기화
@@ -116,6 +119,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 
 ### 3.1. `User` 테이블 (MVP 기능 명세: 01. 사용자 인증 및 프로필)
 - [x] `id`, `email`, `name`, `imageUrl`, `provider`, `providerId`, `role`, `createdAt`, `updatedAt` 필드 정의
+- [x] `User` 테이블에 `bio` 또는 `description` 필드 추가 (자기소개 기능 지원)
 
 ### 3.2. `StudyGroup` 테이블 (MVP 기능 명세: 02. 스터디 그룹 관리)
 - [x] `id`, `ownerId`, `name`, `description`, `goal`, `category`, `rules`, `visibility`, `maxMembers`, `currentMembersCount`, `status`, `createdAt`, `updatedAt` 필드 정의
@@ -141,8 +145,16 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 3.9. Prisma Schema 정의 및 Migration 실행
 - [x] `schema.prisma` 파일에 모든 모델 정의
 - [x] `npx prisma migrate dev --name initial_migration` 명령어를 통해 초기 마이그레이션 실행
+- [x] `User` 모델에 `bio` 또는 `description` 필드 추가 후 마이그레이션 실행
+- [x] `schema.prisma` 파일 내 `StudyRole`, `StudyMemberStatus`, `StudyVisibility` enum 사용 시 문자열 리터럴 대신 실제 enum 타입 활용하도록 코드 수정 및 적용
 
 ## 4. 백엔드 API 개발 (Next.js API Routes & `lib/services/`)
+
+### 4.0. 아키텍처 개선 (서비스 계층 도입)
+- [x] `lib/services` 디렉토리 내에 `userService.js`, `studyService.js` 파일 생성
+- [ ] `lib/services` 디렉토리 내에 `notificationService.js`, `chatService.js`, `fileService.js`, `eventService.js`, `taskService.js`, `noticeService.js` 등 나머지 도메인별 서비스 파일 생성
+- [ ] 기존 API Routes 내의 비즈니스 로직을 해당 서비스 파일로 이동 및 캡슐화
+- [ ] API Routes는 서비스 계층의 메서드를 호출하도록 수정
 
 ### 4.1. 인증 API (`api/auth/[...nextauth]/route.js`)
 - [x] NextAuth.js 콜백 (signIn, session, jwt) 구현
@@ -151,6 +163,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 4.2. 사용자 API (`api/v1/users/me/route.js`)
 - [x] `GET /api/v1/users/me`: 현재 로그인 사용자 정보 조회
 - [x] `PATCH /api/v1/users/me`: 현재 로그인 사용자 정보 수정 (닉네임, 프로필 이미지)
+- [ ] `PATCH /api/v1/users/me`: 사용자 프로필 수정 시 `bio` 또는 `description` 필드 업데이트 로직 추가
 - [x] `DELETE /api/v1/users/me`: 회원 탈퇴
 
 ### 4.3. 스터디 그룹 API (`api/v1/studies/route.js`, `api/v1/studies/[studyId]/route.js`)
@@ -167,39 +180,57 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 
 ### 4.5. 스터디 가입 API (`api/v1/studies/[studyId]/join/route.js`, `api/v1/studies/[studyId]/manage/route.js`)
 - [x] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청
+- [ ] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청 시 그룹장/관리자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 신청 처리 (승인/거절) (그룹장/관리자 권한)
+- [ ] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 승인/거절 시 신청자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.6. 공지사항 API (`api/v1/studies/[studyId]/notices/route.js`, `api/v1/studies/[studyId]/notices/[noticeId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/notices`: 공지사항 목록 조회
 - [x] `POST /api/v1/studies/{studyId}/notices`: 공지사항 생성 (그룹장/관리자 권한)
+- [ ] `POST /api/v1/studies/{studyId}/notices`: 새 공지사항 생성 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 (그룹장/관리자 권한)
+- [ ] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 (그룹장/관리자 권한)
+- [ ] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.7. 파일 API (`api/v1/studies/[studyId]/files/route.js`, `api/v1/studies/[studyId]/files/[fileId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/files`: 파일 목록 조회
 - [x] `POST /api/v1/studies/{studyId}/files`: 파일 업로드 (AWS S3 Presigned URL 방식 고려)
+- [ ] `POST /api/v1/studies/{studyId}/files/upload-url`: 파일 업로드 URL 생성 시 사용자(요청자)가 스터디 그룹 멤버인지 확인하는 로직 추가
 - [x] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 (업로더 또는 그룹장/관리자 권한)
+- [ ] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 시 DB 메타데이터뿐만 아니라 **실제 AWS S3 버킷에서도 파일 삭제 로직 추가**
 
 ### 4.8. 캘린더 이벤트 API (`api/v1/studies/[studyId]/events/route.js`, `api/v1/studies/[studyId]/events/[eventId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/events`: 캘린더 이벤트 목록 조회
 - [x] `POST /api/v1/studies/{studyId}/events`: 캘린더 이벤트 생성 (그룹장/관리자 권한)
+- [ ] `POST /api/v1/studies/{studyId}/events`: 새 이벤트 생성 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 수정 (그룹장/관리자 권한)
+- [ ] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 이벤트 수정 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 삭제 (그룹장/관리자 권한)
+- [ ] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 이벤트 삭제 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.9. 할 일 API (`api/v1/studies/[studyId]/tasks/route.js`, `api/v1/studies/[studyId]/tasks/[taskId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/tasks`: 할 일 목록 조회 (캘린더 연동을 위해 날짜 필터링 옵션 추가 고려)
 - [x] `POST /api/v1/studies/{studyId}/tasks`: 할 일 생성
+- [ ] `POST /api/v1/studies/{studyId}/tasks`: 새 할 일 생성 시 담당자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 (완료 여부, 담당자, 마감일 등)
+- [ ] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 시 담당자/생성자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제
+- [ ] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제 시 담당자/생성자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.10. 알림 API (`api/v1/notifications/route.js`, `api/v1/notifications/[notificationId]/read/route.js`)
 - [x] `GET /api/v1/notifications`: 내 알림 목록 조회
-- [x] `POST /api/v1/notifications/read`: 모든 알림을 읽음 상태로 변경
+- [x] `PATCH /api/v1/notifications/read-all`: 모든 알림을 읽음 상태로 변경하는 API 엔드포인트 추가
 - [x] `PATCH /api/v1/notifications/{notificationId}/read`: 특정 알림을 읽음 상태로 변경
 
 ### 4.11. 내부 통신 API (`api/v1/internal/messages/route.js`, `api/v1/internal/users/status/route.js`)
-- [x] `POST /api/v1/internal/messages`: 채팅 메시지 저장 (시그널링 서버에서 호출)
-- [x] `POST /api/v1/internal/users/status`: 사용자 온라인 상태 업데이트 (시그널링 서버에서 호출)
+- [ ] `src/app/api/v1/studies/internal/messages/route.js` 파일 생성 및 `POST /api/v1/internal/messages` (채팅 메시지 저장) 구현
+- [ ] `POST /api/v1/internal/messages`: **내부 API 인증 로직 추가** (예: API Key 검증)
+- [ ] `src/app/api/v1/studies/internal/users/status/route.js` 파일 생성 및 `POST /api/v1/internal/users/status` (사용자 온라인 상태 업데이트) 구현
+- [ ] `POST /api/v1/internal/users/status`: **내부 API 인증 로직 추가** (예: API Key 검증)
+
+### 4.12. 공통 에러 처리 개선
+- [ ] 모든 API Routes에서 `successResponse` 및 `errorResponse` 헬퍼를 일관되게 사용하도록 수정
 
 ## 5. 프론트엔드 페이지 및 컴포넌트 개발 (`src/app/`, `src/components/domain/`)
 
@@ -259,6 +290,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 5.13. 마이페이지 (`app/(main)/me/page.jsx`)
 - [x] UI/UX 명세: 08. 마이페이지 기반으로 구현
 - [x] `ProfileManagementForm.jsx` (내부 컴포넌트: `ProfileImageSection.jsx`, `NicknameInput.jsx`, `BioTextarea.jsx`, `AccountActions.jsx`) 구현 - **스타일링 개선 완료**
+- [ ] `ProfileManagementForm.jsx`에 `bio` 또는 `description` 필드 추가 및 연동
 
 ### 5.14. 알림 목록 페이지 (`app/(main)/notifications/page.jsx`)
 - [x] UI/UX 명세: 09. 알림 목록 페이지 기반으로 구현
@@ -288,33 +320,33 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ## 7. 시그널링 서버 개발 (Node.js/Express.js/Socket.IO)
 
 ### 7.1. 기본 서버 설정 및 WebSocket 연결
-- [ ] Node.js 프로젝트 초기화 및 Express.js 설정
-- [ ] Socket.IO 서버 설정 및 클라이언트 연결 처리
+- [x] Node.js 프로젝트 초기화 및 Express.js 설정
+- [x] Socket.IO 서버 설정 및 클라이언트 연결 처리
 
 ### 7.2. Redis Pub/Sub 연동 (알림, 채팅 메시지)
-- [ ] Redis 클라이언트 연결 및 Pub/Sub 패턴 구현
-- [ ] Next.js API Routes에서 발행된 메시지 수신
+- [x] Redis 클라이언트 연결 및 Pub/Sub 패턴 구현
+- [x] Next.js API Routes에서 발행된 메시지 수신
 
 ### 7.3. 채팅 메시지 전송/수신 로직
-- [ ] 클라이언트로부터 메시지 수신 및 Redis 발행
-- [ ] Redis로부터 메시지 수신 및 해당 스터디 그룹 멤버들에게 푸시
+- [x] 클라이언트로부터 메시지 수신 및 Redis 발행
+- [x] Redis로부터 메시지 수신 및 해당 스터디 그룹 멤버들에게 푸시
 
 ### 7.4. 알림 푸시 로직
-- [ ] Redis로부터 알림 메시지 수신
-- [ ] 해당 사용자에게 실시간 알림 푸시
+- [x] Redis로부터 알림 메시지 수신
+- [x] 해당 사용자에게 실시간 알림 푸시
 
 ### 7.5. WebRTC 시그널링 로직 (화상 스터디)
-- [ ] WebRTC 연결을 위한 SDP, ICE 후보 교환 로직 구현
+- [x] WebRTC 연결을 위한 SDP, ICE 후보 교환 로직 구현
 - [ ] STUN/TURN 서버 연동 (선택 사항, Post-MVP)
 
 ## 8. 테스트
 
 ### 8.1. 단위 테스트 (Jest/React Testing Library)
-- [ ] 각 컴포넌트 및 유틸리티 함수에 대한 단위 테스트 작성
-- [ ] React Query 훅 및 API 클라이언트 테스트
+- [x] 각 컴포넌트 및 유틸리티 함수에 대한 단위 테스트 작성
+- [x] React Query 훅 및 API 클라이언트 테스트
 
 ### 8.2. 통합 테스트
-- [ ] Next.js API Routes 통합 테스트
+- [x] Next.js API Routes 통합 테스트
 - [ ] 프론트엔드 페이지 및 컴포넌트 간 상호작용 테스트
 
 ### 8.3. E2E 테스트 (Playwright/Cypress)

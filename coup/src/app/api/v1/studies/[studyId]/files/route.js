@@ -1,6 +1,6 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import { StudyService } from '@/lib/services/StudyService';
 
 export async function GET(request, { params }) {
   try {
@@ -11,25 +11,12 @@ export async function GET(request, { params }) {
 
     const { studyId } = params;
 
-    // Check if the user is an active member of the study group
-    const isMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
-    });
-
-    if (!isMember) {
-      return errorResponse('You are not a member of this study group', 403);
-    }
-
-    const files = await prisma.file.findMany({
-      where: { studyGroupId: studyId },
-      include: { uploader: { select: { id: true, name: true, imageUrl: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
+    const files = await StudyService.getFiles(studyId, user.id);
 
     return successResponse(files);
   } catch (error) {
     console.error('[API/studies/[studyId]/files/GET]', error);
-    return errorResponse('Failed to fetch files', 500);
+    return errorResponse(error.message, 500);
   }
 }
 
@@ -51,29 +38,11 @@ export async function POST(request, { params }) {
       return errorResponse('Missing required fields for file upload', 400);
     }
 
-    // Check if the user is a member of the study group
-    const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id },
-    });
-
-    if (!studyMember) {
-      return errorResponse('You are not a member of this study group', 403);
-    }
-
-    const newFile = await prisma.file.create({
-      data: {
-        studyGroupId: studyId,
-        uploaderId: user.id,
-        fileName,
-        fileUrl,
-        fileSize,
-        fileType,
-      },
-    });
+    const newFile = await StudyService.createFile(studyId, user.id, fileName, fileUrl, fileSize, fileType);
 
     return successResponse(newFile, 'File uploaded successfully', 201);
   } catch (error) {
     console.error('[API/studies/[studyId]/files/POST]', error);
-    return errorResponse('Failed to upload file', 500);
+    return errorResponse(error.message, 500);
   }
 }

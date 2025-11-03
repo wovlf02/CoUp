@@ -1,6 +1,6 @@
 import { getCurrentUser, authorize } from '@/lib/utils/auth';
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
-import prisma from '@/lib/db/prisma';
+import { UserService } from '@/lib/services/UserService';
 
 export async function GET() {
   try {
@@ -8,7 +8,8 @@ export async function GET() {
     if (!authorized) {
       return errorResponse(message, 401);
     }
-    return successResponse(user, 'User profile fetched successfully');
+    const fetchedUser = await UserService.getUserById(user.id);
+    return successResponse(fetchedUser, 'User profile fetched successfully');
   } catch (error) {
     console.error('[API/users/me/GET]', error);
     return errorResponse('Failed to fetch user profile', 500);
@@ -23,12 +24,9 @@ export async function PATCH(request) {
     }
 
     const body = await request.json();
-    const { name, imageUrl } = body;
+    const { name, imageUrl, bio } = body;
 
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: { name, imageUrl },
-    });
+    const updatedUser = await UserService.updateUser(user.id, { name, imageUrl, bio });
 
     return successResponse(updatedUser, 'User profile updated successfully');
   } catch (error) {
@@ -44,9 +42,7 @@ export async function DELETE() {
       return errorResponse(message, 401);
     }
 
-    await prisma.user.delete({
-      where: { id: user.id },
-    });
+    await UserService.deleteUser(user.id);
 
     return successResponse(null, 'User account deleted successfully', 204);
   } catch (error) {

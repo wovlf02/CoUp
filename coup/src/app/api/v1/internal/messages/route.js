@@ -14,6 +14,10 @@ export async function POST(request) {
 
     // In a real application, you might want to add an internal API key check here
     // to ensure only the signaling server can call this endpoint.
+    const internalApiKey = request.headers.get('x-internal-api-key');
+    if (internalApiKey !== process.env.INTERNAL_API_KEY) {
+      return errorResponse('Unauthorized: Invalid internal API key', 403);
+    }
 
     const newMessage = await prisma.chatMessage.create({
       data: {

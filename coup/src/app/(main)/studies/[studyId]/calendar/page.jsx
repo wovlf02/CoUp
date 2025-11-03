@@ -6,7 +6,7 @@ import styles from './calendar.module.css';
 export default function StudyCalendarPage({ params }) {
   const { studyId } = params;
 
-  // Placeholder data for events
+  // Placeholder data for events (will be fetched by StudyCalendarView)
   const events = [
     {
       title: "스터디 미팅",
@@ -32,7 +32,7 @@ export default function StudyCalendarPage({ params }) {
       </div>
       <div className={`${styles.contentGrid} ${styles.lgGridCols3}`}>
         <div className={styles.calendarViewWrapper}>
-          <StudyCalendarView events={events} />
+          <StudyCalendarView studyId={studyId} /> {/* Pass studyId here */}
         </div>
         <div className={styles.eventListWrapper}>
           <EventListForDate date="2025년 10월 28일 (화)" events={events} />

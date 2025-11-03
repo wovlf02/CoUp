@@ -1,6 +1,7 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import { publishMessage } from '@/lib/utils/redis';
+import { StudyService } from '@/lib/services/StudyService';
 
 export async function POST(request, { params }) {
   try {
@@ -17,66 +18,32 @@ export async function POST(request, { params }) {
       return errorResponse('Missing memberId or action field', 400);
     }
 
-    // Check if the requesting user is the owner or an admin of the study group
-    const studyGroup = await prisma.studyGroup.findUnique({
-      where: { id: studyId },
-      select: { creatorId: true, maxMembers: true },
-    });
+    const { updatedMember, studyGroup, existingMember } = await StudyService.manageJoinRequest(studyId, memberId, action);
 
-    if (!studyGroup) {
-      return errorResponse('Study group not found', 404);
-    }
+    let notificationMessage;
+    let notificationType;
 
-    const requestingMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id },
-      select: { role: true },
-    });
-
-    const isOwner = studyGroup.creatorId === user.id;
-    const isAdmin = requestingMember && requestingMember.role === 'ADMIN';
-
-    if (!isOwner && !isAdmin) {
-      return errorResponse('You are not authorized to manage join requests for this study group', 403);
-    }
-
-    const existingMember = await prisma.studyMember.findUnique({
-      where: { id: memberId, studyGroupId: studyId },
-    });
-
-    if (!existingMember) {
-      return errorResponse('Study member not found', 404);
-    }
-
-    if (existingMember.status !== 'PENDING') {
-      return errorResponse('Member status is not pending', 400);
-    }
-
-    let updatedMember;
     if (action === 'APPROVE') {
-      const currentMembersCount = await prisma.studyMember.count({
-        where: { studyGroupId: studyId, status: 'ACTIVE' },
-      });
-
-      if (studyGroup.maxMembers && currentMembersCount >= studyGroup.maxMembers) {
-        return errorResponse('Study group is already full', 409);
-      }
-
-      updatedMember = await prisma.studyMember.update({
-        where: { id: memberId },
-        data: { status: 'ACTIVE' },
-      });
+      notificationMessage = `${studyGroup.name} 스터디 가입이 승인되었습니다.`;
+      notificationType = 'STUDY_JOIN_APPROVED';
     } else if (action === 'REJECT') {
-      updatedMember = await prisma.studyMember.update({
-        where: { id: memberId },
-        data: { status: 'REJECTED' },
-      });
+      notificationMessage = `${studyGroup.name} 스터디 가입이 거절되었습니다.`;
+      notificationType = 'STUDY_JOIN_REJECTED';
     } else {
       return errorResponse('Invalid action', 400);
     }
 
+    // Publish notification to the user who made the join request
+    await publishMessage(`notifications:${existingMember.userId}`, {
+      type: notificationType,
+      message: notificationMessage,
+      link: `/studies/${studyId}`,
+      recipientId: existingMember.userId,
+    });
+
     return successResponse(updatedMember, `Study join request ${action.toLowerCase()}d successfully`);
   } catch (error) {
     console.error('[API/studies/[studyId]/manage/POST]', error);
-    return errorResponse('Failed to manage study join request', 500);
+    return errorResponse(error.message, 500);
   }
 }

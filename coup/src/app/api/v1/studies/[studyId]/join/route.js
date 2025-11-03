@@ -1,6 +1,8 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import { publishMessage } from '@/lib/utils/redis';
+import { StudyService } from '@/lib/services/StudyService';
+import { StudyRole } from '@/lib/db/prisma';
 
 export async function POST(request, { params }) {
   try {
@@ -12,51 +14,25 @@ export async function POST(request, { params }) {
     const { studyId } = params;
     const { joinMessage } = await request.json();
 
-    const studyGroup = await prisma.studyGroup.findUnique({
-      where: { id: studyId },
-      select: { visibility: true, maxMembers: true, studyMembers: { select: { id: true, status: true } } },
-    });
+    const { newMember, studyGroup } = await StudyService.requestJoinStudyGroup(studyId, user.id, joinMessage);
 
-    if (!studyGroup) {
-      return errorResponse('Study group not found', 404);
+    // Notify owner/admins of the study group about the new join request
+    const ownerAndAdmins = studyGroup.studyMembers.filter(member => 
+      member.userId === studyGroup.creatorId || member.role === StudyRole.ADMIN
+    );
+
+    for (const member of ownerAndAdmins) {
+      await publishMessage(`notifications:${member.userId}`, {
+        type: 'NEW_JOIN_REQUEST',
+        message: `${user.name}님이 ${studyGroup.name} 스터디 가입을 요청했습니다.`, // Assuming user.name is available
+        link: `/studies/${studyId}/settings?tab=join-requests`,
+        recipientId: member.userId,
+      });
     }
-
-    if (studyGroup.visibility === 'PRIVATE') {
-      return errorResponse('Cannot join a private study group directly', 403);
-    }
-
-    const activeMembers = studyGroup.studyMembers.filter(member => member.status === 'ACTIVE').length;
-    if (studyGroup.maxMembers && activeMembers >= studyGroup.maxMembers) {
-      return errorResponse('Study group is full', 409);
-    }
-
-    // Check if the user is already a member or has a pending request
-    const existingMembership = await prisma.studyMember.findFirst({
-      where: {
-        userId: user.id,
-        studyGroupId: studyId,
-        status: { in: ['PENDING', 'ACTIVE'] },
-      },
-    });
-
-    if (existingMembership) {
-      return errorResponse('You are already a member or your request is pending', 409);
-    }
-
-    // Create a new study member entry with PENDING status
-    const newMember = await prisma.studyMember.create({
-      data: {
-        userId: user.id,
-        studyGroupId: studyId,
-        role: 'MEMBER',
-        status: 'PENDING',
-        joinMessage: joinMessage || null,
-      },
-    });
 
     return successResponse(newMember, 'Study join request sent successfully', 201);
   } catch (error) {
     console.error('[API/studies/[studyId]/join/POST]', error);
-    return errorResponse('Failed to send study join request', 500);
+    return errorResponse(error.message, 500);
   }
 }

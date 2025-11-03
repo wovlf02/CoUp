@@ -6,46 +6,70 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import styles from './TaskDetailModal.module.css';
+import { useCreateTaskMutation, useUpdateTaskMutation } from '@/lib/api/mutations/tasks';
+import { toast } from 'react-toastify';
 
 export default function TaskDetailModal({
   isOpen,
   onClose,
   task = null, // If task is provided, it's an edit operation
-  onSubmit,
+  studyId, // Added studyId prop
 }) {
-  const [content, setContent] = useState(task ? task.content : "");
+  const [title, setTitle] = useState(task ? task.title : ""); // Changed content to title
+  const [description, setDescription] = useState(task ? task.description : ""); // Added description
   const [isCompleted, setIsCompleted] = useState(task ? task.isCompleted : false);
-  const [assignee, setAssignee] = useState(task ? task.assigneeName : "");
+  const [assigneeId, setAssigneeId] = useState(task ? task.assigneeId : null); // Changed assignee to assigneeId
   const [dueDate, setDueDate] = useState(task ? task.dueDate : "");
+
+  const createTaskMutation = useCreateTaskMutation(studyId);
+  const updateTaskMutation = useUpdateTaskMutation(studyId, task?.id);
 
   useEffect(() => {
     if (task) {
-      setContent(task.content);
+      setTitle(task.title);
+      setDescription(task.description || "");
       setIsCompleted(task.isCompleted);
-      setAssignee(task.assigneeName || "");
-      setDueDate(task.dueDate || "");
+      setAssigneeId(task.assigneeId || null);
+      setDueDate(task.dueDate ? task.dueDate.split('T')[0] : ""); // Format date for input
     } else {
-      setContent("");
+      setTitle("");
+      setDescription("");
       setIsCompleted(false);
-      setAssignee("");
+      setAssigneeId(null);
       setDueDate("");
     }
   }, [task]);
 
-  const handleSubmit = () => {
-    if (!content.trim()) {
-      alert("할 일 내용을 입력해주세요.");
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      toast.error("할 일 제목을 입력해주세요.");
       return;
     }
-    onSubmit({
-      ...task,
-      content,
+
+    const taskData = {
+      title,
+      description: description || null,
       isCompleted,
-      assigneeName: assignee,
-      dueDate,
-    });
-    onClose();
+      assigneeId: assigneeId || null,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+    };
+
+    try {
+      if (task) {
+        await updateTaskMutation.mutateAsync(taskData);
+        toast.success("할 일이 성공적으로 수정되었습니다.");
+      } else {
+        await createTaskMutation.mutateAsync(taskData);
+        toast.success("새 할 일이 성공적으로 추가되었습니다.");
+      }
+      onClose();
+    } catch (error) {
+      console.error("Failed to save task:", error);
+      toast.error("할 일 저장 실패: " + error.message);
+    }
   };
+
+  const isSaving = createTaskMutation.isPending || updateTaskMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -59,33 +83,49 @@ export default function TaskDetailModal({
               id="isCompleted"
               checked={isCompleted}
               onCheckedChange={setIsCompleted}
+              disabled={isSaving}
             />
             <Label htmlFor="isCompleted" className={styles.checkboxLabel}>
               완료됨
             </Label>
           </div>
           <div className={styles.formRow}>
-            <Label htmlFor="content" className={styles.labelRight}>
-              내용
+            <Label htmlFor="title" className={styles.labelRight}>
+              제목
             </Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="할 일 내용을 입력하세요."
-              className={`${styles.colSpan3} ${styles.minH80px}`}
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="할 일 제목을 입력하세요."
+              className={styles.colSpan3}
+              disabled={isSaving}
             />
           </div>
           <div className={styles.formRow}>
-            <Label htmlFor="assignee" className={styles.labelRight}>
-              담당자
+            <Label htmlFor="description" className={styles.labelRight}>
+              설명
+            </Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="상세 설명을 입력하세요. (선택 사항)"
+              className={`${styles.colSpan3} ${styles.minH80px}`}
+              disabled={isSaving}
+            />
+          </div>
+          <div className={styles.formRow}>
+            <Label htmlFor="assigneeId" className={styles.labelRight}>
+              담당자 ID
             </Label>
             <Input
-              id="assignee"
-              value={assignee}
-              onChange={(e) => setAssignee(e.target.value)}
-              placeholder="담당자 닉네임 (선택 사항)"
+              id="assigneeId"
+              value={assigneeId || ""}
+              onChange={(e) => setAssigneeId(e.target.value)}
+              placeholder="담당자 사용자 ID (선택 사항)"
               className={styles.colSpan3}
+              disabled={isSaving}
             />
           </div>
           <div className={styles.formRow}>
@@ -98,6 +138,7 @@ export default function TaskDetailModal({
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               className={styles.colSpan3}
+              disabled={isSaving}
             />
           </div>
           {task && (
@@ -110,11 +151,11 @@ export default function TaskDetailModal({
           )}
         </div>
         <DialogFooter className={styles.dialogFooter}>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isSaving}>
             취소
           </Button>
-          <Button type="submit" onClick={handleSubmit}>
-            {task ? "저장" : "추가"}
+          <Button type="submit" onClick={handleSubmit} disabled={isSaving}>
+            {isSaving ? (task ? "저장 중..." : "추가 중...") : (task ? "저장" : "추가")}
           </Button>
         </DialogFooter>
       </DialogContent>

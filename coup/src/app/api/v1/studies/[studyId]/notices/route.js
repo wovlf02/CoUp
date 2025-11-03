@@ -1,6 +1,8 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import { publishMessage } from '@/lib/utils/redis';
+import { StudyService } from '@/lib/services/StudyService';
+import { StudyMemberStatus } from '@/lib/db/prisma';
 
 export async function GET(request, { params }) {
   try {
@@ -11,25 +13,12 @@ export async function GET(request, { params }) {
 
     const { studyId } = params;
 
-    // Check if the user is a member of the study group
-    const isMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
-    });
-
-    if (!isMember) {
-      return errorResponse('You are not a member of this study group', 403);
-    }
-
-    const notices = await prisma.notice.findMany({
-      where: { studyGroupId: studyId },
-      include: { author: { select: { id: true, name: true, imageUrl: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
+    const notices = await StudyService.getNotices(studyId, user.id);
 
     return successResponse(notices);
   } catch (error) {
     console.error('[API/studies/[studyId]/notices/GET]', error);
-    return errorResponse('Failed to fetch notices', 500);
+    return errorResponse(error.message, 500);
   }
 }
 
@@ -48,41 +37,29 @@ export async function POST(request, { params }) {
       return errorResponse('Missing required fields: title, content', 400);
     }
 
-    // Check if the user is the creator or an admin of the study group
-    const studyGroup = await prisma.studyGroup.findUnique({
-      where: { id: studyId },
-      select: { creatorId: true },
+    const { newNotice, studyGroup } = await StudyService.createNotice(studyId, user.id, title, content);
+
+    // Get all active members of the study group
+    const activeMembers = await prisma.studyMember.findMany({
+      where: { studyGroupId: studyId, status: StudyMemberStatus.ACTIVE },
+      select: { userId: true },
     });
 
-    if (!studyGroup) {
-      return errorResponse('Study group not found', 404);
+    // Publish notification to all active members
+    for (const member of activeMembers) {
+      if (member.userId !== user.id) { // Don't notify the author
+        await publishMessage(`notifications:${member.userId}`, {
+          type: 'NEW_NOTICE',
+          message: `${studyGroup.name} 스터디에 새 공지 [${title}]가 등록되었습니다.`, 
+          link: `/studies/${studyId}/notices/${newNotice.id}`,
+          recipientId: member.userId,
+        });
+      }
     }
-
-    const isCreator = studyGroup.creatorId === user.id;
-
-    const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: 'ACTIVE' },
-      select: { role: true },
-    });
-
-    const isAdmin = studyMember && studyMember.role === 'ADMIN';
-
-    if (!isCreator && !isAdmin) {
-      return errorResponse('You are not authorized to create notices in this study group', 403);
-    }
-
-    const newNotice = await prisma.notice.create({
-      data: {
-        studyGroupId: studyId,
-        authorId: user.id,
-        title,
-        content,
-      },
-    });
 
     return successResponse(newNotice, 'Notice created successfully', 201);
   } catch (error) {
     console.error('[API/studies/[studyId]/notices/POST]', error);
-    return errorResponse('Failed to create notice', 500);
+    return errorResponse(error.message, 500);
   }
 }

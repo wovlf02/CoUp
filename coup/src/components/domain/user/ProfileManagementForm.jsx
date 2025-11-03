@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { useDeleteUserMutation } from '@/lib/api/mutations/users';
+import { useDeleteUserMutation, useUpdateUserProfileMutation } from '@/lib/api/mutations/users';
 import { Card } from "../../ui/card";
 import ProfileImageSection from "./ProfileImageSection";
 import NicknameInput from "./NicknameInput";
@@ -18,6 +18,7 @@ export default function ProfileManagementForm({
 }) {
   const router = useRouter();
   const deleteUserMutation = useDeleteUserMutation();
+  const updateUserProfileMutation = useUpdateUserProfileMutation();
 
   const [imageUrl, setImageUrl] = useState(initialImageUrl);
   const [nickname, setNickname] = useState(initialNickname);
@@ -30,10 +31,14 @@ export default function ProfileManagementForm({
     // TODO: Open profile image change modal
   };
 
-  const handleSave = () => {
-    // TODO: Implement save logic (API call)
-    console.log("Saving profile:", { imageUrl, nickname, bio });
-    alert("프로필이 저장되었습니다.");
+  const handleSave = async () => {
+    try {
+      await updateUserProfileMutation.mutateAsync({ name: nickname, bio });
+      alert("프로필이 성공적으로 저장되었습니다.");
+    } catch (error) {
+      console.error("프로필 저장 실패:", error);
+      alert("프로필 저장에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const handleDeleteAccount = () => {
