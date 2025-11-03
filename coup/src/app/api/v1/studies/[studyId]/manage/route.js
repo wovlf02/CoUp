@@ -1,7 +1,7 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
 import { publishMessage } from '@/lib/utils/redis';
-import { StudyService } from '@/lib/services/StudyService';
+import { manageJoinRequest } from '@/lib/services/studyService';
 
 export async function POST(request, { params }) {
   try {
@@ -18,7 +18,7 @@ export async function POST(request, { params }) {
       return errorResponse('Missing memberId or action field', 400);
     }
 
-    const { updatedMember, studyGroup, existingMember } = await StudyService.manageJoinRequest(studyId, memberId, action);
+    const { updatedMember, studyGroup, existingMember } = await manageJoinRequest(studyId, memberId, action, user.id);
 
     let notificationMessage;
     let notificationType;

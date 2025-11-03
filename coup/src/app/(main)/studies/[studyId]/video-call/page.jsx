@@ -1,3 +1,5 @@
+'use client';
+
 import VideoCallInterface from "../../../components/domain/study/video-call/VideoCallInterface";
 import styles from './video-call.module.css';
 

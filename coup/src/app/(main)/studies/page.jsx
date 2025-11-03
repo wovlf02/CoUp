@@ -1,3 +1,5 @@
+'use client';
+
 import StudyDiscoveryFilters from "../../../components/domain/study/StudyDiscoveryFilters";
 import StudyList from "../../../components/domain/study/StudyList";
 import styles from './studies.module.css';

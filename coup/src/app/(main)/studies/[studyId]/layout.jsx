@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import StudyHeader from '@/components/domain/study/StudyHeader';
 import StudyTabNavigation from '@/components/domain/study/StudyTabNavigation';

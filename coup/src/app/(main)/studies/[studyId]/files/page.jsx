@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import FileList from '@/components/domain/file/FileList';
 import FileUploadArea from '@/components/domain/file/FileUploadArea';

@@ -1,55 +1,37 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
+import { authorize } from '@/lib/utils/auth';
+import { getStudyGroupById, getStudyMembers } from '@/lib/services/studyService';
 
 export async function GET(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const { authorized, user, message } = await authorize();
+    if (!authorized) {
+      return errorResponse(message, 401);
     }
 
     const { studyId } = params;
 
     if (!studyId) {
-      return NextResponse.json({ message: 'Study ID is required' }, { status: 400 });
+      return errorResponse('Study ID is required', 400);
     }
 
-    const studyGroup = await prisma.studyGroup.findUnique({
-      where: {
-        id: studyId,
-      },
-      select: {
-        id: true,
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                imageUrl: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const studyGroup = await getStudyGroupById(studyId);
 
     if (!studyGroup) {
-      return NextResponse.json({ message: 'Study group not found' }, { status: 404 });
+      return errorResponse('Study group not found', 404);
     }
 
     // Authorization check: Only members of the study group can view the member list
-    const isMember = studyGroup.members.some(member => member.userId === session.user.id);
+    const isMember = studyGroup.studyMembers.some(member => member.userId === user.id);
     if (!isMember) {
-      return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+      return errorResponse('Forbidden', 403);
     }
 
-    return NextResponse.json(studyGroup.members, { status: 200 });
+    const members = await getStudyMembers(studyId);
+
+    return successResponse(members);
   } catch (error) {
-    console.error('Error fetching study group members:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('[API/studies/[studyId]/members/GET]', error);
+    return errorResponse('Failed to fetch study group members', 500);
   }
 }

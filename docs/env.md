@@ -33,6 +33,10 @@ AWS_S3_BUCKET_NAME=YOUR_AWS_S3_BUCKET_NAME
 REDIS_HOST=YOUR_REDIS_HOST
 REDIS_PORT=YOUR_REDIS_PORT
 REDIS_PASSWORD=YOUR_REDIS_PASSWORD
+REDIS_TOKEN=YOUR_REDIS_TOKEN
+
+# Internal API Key (for inter-service communication)
+INTERNAL_API_KEY=YOUR_SECURE_INTERNAL_API_KEY
 ```
 
 ## 2. 각 환경 변수 값 얻는 방법
@@ -134,5 +138,15 @@ Redis는 실시간 통신(채팅, 알림)을 위한 Pub/Sub 및 캐싱에 사용
     *   선택한 클라우드 서비스의 대시보드에서 Redis 인스턴스를 생성합니다.
     *   생성된 인스턴스의 연결 정보(호스트, 포트, 비밀번호)를 확인하여 `.env.local` 파일에 각각 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`로 설정합니다.
     *   Upstash Redis의 경우, `REDIS_TOKEN`도 필요합니다. `REDIS_TOKEN=YOUR_REDIS_TOKEN`
+
+### 2.7. 내부 API 키 (INTERNAL_API_KEY)
+
+내부 서비스(예: 시그널링 서버)가 Next.js API Routes의 특정 엔드포인트에 안전하게 접근하기 위한 키입니다.
+
+**값 얻는 방법**:
+1.  **비밀 키 생성**: 강력하고 무작위적인 문자열이어야 합니다. 다음 명령어를 터미널에서 실행하여 생성할 수 있습니다.
+    *   Linux/macOS: `openssl rand -base64 32`
+    *   Windows (PowerShell): `[System.Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))`
+2.  생성된 문자열을 `INTERNAL_API_KEY` 값으로 사용합니다. 이 키는 `.env.local` 파일과 시그널링 서버의 `.env` 파일에 동일하게 설정되어야 합니다.
 
 ---

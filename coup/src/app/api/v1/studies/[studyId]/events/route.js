@@ -1,8 +1,8 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import { publishMessage } from '@/lib/utils/redis';
-import { StudyService } from '@/lib/services/StudyService';
-import { StudyMemberStatus } from '@/lib/db/prisma';
+import { createEvent, getEventsByStudyGroup } from '@/lib/services/eventService';
+import { getStudyGroupById } from '@/lib/services/studyService';
+import { StudyRole } from '@/lib/db/prisma';
 
 export async function GET(request, { params }) {
   try {
@@ -13,7 +13,18 @@ export async function GET(request, { params }) {
 
     const { studyId } = params;
 
-    const events = await StudyService.getEvents(studyId, user.id);
+    const studyGroup = await getStudyGroupById(studyId);
+    if (!studyGroup) {
+      return errorResponse('Study group not found', 404);
+    }
+
+    // Authorization check: Only members of the study group can view events
+    const isMember = studyGroup.studyMembers.some(member => member.userId === user.id);
+    if (!isMember) {
+      return errorResponse('Forbidden', 403);
+    }
+
+    const events = await getEventsByStudyGroup(studyId);
 
     return successResponse(events);
   } catch (error) {
@@ -37,25 +48,20 @@ export async function POST(request, { params }) {
       return errorResponse('Missing required fields: title, startTime, endTime', 400);
     }
 
-    const { newEvent, studyGroup } = await StudyService.createEvent(studyId, user.id, title, description, startTime, endTime);
-
-    // Get all active members of the study group
-    const activeMembers = await prisma.studyMember.findMany({
-      where: { studyGroupId: studyId, status: StudyMemberStatus.ACTIVE },
-      select: { userId: true },
-    });
-
-    // Publish notification to all active members
-    for (const member of activeMembers) {
-      if (member.userId !== user.id) { // Don't notify the author
-        await publishMessage(`notifications:${member.userId}`, {
-          type: 'NEW_EVENT',
-          message: `${studyGroup.name} 스터디에 새 이벤트 [${title}]가 등록되었습니다.`, 
-          link: `/studies/${studyId}/events/${newEvent.id}`,
-          recipientId: member.userId,
-        });
-      }
+    const studyGroup = await getStudyGroupById(studyId);
+    if (!studyGroup) {
+      return errorResponse('Study group not found', 404);
     }
+
+    // Authorization check: Only owner or admin can create events
+    const isOwner = studyGroup.creatorId === user.id;
+    const isAdmin = studyGroup.studyMembers.some(member => member.userId === user.id && member.role === StudyRole.ADMIN);
+
+    if (!isOwner && !isAdmin) {
+      return errorResponse('Forbidden', 403);
+    }
+
+    const newEvent = await createEvent(studyId, user.id, title, description, startTime, endTime);
 
     return successResponse(newEvent, 'Event created successfully', 201);
   } catch (error) {

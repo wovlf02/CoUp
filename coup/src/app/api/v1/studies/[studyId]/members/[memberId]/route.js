@@ -1,6 +1,6 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import { StudyService } from '@/lib/services/StudyService';
+import { updateStudyMemberRole, removeStudyMember, getStudyGroupById } from '@/lib/services/studyService';
 import { StudyRole } from '@/lib/db/prisma';
 
 export async function PATCH(request, { params }) {
@@ -18,7 +18,13 @@ export async function PATCH(request, { params }) {
       return errorResponse('Missing role field', 400);
     }
 
-    const updatedMember = await StudyService.updateStudyMemberRole(studyId, memberId, role, user.id);
+    const studyGroup = await getStudyGroupById(studyId);
+    if (!studyGroup) {
+      return errorResponse('Study group not found', 404);
+    }
+
+    // Authorization check is now handled within the service function
+    const updatedMember = await updateStudyMemberRole(studyId, memberId, role, user.id);
 
     return successResponse(updatedMember, 'Study member role updated successfully');
   } catch (error) {
@@ -36,7 +42,13 @@ export async function DELETE(request, { params }) {
 
     const { studyId, memberId } = params;
 
-    await StudyService.removeStudyMember(studyId, memberId, user.id);
+    const studyGroup = await getStudyGroupById(studyId);
+    if (!studyGroup) {
+      return errorResponse('Study group not found', 404);
+    }
+
+    // Authorization check is now handled within the service function
+    await removeStudyMember(studyId, memberId, user.id);
 
     return successResponse(null, 'Study member removed successfully', 204);
   } catch (error) {

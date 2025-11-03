@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Avatar from '@/components/ui/avatar'; // Assuming Avatar component is available
+import { Avatar } from '@/components/ui/avatar'; // Assuming Avatar component is available
 
 function UserProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);

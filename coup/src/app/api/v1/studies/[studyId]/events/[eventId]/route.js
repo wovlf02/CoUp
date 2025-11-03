@@ -1,6 +1,8 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma, { StudyMemberStatus, StudyRole } from '@/lib/db/prisma';
+import { updateEvent, deleteEvent } from '@/lib/services/eventService';
+import { getStudyGroupById } from '@/lib/services/studyService';
+import { StudyRole } from '@/lib/db/prisma';
 
 export async function PATCH(request, { params }) {
   try {
@@ -17,43 +19,25 @@ export async function PATCH(request, { params }) {
       return errorResponse('Missing required fields: title, startTime, endTime', 400);
     }
 
-    // Check if the user is the creator or an admin of the study group
-    const studyGroup = await prisma.studyGroup.findUnique({
-      where: { id: studyId },
-      select: { creatorId: true },
-    });
-
+    const studyGroup = await getStudyGroupById(studyId);
     if (!studyGroup) {
       return errorResponse('Study group not found', 404);
     }
 
-    const isCreator = studyGroup.creatorId === user.id;
+    // Authorization check: Only owner or admin can update events
+    const isOwner = studyGroup.creatorId === user.id;
+    const isAdmin = studyGroup.studyMembers.some(member => member.userId === user.id && member.role === StudyRole.ADMIN);
 
-    const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
-      select: { role: true },
-    });
-
-    const isAdmin = studyMember && studyMember.role === StudyRole.ADMIN;
-
-    if (!isCreator && !isAdmin) {
-      return errorResponse('You are not authorized to update events in this study group', 403);
+    if (!isOwner && !isAdmin) {
+      return errorResponse('Forbidden', 403);
     }
 
-    const updatedEvent = await prisma.event.update({
-      where: { id: eventId, studyGroupId: studyId },
-      data: {
-        title,
-        description,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-      },
-    });
+    const updatedEvent = await updateEvent(eventId, { title, description, startTime, endTime });
 
     return successResponse(updatedEvent, 'Event updated successfully');
   } catch (error) {
     console.error('[API/studies/[studyId]/events/[eventId]/PATCH]', error);
-    return errorResponse('Failed to update event', 500);
+    return errorResponse(error.message, 500);
   }
 }
 
@@ -66,36 +50,24 @@ export async function DELETE(request, { params }) {
 
     const { studyId, eventId } = params;
 
-    // Check if the user is the creator or an admin of the study group
-    const studyGroup = await prisma.studyGroup.findUnique({
-      where: { id: studyId },
-      select: { creatorId: true },
-    });
-
+    const studyGroup = await getStudyGroupById(studyId);
     if (!studyGroup) {
       return errorResponse('Study group not found', 404);
     }
 
-    const isCreator = studyGroup.creatorId === user.id;
+    // Authorization check: Only owner or admin can delete events
+    const isOwner = studyGroup.creatorId === user.id;
+    const isAdmin = studyGroup.studyMembers.some(member => member.userId === user.id && member.role === StudyRole.ADMIN);
 
-    const studyMember = await prisma.studyMember.findFirst({
-      where: { studyGroupId: studyId, userId: user.id, status: StudyMemberStatus.ACTIVE },
-      select: { role: true },
-    });
-
-    const isAdmin = studyMember && studyMember.role === StudyRole.ADMIN;
-
-    if (!isCreator && !isAdmin) {
-      return errorResponse('You are not authorized to delete events from this study group', 403);
+    if (!isOwner && !isAdmin) {
+      return errorResponse('Forbidden', 403);
     }
 
-    await prisma.event.delete({
-      where: { id: eventId, studyGroupId: studyId },
-    });
+    await deleteEvent(eventId);
 
     return successResponse(null, 'Event deleted successfully', 204);
   } catch (error) {
     console.error('[API/studies/[studyId]/events/[eventId]/DELETE]', error);
-    return errorResponse('Failed to delete event', 500);
+    return errorResponse(error.message, 500);
   }
 }

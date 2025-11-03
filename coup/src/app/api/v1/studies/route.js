@@ -1,7 +1,6 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import { StudyService } from '@/lib/services/StudyService';
-import { StudyVisibility, StudyRole } from '@/lib/db/prisma';
+import { createStudyGroup, getStudyGroups } from '@/lib/services/studyService';
 
 export async function GET(request) {
   try {
@@ -12,7 +11,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit')) || 10;
     const skip = (page - 1) * limit;
 
-    const { studies, totalStudies } = await StudyService.getStudyGroups(
+    const { studies, totalStudies } = await getStudyGroups(
       { category, search },
       { skip, take: limit }
     );
@@ -34,11 +33,11 @@ export async function POST(request) {
     const body = await request.json();
     const { name, description, goal, category, rules, visibility, maxMembers } = body;
 
-    if (!name || !description || !goal || !category || !visibility || !maxMembers) {
+    if (!name || !description || !category || !visibility || !maxMembers) {
       return errorResponse('Missing required fields', 400);
     }
 
-    const newStudy = await StudyService.createStudyGroup(body, user.id);
+    const newStudy = await createStudyGroup(body, user.id);
 
     return successResponse(newStudy, 'Study group created successfully', 201);
   } catch (error) {

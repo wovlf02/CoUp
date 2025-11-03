@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '@/lib/hooks/useSocket';
-import { useNotifications } from '@/lib/api/queries/notifications'; // Assuming this hook exists
+import { useNotifications } from '../../../lib/api/queries/notifications';
 import { useQueryClient } from '@tanstack/react-query';
 import styles from './NotificationBell.module.css'; // Assuming styles are defined here
 

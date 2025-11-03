@@ -1,3 +1,5 @@
+'use client';
+
 import styles from './auth.module.css';
 import AuthProvider from '@/components/providers/AuthProvider';
 

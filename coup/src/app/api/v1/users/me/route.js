@@ -1,6 +1,6 @@
-import { getCurrentUser, authorize } from '@/lib/utils/auth';
+import { authorize } from '@/lib/utils/auth';
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
-import { UserService } from '@/lib/services/UserService';
+import { getUserById, updateUserProfile, deleteUser } from '@/lib/services/userService';
 
 export async function GET() {
   try {
@@ -8,7 +8,7 @@ export async function GET() {
     if (!authorized) {
       return errorResponse(message, 401);
     }
-    const fetchedUser = await UserService.getUserById(user.id);
+    const fetchedUser = await getUserById(user.id);
     return successResponse(fetchedUser, 'User profile fetched successfully');
   } catch (error) {
     console.error('[API/users/me/GET]', error);
@@ -26,7 +26,7 @@ export async function PATCH(request) {
     const body = await request.json();
     const { name, imageUrl, bio } = body;
 
-    const updatedUser = await UserService.updateUser(user.id, { name, imageUrl, bio });
+    const updatedUser = await updateUserProfile(user.id, { name, imageUrl, bio });
 
     return successResponse(updatedUser, 'User profile updated successfully');
   } catch (error) {
@@ -42,7 +42,7 @@ export async function DELETE() {
       return errorResponse(message, 401);
     }
 
-    await UserService.deleteUser(user.id);
+    await deleteUser(user.id);
 
     return successResponse(null, 'User account deleted successfully', 204);
   } catch (error) {

@@ -1,3 +1,5 @@
+'use client';
+
 import StudyOverviewContent from '@/components/domain/study/StudyOverviewContent';
 
 export default function StudyOverviewPage({ params }) {

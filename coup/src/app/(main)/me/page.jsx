@@ -1,3 +1,5 @@
+'use client';
+
 import ProfileManagementForm from "../../../components/domain/user/ProfileManagementForm";
 import styles from './page.module.css';
 

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from "react";
 import NotificationList from "../../../components/domain/notification/NotificationList";
 import { Button } from "../../../components/ui/button";

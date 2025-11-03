@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/utils/auth';
-import { StudyService } from '@/lib/services/StudyService';
+import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
+import { authorize } from '@/lib/utils/auth';
+import { getStudyGroupById, updateStudyGroup, deleteStudyGroup } from '@/lib/services/studyService';
 import { StudyRole } from '@/lib/db/prisma';
 
 export async function GET(request, { params }) {
@@ -9,102 +8,97 @@ export async function GET(request, { params }) {
     const { studyId } = params;
 
     if (!studyId) {
-      return NextResponse.json({ message: 'Study ID is required' }, { status: 400 });
+      return errorResponse('Study ID is required', 400);
     }
 
-    const studyGroup = await StudyService.getStudyGroupById(studyId);
+    const studyGroup = await getStudyGroupById(studyId);
 
     if (!studyGroup) {
-      return NextResponse.json({ message: 'Study group not found' }, { status: 404 });
+      return errorResponse('Study group not found', 404);
     }
 
-    return NextResponse.json(studyGroup, { status: 200 });
+    return successResponse(studyGroup);
   } catch (error) {
-    console.error('Error fetching study group:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('[API/studies/[studyId]/GET]', error);
+    return errorResponse('Failed to fetch study group', 500);
   }
 }
 
 export async function PATCH(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const { authorized, user, message } = await authorize();
+    if (!authorized) {
+      return errorResponse(message, 401);
     }
 
     const { studyId } = params;
-    const { name, description, goal, category, rules, visibility, maxMembers } = await request.json();
+    const body = await request.json();
+    const { name, description, goal, category, rules, visibility, maxMembers } = body;
 
     if (!studyId) {
-      return NextResponse.json({ message: 'Study ID is required' }, { status: 400 });
+      return errorResponse('Study ID is required', 400);
     }
 
-    const existingStudyGroup = await StudyService.getStudyGroupById(studyId);
+    const existingStudyGroup = await getStudyGroupById(studyId);
 
     if (!existingStudyGroup) {
-      return NextResponse.json({ message: 'Study group not found' }, { status: 404 });
+      return errorResponse('Study group not found', 404);
     }
 
     // Authorization check: Only owner or admin can update
-    if (existingStudyGroup.creatorId !== session.user.id && session.user.role !== StudyRole.ADMIN) {
-      return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+    const isOwner = existingStudyGroup.creatorId === user.id;
+    const isAdmin = user.role === StudyRole.ADMIN; // Assuming user.role is available in session
+
+    if (!isOwner && !isAdmin) {
+      return errorResponse('Forbidden', 403);
     }
 
-    const updatedStudyGroup = await StudyService.updateStudyGroup(studyId, {
+    const updatedStudyGroup = await updateStudyGroup(studyId, {
       name: name || existingStudyGroup.name,
       description: description || existingStudyGroup.description,
       goal: goal || existingStudyGroup.goal,
       category: category || existingStudyGroup.category,
       rules: rules || existingStudyGroup.rules,
       visibility: visibility || existingStudyGroup.visibility,
-      maxMembers: maxStudyGroup.maxMembers,
+      maxMembers: maxMembers || existingStudyGroup.maxMembers,
     });
 
-    return NextResponse.json(updatedStudyGroup, { status: 200 });
+    return successResponse(updatedStudyGroup, 'Study group updated successfully');
   } catch (error) {
-    console.error('Error updating study group:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('[API/studies/[studyId]/PATCH]', error);
+    return errorResponse('Failed to update study group', 500);
   }
 }
 
 export async function DELETE(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const { authorized, user, message } = await authorize();
+    if (!authorized) {
+      return errorResponse(message, 401);
     }
 
     const { studyId } = params;
 
     if (!studyId) {
-      return NextResponse.json({ message: 'Study ID is required' }, { status: 400 });
+      return errorResponse('Study ID is required', 400);
     }
 
-    const existingStudyGroup = await StudyService.getStudyGroupById(studyId);
+    const existingStudyGroup = await getStudyGroupById(studyId);
 
     if (!existingStudyGroup) {
-      return NextResponse.json({ message: 'Study group not found' }, { status: 404 });
+      return errorResponse('Study group not found', 404);
     }
 
     // Authorization check: Only owner can delete
-    if (existingStudyGroup.creatorId !== session.user.id) {
-      return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+    if (existingStudyGroup.creatorId !== user.id) {
+      return errorResponse('Forbidden', 403);
     }
 
-    await StudyService.deleteStudyGroup(studyId);
+    await deleteStudyGroup(studyId);
 
-    return NextResponse.json({ message: 'Study group deleted successfully' }, { status: 200 });
+    return successResponse(null, 'Study group deleted successfully', 200);
   } catch (error) {
-    console.error('Error deleting study group:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    console.error('[API/studies/[studyId]/DELETE]', error);
+    return errorResponse('Failed to delete study group', 500);
   }
 }
-
-
-    
-
-        
-
-    

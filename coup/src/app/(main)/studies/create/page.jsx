@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import StudyCreationForm from '@/components/domain/study/StudyCreationForm/StudyCreationForm';
 import styles from './create.module.css';

@@ -1,7 +1,7 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
 import { publishMessage } from '@/lib/utils/redis';
-import { StudyService } from '@/lib/services/StudyService';
+import { requestJoinStudyGroup, getStudyGroupById } from '@/lib/services/studyService';
 import { StudyRole } from '@/lib/db/prisma';
 
 export async function POST(request, { params }) {
@@ -14,7 +14,7 @@ export async function POST(request, { params }) {
     const { studyId } = params;
     const { joinMessage } = await request.json();
 
-    const { newMember, studyGroup } = await StudyService.requestJoinStudyGroup(studyId, user.id, joinMessage);
+    const { newMember, studyGroup } = await requestJoinStudyGroup(studyId, user.id, joinMessage);
 
     // Notify owner/admins of the study group about the new join request
     const ownerAndAdmins = studyGroup.studyMembers.filter(member => 
@@ -24,7 +24,7 @@ export async function POST(request, { params }) {
     for (const member of ownerAndAdmins) {
       await publishMessage(`notifications:${member.userId}`, {
         type: 'NEW_JOIN_REQUEST',
-        message: `${user.name}님이 ${studyGroup.name} 스터디 가입을 요청했습니다.`, // Assuming user.name is available
+        message: `${user.name}님이 ${studyGroup.name} 스터디 가입을 요청했습니다.`,
         link: `/studies/${studyId}/settings?tab=join-requests`,
         recipientId: member.userId,
       });

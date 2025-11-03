@@ -1,4 +1,4 @@
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/react';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function getCurrentUser() {

@@ -15,7 +15,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [x] NextAuth.js 관련 환경 변수 추가 (NEXTAUTH_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET 등)
 - [x] AWS S3 관련 환경 변수 추가 (파일 업로드용)
 - [x] Redis 관련 환경 변수 추가
-- [ ] `docs/env.md` 문서에 `REDIS_TOKEN` 환경 변수 추가 및 설명 보완
+- [x] `docs/env.md` 문서에 `REDIS_TOKEN` 환경 변수 추가 및 설명 보완
 
 ### 1.3. Prisma ORM 설정 및 PostgreSQL 연동
 - [x] `prisma` 디렉토리 생성 및 `schema.prisma` 파일 초기화
@@ -152,9 +152,9 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 
 ### 4.0. 아키텍처 개선 (서비스 계층 도입)
 - [x] `lib/services` 디렉토리 내에 `userService.js`, `studyService.js` 파일 생성
-- [ ] `lib/services` 디렉토리 내에 `notificationService.js`, `chatService.js`, `fileService.js`, `eventService.js`, `taskService.js`, `noticeService.js` 등 나머지 도메인별 서비스 파일 생성
-- [ ] 기존 API Routes 내의 비즈니스 로직을 해당 서비스 파일로 이동 및 캡슐화
-- [ ] API Routes는 서비스 계층의 메서드를 호출하도록 수정
+- [x] `lib/services` 디렉토리 내에 `notificationService.js`, `chatService.js`, `fileService.js`, `eventService.js`, `taskService.js`, `noticeService.js` 등 나머지 도메인별 서비스 파일 생성
+- [x] 기존 API Routes 내의 비즈니스 로직을 해당 서비스 파일로 이동 및 캡슐화
+- [x] API Routes는 서비스 계층의 메서드를 호출하도록 수정
 
 ### 4.1. 인증 API (`api/auth/[...nextauth]/route.js`)
 - [x] NextAuth.js 콜백 (signIn, session, jwt) 구현
@@ -163,7 +163,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 4.2. 사용자 API (`api/v1/users/me/route.js`)
 - [x] `GET /api/v1/users/me`: 현재 로그인 사용자 정보 조회
 - [x] `PATCH /api/v1/users/me`: 현재 로그인 사용자 정보 수정 (닉네임, 프로필 이미지)
-- [ ] `PATCH /api/v1/users/me`: 사용자 프로필 수정 시 `bio` 또는 `description` 필드 업데이트 로직 추가
+- [x] `PATCH /api/v1/users/me`: 사용자 프로필 수정 시 `bio` 또는 `description` 필드 업데이트 로직 추가
 - [x] `DELETE /api/v1/users/me`: 회원 탈퇴
 
 ### 4.3. 스터디 그룹 API (`api/v1/studies/route.js`, `api/v1/studies/[studyId]/route.js`)
@@ -180,43 +180,43 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 
 ### 4.5. 스터디 가입 API (`api/v1/studies/[studyId]/join/route.js`, `api/v1/studies/[studyId]/manage/route.js`)
 - [x] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청
-- [ ] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청 시 그룹장/관리자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `POST /api/v1/studies/{studyId}/join`: 스터디 가입 신청 시 그룹장/관리자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 신청 처리 (승인/거절) (그룹장/관리자 권한)
-- [ ] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 승인/거절 시 신청자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `POST /api/v1/studies/{studyId}/manage`: 스터디 가입 승인/거절 시 신청자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.6. 공지사항 API (`api/v1/studies/[studyId]/notices/route.js`, `api/v1/studies/[studyId]/notices/[noticeId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/notices`: 공지사항 목록 조회
 - [x] `POST /api/v1/studies/{studyId}/notices`: 공지사항 생성 (그룹장/관리자 권한)
-- [ ] `POST /api/v1/studies/{studyId}/notices`: 새 공지사항 생성 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `POST /api/v1/studies/{studyId}/notices`: 새 공지사항 생성 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 (그룹장/관리자 권한)
-- [ ] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `PATCH /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 수정 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 (그룹장/관리자 권한)
-- [ ] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `DELETE /api/v1/studies/{studyId}/notices/{noticeId}`: 공지사항 삭제 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.7. 파일 API (`api/v1/studies/[studyId]/files/route.js`, `api/v1/studies/[studyId]/files/[fileId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/files`: 파일 목록 조회
 - [x] `POST /api/v1/studies/{studyId}/files`: 파일 업로드 (AWS S3 Presigned URL 방식 고려)
 - [ ] `POST /api/v1/studies/{studyId}/files/upload-url`: 파일 업로드 URL 생성 시 사용자(요청자)가 스터디 그룹 멤버인지 확인하는 로직 추가
 - [x] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 (업로더 또는 그룹장/관리자 권한)
-- [ ] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 시 DB 메타데이터뿐만 아니라 **실제 AWS S3 버킷에서도 파일 삭제 로직 추가**
+- [x] `DELETE /api/v1/studies/{studyId}/files/{fileId}`: 파일 삭제 시 DB 메타데이터뿐만 아니라 **실제 AWS S3 버킷에서도 파일 삭제 로직 추가**
 
 ### 4.8. 캘린더 이벤트 API (`api/v1/studies/[studyId]/events/route.js`, `api/v1/studies/[studyId]/events/[eventId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/events`: 캘린더 이벤트 목록 조회
 - [x] `POST /api/v1/studies/{studyId}/events`: 캘린더 이벤트 생성 (그룹장/관리자 권한)
-- [ ] `POST /api/v1/studies/{studyId}/events`: 새 이벤트 생성 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `POST /api/v1/studies/{studyId}/events`: 새 이벤트 생성 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 수정 (그룹장/관리자 권한)
-- [ ] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 이벤트 수정 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `PATCH /api/v1/studies/{studyId}/events/{eventId}`: 이벤트 수정 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 캘린더 이벤트 삭제 (그룹장/관리자 권한)
-- [ ] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 이벤트 삭제 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `DELETE /api/v1/studies/{studyId}/events/{eventId}`: 이벤트 삭제 시 스터디 멤버들에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.9. 할 일 API (`api/v1/studies/[studyId]/tasks/route.js`, `api/v1/studies/[studyId]/tasks/[taskId]/route.js`)
 - [x] `GET /api/v1/studies/{studyId}/tasks`: 할 일 목록 조회 (캘린더 연동을 위해 날짜 필터링 옵션 추가 고려)
 - [x] `POST /api/v1/studies/{studyId}/tasks`: 할 일 생성
-- [ ] `POST /api/v1/studies/{studyId}/tasks`: 새 할 일 생성 시 담당자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `POST /api/v1/studies/{studyId}/tasks`: 새 할 일 생성 시 담당자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 (완료 여부, 담당자, 마감일 등)
-- [ ] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 시 담당자/생성자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `PATCH /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 수정 시 담당자/생성자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 - [x] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제
-- [ ] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제 시 담당자/생성자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
+- [x] `DELETE /api/v1/studies/{studyId}/tasks/{taskId}`: 할 일 삭제 시 담당자/생성자에게 알림 발행 로직 추가 (Redis Pub/Sub 활용)
 
 ### 4.10. 알림 API (`api/v1/notifications/route.js`, `api/v1/notifications/[notificationId]/read/route.js`)
 - [x] `GET /api/v1/notifications`: 내 알림 목록 조회
@@ -224,10 +224,10 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 - [x] `PATCH /api/v1/notifications/{notificationId}/read`: 특정 알림을 읽음 상태로 변경
 
 ### 4.11. 내부 통신 API (`api/v1/internal/messages/route.js`, `api/v1/internal/users/status/route.js`)
-- [ ] `src/app/api/v1/studies/internal/messages/route.js` 파일 생성 및 `POST /api/v1/internal/messages` (채팅 메시지 저장) 구현
-- [ ] `POST /api/v1/internal/messages`: **내부 API 인증 로직 추가** (예: API Key 검증)
-- [ ] `src/app/api/v1/studies/internal/users/status/route.js` 파일 생성 및 `POST /api/v1/internal/users/status` (사용자 온라인 상태 업데이트) 구현
-- [ ] `POST /api/v1/internal/users/status`: **내부 API 인증 로직 추가** (예: API Key 검증)
+- [x] `src/app/api/v1/studies/internal/messages/route.js` 파일 생성 및 `POST /api/v1/internal/messages` (채팅 메시지 저장) 구현
+- [x] `POST /api/v1/internal/messages`: **내부 API 인증 로직 추가** (예: API Key 검증)
+- [x] `src/app/api/v1/studies/internal/users/status/route.js` 파일 생성 및 `POST /api/v1/internal/users/status` (사용자 온라인 상태 업데이트) 구현
+- [x] `POST /api/v1/internal/users/status`: **내부 API 인증 로직 추가** (예: API Key 검증)
 
 ### 4.12. 공통 에러 처리 개선
 - [ ] 모든 API Routes에서 `successResponse` 및 `errorResponse` 헬퍼를 일관되게 사용하도록 수정
@@ -290,7 +290,7 @@ CoUp 프로젝트의 MVP(Minimum Viable Product) 개발을 위한 상세 Todo �
 ### 5.13. 마이페이지 (`app/(main)/me/page.jsx`)
 - [x] UI/UX 명세: 08. 마이페이지 기반으로 구현
 - [x] `ProfileManagementForm.jsx` (내부 컴포넌트: `ProfileImageSection.jsx`, `NicknameInput.jsx`, `BioTextarea.jsx`, `AccountActions.jsx`) 구현 - **스타일링 개선 완료**
-- [ ] `ProfileManagementForm.jsx`에 `bio` 또는 `description` 필드 추가 및 연동
+- [x] `ProfileManagementForm.jsx`에 `bio` 또는 `description` 필드 추가 및 연동
 
 ### 5.14. 알림 목록 페이지 (`app/(main)/notifications/page.jsx`)
 - [x] UI/UX 명세: 09. 알림 목록 페이지 기반으로 구현

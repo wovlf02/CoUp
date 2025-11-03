@@ -1,6 +1,6 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import prisma from '@/lib/db/prisma';
+import { markNotificationAsRead } from '@/lib/services/notificationService';
 
 export async function PATCH(request, { params }) {
   try {
@@ -11,10 +11,7 @@ export async function PATCH(request, { params }) {
 
     const { notificationId } = params;
 
-    const updatedNotification = await prisma.notification.update({
-      where: { id: notificationId, recipientId: user.id },
-      data: { isRead: true },
-    });
+    const updatedNotification = await markNotificationAsRead(notificationId);
 
     return successResponse(updatedNotification, 'Notification marked as read');
   } catch (error) {

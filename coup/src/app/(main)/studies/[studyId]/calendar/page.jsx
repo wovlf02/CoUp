@@ -1,3 +1,5 @@
+'use client';
+
 import StudyCalendarView from "../../../components/domain/study/calendar/StudyCalendarView";
 import EventListForDate from "../../../components/domain/study/calendar/EventListForDate";
 import { Button } from "../../../components/ui/button";

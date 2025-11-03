@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from "react";
 import TaskInput from "../../../components/domain/study/task/TaskInput";
 import TaskList from "../../../components/domain/study/task/TaskList";

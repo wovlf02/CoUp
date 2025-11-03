@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import NoticeList from '@/components/domain/notice/NoticeList';
 import { Button } from '@/components/ui/button';

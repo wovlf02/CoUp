@@ -1,6 +1,8 @@
 import { successResponse, errorResponse } from '@/lib/utils/apiResponse';
 import { authorize } from '@/lib/utils/auth';
-import { StudyService } from '@/lib/services/StudyService';
+import { updateNotice, deleteNotice } from '@/lib/services/noticeService';
+import { getStudyGroupById } from '@/lib/services/studyService';
+import { StudyRole } from '@/lib/db/prisma';
 
 export async function PATCH(request, { params }) {
   try {
@@ -17,7 +19,20 @@ export async function PATCH(request, { params }) {
       return errorResponse('Missing required fields: title, content', 400);
     }
 
-    const updatedNotice = await StudyService.updateNotice(studyId, noticeId, user.id, title, content);
+    const studyGroup = await getStudyGroupById(studyId);
+    if (!studyGroup) {
+      return errorResponse('Study group not found', 404);
+    }
+
+    // Authorization check: Only owner or admin can update notices
+    const isOwner = studyGroup.creatorId === user.id;
+    const isAdmin = studyGroup.studyMembers.some(member => member.userId === user.id && member.role === StudyRole.ADMIN);
+
+    if (!isOwner && !isAdmin) {
+      return errorResponse('Forbidden', 403);
+    }
+
+    const updatedNotice = await updateNotice(noticeId, { title, content });
 
     return successResponse(updatedNotice, 'Notice updated successfully');
   } catch (error) {
@@ -35,7 +50,20 @@ export async function DELETE(request, { params }) {
 
     const { studyId, noticeId } = params;
 
-    await StudyService.deleteNotice(studyId, noticeId, user.id);
+    const studyGroup = await getStudyGroupById(studyId);
+    if (!studyGroup) {
+      return errorResponse('Study group not found', 404);
+    }
+
+    // Authorization check: Only owner or admin can delete notices
+    const isOwner = studyGroup.creatorId === user.id;
+    const isAdmin = studyGroup.studyMembers.some(member => member.userId === user.id && member.role === StudyRole.ADMIN);
+
+    if (!isOwner && !isAdmin) {
+      return errorResponse('Forbidden', 403);
+    }
+
+    await deleteNotice(noticeId);
 
     return successResponse(null, 'Notice deleted successfully', 204);
   } catch (error) {
