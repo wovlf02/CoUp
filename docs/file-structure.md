@@ -28,6 +28,36 @@ CoUp/
 │   │   │   │       ├── page.jsx                    # 회원가입 페이지 (CSR)
 │   │   │   │       └── loading.jsx                 # 로딩 UI
 │   │   │   │
+│   │   │   ├── (admin)/                            # 관리자 라우트 그룹 (SYSTEM_ADMIN만)
+│   │   │   │   ├── layout.jsx                      # 관리자 전용 레이아웃
+│   │   │   │   ├── loading.jsx                     # 관리자 로딩 UI
+│   │   │   │   │
+│   │   │   │   ├── page.jsx                        # 관리자 대시보드 (리다이렉트)
+│   │   │   │   │
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   ├── page.jsx                    # 관리자 대시보드 메인
+│   │   │   │   │   └── loading.jsx
+│   │   │   │   │
+│   │   │   │   ├── users/
+│   │   │   │   │   ├── page.jsx                    # 사용자 관리
+│   │   │   │   │   └── loading.jsx
+│   │   │   │   │
+│   │   │   │   ├── studies/
+│   │   │   │   │   ├── page.jsx                    # 스터디 관리
+│   │   │   │   │   └── loading.jsx
+│   │   │   │   │
+│   │   │   │   ├── reports/
+│   │   │   │   │   ├── page.jsx                    # 신고 관리
+│   │   │   │   │   └── loading.jsx
+│   │   │   │   │
+│   │   │   │   ├── analytics/
+│   │   │   │   │   ├── page.jsx                    # 통계 분석
+│   │   │   │   │   └── loading.jsx
+│   │   │   │   │
+│   │   │   │   └── settings/
+│   │   │   │       ├── page.jsx                    # 시스템 설정
+│   │   │   │       └── loading.jsx
+│   │   │   │
 │   │   │   ├── (main)/                             # 메인 서비스 라우트 그룹 (인증 필요)
 │   │   │   │   ├── layout.jsx                      # 메인 레이아웃 (Header + Sidebar)
 │   │   │   │   ├── loading.jsx                     # 전역 로딩 UI
@@ -139,6 +169,27 @@ CoUp/
 │   │   │   │       │       └── read/
 │   │   │   │       │           └── route.js        # PATCH - 읽음 처리
 │   │   │   │       │
+│   │   │   │       ├── dashboard/
+│   │   │   │       │   └── route.js                # GET - 대시보드 데이터
+│   │   │   │       │
+│   │   │   │       ├── admin/                       # 관리자 전용 API
+│   │   │   │       │   ├── users/
+│   │   │   │       │   │   ├── route.js            # GET - 사용자 목록
+│   │   │   │       │   │   └── [userId]/
+│   │   │   │       │   │       └── route.js        # PATCH/DELETE - 사용자 관리
+│   │   │   │       │   ├── studies/
+│   │   │   │       │   │   ├── route.js            # GET - 스터디 목록
+│   │   │   │       │   │   └── [studyId]/
+│   │   │   │       │   │       └── route.js        # PATCH/DELETE - 스터디 관리
+│   │   │   │       │   ├── reports/
+│   │   │   │       │   │   ├── route.js            # GET - 신고 목록
+│   │   │   │       │   │   └── [reportId]/
+│   │   │   │       │   │       └── route.js        # PATCH - 신고 처리
+│   │   │   │       │   ├── analytics/
+│   │   │   │       │   │   └── route.js            # GET - 통계 데이터
+│   │   │   │       │   └── settings/
+│   │   │   │       │       └── route.js            # GET/PATCH - 시스템 설정
+│   │   │   │       │
 │   │   │   │       └── internal/                    # 내부 서버간 통신용 API
 │   │   │   │           ├── messages/
 │   │   │   │           │   └── route.js            # POST - 채팅 메시지 저장
@@ -218,6 +269,17 @@ CoUp/
 │   │   │   │   └── ServerErrorMessage.jsx           # 500 서버 에러
 │   │   │   │
 │   │   │   ├── domain/                              # 도메인별 컴포넌트
+│   │   │   │   ├── landing/                         # 랜딩 페이지 전용
+│   │   │   │   │   ├── HeroSection.jsx              # Hero 섹션
+│   │   │   │   │   ├── FeaturesSection.jsx          # 기능 소개 섹션
+│   │   │   │   │   ├── FeatureCard.jsx              # 기능 카드
+│   │   │   │   │   ├── HowItWorksSection.jsx        # 사용 방법 섹션
+│   │   │   │   │   ├── TestimonialsSection.jsx      # 후기 섹션
+│   │   │   │   │   ├── TestimonialCard.jsx          # 후기 카드
+│   │   │   │   │   ├── CTASection.jsx               # CTA 섹션
+│   │   │   │   │   ├── LandingHeader.jsx            # 랜딩 전용 헤더
+│   │   │   │   │   └── LandingFooter.jsx            # 랜딩 전용 푸터
+│   │   │   │   │
 │   │   │   │   ├── auth/
 │   │   │   │   │   ├── SignInForm.jsx               # 로그인 폼
 │   │   │   │   │   ├── SignUpForm.jsx               # 회원가입 폼
@@ -297,19 +359,34 @@ CoUp/
 │   │   │   │   │   ├── MyStudyList.jsx              # 내 스터디 목록
 │   │   │   │   │   └── AccountSettings.jsx          # 계정 설정
 │   │   │   │   │
-│   │   │   │   └── notification/
-│   │   │   │       ├── NotificationList.jsx         # 알림 목록
-│   │   │   │       ├── NotificationItem.jsx         # 알림 아이템
-│   │   │   │       ├── NotificationBadge.jsx        # 알림 배지 (개수)
-│   │   │   │       └── NotificationDropdown.jsx     # 헤더 알림 드롭다운
+│   │   │   │   ├── notification/
+│   │   │   │   │   ├── NotificationList.jsx         # 알림 목록
+│   │   │   │   │   ├── NotificationItem.jsx         # 알림 아이템
+│   │   │   │   │   ├── NotificationBadge.jsx        # 알림 배지 (개수)
+│   │   │   │   │   └── NotificationDropdown.jsx     # 헤더 알림 드롭다운
+│   │   │   │   │
+│   │   │   │   └── admin/                           # 관리자 전용 컴포넌트
+│   │   │   │       ├── AdminSidebar.jsx             # 관리자 사이드바
+│   │   │   │       ├── AdminDashboardStats.jsx      # 관리자 통계 카드
+│   │   │   │       ├── UserManagementTable.jsx      # 사용자 관리 테이블
+│   │   │   │       ├── StudyManagementTable.jsx     # 스터디 관리 테이블
+│   │   │   │       ├── ReportManagementTable.jsx    # 신고 관리 테이블
+│   │   │   │       ├── AnalyticsCharts.jsx          # 통계 차트
+│   │   │   │       ├── SystemSettingsForm.jsx       # 시스템 설정 폼
+│   │   │   │       └── AdminActions.jsx             # 관리자 액션 버튼
 │   │   │   │
 │   │   │   ├── modals/                              # 모달 컴포넌트
 │   │   │   │   ├── NoticeCreateEditModal.jsx        # 공지사항 작성/수정 모달
+│   │   │   │   ├── NoticeDetailModal.jsx            # 공지사항 상세 모달
 │   │   │   │   ├── EventAddEditModal.jsx            # 일정 추가/수정 모달
+│   │   │   │   ├── EventDetailModal.jsx             # 일정 상세 모달
 │   │   │   │   ├── TaskCreateEditModal.jsx          # 할 일 생성/수정 모달
 │   │   │   │   ├── ProfileImageChangeModal.jsx      # 프로필 이미지 변경 모달
 │   │   │   │   ├── MemberKickModal.jsx              # 멤버 강퇴 확인 모달
+│   │   │   │   ├── MemberDetailModal.jsx            # 멤버 상세 정보 모달
 │   │   │   │   ├── StudyDeleteModal.jsx             # 스터디 삭제 확인 모달
+│   │   │   │   ├── AccountDeleteModal.jsx           # 계정 삭제 확인 모달
+│   │   │   │   ├── FilePreviewModal.jsx             # 파일 미리보기 모달
 │   │   │   │   └── GeneralConfirmationModal.jsx     # 범용 확인 모달
 │   │   │   │
 │   │   │   └── providers/                           # Context Providers
@@ -371,10 +448,13 @@ CoUp/
 │   │   │   │   ├── validators.js                    # 입력 검증 함수
 │   │   │   │   ├── formatters.js                    # 날짜, 숫자 포맷터
 │   │   │   │   ├── constants.js                     # 상수 정의
+│   │   │   │   ├── categories.js                    # 카테고리 정의 (스터디)
+│   │   │   │   ├── roles.js                         # 역할 정의 (OWNER/ADMIN/MEMBER)
 │   │   │   │   ├── redis.js                         # Redis 클라이언트
 │   │   │   │   ├── s3.js                            # AWS S3 헬퍼
 │   │   │   │   ├── logger.js                        # 로깅 유틸리티
-│   │   │   │   └── permissions.js                   # 권한 체크 함수
+│   │   │   │   ├── permissions.js                   # 권한 체크 함수
+│   │   │   │   └── cn.js                            # Tailwind className 병합
 │   │   │   │
 │   │   │   ├── hooks/                               # 커스텀 React Hooks
 │   │   │   │   ├── useAuth.js                       # 인증 상태 훅
@@ -386,7 +466,10 @@ CoUp/
 │   │   │   │   ├── useLocalStorage.js               # 로컬 스토리지 훅
 │   │   │   │   ├── usePermission.js                 # 권한 체크 훅
 │   │   │   │   ├── useToast.js                      # Toast 알림 훅
-│   │   │   │   └── useFileUpload.js                 # 파일 업로드 훅
+│   │   │   │   ├── useFileUpload.js                 # 파일 업로드 훅
+│   │   │   │   ├── useScrollToBottom.js             # 스크롤 하단 이동 훅
+│   │   │   │   ├── useClickOutside.js               # 외부 클릭 감지 훅
+│   │   │   │   └── useNotifications.js              # 실시간 알림 수신 훅
 │   │   │   │
 │   │   │   └── store/                               # Zustand 상태 관리
 │   │   │       ├── userStore.js                     # 사용자 상태 (전역)
@@ -628,14 +711,17 @@ CoUp/
 
 ### **middleware.js**
 ```javascript
-// 보호된 라우트
+// 보호된 라우트 (인증 필요)
 const protectedRoutes = ['/dashboard', '/studies', '/me', '/notifications']
 
-// 인증 전용 라우트
+// 인증 전용 라우트 (비로그인만)
 const authRoutes = ['/sign-in', '/sign-up']
 
-// 관리자 전용 라우트
-const adminRoutes = ['/studies/[id]/settings']
+// 스터디 관리자 전용 라우트 (OWNER/ADMIN)
+const studyAdminRoutes = ['/studies/[id]/settings']
+
+// 시스템 관리자 전용 라우트 (SYSTEM_ADMIN)
+const systemAdminRoutes = ['/admin']
 ```
 
 ### **jsconfig.json**
