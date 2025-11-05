@@ -14,10 +14,21 @@
 │                                                                │
 │  ← 뒤로가기                                                     │
 │                                                                │
-│                                                                │
 │                       [Logo] CoUp                              │
 │                     로그인하고 시작하기                          │
 │                                                                │
+│              ┌──────────────────────────────┐                  │
+│              │  이메일                      │                  │
+│              └──────────────────────────────┘                  │
+│              ┌──────────────────────────────┐                  │
+│              │  비밀번호                    │                  │
+│              └──────────────────────────────┘                  │
+│                                                                │
+│              ┌──────────────────────────────┐                  │
+│              │      로그인                  │                  │
+│              └──────────────────────────────┘                  │
+│                                                                │
+│                    ──── 또는 ────                              │
 │                                                                │
 │              ┌──────────────────────────────┐                  │
 │              │  Google로 계속하기            │                  │
@@ -27,9 +38,7 @@
 │              │  GitHub로 계속하기            │                  │
 │              └──────────────────────────────┘                  │
 │                                                                │
-│                                                                │
 │              아직 계정이 없으신가요? [회원가입]                  │
-│                                                                │
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -83,7 +92,88 @@ Hover: gray-50
 
 ---
 
-### 3. 소셜 로그인 버튼
+### 3. 이메일/비밀번호 로그인 폼 (추가)
+
+```
+┌────────────────────────────────────┐
+│  이메일                            │
+│  [example@email.com]              │
+└────────────────────────────────────┘
+
+┌────────────────────────────────────┐
+│  비밀번호                          │
+│  [••••••••]                       │
+└────────────────────────────────────┘
+
+┌────────────────────────────────────┐
+│         로그인                     │
+└────────────────────────────────────┘
+```
+
+**이메일 입력**:
+- Label: "이메일" (text-sm, gray-700, Medium)
+- Input:
+  - 배경: white
+  - 테두리: 1px solid gray-300
+  - 높이: 48px
+  - 패딩: 12px 16px
+  - 둥근 모서리: 8px
+  - Placeholder: "example@email.com"
+  - Focus: border primary-500, shadow
+  - Type: email
+  - Required
+
+**비밀번호 입력**:
+- Label: "비밀번호" (text-sm, gray-700, Medium)
+- Input:
+  - 배경: white
+  - 테두리: 1px solid gray-300
+  - 높이: 48px
+  - 패딩: 12px 16px
+  - 둥근 모서리: 8px
+  - Placeholder: "8자 이상"
+  - Focus: border primary-500, shadow
+  - Type: password
+  - Required
+  - 우측 아이콘: 👁️ (표시/숨김 토글)
+
+**로그인 버튼**:
+- 배경: primary-600
+- 텍스트: white (text-base, 16px, Semibold)
+- 높이: 48px
+- 전체 너비
+- 둥근 모서리: 8px
+- Hover: primary-700, 상승 효과
+- Disabled: 입력값 없을 때 비활성화
+
+**폼 검증**:
+- 이메일: 유효한 이메일 형식 검증
+- 비밀번호: 8자 이상
+- 실시간 에러 메시지 (input 아래)
+
+**간격**:
+- 제목 아래 32px
+- Input 사이 16px
+- 로그인 버튼 위 24px
+
+---
+
+### 4. 구분선 (Divider)
+
+```
+──────── 또는 ────────
+```
+
+**스타일**:
+- 텍스트: gray-400 (text-sm)
+- 선: gray-200 (1px)
+- 로그인 버튼 아래 32px
+- 소셜 버튼 위 32px
+
+---
+
+### 5. 소셜 로그인 버튼
+
 ```
 ┌────────────────────────────────────┐
 │  [G]  Google로 계속하기            │
@@ -114,12 +204,12 @@ Hover: gray-50
 - 클릭 → NextAuth GitHub OAuth
 
 **간격**:
-- 제목 아래 32px
 - 버튼 사이 12px
 
 ---
 
-### 4. 회원가입 링크
+### 6. 회원가입 링크
+
 ```
 아직 계정이 없으신가요? [회원가입]
 ```
@@ -135,7 +225,8 @@ Hover: gray-50
 
 ---
 
-### 5. 하단 (선택적)
+### 7. 하단 (선택적)
+
 ```
 이용약관  |  개인정보처리방침
 ```
@@ -151,6 +242,7 @@ Hover: gray-50
 ## 🎬 인터랙션
 
 ### 로딩 상태
+
 ```
 버튼 클릭 시:
 ┌────────────────────────────────────┐
@@ -163,6 +255,7 @@ Hover: gray-50
 ```
 
 ### 성공
+
 ```
 1. 로그인 성공
 2. 대시보드로 리다이렉트 → `/dashboard`
@@ -170,11 +263,12 @@ Hover: gray-50
 ```
 
 ### 실패
+
 ```
-1. 에러 메시지 표시 (버튼 위)
+1. 에러 메시지 표시 (폼 상단)
 ┌────────────────────────────────────┐
-│  ⚠️  로그인에 실패했습니다.         │
-│     다시 시도해 주세요.             │
+│  ⚠️  이메일 또는 비밀번호가         │
+│     올바르지 않습니다.             │
 └────────────────────────────────────┘
 
 - 배경: danger-50
@@ -184,14 +278,37 @@ Hover: gray-50
 - 둥근 모서리: 8px
 ```
 
+### 입력 검증 에러
+
+```
+이메일 형식 오류:
+"올바른 이메일 형식이 아닙니다"
+
+비밀번호 길이 부족:
+"비밀번호는 8자 이상이어야 합니다"
+
+- 텍스트: danger-600 (text-sm)
+- Input 아래 4px 간격
+```
+
 ---
 
 ## 🔐 보안
 
-### OAuth 흐름
+### Credentials 로그인 (이메일/비밀번호)
+
+1. 폼 제출
+2. NextAuth.js Credentials Provider 호출
+3. 서버에서 이메일 검증
+4. bcrypt로 비밀번호 해시 비교
+5. 일치 시 세션 생성 (JWT)
+6. 대시보드로 리다이렉트
+
+### OAuth 흐름 (Google/GitHub)
+
 1. 버튼 클릭
-2. NextAuth.js Google/GitHub Provider 호출
-3. OAuth 동의 화면 (팝업 또는 리다이렉트)
+2. NextAuth.js Provider 호출
+3. OAuth 동의 화면
 4. 코드 교환 → 토큰 받기
 5. 사용자 정보 조회
 6. DB에 저장 (첫 로그인 시)
@@ -199,29 +316,42 @@ Hover: gray-50
 8. 대시보드로 리다이렉트
 
 ### CSRF 방어
+
 - NextAuth.js 내장 CSRF 토큰 사용
 - state 파라미터 검증
+
+### 비밀번호 보안
+
+- bcrypt 해싱 (salt rounds: 10)
+- 평문 비밀번호 저장 금지
+- 로그인 실패 시 구체적 오류 메시지 제공하지 않음
+  (이메일/비밀번호 중 어느 것이 틀렸는지 노출 X)
 
 ---
 
 ## 📱 반응형 설계
 
 ### Desktop (1280px+)
+
 ```
 카드 크기: 480px × auto
 중앙 정렬 (화면 중앙)
+Input 높이: 48px
 ```
 
 ### Tablet (768-1279px)
+
 ```
 카드 크기: 420px × auto
 중앙 정렬
 ```
 
 ### Mobile (<768px)
+
 ```
 카드 크기: 100% (좌우 여백 24px)
 패딩: 24px
+Input 높이: 48px 유지
 버튼 높이: 48px 유지
 ```
 
@@ -230,93 +360,105 @@ Hover: gray-50
 ## 🎨 스타일 코드
 
 ```css
-/* Container */
-.sign-in-container {
-  min-height: 100vh;
-  background: var(--gray-50);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+/* Form Group */
+.form-group {
+  margin-bottom: 16px;
 }
 
-/* Card */
-.sign-in-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: var(--shadow-lg);
-  padding: 48px;
-  width: 100%;
-  max-width: 480px;
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 6px;
 }
 
-/* Logo */
-.sign-in-logo {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 16px;
-  color: var(--primary-500);
-}
-
-/* Title */
-.sign-in-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--gray-900);
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-/* Social Button */
-.social-button {
+.form-input {
   width: 100%;
   height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
+  color: var(--gray-900);
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-input.error {
+  border-color: var(--danger-500);
+}
+
+.form-error {
+  font-size: 12px;
+  color: var(--danger-600);
+  margin-top: 4px;
+}
+
+/* Password Toggle */
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--gray-400);
+}
+
+/* Primary Button (로그인) */
+.primary-button {
+  width: 100%;
+  height: 48px;
+  background: var(--primary-600);
+  color: white;
+  border: none;
   border-radius: 8px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.social-button.google {
-  background: white;
-  border: 1px solid var(--gray-300);
-  color: var(--gray-700);
+.primary-button:hover:not(:disabled) {
+  background: var(--primary-700);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.social-button.google:hover {
-  background: var(--gray-50);
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.social-button.github {
-  background: #24292e;
-  color: white;
-  border: none;
-}
-
-.social-button.github:hover {
-  background: #1b1f23;
-}
-
-/* Sign Up Link */
-.sign-up-link {
-  text-align: center;
-  margin-top: 32px;
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 32px 0;
+  color: var(--gray-400);
   font-size: 14px;
-  color: var(--gray-600);
 }
 
-.sign-up-link a {
-  color: var(--primary-500);
-  text-decoration: none;
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gray-200);
 }
 
-.sign-up-link a:hover {
-  text-decoration: underline;
+.divider::before {
+  margin-right: 16px;
+}
+
+.divider::after {
+  margin-left: 16px;
 }
 ```
 
@@ -329,32 +471,38 @@ Hover: gray-50
 │                                                         │
 │  ← 뒤로                                                  │
 │                                                         │
-│                                                         │
 │                    ┌─────────────┐                      │
-│                    │             │                      │
 │                    │   [LOGO]    │                      │
 │                    │    CoUp     │                      │
-│                    │             │                      │
 │                    └─────────────┘                      │
 │                                                         │
 │                 로그인하고 시작하기                       │
 │                                                         │
+│         ┌───────────────────────────────────┐           │
+│         │  이메일                           │           │
+│         │  [example@email.com]             │           │
+│         └───────────────────────────────────┘           │
 │                                                         │
 │         ┌───────────────────────────────────┐           │
-│         │                                   │           │
+│         │  비밀번호                         │           │
+│         │  [••••••••]                  [👁️]│           │
+│         └───────────────────────────────────┘           │
+│                                                         │
+│         ┌───────────────────────────────────┐           │
+│         │          로그인                   │           │
+│         └───────────────────────────────────┘           │
+│                                                         │
+│                   ──── 또는 ────                        │
+│                                                         │
+│         ┌───────────────────────────────────┐           │
 │         │  [G]  Google로 계속하기           │           │
-│         │                                   │           │
 │         └───────────────────────────────────┘           │
 │                                                         │
 │         ┌───────────────────────────────────┐           │
-│         │                                   │           │
 │         │  [GH]  GitHub로 계속하기          │           │
-│         │                                   │           │
 │         └───────────────────────────────────┘           │
-│                                                         │
 │                                                         │
 │         아직 계정이 없으신가요? [회원가입]                │
-│                                                         │
 │                                                         │
 │              이용약관  |  개인정보처리방침                │
 │                                                         │
@@ -366,11 +514,17 @@ Hover: gray-50
 ## ✅ 완료 체크리스트
 
 - [ ] 카드 레이아웃 구현
+- [ ] 이메일/비밀번호 입력 폼
+- [ ] 폼 검증 (이메일 형식, 비밀번호 길이)
+- [ ] 로그인 버튼 (Credentials)
+- [ ] 구분선 (또는)
 - [ ] Google 소셜 로그인 버튼
 - [ ] GitHub 소셜 로그인 버튼
+- [ ] NextAuth.js Credentials Provider 연동
 - [ ] NextAuth.js OAuth 연동
 - [ ] 로딩 상태 UI
 - [ ] 에러 처리 (Toast 또는 인라인 메시지)
+- [ ] 비밀번호 표시/숨김 토글
 - [ ] 회원가입 페이지 링크
 - [ ] 반응형 테스트
 - [ ] 키보드 접근성 (Tab 순서)

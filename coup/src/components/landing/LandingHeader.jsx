@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import styles from '@/styles/landing/landing-header.module.css'
 
 export default function LandingHeader() {
+  const router = useRouter()
   const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
@@ -19,6 +21,14 @@ export default function LandingHeader() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handleLogin = () => {
+    router.push('/sign-in')
+  }
+
+  const handleSignup = () => {
+    router.push('/sign-up')
+  }
+
   return (
     <header className={`${styles.header} ${isScrolled ? styles.solid : styles.transparent}`}>
       <div className={styles.headerContainer}>
@@ -28,8 +38,8 @@ export default function LandingHeader() {
         </div>
 
         <nav className={styles.nav}>
-          <button className={styles.loginBtn}>로그인</button>
-          <button className={styles.signupBtn}>시작하기</button>
+          <button className={styles.loginBtn} onClick={handleLogin}>로그인</button>
+          <button className={styles.signupBtn} onClick={handleSignup}>시작하기</button>
         </nav>
 
         <button className={styles.mobileMenuBtn} aria-label="메뉴">

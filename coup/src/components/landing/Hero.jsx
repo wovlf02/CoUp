@@ -1,11 +1,22 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import styles from '@/styles/landing/hero.module.css'
 
 export default function Hero() {
+  const router = useRouter()
+
   const scrollToFeatures = () => {
     const featuresSection = document.getElementById('features')
     featuresSection?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleGetStarted = () => {
+    router.push('/sign-up')
+  }
+
+  const handleExploreStudies = () => {
+    router.push('/studies')
   }
 
   return (
@@ -19,13 +30,13 @@ export default function Hero() {
           </p>
 
           <div className={styles.ctaButtons}>
-            <button className={styles.primaryBtn}>
+            <button className={styles.primaryBtn} onClick={handleGetStarted}>
               지금 시작하기
               <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </button>
-            <button className={styles.secondaryBtn}>
+            <button className={styles.secondaryBtn} onClick={handleExploreStudies}>
               스터디 둘러보기
             </button>
           </div>
