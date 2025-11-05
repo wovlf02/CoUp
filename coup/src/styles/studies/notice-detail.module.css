@@ -1,0 +1,274 @@
+/* 공지사항 상세 페이지 스타일 */
+
+.noticeDetailPage {
+  width: 100%;
+}
+
+/* Study Header */
+.studyHeader {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  margin: -2rem -2rem 0 -2rem;
+}
+
+.studyInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.emoji {
+  font-size: 2rem;
+}
+
+.studyName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+/* Tab Navigation */
+.tabNavigation {
+  display: flex;
+  gap: 2rem;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 1.5rem;
+  margin: 0 -2rem 2rem -2rem;
+  overflow-x: auto;
+}
+
+.tab {
+  position: relative;
+  padding: 1rem 0;
+  color: #6b7280;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.tab:hover {
+  color: #111827;
+}
+
+.tabActive {
+  color: #2563eb;
+}
+
+.tabActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #2563eb;
+}
+
+/* Content */
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.detailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.backToList {
+  color: #6b7280;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.backToList:hover {
+  color: #111827;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editButton,
+.deleteButton {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editButton {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+}
+
+.editButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.deleteButton {
+  border: 1px solid #fecaca;
+  background: white;
+  color: #dc2626;
+}
+
+.deleteButton:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.pinnedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #eff6ff;
+  color: #1e40af;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+  word-break: break-word;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: #6b7280;
+}
+
+.author {
+  font-weight: 500;
+  color: #374151;
+}
+
+.separator {
+  color: #d1d5db;
+}
+
+.date {
+  color: #9ca3af;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 2rem 0;
+}
+
+.body {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  line-height: 1.8;
+  color: #374151;
+}
+
+/* Not Found */
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+}
+
+.notFound h2 {
+  font-size: 1.5rem;
+  color: #374151;
+}
+
+.notFound button {
+  padding: 0.75rem 1.5rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notFound button:hover {
+  background: #1d4ed8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .studyHeader {
+    padding: 1rem;
+    margin: -1rem -1rem 0 -1rem;
+  }
+
+  .studyInfo {
+    gap: 0.5rem;
+  }
+
+  .emoji {
+    font-size: 1.5rem;
+  }
+
+  .studyName {
+    font-size: 1.25rem;
+  }
+
+  .tabNavigation {
+    gap: 1rem;
+    padding: 0 1rem;
+    margin: 0 -1rem 1rem -1rem;
+  }
+
+  .content {
+    padding: 0;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .body {
+    padding: 1.5rem;
+  }
+
+  .detailHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .editButton,
+  .deleteButton {
+    flex: 1;
+  }
+}

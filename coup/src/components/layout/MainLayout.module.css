@@ -1,0 +1,59 @@
+/* Main Layout 스타일 */
+
+.layout {
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+/* Main Content */
+.main {
+  margin-left: 240px; /* Sidebar 너비 */
+  margin-top: 64px; /* Header 높이 */
+  padding: 2rem;
+  min-height: calc(100vh - 64px);
+}
+
+/* Tablet */
+@media (max-width: 1279px) {
+  .main {
+    margin-left: 200px;
+    padding: 1.5rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .main {
+    margin-left: 0;
+    margin-top: 56px;
+    padding: 1rem;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* Mobile Overlay */
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 45;
+    animation: fadeIn 0.3s;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* Content Width Constraints */
+.main > * {
+  max-width: 1600px;
+  margin: 0 auto;
+}

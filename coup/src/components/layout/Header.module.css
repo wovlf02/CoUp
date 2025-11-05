@@ -1,0 +1,418 @@
+/* Header 스타일 */
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 240px; /* Sidebar 너비만큼 */
+  right: 0;
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 2rem;
+  z-index: 30;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile Menu Button (Hidden on Desktop) */
+.menuButton {
+  display: none;
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  color: #374151;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.menuButton:hover {
+  color: #111827;
+}
+
+.menuIcon {
+  display: block;
+  line-height: 1;
+}
+
+/* Search Form */
+.searchForm {
+  position: relative;
+  flex: 1;
+  max-width: 500px;
+}
+
+.searchInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 3rem 0 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  color: #374151;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #4f46e5;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.searchButton {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.searchButton:hover {
+  opacity: 0.7;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notificationWrapper,
+.profileWrapper {
+  position: relative;
+}
+
+.iconButton,
+.profileButton {
+  position: relative;
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 0.5rem;
+}
+
+.iconButton:hover {
+  background: #f3f4f6;
+}
+
+.icon {
+  font-size: 1.5rem;
+  display: block;
+}
+
+.badge {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Avatar */
+.avatar,
+.avatarPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileButton:hover {
+  opacity: 0.8;
+}
+
+/* Dropdown */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 320px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdownHeader h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.markAllRead {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  background: none;
+  color: #4f46e5;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: background 0.2s;
+}
+
+.markAllRead:hover {
+  background: #eef2ff;
+}
+
+.dropdownContent {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notificationItem {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notificationItem:hover {
+  background: #f9fafb;
+}
+
+.notificationItem:last-child {
+  border-bottom: none;
+}
+
+.notificationIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.notificationText {
+  flex: 1;
+}
+
+.notificationTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem;
+}
+
+.notificationDesc {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 0.25rem;
+}
+
+.notificationTime {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.viewAll {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  color: #4f46e5;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-top: 1px solid #e5e7eb;
+  transition: background 0.2s;
+}
+
+.viewAll:hover {
+  background: #f9fafb;
+}
+
+/* Profile Dropdown */
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.profileInfo .avatarPlaceholder {
+  width: 48px;
+  height: 48px;
+  font-size: 1.25rem;
+}
+
+.profileName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.125rem;
+}
+
+.profileEmail {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.5rem 0;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  color: #374151;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdownItem:hover {
+  background: #f9fafb;
+}
+
+.dropdownIcon {
+  font-size: 1.125rem;
+}
+
+.logout {
+  color: #dc2626;
+}
+
+.logout:hover {
+  background: #fef2f2;
+}
+
+/* Tablet */
+@media (max-width: 1279px) {
+  .header {
+    left: 200px;
+    padding: 0 1.5rem;
+  }
+
+  .searchForm {
+    max-width: 400px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .header {
+    left: 0;
+    height: 56px;
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+
+  .menuButton {
+    display: block;
+  }
+
+  .searchForm {
+    flex: 1;
+    max-width: none;
+  }
+
+  .searchInput {
+    height: 36px;
+    font-size: 0.875rem;
+  }
+
+  .actions {
+    gap: 0.5rem;
+  }
+
+  .icon {
+    font-size: 1.25rem;
+  }
+
+  .avatar,
+  .avatarPlaceholder {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .dropdown {
+    min-width: 280px;
+  }
+}
+
+/* Scrollbar */
+.dropdownContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdownContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdownContent::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.dropdownContent::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
