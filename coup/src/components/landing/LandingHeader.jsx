@@ -1,0 +1,43 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import styles from '@/styles/landing/landing-header.module.css'
+
+export default function LandingHeader() {
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  return (
+    <header className={`${styles.header} ${isScrolled ? styles.solid : styles.transparent}`}>
+      <div className={styles.headerContainer}>
+        <div className={styles.logo} onClick={scrollToTop}>
+          <span>🚀</span>
+          <span>CoUp</span>
+        </div>
+
+        <nav className={styles.nav}>
+          <button className={styles.loginBtn}>로그인</button>
+          <button className={styles.signupBtn}>시작하기</button>
+        </nav>
+
+        <button className={styles.mobileMenuBtn} aria-label="메뉴">
+          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </header>
+  )
+}
