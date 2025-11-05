@@ -4,6 +4,7 @@
   flex-direction: column;
   height: calc(100vh - 64px - 48px - 80px); /* Header + Tab + Padding */
   max-height: calc(100vh - 64px - 48px - 80px);
+  width: 100%;
   overflow: hidden; /* 전체 스크롤 방지 */
 }
 
@@ -291,4 +292,3 @@
     max-height: 60px;
   }
 }
-

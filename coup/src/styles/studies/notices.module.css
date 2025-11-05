@@ -1,6 +1,7 @@
 /* 공지사항 컨테이너 */
 .noticesContainer {
-  padding: 24px;
+  padding: 0; /* 부모 레이아웃에서 padding 적용 */
+  width: 100%;
 }
 
 /* 헤더 */
@@ -343,4 +344,3 @@
     max-height: 95vh;
   }
 }
-
