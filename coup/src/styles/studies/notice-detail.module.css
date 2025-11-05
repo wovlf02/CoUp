@@ -1,274 +1,188 @@
-/* 공지사항 상세 페이지 스타일 */
-
-.noticeDetailPage {
-  width: 100%;
-}
-
-/* Study Header */
-.studyHeader {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1.5rem;
-  margin: -2rem -2rem 0 -2rem;
-}
-
-.studyInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.emoji {
-  font-size: 2rem;
-}
-
-.studyName {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
-
-/* Tab Navigation */
-.tabNavigation {
-  display: flex;
-  gap: 2rem;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0 1.5rem;
-  margin: 0 -2rem 2rem -2rem;
-  overflow-x: auto;
-}
-
-.tab {
-  position: relative;
-  padding: 1rem 0;
-  color: #6b7280;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  white-space: nowrap;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.tab:hover {
-  color: #111827;
-}
-
-.tabActive {
-  color: #2563eb;
-}
-
-.tabActive::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #2563eb;
-}
-
-/* Content */
-.content {
+/* 공지사항 상세 컨테이너 */
+.noticeDetailContainer {
+  padding: 24px;
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
 }
 
-.detailHeader {
+/* 헤더 */
+.noticeHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
 }
 
-.backToList {
-  color: #6b7280;
-  font-size: 0.9375rem;
-  text-decoration: none;
-  transition: color 0.2s;
+.backButton {
+  padding: 8px 16px;
+  background: white;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.backToList:hover {
-  color: #111827;
+.backButton:hover {
+  background: var(--gray-50);
 }
 
-.actions {
+.headerActions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .editButton,
 .deleteButton {
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .editButton {
-  border: 1px solid #d1d5db;
   background: white;
-  color: #374151;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
 }
 
 .editButton:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: var(--gray-50);
 }
 
 .deleteButton {
-  border: 1px solid #fecaca;
   background: white;
-  color: #dc2626;
+  color: var(--danger-600);
+  border: 1px solid var(--danger-300);
 }
 
 .deleteButton:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--danger-50);
+}
+
+/* 제목 */
+.noticeTitle {
+  margin-bottom: 16px;
+}
+
+.noticeTitle h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+  line-height: 1.3;
 }
 
 .pinnedBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #eff6ff;
-  color: #1e40af;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--primary-100);
+  color: var(--primary-700);
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 1rem;
+  border-radius: 6px;
+  margin-bottom: 12px;
 }
 
-.title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
-  line-height: 1.3;
-  margin-bottom: 1rem;
-  word-break: break-word;
-}
-
-.meta {
+/* 메타 정보 */
+.noticeMeta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-  color: #6b7280;
-}
-
-.author {
-  font-weight: 500;
-  color: #374151;
-}
-
-.separator {
-  color: #d1d5db;
-}
-
-.date {
-  color: #9ca3af;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--gray-600);
+  margin-bottom: 24px;
 }
 
 .divider {
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 2rem 0;
+  height: 1px;
+  background: var(--gray-200);
+  margin-bottom: 32px;
 }
 
-.body {
-  background: white;
-  border-radius: 0.75rem;
-  padding: 2rem;
+/* 본문 */
+.noticeContent {
+  font-size: 16px;
   line-height: 1.8;
-  color: #374151;
+  color: var(--gray-800);
 }
 
-/* Not Found */
-.notFound {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 50vh;
-  gap: 1rem;
+.noticeContent h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 32px 0 16px 0;
 }
 
-.notFound h2 {
-  font-size: 1.5rem;
-  color: #374151;
+.noticeContent h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 24px 0 12px 0;
 }
 
-.notFound button {
-  padding: 0.75rem 1.5rem;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
+.noticeContent p {
+  margin: 16px 0;
 }
 
-.notFound button:hover {
-  background: #1d4ed8;
+.noticeContent ul,
+.noticeContent ol {
+  margin: 16px 0;
+  padding-left: 24px;
 }
 
-/* Responsive */
+.noticeContent li {
+  margin: 8px 0;
+}
+
+.noticeContent strong {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.noticeContent code {
+  padding: 2px 6px;
+  background: var(--gray-100);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
+
+.noticeContent pre {
+  padding: 16px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.noticeContent img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+/* 반응형 */
 @media (max-width: 768px) {
-  .studyHeader {
-    padding: 1rem;
-    margin: -1rem -1rem 0 -1rem;
+  .noticeDetailContainer {
+    padding: 16px;
   }
 
-  .studyInfo {
-    gap: 0.5rem;
+  .noticeTitle h1 {
+    font-size: 24px;
   }
 
-  .emoji {
-    font-size: 1.5rem;
+  .noticeContent {
+    font-size: 15px;
   }
 
-  .studyName {
-    font-size: 1.25rem;
+  .noticeContent h2 {
+    font-size: 20px;
   }
 
-  .tabNavigation {
-    gap: 1rem;
-    padding: 0 1rem;
-    margin: 0 -1rem 1rem -1rem;
-  }
-
-  .content {
-    padding: 0;
-  }
-
-  .title {
-    font-size: 1.5rem;
-  }
-
-  .body {
-    padding: 1.5rem;
-  }
-
-  .detailHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .actions {
-    width: 100%;
-  }
-
-  .editButton,
-  .deleteButton {
-    flex: 1;
+  .noticeContent h3 {
+    font-size: 18px;
   }
 }
+
