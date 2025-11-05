@@ -181,14 +181,72 @@ export default function TermsPage() {
         <article id="article-9" className={styles.article}>
           <h2 className={styles.articleTitle}>제9조 (서비스의 제공)</h2>
           <div className={styles.articleContent}>
-            <p>회사는 회원에게 아래와 같은 서비스를 제공합니다:</p>
-            <ul>
-              <li>스터디 그룹 생성 및 관리</li>
-              <li>실시간 채팅 및 화상 스터디</li>
-              <li>파일 공유 및 자료 관리</li>
-              <li>일정 관리 및 할 일 관리</li>
-              <li>알림 서비스</li>
-            </ul>
+            <ol>
+              <li>회사는 회원에게 아래와 같은 서비스를 제공합니다:
+                <ul>
+                  <li>스터디 그룹 생성 및 관리</li>
+                  <li>실시간 채팅 및 화상 스터디</li>
+                  <li>파일 공유 및 자료 관리</li>
+                  <li>일정 관리 및 할 일 관리</li>
+                  <li>알림 서비스</li>
+                  <li>기타 회사가 추가 개발하거나 다른 회사와의 제휴계약 등을 통해 회원에게 제공하는 일체의 서비스</li>
+                </ul>
+              </li>
+              <li>서비스는 연중무휴, 1일 24시간 제공함을 원칙으로 합니다. 다만, 회사는 서비스의 종류나 성질에 따라 제공하는 서비스 중 일부에 대해서는 별도로 이용시간을 정할 수 있으며, 이 경우 그 이용시간을 사전에 회원에게 공지 또는 통지합니다.</li>
+              <li>회사는 컴퓨터 등 정보통신설비의 보수점검, 교체 및 고장, 통신두절 또는 운영상 상당한 이유가 있는 경우 서비스의 제공을 일시적으로 중단할 수 있습니다. 이 경우 회사는 회원에게 통지합니다. 다만, 회사가 사전에 통지할 수 없는 부득이한 사유가 있는 경우 사후에 통지할 수 있습니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-10" className={styles.article}>
+          <h2 className={styles.articleTitle}>제10조 (서비스의 변경 및 중단)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회사는 상당한 이유가 있는 경우에 운영상, 기술상의 필요에 따라 제공하고 있는 전부 또는 일부 서비스를 변경할 수 있습니다.</li>
+              <li>서비스의 내용, 이용방법, 이용시간에 대하여 변경이 있는 경우에는 변경사유, 변경될 서비스의 내용 및 제공일자 등은 그 변경 전 7일 이상 해당 서비스 초기화면에 게시하여야 합니다.</li>
+              <li>회사는 무료로 제공되는 서비스의 일부 또는 전부를 회사의 정책 및 운영의 필요상 수정, 중단, 변경할 수 있으며, 이에 대하여 관련법에 특별한 규정이 없는 한 회원에게 별도의 보상을 하지 않습니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-11" className={styles.article}>
+          <h2 className={styles.articleTitle}>제11조 (정보의 제공 및 광고의 게재)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회사는 회원이 서비스 이용 중 필요하다고 인정되는 다양한 정보를 공지사항이나 전자우편 등의 방법으로 회원에게 제공할 수 있습니다. 다만, 회원은 관련법에 따른 거래관련 정보 및 고객문의 등에 대한 답변 등을 제외하고는 언제든지 전자우편에 대해서 수신 거절을 할 수 있습니다.</li>
+              <li>회사는 서비스의 운영과 관련하여 서비스 화면, 홈페이지, 전자우편 등에 광고를 게재할 수 있습니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-12" className={styles.article}>
+          <h2 className={styles.articleTitle}>제12조 (게시물의 저작권)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회원이 서비스 내에 게시한 게시물의 저작권은 해당 게시물의 저작자에게 귀속됩니다.</li>
+              <li>회원이 서비스 내에 게시하는 게시물은 검색결과 내지 서비스 및 관련 프로모션 등에 노출될 수 있으며, 해당 노출을 위해 필요한 범위 내에서는 일부 수정, 복제, 편집되어 게시될 수 있습니다. 이 경우, 회사는 저작권법 규정을 준수하며, 회원은 언제든지 고객센터 또는 서비스 내 관리기능을 통해 해당 게시물에 대해 삭제, 검색결과 제외, 비공개 등의 조치를 취할 수 있습니다.</li>
+              <li>회사는 제2항 이외의 방법으로 회원의 게시물을 이용하고자 하는 경우에는 전화, 팩스, 전자우편 등을 통해 사전에 회원의 동의를 얻어야 합니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-13" className={styles.article}>
+          <h2 className={styles.articleTitle}>제13조 (게시물의 관리)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회원의 게시물이 「정보통신망법」 및 「저작권법」등 관련법에 위반되는 내용을 포함하는 경우, 권리자는 관련법이 정한 절차에 따라 해당 게시물의 게시중단 및 삭제 등을 요청할 수 있으며, 회사는 관련법에 따라 조치를 취하여야 합니다.</li>
+              <li>회사는 전항에 따른 권리자의 요청이 없는 경우라도 권리침해가 인정될 만한 사유가 있거나 기타 회사 정책 및 관련법에 위반되는 경우에는 관련법에 따라 해당 게시물에 대해 임시조치 등을 취할 수 있습니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-14" className={styles.article}>
+          <h2 className={styles.articleTitle}>제14조 (권리의 귀속)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>서비스에 대한 저작권 및 지적재산권은 회사에 귀속됩니다. 단, 회원의 게시물 및 제휴계약에 따라 제공된 저작물 등은 제외합니다.</li>
+              <li>회사는 서비스와 관련하여 회원에게 회사가 정한 이용조건에 따라 계정, 아이디, 콘텐츠 등을 이용할 수 있는 이용권만을 부여하며, 회원은 이를 양도, 판매, 담보제공 등의 처분행위를 할 수 없습니다.</li>
+            </ol>
           </div>
         </article>
 
@@ -196,7 +254,52 @@ export default function TermsPage() {
           <p><strong>중요:</strong> 본 약관의 모든 내용은 관련 법령을 준수하며, 회원의 권리와 의무를 명확히 합니다. 서비스 이용 전 반드시 전체 내용을 확인해주시기 바랍니다.</p>
         </div>
 
+        <article id="article-15" className={styles.article}>
+          <h2 className={styles.articleTitle}>제15조 (계약해제, 해지 등)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회원은 언제든지 서비스 내 설정을 통하여 이용계약 해지 신청을 할 수 있으며, 회사는 관련법 등이 정하는 바에 따라 이를 즉시 처리하여야 합니다.</li>
+              <li>회원이 계약을 해지할 경우, 관련법 및 개인정보처리방침에 따라 회사가 회원정보를 보유하는 경우를 제외하고는 해지 즉시 회원의 모든 데이터는 소멸됩니다.</li>
+              <li>회원이 계약을 해지하는 경우, 회원이 작성한 게시물은 삭제되지 않으므로 회원은 해지 전에 직접 삭제해야 합니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-16" className={styles.article}>
+          <h2 className={styles.articleTitle}>제16조 (이용제한 등)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회사는 회원이 본 약관의 의무를 위반하거나 서비스의 정상적인 운영을 방해한 경우, 경고, 일시정지, 영구이용정지 등으로 서비스 이용을 단계적으로 제한할 수 있습니다.</li>
+              <li>회사는 전항에도 불구하고, 「주민등록법」을 위반한 명의도용 및 결제도용, 「저작권법」을 위반한 불법프로그램의 제공 및 운영방해, 「정보통신망법」을 위반한 불법통신 및 해킹, 악성프로그램의 배포, 접속권한 초과행위 등과 같이 관련법을 위반한 경우에는 즉시 영구이용정지를 할 수 있습니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-17" className={styles.article}>
+          <h2 className={styles.articleTitle}>제17조 (책임제한)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회사는 천재지변 또는 이에 준하는 불가항력으로 인하여 서비스를 제공할 수 없는 경우에는 서비스 제공에 관한 책임이 면제됩니다.</li>
+              <li>회사는 회원의 귀책사유로 인한 서비스 이용의 장애에 대하여는 책임을 지지 않습니다.</li>
+              <li>회사는 회원이 서비스와 관련하여 게재한 정보, 자료, 사실의 신뢰도, 정확성 등의 내용에 관하여는 책임을 지지 않습니다.</li>
+              <li>회사는 회원 간 또는 회원과 제3자 상호간에 서비스를 매개로 하여 거래 등을 한 경우에는 책임이 면제됩니다.</li>
+              <li>회사는 무료로 제공되는 서비스 이용과 관련하여 관련법에 특별한 규정이 없는 한 책임을 지지 않습니다.</li>
+            </ol>
+          </div>
+        </article>
+
+        <article id="article-18" className={styles.article}>
+          <h2 className={styles.articleTitle}>제18조 (준거법 및 재판관할)</h2>
+          <div className={styles.articleContent}>
+            <ol>
+              <li>회사와 회원 간 제기된 소송은 대한민국법을 준거법으로 합니다.</li>
+              <li>회사와 회원간 발생한 분쟁에 관한 소송은 제소 당시의 회원의 주소에 의하고, 주소가 없는 경우 거소를 관할하는 지방법원의 전속관할로 합니다. 단, 제소 당시 회원의 주소 또는 거소가 명확하지 않거나 외국 거주자의 경우에는 민사소송법상의 관할법원에 제기합니다.</li>
+            </ol>
+          </div>
+        </article>
+
         <div className={styles.footer}>
+          <p><strong>부칙</strong></p>
           <p>본 약관은 2025년 11월 5일부터 적용됩니다.</p>
           <p>문의사항이 있으시면 <Link href="/contact">고객센터</Link>로 연락주시기 바랍니다.</p>
         </div>
