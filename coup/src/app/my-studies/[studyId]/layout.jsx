@@ -14,7 +14,7 @@ export default function StudyLayout({ children, params }) {
   const showSidebar = !pathname.includes('/video-call')
   const showHeader = !pathname.includes('/video-call')
 
-  // Mock study data - 비회원 프리뷰용
+  // Mock study data - 실제로는 API에서 가져옴
   const study = {
     id: studyId,
     emoji: '📚',
@@ -23,7 +23,7 @@ export default function StudyLayout({ children, params }) {
     currentMembers: 12,
     maxMembers: 20,
     category: '프로그래밍',
-    role: null // 비회원
+    role: 'MEMBER' // OWNER, ADMIN, MEMBER
   }
 
   return (

@@ -10,7 +10,7 @@ export default function StudyChatPage() {
   const [messages, setMessages] = useState([])
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore] = useState(true)
   const [currentUser] = useState({ id: 1, name: '나' })
 
   // 샘플 메시지 데이터
@@ -80,9 +80,6 @@ export default function StudyChatPage() {
         const newScrollHeight = messagesContainer.scrollHeight
         messagesContainer.scrollTop = newScrollHeight - previousScrollHeight
       }, 0)
-
-      // 더 이상 메시지가 없으면
-      // setHasMore(false)
     }, 500)
   }
 

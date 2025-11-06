@@ -1,0 +1,421 @@
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 페이지 헤더 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.filterButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.filterBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterBtn:hover {
+  background: var(--gray-50);
+}
+
+.filterBtn.active {
+  background: var(--primary-500);
+  color: white;
+  border-color: var(--primary-500);
+}
+
+/* 할일 추가 버튼 */
+.addTaskButton {
+  background: white;
+  border: 2px dashed var(--gray-300);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 32px;
+}
+
+.addTaskButton:hover {
+  border-color: var(--primary-400);
+  background: var(--primary-50);
+  color: var(--primary-600);
+}
+
+.plusIcon {
+  font-size: 20px;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+/* 할일 추가 폼 */
+.addTaskForm {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.taskInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.taskInput:focus {
+  outline: none;
+  border-color: var(--primary-500);
+}
+
+.taskDetails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.detailGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailGroup label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.taskSelect,
+.taskDate {
+  padding: 10px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.priorityRadios {
+  display: flex;
+  gap: 16px;
+}
+
+.priorityRadios label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelBtn,
+.submitBtn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn {
+  background: white;
+  border: 1px solid var(--gray-300);
+  color: var(--gray-700);
+}
+
+.cancelBtn:hover {
+  background: var(--gray-50);
+}
+
+.submitBtn {
+  background: var(--primary-500);
+  border: none;
+  color: white;
+}
+
+.submitBtn:hover {
+  background: var(--primary-600);
+}
+
+/* 할일 섹션 */
+.taskSection {
+  margin-bottom: 32px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 16px;
+}
+
+.viewAllBtn {
+  padding: 6px 12px;
+  background: var(--gray-100);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewAllBtn:hover {
+  background: var(--gray-200);
+}
+
+/* 할일 목록 */
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 할일 카드 */
+.taskCard {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s ease;
+}
+
+.taskCard:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--primary-200);
+}
+
+.taskCard:hover .taskActions {
+  opacity: 1;
+}
+
+.taskCard.completed {
+  background: var(--gray-50);
+}
+
+/* 체크박스 */
+.taskCheckbox {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.2s ease;
+}
+
+.unchecked {
+  color: var(--gray-400);
+}
+
+.unchecked:hover {
+  color: var(--primary-500);
+}
+
+.checked {
+  color: var(--primary-500);
+}
+
+/* 할일 내용 */
+.taskContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.taskTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+}
+
+.taskTitle.completedTitle {
+  text-decoration: line-through;
+  color: var(--gray-500);
+}
+
+.taskMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--gray-600);
+  flex-wrap: wrap;
+}
+
+.taskMeta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* D-day 색상 */
+.overdue {
+  color: var(--danger-500);
+  font-weight: 600;
+}
+
+.urgent {
+  color: var(--warning-500);
+  font-weight: 600;
+}
+
+/* 우선순위 */
+.taskPriority {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 액션 버튼 */
+.taskActions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.completeBtn,
+.editBtn,
+.deleteBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.completeBtn {
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+}
+
+.completeBtn:hover {
+  background: var(--primary-100);
+}
+
+.editBtn {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+
+.editBtn:hover {
+  background: var(--gray-200);
+}
+
+.deleteBtn {
+  background: var(--danger-50);
+  color: var(--danger-700);
+  border: 1px solid var(--danger-200);
+}
+
+.deleteBtn:hover {
+  background: var(--danger-100);
+}
+
+/* 빈 상태 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 80px;
+  margin-bottom: 24px;
+}
+
+.emptyTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 12px;
+}
+
+.emptyDescription {
+  font-size: 16px;
+  color: var(--gray-600);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .taskDetails {
+    grid-template-columns: 1fr;
+  }
+
+  .taskCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .taskActions {
+    opacity: 1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+

@@ -2,16 +2,18 @@
 .chatContainer {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px - 48px - 80px); /* Header + Tab + Padding */
-  max-height: calc(100vh - 64px - 48px - 80px);
-  width: 100%;
-  overflow: hidden; /* 전체 스크롤 방지 */
+  height: calc(100vh - 64px - 150px - 32px);
+  max-height: calc(100vh - 64px - 150px - 32px);
+  overflow: hidden;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
 }
 
 /* 메시지 영역 - 내부 스크롤만 */
 .chatMessages {
   flex: 1;
-  overflow-y: auto; /* 메시지 영역만 스크롤 */
+  overflow-y: auto;
   overflow-x: hidden;
   padding: 24px;
   display: flex;
@@ -52,19 +54,6 @@
   font-size: 14px;
 }
 
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--gray-300);
-  border-top-color: var(--primary-500);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .noMoreMessages {
   text-align: center;
   padding: 16px;
@@ -74,30 +63,37 @@
 
 /* 날짜 구분선 */
 .dateDivider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 16px 0;
+  text-align: center;
+  padding: 16px 0;
+  position: relative;
   color: var(--gray-500);
   font-size: 13px;
 }
 
-.dateDivider span {
-  padding: 4px 12px;
+.dateDivider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
   background: var(--gray-200);
-  border-radius: 12px;
+  z-index: 0;
+}
+
+.dateDivider span {
+  background: var(--gray-50);
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
 }
 
 /* 시스템 메시지 */
 .systemMessage {
   text-align: center;
-  padding: 8px 16px;
-  background: var(--gray-100);
-  color: var(--gray-600);
-  font-size: 12px;
-  border-radius: 16px;
-  align-self: center;
-  max-width: 80%;
+  color: var(--gray-500);
+  font-size: 13px;
+  padding: 8px 0;
 }
 
 /* 메시지 아이템 */
@@ -105,7 +101,6 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  max-width: 70%;
 }
 
 .messageItem.mine {
@@ -113,9 +108,9 @@
   align-self: flex-end;
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
+.messageAvatar {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--gray-200);
   display: flex;
@@ -126,34 +121,31 @@
 }
 
 .messageContent {
+  max-width: 60%;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
-  min-width: 0;
 }
 
-.messageHeader {
+.messageItem.mine .messageContent {
+  align-items: flex-end;
+}
+
+.messageMeta {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.messageItem.mine .messageMeta {
+  flex-direction: row-reverse;
 }
 
 .userName {
-  font-size: 13px;
   font-weight: 600;
-  color: var(--gray-900);
-}
-
-.timestamp {
-  font-size: 11px;
-  color: var(--gray-500);
-}
-
-.myTimestamp {
-  font-size: 11px;
-  color: var(--gray-500);
-  text-align: right;
+  color: var(--gray-700);
 }
 
 /* 메시지 박스 */
@@ -161,15 +153,14 @@
   padding: 12px 16px;
   border-radius: 12px;
   word-wrap: break-word;
-  word-break: break-word;
   line-height: 1.5;
 }
 
 .messageBubble.other {
   background: white;
   color: var(--gray-900);
+  border: 1px solid var(--gray-200);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .messageBubble.mine {
@@ -180,7 +171,7 @@
 
 /* 입력 영역 - 하단 고정, 스크롤 없음 */
 .chatInputContainer {
-  flex-shrink: 0; /* 크기 고정 */
+  flex-shrink: 0;
   border-top: 1px solid var(--gray-200);
   padding: 16px 24px;
   background: white;
@@ -190,37 +181,39 @@
   min-height: 72px;
 }
 
-.attachButton {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--gray-300);
-  background: white;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 18px;
+.chatInputWrapper {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  flex-shrink: 0;
+  gap: 8px;
+}
+
+.attachButton {
+  background: none;
+  border: none;
+  color: var(--gray-500);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s ease;
 }
 
 .attachButton:hover {
-  background: var(--gray-50);
+  color: var(--gray-700);
 }
 
 .chatInput {
   flex: 1;
   min-height: 40px;
-  max-height: 80px; /* 입력창 최대 높이 제한 */
-  padding: 10px 12px;
+  max-height: 120px;
+  padding: 10px 16px;
   border: 1px solid var(--gray-300);
-  border-radius: 8px;
+  border-radius: 20px;
   resize: none;
-  overflow-y: auto; /* 긴 입력 시에만 입력창 내부 스크롤 */
   font-size: 14px;
   font-family: inherit;
-  line-height: 1.5;
+  overflow-y: auto;
+  transition: border-color 0.2s ease;
 }
 
 .chatInput:focus {
@@ -228,21 +221,24 @@
   border-color: var(--primary-500);
 }
 
+.chatInput::placeholder {
+  color: var(--gray-400);
+}
+
 .sendButton {
-  padding: 10px 20px;
   background: var(--primary-500);
   color: white;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 20px;
   font-size: 14px;
-  transition: all 0.2s;
-  flex-shrink: 0;
-  height: 40px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.sendButton:hover:not(:disabled) {
+.sendButton:hover {
   background: var(--primary-600);
 }
 
@@ -254,7 +250,8 @@
 /* 반응형 */
 @media (max-width: 768px) {
   .chatContainer {
-    height: calc(100vh - 56px - 44px - 48px);
+    height: calc(100vh - 56px - 120px - 16px);
+    max-height: calc(100vh - 56px - 120px - 16px);
   }
 
   .chatMessages {
@@ -262,13 +259,13 @@
     gap: 12px;
   }
 
-  .messageItem {
-    max-width: 85%;
+  .messageContent {
+    max-width: 75%;
   }
 
-  .avatar {
-    width: 28px;
-    height: 28px;
+  .messageAvatar {
+    width: 32px;
+    height: 32px;
     font-size: 16px;
   }
 
@@ -277,18 +274,9 @@
     min-height: 64px;
   }
 
-  .attachButton {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-  }
-
-  .sendButton {
-    height: 36px;
-    padding: 8px 16px;
-  }
-
   .chatInput {
-    max-height: 60px;
+    max-height: 100px;
+    font-size: 16px; /* iOS 줌 방지 */
   }
 }
+

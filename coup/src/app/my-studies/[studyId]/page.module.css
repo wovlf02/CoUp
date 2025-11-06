@@ -1,0 +1,277 @@
+/* 스터디 대시보드 (회원용) */
+.container {
+  max-width: 100%;
+}
+
+.welcomeCard {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  color: white;
+  padding: 32px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+.welcomeCard h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.welcomeCard p {
+  font-size: 16px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* 스터디 소개 */
+.studyIntro {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.studyIntro h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studyIntro .description {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  color: var(--gray-700);
+  margin-bottom: 24px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 최근 활동 */
+.recentActivity {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.recentActivity h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activityItem {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.activityItem:hover {
+  background: var(--gray-100);
+  cursor: pointer;
+}
+
+.activityIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.activityIcon.notice {
+  background: var(--primary-100);
+}
+
+.activityIcon.file {
+  background: var(--success-100);
+}
+
+.activityIcon.chat {
+  background: var(--warning-100);
+}
+
+.activityContent {
+  flex: 1;
+}
+
+.activityHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.activityType {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.activityTime {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.activityText {
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.activityUser {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+/* 퀵 액션 */
+.quickActions {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.quickActions h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.actionButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  background: var(--gray-50);
+  border: 2px solid var(--gray-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: var(--gray-900);
+}
+
+.actionButton:hover {
+  background: white;
+  border-color: var(--primary-300);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.actionButton .icon {
+  font-size: 32px;
+}
+
+.actionButton .label {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 빈 상태 */
+.emptyState {
+  text-align: center;
+  padding: 64px 32px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+}
+
+.emptyState .icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyState h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 8px 0;
+}
+
+.emptyState p {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .welcomeCard,
+  .studyIntro,
+  .recentActivity,
+  .quickActions {
+    padding: 20px;
+  }
+
+  .welcomeCard h2 {
+    font-size: 22px;
+  }
+
+  .actionGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .activityItem {
+    padding: 12px;
+  }
+
+  .activityIcon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
