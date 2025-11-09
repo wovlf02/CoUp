@@ -1,0 +1,63 @@
+/* 오늘의 할 일 위젯 스타일 */
+
+.widget {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+.widgetHeader {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.taskItem {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.taskItem:hover {
+  padding-left: 8px;
+  background: var(--gray-50);
+  border-radius: 4px;
+}
+
+.taskItem:last-child {
+  border-bottom: none;
+}
+
+.taskTitle {
+  font-weight: 500;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+  font-size: 0.875rem;
+}
+
+.taskTime {
+  font-size: 0.75rem;
+  color: var(--danger-500);
+  font-weight: 500;
+}
+
+.emptyText {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  text-align: center;
+  padding: 20px 0;
+}
+

@@ -105,6 +105,88 @@
   --container-max-width: 1280px;
   --container-padding: 1rem;
   --container-padding-lg: 2rem;
+
+  /* ========== Layout (추가) ========== */
+  --nav-width: 240px;
+  --sidebar-width: 280px;
+  --content-max-width: 1920px;
+
+  /* ========== Spacing (추가) ========== */
+  --spacing-2xs: 4px;
+  --spacing-3xs: 8px;
+  --spacing-4xs: 12px;
+  --spacing-5xs: 16px;
+  --spacing-6xs: 24px;
+  --spacing-7xs: 32px;
+
+  /* ========== 알림/할일 상태 색상 (추가) ========== */
+
+  /* 긴급 상태 */
+  --urgent-bg: #fef2f2;
+  --urgent-border: #fca5a5;
+  --urgent-text: #dc2626;
+
+  /* 읽지 않은 알림 */
+  --unread-bg: #eff6ff;
+  --unread-border: #bfdbfe;
+  --unread-dot: #3b82f6;
+
+  /* 완료 상태 */
+  --completed-bg: #f0fdf4;
+  --completed-border: #86efac;
+  --completed-text: #16a34a;
+
+  /* ========== 역할 배지 색상 (추가) ========== */
+
+  /* OWNER */
+  --role-owner-bg: #fee2e2;
+  --role-owner-text: #dc2626;
+  --role-owner-border: #fecaca;
+
+  /* ADMIN */
+  --role-admin-bg: #ede9fe;
+  --role-admin-text: #7c3aed;
+  --role-admin-border: #ddd6fe;
+
+  /* MEMBER */
+  --role-member-bg: #dbeafe;
+  --role-member-text: #2563eb;
+  --role-member-border: #bfdbfe;
+
+  /* PENDING */
+  --role-pending-bg: #f3f4f6;
+  --role-pending-text: #6b7280;
+  --role-pending-border: #e5e7eb;
+
+  /* ========== 알림 타입별 색상 (추가) ========== */
+
+  /* 가입승인 */
+  --notification-join-bg: #d1fae5;
+  --notification-join-text: #059669;
+
+  /* 공지 */
+  --notification-notice-bg: #dbeafe;
+  --notification-notice-text: #2563eb;
+
+  /* 파일 */
+  --notification-file-bg: #e9d5ff;
+  --notification-file-text: #9333ea;
+
+  /* 일정 */
+  --notification-event-bg: #fed7aa;
+  --notification-event-text: #ea580c;
+
+  /* 할일 */
+  --notification-task-bg: #f3f4f6;
+  --notification-task-text: #4b5563;
+
+  /* 멤버 */
+  --notification-member-bg: #e0e7ff;
+  --notification-member-text: #4f46e5;
+
+  /* 강퇴 */
+  --notification-kick-bg: #fee2e2;
+  --notification-kick-text: #dc2626;
 }
 
 /* 반응형 타이포그래피 (모바일 최적화) */

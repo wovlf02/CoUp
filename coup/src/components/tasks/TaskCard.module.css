@@ -1,0 +1,176 @@
+/* 할 일 카드 스타일 */
+
+.taskCard {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.taskCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.taskCard.urgent {
+  background: var(--urgent-bg);
+  border: 2px solid var(--urgent-border);
+}
+
+.taskCard.completed {
+  background: var(--gray-50);
+  opacity: 0.7;
+}
+
+.taskHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--gray-300);
+  border-radius: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  font-size: 14px;
+  color: white;
+}
+
+.checkbox:hover {
+  border-color: var(--primary-500);
+  background: var(--primary-50);
+}
+
+.checkbox.checked {
+  background: var(--primary-500);
+  border-color: var(--primary-500);
+}
+
+.taskTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.deleteButton {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteButton:hover {
+  background: var(--danger-500);
+  transform: scale(1.1);
+}
+
+.completed .taskTitle {
+  text-decoration: line-through;
+  color: var(--gray-500);
+}
+
+.taskMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin-left: 32px;
+}
+
+.studyInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gray-700);
+}
+
+.deadline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.deadlineUrgent {
+  color: var(--urgent-text);
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.deadlineExpired {
+  color: var(--danger-500);
+  font-weight: 600;
+}
+
+.deadlineNormal {
+  color: var(--gray-600);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gray-600);
+}
+
+.description {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin-top: 12px;
+  margin-left: 32px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .taskCard {
+    padding: 16px;
+  }
+
+  .taskTitle {
+    font-size: 1rem;
+  }
+
+  .taskMeta {
+    margin-left: 0;
+  }
+
+  .description {
+    margin-left: 0;
+  }
+}
