@@ -5,8 +5,7 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 240px; /* 15% */
-  min-width: 200px;
+  width: clamp(200px, 12vw, 280px); /* 유동적 너비: 12% (최소 200px, 최대 280px) */
   background: white;
   border-right: 1px solid #e5e7eb;
   display: flex;
@@ -125,8 +124,7 @@
 /* Tablet */
 @media (max-width: 1279px) {
   .sidebar {
-    width: 200px;
-    min-width: 160px;
+    width: clamp(160px, 15vw, 200px);
   }
 
   .logo {
@@ -152,7 +150,7 @@
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
-    width: 280px;
+    width: min(280px, 80vw); /* 모바일에서는 화면의 80% 또는 280px 중 작은 값 */
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   }
 

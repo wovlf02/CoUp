@@ -1,24 +1,25 @@
 /* 스터디 대시보드 (회원용) */
 .container {
   max-width: 100%;
+  width: 100%;
 }
 
 .welcomeCard {
   background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
   color: white;
-  padding: 32px;
+  padding: clamp(1.5rem, 3vw, 2rem);
   border-radius: 12px;
-  margin-bottom: 32px;
+  margin-bottom: clamp(1.5rem, 2vw, 2rem);
 }
 
 .welcomeCard h2 {
-  font-size: 28px;
+  font-size: clamp(1.375rem, 2.5vw, 1.75rem); /* 22-28px */
   font-weight: 700;
   margin: 0 0 8px 0;
 }
 
 .welcomeCard p {
-  font-size: 16px;
+  font-size: clamp(0.875rem, 1.5vw, 1rem); /* 14-16px */
   opacity: 0.9;
   margin: 0;
 }
@@ -28,8 +29,8 @@
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  padding: 32px;
-  margin-bottom: 24px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .studyIntro h3 {
@@ -69,8 +70,8 @@
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  padding: 32px;
-  margin-bottom: 24px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .recentActivity h3 {
@@ -168,8 +169,8 @@
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  padding: 32px;
-  margin-bottom: 24px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .quickActions h3 {
@@ -185,7 +186,7 @@
 .actionGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
+  gap: clamp(0.75rem, 1.5vw, 1rem);
 }
 
 .actionButton {
@@ -223,7 +224,7 @@
 /* 빈 상태 */
 .emptyState {
   text-align: center;
-  padding: 64px 32px;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 3vw, 2rem);
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
@@ -254,15 +255,15 @@
   .studyIntro,
   .recentActivity,
   .quickActions {
-    padding: 20px;
+    padding: 1.25rem;
   }
 
   .welcomeCard h2 {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
 
   .actionGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 
   .activityItem {

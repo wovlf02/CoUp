@@ -1,9 +1,9 @@
 /* 마이페이지 스타일 */
 
 .container {
-  padding: 24px;
-  max-width: var(--content-max-width);
-  margin: 0 auto;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  width: 100%;
+  max-width: 100%; /* 전체 너비 활용 */
 }
 
 .header {
@@ -22,9 +22,9 @@
 /* 2컬럼 그리드 레이아웃 */
 .contentGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .leftColumn {
@@ -48,11 +48,11 @@
 @media (max-width: 1024px) {
   .contentGrid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 1rem;
   }
 
   .container {
-    padding: 16px;
+    padding: 1rem;
   }
 }
 
@@ -65,4 +65,3 @@
     font-size: 1.25rem;
   }
 }
-

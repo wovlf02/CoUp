@@ -68,6 +68,7 @@ export default function Header({ onMenuToggle }) {
             {unreadCount > 0 && (
               <span className={styles.badge}>{unreadCount}</span>
             )}
+            <span className={styles.buttonText}>알림</span>
           </button>
 
           {showNotifications && (
@@ -109,6 +110,8 @@ export default function Header({ onMenuToggle }) {
                 {user.name.charAt(0)}
               </div>
             )}
+            <span className={styles.userName}>{user.name}</span>
+            <span className={styles.dropdownIcon}>▼</span>
           </button>
 
           {showProfile && (
@@ -143,4 +146,3 @@ export default function Header({ onMenuToggle }) {
     </header>
   )
 }
-
