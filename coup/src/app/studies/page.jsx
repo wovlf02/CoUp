@@ -98,7 +98,7 @@ export default function StudiesExplorePage() {
     <div className={styles.container}>
       {/* 페이지 헤더 */}
       <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>스터디 탐색</h1>
+        <h1 className={styles.pageTitle}>🔍 스터디 탐색</h1>
         <Link href="/studies/create" className={styles.createButton}>
           <span className={styles.plusIcon}>+</span>
           스터디 만들기

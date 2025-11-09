@@ -1,52 +1,56 @@
 .container {
-  padding: 24px;
-  max-width: 1600px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  padding: 0; /* MainLayout의 padding 사용 */
 }
 
-/* 페이지 헤더 */
+/* 페이지 헤더 - 일관된 스타일 */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
 }
 
 .title {
-  font-size: 32px;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--gray-900);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .createButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: var(--primary-500);
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--primary-600);
   color: white;
-  padding: 12px 24px;
+  border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.2s ease;
+  transition: all 0.2s;
 }
 
 .createButton:hover {
-  background: var(--primary-600);
+  background: var(--primary-700);
 }
 
 .plusIcon {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
 }
 
 /* 2컬럼 레이아웃 */
 .contentWithSidebar {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 24px;
+  grid-template-columns: 1fr minmax(320px, 20%); /* 우측 사이드바: 20% (최소 320px) */
+  gap: clamp(1rem, 2vw, 1.5rem);
   align-items: start;
 }
 
@@ -523,17 +527,29 @@
 }
 
 /* 반응형 */
+@media (min-width: 2560px) {
+  .contentWithSidebar {
+    grid-template-columns: 1fr minmax(380px, 18%);
+  }
+}
+
+@media (min-width: 1920px) and (max-width: 2559px) {
+  .contentWithSidebar {
+    grid-template-columns: 1fr minmax(360px, 20%);
+  }
+}
+
 @media (max-width: 1440px) {
   .contentWithSidebar {
-    grid-template-columns: 1fr 340px;
-    gap: 20px;
+    grid-template-columns: 1fr minmax(300px, 22%);
+    gap: clamp(1rem, 1.5vw, 1.25rem);
   }
 }
 
 @media (max-width: 1280px) {
   .contentWithSidebar {
-    grid-template-columns: 1fr 300px;
-    gap: 16px;
+    grid-template-columns: 1fr 280px;
+    gap: 1rem;
   }
   
   .widget {
@@ -551,7 +567,7 @@
 
 @media (max-width: 1024px) {
   .contentWithSidebar {
-    grid-template-columns: 1fr 280px;
+    grid-template-columns: 1fr 260px;
   }
 
   .widget {
@@ -566,7 +582,7 @@
 
 @media (max-width: 768px) {
   .container {
-    padding: 16px;
+    padding: 1rem;
   }
 
   .header {
@@ -576,7 +592,7 @@
   }
 
   .title {
-    font-size: 24px;
+    font-size: 1.25rem;
   }
 
   .createButton {

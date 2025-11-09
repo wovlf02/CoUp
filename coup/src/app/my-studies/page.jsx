@@ -109,7 +109,7 @@ export default function MyStudiesPage() {
     <div className={styles.container}>
       {/* 페이지 헤더 */}
       <div className={styles.header}>
-        <h1 className={styles.title}>내 스터디</h1>
+        <h1 className={styles.title}>📚 내 스터디</h1>
         <Link href="/studies/create" className={styles.createButton}>
           <span className={styles.plusIcon}>+</span>
           스터디 만들기

@@ -1,17 +1,16 @@
-/* 알림 페이지 스타일 (3컬럼 레이아웃) */
+/* 알림 페이지 스타일 (2컬럼 레이아웃) */
 
 .container {
   display: grid;
-  grid-template-columns: 1fr minmax(280px, 18%); /* 우측 사이드바: 18% (최소 280px) */
+  grid-template-columns: 1fr minmax(320px, 20%); /* 메인 + 우측 사이드바 20% */
   gap: clamp(1rem, 2vw, 1.5rem);
-  padding: clamp(1rem, 2vw, 1.5rem);
   width: 100%;
-  max-width: 100%; /* 전체 너비 활용 */
+  max-width: 100%;
+  padding: 0; /* MainLayout의 padding 사용 */
 }
 
 .mainContent {
-  flex: 1;
-  min-width: 0;
+  min-width: 0; /* Grid overflow 방지 */
 }
 
 .sidebar {
@@ -19,17 +18,19 @@
   flex-shrink: 0;
 }
 
+/* 페이지 헤더 - 일관된 스타일 */
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 2rem;
 }
 
 .title {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--gray-900);
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .notificationList {
@@ -39,6 +40,30 @@
 }
 
 /* 반응형 디자인 */
+@media (min-width: 2560px) {
+  .container {
+    grid-template-columns: 1fr minmax(380px, 18%);
+  }
+}
+
+@media (min-width: 1920px) and (max-width: 2559px) {
+  .container {
+    grid-template-columns: 1fr minmax(360px, 20%);
+  }
+}
+
+@media (max-width: 1440px) {
+  .container {
+    grid-template-columns: 1fr minmax(300px, 22%);
+  }
+}
+
+@media (max-width: 1280px) {
+  .container {
+    grid-template-columns: 1fr 280px;
+  }
+}
+
 @media (max-width: 1024px) {
   .container {
     grid-template-columns: 1fr;
@@ -53,10 +78,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
-
   .sidebar {
     grid-template-columns: 1fr;
   }

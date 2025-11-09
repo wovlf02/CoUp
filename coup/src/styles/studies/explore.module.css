@@ -1,12 +1,13 @@
 /* Studies Explore Page Styles */
 
 .container {
-  max-width: 1440px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  padding: var(--container-padding);
+  padding: 0; /* MainLayout의 padding 사용 */
 }
 
-/* Page Header */
+/* Page Header - 일관된 스타일 */
 .pageHeader {
   display: flex;
   align-items: center;
@@ -15,22 +16,28 @@
 }
 
 .pageTitle {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--gray-900);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .createButton {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   background: var(--primary-600);
   color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
   text-decoration: none;
-  border-radius: var(--radius-lg);
-  font-weight: var(--font-weight-semibold);
-  transition: background var(--transition-fast);
+  transition: all 0.2s;
 }
 
 .createButton:hover {
@@ -38,8 +45,8 @@
 }
 
 .plusIcon {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 /* Filter Bar */
@@ -114,8 +121,8 @@
 /* Studies Grid */
 .studiesGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); /* Responsive grid */
+  gap: clamp(1rem, 1.5vw, 1.5rem);
   margin-bottom: 3rem;
 }
 
@@ -277,7 +284,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .studiesGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   }
 
   .filterBar {
@@ -291,10 +298,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
-
   .pageHeader {
     flex-direction: column;
     align-items: flex-start;
@@ -317,5 +320,9 @@
 
   .filterSelect {
     width: 100%;
+  }
+
+  .pageTitle {
+    font-size: 1.25rem;
   }
 }

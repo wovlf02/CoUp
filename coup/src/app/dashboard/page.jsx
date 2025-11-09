@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import styles from '@/styles/dashboard/dashboard.module.css'
+import styles from './page.module.css'
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton'
 import EmptyState from '@/components/dashboard/EmptyState'
 
@@ -97,95 +97,218 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.container}>
-      {/* 환영 메시지 */}
-      <div className={styles.welcomeSection}>
-        <h1 className={styles.welcomeTitle}>안녕하세요, {user.name}님! 👋</h1>
-      </div>
+      {/* 메인 콘텐츠 */}
+      <div className={styles.mainContent}>
+        {/* 페이지 헤더 - 일관된 스타일 */}
+        <header className={styles.header}>
+          <h1 className={styles.title}>📊 대시보드</h1>
+        </header>
 
-      {/* 통계 카드 */}
-      <div className={styles.statsGrid}>
-        {stats.map((stat, index) => (
-          <div key={index} className={`${styles.statCard} ${styles[stat.color]}`}>
-            <div className={styles.statIcon}>{stat.icon}</div>
-            <div className={styles.statLabel}>{stat.label}</div>
-            <div className={styles.statValue}>{stat.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* 내 스터디 섹션 */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>내 스터디</h2>
-          <Link href="/studies?filter=my" className={styles.viewAllLink}>
-            전체 보기 →
-          </Link>
+        {/* 환영 메시지 */}
+        <div className={styles.welcomeSection}>
+          <p className={styles.welcomeMessage}>안녕하세요, {user.name}님! 👋</p>
         </div>
 
-        {myStudies.length === 0 ? (
-          <EmptyState type="studies" />
-        ) : (
-          <div className={styles.studiesGrid}>
-            {myStudies.map((study) => (
-              <Link
-                key={study.id}
-                href={`/studies/${study.id}`}
-                className={styles.studyCard}
-              >
-                <div className={styles.studyEmoji}>{study.emoji}</div>
-                <h3 className={styles.studyName}>{study.name}</h3>
-                <div className={styles.studyMeta}>
-                  <span className={styles.studyMembers}>{study.members}명 참여</span>
-                  <span className={styles.studyRole}>{study.role}</span>
-                </div>
-                <div className={styles.studyActivity}>
-                  마지막 활동: {study.lastActivity}
-                </div>
-                <div className={styles.studyActions}>
-                  <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
-                    💬 채팅
-                  </button>
-                  <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
-                    📢 공지
-                  </button>
-                  <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
-                    📁 파일
-                  </button>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 최근 활동 섹션 */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>최근 활동</h2>
-          <Link href="/notifications" className={styles.viewAllLink}>
-            전체 보기 →
-          </Link>
+        {/* 통계 카드 */}
+        <div className={styles.statsGrid}>
+          {stats.map((stat, index) => (
+            <div key={index} className={`${styles.statCard} ${styles[stat.color]}`}>
+              <div className={styles.statIcon}>{stat.icon}</div>
+              <div className={styles.statLabel}>{stat.label}</div>
+              <div className={styles.statValue}>{stat.value}</div>
+            </div>
+          ))}
         </div>
 
-        {recentActivities.length === 0 ? (
-          <EmptyState type="activities" />
-        ) : (
-          <div className={styles.activitiesList}>
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className={styles.activityItem}>
-                <span className={`${styles.activityBadge} ${styles[activity.badge]}`}>
-                  [{activity.type}]
-                </span>
-                <div className={styles.activityContent}>
-                  <span className={styles.activityStudy}>{activity.study}</span>
-                  <span className={styles.activityText}> - {activity.content}</span>
+        {/* 내 스터디 섹션 */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>내 스터디</h2>
+            <Link href="/my-studies" className={styles.viewAllLink}>
+              전체 보기 →
+            </Link>
+          </div>
+
+          {myStudies.length === 0 ? (
+            <EmptyState type="studies" />
+          ) : (
+            <div className={styles.studiesGrid}>
+              {myStudies.map((study) => (
+                <Link
+                  key={study.id}
+                  href={`/my-studies/${study.id}`}
+                  className={styles.studyCard}
+                >
+                  <div className={styles.studyEmoji}>{study.emoji}</div>
+                  <h3 className={styles.studyName}>{study.name}</h3>
+                  <div className={styles.studyMeta}>
+                    <span className={styles.studyMembers}>{study.members}명 참여</span>
+                    <span className={styles.studyRole}>{study.role}</span>
+                  </div>
+                  <div className={styles.studyActivity}>
+                    마지막 활동: {study.lastActivity}
+                  </div>
+                  <div className={styles.studyActions}>
+                    <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
+                      💬 채팅
+                    </button>
+                    <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
+                      📢 공지
+                    </button>
+                    <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
+                      📁 파일
+                    </button>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* 최근 활동 섹션 */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>최근 활동</h2>
+            <Link href="/notifications" className={styles.viewAllLink}>
+              전체 보기 →
+            </Link>
+          </div>
+
+          {recentActivities.length === 0 ? (
+            <EmptyState type="activities" />
+          ) : (
+            <div className={styles.activitiesList}>
+              {recentActivities.map((activity) => (
+                <div key={activity.id} className={styles.activityItem}>
+                  <span className={`${styles.activityBadge} ${styles[activity.badge]}`}>
+                    [{activity.type}]
+                  </span>
+                  <div className={styles.activityContent}>
+                    <span className={styles.activityStudy}>{activity.study}</span>
+                    <span className={styles.activityText}> - {activity.content}</span>
+                  </div>
+                  <span className={styles.activityTime}>{activity.time}</span>
                 </div>
-                <span className={styles.activityTime}>{activity.time}</span>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* 우측 사이드바 위젯 */}
+      <aside className={styles.sidebar}>
+        {/* 1. 오늘의 할 일 */}
+        <div className={styles.widget}>
+          <h3 className={styles.widgetTitle}>🔥 오늘의 할 일</h3>
+          <div className={styles.widgetContent}>
+            <div className={styles.todoItem}>
+              <input type="checkbox" className={styles.todoCheckbox} />
+              <div className={styles.todoInfo}>
+                <p className={styles.todoText}>백준 1234번 풀이</p>
+                <p className={styles.todoMeta}>코딩테스트 • D-day</p>
               </div>
-            ))}
+            </div>
+            <div className={styles.todoItem}>
+              <input type="checkbox" className={styles.todoCheckbox} />
+              <div className={styles.todoInfo}>
+                <p className={styles.todoText}>자소서 1차 작성</p>
+                <p className={styles.todoMeta}>취업준비 • D-1</p>
+              </div>
+            </div>
+            <div className={styles.todoItem}>
+              <input type="checkbox" className={styles.todoCheckbox} />
+              <div className={styles.todoInfo}>
+                <p className={styles.todoText}>영어 단어 100개 암기</p>
+                <p className={styles.todoMeta}>영어회화 • D-day</p>
+              </div>
+            </div>
+            <Link href="/tasks" className={styles.widgetLink}>
+              할 일 전체보기 →
+            </Link>
           </div>
-        )}
-      </section>
+        </div>
+
+        {/* 2. 다가오는 일정 */}
+        <div className={styles.widget}>
+          <h3 className={styles.widgetTitle}>📅 다가오는 일정</h3>
+          <div className={styles.widgetContent}>
+            <div className={styles.eventItem}>
+              <div className={styles.eventDate}>
+                <span className={styles.eventDay}>오늘</span>
+                <span className={styles.eventTime}>14:00</span>
+              </div>
+              <div className={styles.eventInfo}>
+                <p className={styles.eventTitle}>주간 회의</p>
+                <p className={styles.eventStudy}>코딩테스트</p>
+              </div>
+            </div>
+            <div className={styles.eventItem}>
+              <div className={styles.eventDate}>
+                <span className={styles.eventDay}>내일</span>
+                <span className={styles.eventTime}>20:00</span>
+              </div>
+              <div className={styles.eventInfo}>
+                <p className={styles.eventTitle}>모의 면접</p>
+                <p className={styles.eventStudy}>취업준비</p>
+              </div>
+            </div>
+            <div className={styles.eventItem}>
+              <div className={styles.eventDate}>
+                <span className={styles.eventDay}>11/11</span>
+                <span className={styles.eventTime}>23:59</span>
+              </div>
+              <div className={styles.eventInfo}>
+                <p className={styles.eventTitle}>과제 제출</p>
+                <p className={styles.eventStudy}>영어회화</p>
+              </div>
+            </div>
+            <Link href="/my-studies" className={styles.widgetLink}>
+              일정 전체보기 →
+            </Link>
+          </div>
+        </div>
+
+        {/* 3. 스터디 현황 */}
+        <div className={styles.widget}>
+          <h3 className={styles.widgetTitle}>📊 나의 스터디 현황</h3>
+          <div className={styles.widgetContent}>
+            <div className={styles.statItem}>
+              <span className={styles.statItemLabel}>총 참여 스터디</span>
+              <span className={styles.statItemValue}>4개</span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={styles.statItemLabel}>그룹장</span>
+              <span className={styles.statItemValue}>1개</span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={styles.statItemLabel}>이번 주 출석</span>
+              <span className={styles.statItemValue}>5/7일</span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={styles.statItemLabel}>완료한 할 일</span>
+              <span className={styles.statItemValue}>12개</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. 빠른 액션 */}
+        <div className={styles.widget}>
+          <h3 className={styles.widgetTitle}>⚡ 빠른 액션</h3>
+          <div className={styles.widgetContent}>
+            <div className={styles.quickActionGrid}>
+              <Link href="/studies" className={styles.quickActionBtn}>
+                🔍 스터디 찾기
+              </Link>
+              <Link href="/studies/create" className={styles.quickActionBtn}>
+                ➕ 스터디 만들기
+              </Link>
+            </div>
+            <Link href="/tasks" className={styles.quickActionBtnFull}>
+              ✅ 할 일 추가
+            </Link>
+          </div>
+        </div>
+      </aside>
     </div>
   )
 }

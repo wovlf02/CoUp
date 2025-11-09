@@ -1,22 +1,24 @@
 /* 마이페이지 스타일 */
 
 .container {
-  padding: clamp(1rem, 2vw, 1.5rem);
   width: 100%;
-  max-width: 100%; /* 전체 너비 활용 */
+  max-width: 100%;
+  padding: 0; /* MainLayout의 padding 사용 */
 }
 
+/* 페이지 헤더 - 일관된 스타일 */
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
 }
 
 .title {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--gray-900);
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 /* 2컬럼 그리드 레이아웃 */

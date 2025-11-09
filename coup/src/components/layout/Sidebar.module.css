@@ -32,7 +32,7 @@
 
 /* Logo */
 .logo {
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -128,7 +128,7 @@
   }
 
   .logo {
-    padding: 1rem;
+    padding: 0.875rem 1rem;
   }
 
   .logoText {
