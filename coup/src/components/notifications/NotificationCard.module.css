@@ -1,22 +1,65 @@
 /* 알림 카드 스타일 */
 
 .card {
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: #F0F4FF;
+  border: 1px solid #D6E4FF;
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
   transform: translateY(-1px);
+  background: #E5EDFF;
+}
+
+.card:nth-child(4n+1) {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.card:nth-child(4n+1):hover {
+  background: #DBEAFE;
+}
+
+.card:nth-child(4n+2) {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.card:nth-child(4n+2):hover {
+  background: #D1FAE5;
+}
+
+.card:nth-child(4n+3) {
+  background: #FCE7F3;
+  border-color: #F9A8D4;
+}
+
+.card:nth-child(4n+3):hover {
+  background: #FBCFE8;
+}
+
+.card:nth-child(4n+4) {
+  background: #FFF7ED;
+  border-color: #FED7AA;
+}
+
+.card:nth-child(4n+4):hover {
+  background: #FFEDD5;
 }
 
 .card.unread {
-  background: var(--unread-bg);
-  border-color: var(--unread-border);
+  background: #FEF3C7 !important;
+  border-color: #FDE68A !important;
+  box-shadow: 0 0 0 2px #FEF08A;
+}
+
+.card.unread:hover {
+  background: #FEF08A !important;
 }
 
 .header {
@@ -119,4 +162,3 @@
     padding: 3px 6px;
   }
 }
-

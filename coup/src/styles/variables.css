@@ -27,6 +27,42 @@
   --gray-800: #1F2937;
   --gray-900: #111827;
   
+  /* ========== Pastel Palette ========== */
+
+  /* Primary Pastel Set (메인 콘텐츠용) */
+  --pastel-blue-bg: #EFF6FF;
+  --pastel-blue-border: #BFDBFE;
+  --pastel-blue-hover: #DBEAFE;
+
+  --pastel-green-bg: #ECFDF5;
+  --pastel-green-border: #A7F3D0;
+  --pastel-green-hover: #D1FAE5;
+
+  --pastel-yellow-bg: #FEF3C7;
+  --pastel-yellow-border: #FDE68A;
+  --pastel-yellow-hover: #FEF08A;
+
+  --pastel-purple-bg: #F3E8FF;
+  --pastel-purple-border: #D8B4FE;
+  --pastel-purple-hover: #E9D5FF;
+
+  /* Secondary Pastel Set (위젯/사이드바용) */
+  --pastel-light-blue-bg: #F0F4FF;
+  --pastel-light-blue-border: #D6E4FF;
+  --pastel-light-blue-hover: #E5EDFF;
+
+  --pastel-pink-bg: #FCE7F3;
+  --pastel-pink-border: #F9A8D4;
+  --pastel-pink-hover: #FBCFE8;
+
+  --pastel-orange-bg: #FFF7ED;
+  --pastel-orange-border: #FED7AA;
+  --pastel-orange-hover: #FFEDD5;
+
+  --pastel-cyan-bg: #ECFEFF;
+  --pastel-cyan-border: #A5F3FC;
+  --pastel-cyan-hover: #CFFAFE;
+
   /* Semantic Colors */
   --success-500: #10B981;
   --success-600: #059669;

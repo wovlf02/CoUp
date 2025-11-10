@@ -56,17 +56,54 @@
 
 /* 위젯 공통 스타일 */
 .widget {
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: var(--pastel-light-blue-bg);
+  border: 1px solid var(--pastel-light-blue-border);
   border-radius: 12px;
   padding: 1.25rem;
   margin-bottom: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
   transition: all 0.2s ease;
 }
 
 .widget:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
+}
+
+/* 각 위젯마다 다른 파스텔 색상 */
+.widget:nth-child(1) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.widget:nth-child(1):hover {
+  background: var(--pastel-yellow-hover);
+}
+
+.widget:nth-child(2) {
+  background: var(--pastel-orange-bg);
+  border-color: var(--pastel-orange-border);
+}
+
+.widget:nth-child(2):hover {
+  background: var(--pastel-orange-hover);
+}
+
+.widget:nth-child(3) {
+  background: var(--pastel-cyan-bg);
+  border-color: var(--pastel-cyan-border);
+}
+
+.widget:nth-child(3):hover {
+  background: var(--pastel-cyan-hover);
+}
+
+.widget:nth-child(4) {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+.widget:nth-child(4):hover {
+  background: var(--pastel-pink-hover);
 }
 
 .widgetTitle {
@@ -241,39 +278,20 @@
   align-items: center;
   justify-content: center;
   padding: 0.75rem;
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: #F0F9FF;
+  color: #0369A1;
   border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
   transition: all 0.2s ease;
+  border: 1px solid #BAE6FD;
 }
 
 .quickActionBtn:hover {
-  background: var(--gray-200);
-  transform: translateY(-1px);
-}
-
-.quickActionBtnFull {
-  display: block;
-  width: 100%;
-  padding: 0.75rem;
-  background: var(--primary-50);
-  color: var(--primary-700);
-  border: 1px solid var(--primary-200);
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.quickActionBtnFull:hover {
-  background: var(--primary-100);
-  border-color: var(--primary-300);
+  background: #E0F2FE;
+  border-color: #0EA5E9;
   transform: translateY(-1px);
 }
 
@@ -313,8 +331,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--pastel-blue-bg);
+  border: 1px solid var(--pastel-blue-border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   transition: all 0.2s;
@@ -322,28 +340,90 @@
 }
 
 .statCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
   transform: translateY(-2px);
 }
 
-.statCard.blue {
+/* 각 카드마다 다른 파스텔 색상 */
+.statCard:nth-child(1) {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+}
+
+.statCard:nth-child(1):hover {
+  background: var(--pastel-blue-hover);
   border-color: #3B82F6;
-  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+}
+
+.statCard:nth-child(2) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.statCard:nth-child(2):hover {
+  background: var(--pastel-green-hover);
+  border-color: #10B981;
+}
+
+.statCard:nth-child(3) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.statCard:nth-child(3):hover {
+  background: var(--pastel-yellow-hover);
+  border-color: #F59E0B;
+}
+
+.statCard:nth-child(4) {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.statCard:nth-child(4):hover {
+  background: var(--pastel-purple-hover);
+  border-color: #8B5CF6;
+}
+
+/* 레거시 클래스 제거 - 이제 nth-child로 관리 */
+.statCard.blue {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+}
+
+.statCard.blue:hover {
+  background: var(--pastel-blue-hover);
+  border-color: #3B82F6;
 }
 
 .statCard.green {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.statCard.green:hover {
+  background: var(--pastel-green-hover);
   border-color: #10B981;
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
 }
 
 .statCard.orange {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.statCard.orange:hover {
+  background: var(--pastel-yellow-hover);
   border-color: #F59E0B;
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
 }
 
 .statCard.purple {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.statCard.purple:hover {
+  background: var(--pastel-purple-hover);
   border-color: #8B5CF6;
-  background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
 }
 
 .statIcon {
@@ -403,8 +483,8 @@
 }
 
 .studyCard {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--pastel-blue-bg);
+  border: 1px solid var(--pastel-blue-border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   cursor: pointer;
@@ -415,9 +495,49 @@
 }
 
 .studyCard:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
   transform: translateY(-2px);
-  border-color: #4f46e5;
+}
+
+/* 4색 순환 파스텔 톤 */
+.studyCard:nth-child(4n+1) {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+}
+
+.studyCard:nth-child(4n+1):hover {
+  background: var(--pastel-blue-hover);
+  border-color: #3B82F6;
+}
+
+.studyCard:nth-child(4n+2) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.studyCard:nth-child(4n+2):hover {
+  background: var(--pastel-green-hover);
+  border-color: #10B981;
+}
+
+.studyCard:nth-child(4n+3) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.studyCard:nth-child(4n+3):hover {
+  background: var(--pastel-yellow-hover);
+  border-color: #F59E0B;
+}
+
+.studyCard:nth-child(4n+4) {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.studyCard:nth-child(4n+4):hover {
+  background: var(--pastel-purple-hover);
+  border-color: #8B5CF6;
 }
 
 .studyEmoji {
@@ -467,26 +587,29 @@
 .actionButton {
   flex: 1;
   padding: 0.5rem;
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: #F0F9FF;
+  color: #0369A1;
   border: none;
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  border: 1px solid #BAE6FD;
 }
 
 .actionButton:hover {
-  background: var(--gray-200);
+  background: #E0F2FE;
+  border-color: #0EA5E9;
 }
 
 /* Activity List */
 .activitiesList {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: #F0F4FF;
+  border: 1px solid #D6E4FF;
   border-radius: 0.75rem;
   padding: 1rem;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
 }
 
 .activityItem {

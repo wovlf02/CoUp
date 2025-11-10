@@ -81,16 +81,54 @@
 
 /* 위젯 공통 스타일 */
 .widget {
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: var(--pastel-light-blue-bg);
+  border: 1px solid var(--pastel-light-blue-border);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 18px;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
 }
 
 .widget:hover {
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
+}
+
+/* 위젯마다 다른 파스텔 색상 */
+.widget:nth-child(1) {
+  background: var(--pastel-cyan-bg);
+  border-color: var(--pastel-cyan-border);
+}
+
+.widget:nth-child(1):hover {
+  background: var(--pastel-cyan-hover);
+}
+
+.widget:nth-child(2) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.widget:nth-child(2):hover {
+  background: var(--pastel-yellow-hover);
+}
+
+.widget:nth-child(3) {
+  background: var(--pastel-orange-bg);
+  border-color: var(--pastel-orange-border);
+}
+
+.widget:nth-child(3):hover {
+  background: var(--pastel-orange-hover);
+}
+
+.widget:nth-child(4) {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+.widget:nth-child(4):hover {
+  background: var(--pastel-pink-hover);
 }
 
 .widgetTitle {
@@ -148,13 +186,19 @@
 /* 급한 할일 위젯 */
 .taskItem {
   padding: 14px;
-  background: var(--gray-50);
+  background: #FEF3C7;
   border-radius: 8px;
   margin-bottom: 10px;
+  border: 1px solid #FDE68A;
 }
 
 .taskItem:last-of-type {
   margin-bottom: 0;
+}
+
+.taskItem:hover {
+  background: #FEF08A;
+  border-color: #F59E0B;
 }
 
 .taskHeader {
@@ -274,11 +318,11 @@
 
 /* 탭 필터 */
 .tabs {
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: #F0F4FF;
+  border: 1px solid #D6E4FF;
   border-radius: 12px;
   padding: 12px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
   margin-bottom: 24px;
   display: flex;
   gap: 8px;
@@ -350,17 +394,54 @@
 
 /* 스터디 카드 */
 .studyCard {
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: #F0F4FF;
+  border: 1px solid #D6E4FF;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
   transition: all 0.2s ease;
 }
 
 .studyCard:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
   border-color: var(--primary-200);
+  background: #E5EDFF;
+}
+
+.studyCard:nth-child(4n+1) {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.studyCard:nth-child(4n+1):hover {
+  background: #DBEAFE;
+}
+
+.studyCard:nth-child(4n+2) {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.studyCard:nth-child(4n+2):hover {
+  background: #D1FAE5;
+}
+
+.studyCard:nth-child(4n+3) {
+  background: #FEF3C7;
+  border-color: #FDE68A;
+}
+
+.studyCard:nth-child(4n+3):hover {
+  background: #FEF08A;
+}
+
+.studyCard:nth-child(4n+4) {
+  background: #F3E8FF;
+  border-color: #D8B4FE;
+}
+
+.studyCard:nth-child(4n+4):hover {
+  background: #E9D5FF;
 }
 
 /* 카드 헤더 */

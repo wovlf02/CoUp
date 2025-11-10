@@ -55,11 +55,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: #F0F4FF;
+  border: 1px solid #D6E4FF;
   border-radius: var(--radius-xl);
   padding: 1rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
   margin-bottom: 2rem;
 }
 
@@ -127,11 +127,11 @@
 }
 
 .studyCard {
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: #F0F4FF;
+  border: 1px solid #D6E4FF;
   border-radius: var(--radius-xl);
   padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.08), 0 1px 2px rgba(99, 102, 241, 0.04);
   transition: all 0.2s ease;
   cursor: pointer;
   text-decoration: none;
@@ -140,9 +140,64 @@
 }
 
 .studyCard:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1), 0 4px 6px -2px rgba(99, 102, 241, 0.05);
   border-color: var(--primary-200);
   transform: translateY(-4px);
+  background: #E5EDFF;
+}
+
+.studyCard:nth-child(6n+1) {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.studyCard:nth-child(6n+1):hover {
+  background: #DBEAFE;
+}
+
+.studyCard:nth-child(6n+2) {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.studyCard:nth-child(6n+2):hover {
+  background: #D1FAE5;
+}
+
+.studyCard:nth-child(6n+3) {
+  background: #FEF3C7;
+  border-color: #FDE68A;
+}
+
+.studyCard:nth-child(6n+3):hover {
+  background: #FEF08A;
+}
+
+.studyCard:nth-child(6n+4) {
+  background: #F3E8FF;
+  border-color: #D8B4FE;
+}
+
+.studyCard:nth-child(6n+4):hover {
+  background: #E9D5FF;
+}
+
+.studyCard:nth-child(6n+5) {
+  background: #FCE7F3;
+  border-color: #F9A8D4;
+}
+
+.studyCard:nth-child(6n+5):hover {
+  background: #FBCFE8;
+}
+
+.studyCard:nth-child(6n+6) {
+  background: #FFF7ED;
+  border-color: #FED7AA;
+}
+
+.studyCard:nth-child(6n+6):hover {
+  background: #FFEDD5;
 }
 
 .studyEmoji {
