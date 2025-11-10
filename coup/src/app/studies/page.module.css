@@ -148,10 +148,81 @@
   flex-direction: column;
 }
 
-.studyCard:hover {
-  border-color: var(--primary-500);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+/* 파스텔 색상 순환 적용 (6가지 색상) */
+.studyCard:nth-child(6n + 1) {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+}
+
+.studyCard:nth-child(6n + 1):hover {
+  background: var(--pastel-blue-hover);
+  border-color: var(--primary-400);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
   transform: translateY(-4px);
+}
+
+.studyCard:nth-child(6n + 2) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.studyCard:nth-child(6n + 2):hover {
+  background: var(--pastel-green-hover);
+  border-color: var(--success-500);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+  transform: translateY(-4px);
+}
+
+.studyCard:nth-child(6n + 3) {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.studyCard:nth-child(6n + 3):hover {
+  background: var(--pastel-purple-hover);
+  border-color: var(--primary-500);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+  transform: translateY(-4px);
+}
+
+.studyCard:nth-child(6n + 4) {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+.studyCard:nth-child(6n + 4):hover {
+  background: var(--pastel-pink-hover);
+  border-color: #EC4899;
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15);
+  transform: translateY(-4px);
+}
+
+.studyCard:nth-child(6n + 5) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.studyCard:nth-child(6n + 5):hover {
+  background: var(--pastel-yellow-hover);
+  border-color: var(--warning-500);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+  transform: translateY(-4px);
+}
+
+.studyCard:nth-child(6n + 6) {
+  background: var(--pastel-cyan-bg);
+  border-color: var(--pastel-cyan-border);
+}
+
+.studyCard:nth-child(6n + 6):hover {
+  background: var(--pastel-cyan-hover);
+  border-color: #06B6D4;
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+  transform: translateY(-4px);
+}
+
+.studyCard:hover {
+  /* 기본 호버는 nth-child에서 처리 */
 }
 
 .cardHeader {

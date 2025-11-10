@@ -32,10 +32,16 @@
   justify-content: space-between;
   align-items: center;
   padding: 24px;
-  background: white;
-  border: 1px solid var(--gray-200);
+  background: linear-gradient(135deg, var(--pastel-blue-bg) 0%, var(--pastel-purple-bg) 100%);
+  border: 1px solid var(--pastel-blue-border);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+  transition: all 0.3s ease;
+}
+
+.studyHeader:hover {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
 }
 
 .studyInfo {
@@ -149,7 +155,7 @@
   color: white;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
 }
 
 .sectionTitle {
@@ -210,31 +216,74 @@
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.cardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+/* 그리드 카드에 파스텔 색상 순환 적용 */
+.gridCard:nth-child(1) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
 }
 
-.cardTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0;
+.gridCard:nth-child(1):hover {
+  background: var(--pastel-green-hover);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  transform: translateY(-2px);
 }
 
-.moreLink {
-  font-size: 0.875rem;
-  color: var(--primary-600);
-  text-decoration: none;
-  font-weight: 500;
+.gridCard:nth-child(2) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
 }
 
-.moreLink:hover {
-  text-decoration: underline;
+.gridCard:nth-child(2):hover {
+  background: var(--pastel-yellow-hover);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  transform: translateY(-2px);
+}
+
+.gridCard:nth-child(3) {
+  background: var(--pastel-cyan-bg);
+  border-color: var(--pastel-cyan-border);
+}
+
+.gridCard:nth-child(3):hover {
+  background: var(--pastel-cyan-hover);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+  transform: translateY(-2px);
+}
+
+.gridCard:nth-child(4) {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+.gridCard:nth-child(4):hover {
+  background: var(--pastel-pink-hover);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+  transform: translateY(-2px);
+}
+
+.gridCard:nth-child(5) {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.gridCard:nth-child(5):hover {
+  background: var(--pastel-purple-hover);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.gridCard:nth-child(6) {
+  background: var(--pastel-orange-bg);
+  border-color: var(--pastel-orange-border);
+}
+
+.gridCard:nth-child(6):hover {
+  background: var(--pastel-orange-hover);
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.15);
+  transform: translateY(-2px);
 }
 
 /* 리스트 아이템 */
@@ -249,13 +298,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: var(--gray-50);
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 8px;
   transition: all 0.2s;
 }
 
 .listItem:hover {
-  background: var(--gray-100);
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(4px);
 }
 
 .itemContent {
@@ -307,6 +357,58 @@
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* 위젯에 파스텔 색상 순환 적용 */
+.widget:nth-child(1) {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.widget:nth-child(1):hover {
+  background: var(--pastel-purple-hover);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+}
+
+.widget:nth-child(2) {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+}
+
+.widget:nth-child(2):hover {
+  background: var(--pastel-blue-hover);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.widget:nth-child(3) {
+  background: var(--pastel-orange-bg);
+  border-color: var(--pastel-orange-border);
+}
+
+.widget:nth-child(3):hover {
+  background: var(--pastel-orange-hover);
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.15);
+}
+
+.widget:nth-child(4) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.widget:nth-child(4):hover {
+  background: var(--pastel-green-hover);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.widget:nth-child(5) {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+.widget:nth-child(5):hover {
+  background: var(--pastel-pink-hover);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
 }
 
 .widgetTitle {
@@ -330,10 +432,15 @@
 
 .onlineMember {
   padding: 8px 12px;
-  background: var(--gray-50);
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 6px;
   font-size: 0.875rem;
   color: var(--gray-700);
+  transition: all 0.2s;
+}
+
+.onlineMember:hover {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .widgetActions {
@@ -344,7 +451,7 @@
 
 .widgetButton {
   padding: 10px 12px;
-  background: var(--gray-100);
+  background: rgba(255, 255, 255, 0.6);
   border: none;
   border-radius: 8px;
   color: var(--gray-700);
@@ -357,8 +464,35 @@
 }
 
 .widgetButton:hover {
-  background: var(--primary-100);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--primary-700);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.moreLink {
+  font-size: 0.875rem;
+  color: var(--primary-600);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.moreLink:hover {
+  text-decoration: underline;
 }
 
 /* 반응형 */
@@ -416,4 +550,3 @@
     grid-template-columns: 1fr;
   }
 }
-
