@@ -436,4 +436,3 @@ const handleBack = () => {
 ---
 
 **다음 화면**: `08_study-approval-management.md` (승인 관리 - 그룹장용)
-

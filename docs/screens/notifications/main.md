@@ -66,6 +66,32 @@
 - 메인 콘텐츠: 58% (1100px)
 - 우측 위젯: 30% (280px)
 
+**레이아웃 비율** (해상도별 자동 조정):
+
+### 🖥️ FHD (1920px) - 기본 기준
+- 좌측 네비게이션: **12%** (min: 200px, max: 240px)
+- 메인 콘텐츠: **58%** (min: 900px, max: 1100px)
+- 우측 위젯: **28%** (min: 260px, max: 280px)
+- 갭(여백): **2%**
+
+### 🖥️ QHD (2560px) - 고해상도
+- 좌측 네비게이션: **10%** (min: 240px, max: 280px)
+- 메인 콘텐츠: **60%** (min: 1200px, max: 1500px)
+- 우측 위젯: **28%** (min: 300px, max: 360px)
+- 갭(여백): **2%**
+
+### 🖥️ 4K (3840px) - 초고해상도
+- 좌측 네비게이션: **8%** (min: 280px, max: 320px)
+- 메인 콘텐츠: **62%** (min: 1800px, max: 2300px)
+- 우측 위젯: **28%** (min: 400px, max: 500px)
+- 갭(여백): **2%**
+
+### 📱 반응형 브레이크포인트
+- **Desktop (1920px+)**: 3컬럼 레이아웃 (Nav + Content + Widget)
+- **Laptop (1440px)**: 3컬럼 유지, 위젯 폭 축소 (280px → 240px)
+- **Tablet (1024px)**: 위젯이 콘텐츠 하단으로 이동, 2컬럼 그리드
+- **Mobile (<768px)**: 1컬럼 레이아웃, 위젯 1줄 배치
+
 ---
 
 ## 📋 섹션별 상세 설계
@@ -560,49 +586,6 @@ const handleMarkAllAsRead = async () => {
 .typeList,
 .studyList {
   display: flex;
-
-export const notificationStats = {
-  today: 3,
-  thisWeek: 12,
-  unread: 5,
-  total: 48,
-### Desktop (1920px+)
-- 3컬럼 레이아웃 (Nav + Content + Widget)
-- 모든 위젯 표시
-
-### Laptop (1440px)
-- 3컬럼 유지
-- 위젯 폭 축소 (280px → 240px)
-
-### Tablet (1024px)
-- 위젯이 콘텐츠 하단으로 이동
-- 2컬럼 그리드 배치
-
-### Mobile (768px 이하)
-- 1컬럼 레이아웃
-- 위젯 1줄 배치
-- 텍스트 축약, 배지 작게
-    EVENT: 2,
-    TASK: 2,
-    MEMBER: 1,
-    JOIN_APPROVED: 0,
-    KICK: 0,
-    COMMENT: 0,
-    MENTION: 0,
-  },
-  byStudy: {
-    1: { name: '알고리즘 마스터', emoji: '💻', count: 5 },
-    2: { name: '취업 준비', emoji: '📝', count: 4 },
-    3: { name: '영어 회화', emoji: '🌍', count: 3 },
-    4: { name: '운동 루틴', emoji: '💪', count: 0 },
-  },
-}
-
-export const notificationSettings = {
-  sound: true,
-  vibration: true,
-  email: false,
-}
   flex-direction: column;
   gap: 8px;
 }
