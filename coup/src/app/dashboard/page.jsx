@@ -101,7 +101,12 @@ export default function DashboardPage() {
       <div className={styles.mainContent}>
         {/* 페이지 헤더 - 일관된 스타일 */}
         <header className={styles.header}>
-          <h1 className={styles.title}>📊 대시보드</h1>
+          <div className={styles.headerContent}>
+            <h1 className={styles.title}>📊 대시보드</h1>
+            <p className={styles.subtitle}>
+              나의 활동을 한눈에 확인하세요
+            </p>
+          </div>
         </header>
 
         {/* 환영 메시지 */}

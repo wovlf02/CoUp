@@ -19,7 +19,12 @@ export default function MyPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>👤 마이페이지</h1>
+        <div className={styles.headerContent}>
+          <h1 className={styles.title}>👤 마이페이지</h1>
+          <p className={styles.subtitle}>
+            내 정보와 활동을 관리하세요
+          </p>
+        </div>
       </header>
 
       <div className={styles.contentGrid}>
@@ -43,4 +48,3 @@ export default function MyPage() {
     </div>
   )
 }
-

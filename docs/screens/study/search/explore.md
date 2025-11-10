@@ -4,681 +4,480 @@
 > **라우트**: `/studies`  
 > **목적**: 공개 스터디 검색 및 탐색  
 > **사용자 상태**: 미가입 (탐색 중)  
-> **렌더링**: SSR (SEO 최적화)
+> **렌더링**: SSR (SEO 최적화)  
+> **최종 업데이트**: 2025.11.10 - 현재 구현 반영 + 2컬럼 개선 설계
 
 ---
 
-## ? 화면 목적
+## 📌 현재 구현 상태 (v1.0)
 
-**"내게 맞는 스터디 찾기"**
-- 다양한 공개 스터디를 빠르게 탐색
-- 카테고리/키워드로 효율적인 검색
-- 스터디 정보를 한눈에 비교
-- 관심 있는 스터디에 즉시 가입 신청
+### 레이아웃
+- **중앙 정렬 단일 컬럼** (max-width: 1400px)
+- 좌우 여백이 많아 공간 활용 비효율적
+- 모바일 최적화는 양호
+
+### 주요 기능
+- ✅ 헤더 (제목 + 스터디 만들기 버튼)
+- ✅ 검색 및 필터 섹션 (카테고리 탭)
+- ✅ 스터디 카드 그리드 (3컬럼, auto-fill)
+- ✅ 카드 호버 애니메이션
+- ✅ 모집 상태 배지
+
+### 문제점
+- 🚨 **공간 활용 부족**: FHD(1920px)에서 좌우 여백 과다
+- 🚨 **우측 공간 미활용**: 추천, 통계 등 유용한 정보 표시 불가
+- 🚨 **대시보드와 불일치**: 대시보드는 2컬럼인데 탐색은 단일 컬럼
 
 ---
 
-## ? 레이아웃 구조 (FHD 최적화)
+## 🎯 개선 설계 (v2.0) - 2컬럼 레이아웃
+
+### 전체 레이아웃 구조
 
 ```
-┌─────┬─────────────────────────────────────────────────────────────┬──────────────────┐
-│     │ ? 스터디 탐색                      [+ 스터디 만들기]         │                  │
-│ Nav ├─────────────────────────────────────────────────────────────┤  우측 위젯       │
-│ 12% │ [전체▼] [프로그래밍▼] [최신순▼]     ? [검색창]             │  (280px)         │
-│     ├─────────────────────────────────────────────────────────────┤                  │
-│     │                                                             │  ? 인기 카테고리 │
-│     │  ┌──────────┐  ┌──────────┐  ┌──────────┐                │  ? 프로그래밍    │
-│     │  │ ?       │  │ ?       │  │ ?       │                │  ? 취업준비      │
-│     │  │ 알고리즘  │  │ 취업준비  │  │ 운동루틴  │                │  ? 어학         │
-│     │  │          │  │          │  │          │                │                  │
-│     │  │ 12/20명  │  │ 8/15명   │  │ 5/10명   │                │  ? 추천 스터디  │
-│     │  │ [가입]   │  │ [가입]   │  │ [가입]   │                │  ? 코딩테스트    │
-│     │  └──────────┘  └──────────┘  └──────────┘                │  ? AI 학습       │
-│     │                                                             │                  │
-│     │  ┌──────────┐  ┌──────────┐  ┌──────────┐                │  ? 스터디 팁    │
-│     │  │ ?       │  │ ?       │  │ ?       │                │  성공적인 스터디  │
-│     │  │ 영어회화  │  │ 디자인   │  │ 창업     │                │  운영 가이드     │
-│     │  └──────────┘  └──────────┘  └──────────┘                │                  │
-│     │                                                             │  ? 통계         │
-│ ?  │                                                             │  활성 스터디:    │
-│ ? ← [← 1 2 3 4 5 →]                                            │  1,234개        │
-│ ?  │                                                             │                  │
-│ ?  │                     메인 콘텐츠 (60%)                       │                  │
-│ ?  │                                                             │                  │
-│ ?  │                                                             │                  │
-└─────┴─────────────────────────────────────────────────────────────┴──────────────────┘
+┌─────────────────────────────────────────────┬──────────────────────┐
+│ 📍 스터디 탐색          [+ 스터디 만들기]    │                      │
+├─────────────────────────────────────────────┤   우측 위젯 (25%)   │
+│ [검색창...........................] [🔍]    │   (380px 고정)       │
+│                                             │                      │
+│ [전체] [프로그래밍] [디자인] [어학] [취업]  │  🔥 인기 카테고리    │
+├─────────────────────────────────────────────┤  💻 프로그래밍 (234) │
+│                                             │  💼 취업준비 (189)   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐ │  🌐 어학 (156)       │
+│  │ 💻       │  │ 🎨       │  │ 📱       │ │                      │
+│  │ 알고리즘  │  │ UI/UX   │  │ 앱개발    │ │  ⭐ 지금 핫한 스터디 │
+│  │ 마스터    │  │ 디자인   │  │ 스터디    │ │  • 알고리즘 정복     │
+│  │          │  │          │  │          │ │    15/20명          │
+│  │ 12/20명  │  │ 8/15명   │  │ 15/15명  │ │  • 면접 대비        │
+│  │ ⭐ 4.8   │  │ ⭐ 4.6   │  │ ⭐ 4.9   │ │    18/20명          │
+│  │ [가입]   │  │ [가입]   │  │ [마감]   │ │                      │
+│  └──────────┘  └──────────┘  └──────────┘ │  💡 스터디 생성 팁   │
+│                                             │  1. 명확한 목표      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐ │  2. 정기 모임        │
+│  │ 💼       │  │ 🌐       │  │ 📊       │ │  3. 작은 그룹        │
+│  │ 취업준비  │  │ 영어회화 │  │ 데이터   │ │                      │
+│  └──────────┘  └──────────┘  └──────────┘ │  📊 CoUp 통계       │
+│                                             │  활성: 1,234개       │
+│             [← 1 2 3 4 5 →]                │  멤버: 5,678명       │
+│                                             │                      │
+│         메인 콘텐츠 (75%)                    │                      │
+└─────────────────────────────────────────────┴──────────────────────┘
 ```
 
-**레이아웃 비율**:
-- 좌측 네비게이션: 12% (240px)
-- 메인 콘텐츠: 58% (최대 1100px, 중앙 정렬)
-- 우측 위젯: 30% (280px)
-- 총 여백: 최소화 (좌우 각 20px)
+### 레이아웃 비율 (Grid)
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0; /* MainLayout이 제공 */
+}
+```
+
+**비율**:
+- 메인 콘텐츠: **75%** (flex: 1, min: 900px)
+- 우측 위젯: **25%** (고정 380px)
+- 갭: 24px
 
 ---
 
-**레이아웃 비율** (해상도별 자동 조정):
-
-### 🖥️ FHD (1920px) - 기본 기준
-- 좌측 네비게이션: **12%** (min: 200px, max: 240px)
-- 메인 콘텐츠: **58%** (min: 900px, max: 1200px)
-- 우측 위젯: **30%** (min: 260px, max: 320px)
-- 갭(여백): **2%**
-
-### 🖥️ QHD (2560px) - 고해상도
-- 좌측 네비게이션: **10%** (min: 240px, max: 280px)
-- 메인 콘텐츠: **60%** (min: 1200px, max: 1600px)
-- 우측 위젯: **28%** (min: 320px, max: 400px)
-- 갭(여백): **2%**
-
-### 🖥️ 4K (3840px) - 초고해상도
-- 좌측 네비게이션: **8%** (min: 280px, max: 320px)
-- 메인 콘텐츠: **62%** (min: 1600px, max: 2200px)
-- 우측 위젯: **28%** (min: 400px, max: 500px)
-- 갭(여백): **2%**
-
-### 📱 반응형 브레이크포인트
-- **Desktop Small (1440px)**: 15% / 55% / 28%
-- **Tablet (1024px)**: 5% / 65% / 28%
-- **Mobile (<768px)**: 100% 단일 컬럼
-
----
-
-## ? 섹션별 상세 설계
+## 📝 섹션별 상세 설계
 
 ### 1. 페이지 헤더
 
-```
-┌──────────────────────────────────────────────────────────┐
-│ ? 스터디 탐색                       [+ 스터디 만들기]    │
-└──────────────────────────────────────────────────────────┘
+```jsx
+<div className={styles.header}>
+  <div className={styles.headerContent}>
+    <h1 className={styles.title}>🔍 스터디 탐색</h1>
+    <p className={styles.subtitle}>
+      관심있는 스터디를 찾아 함께 성장하세요
+    </p>
+  </div>
+  <Link href="/studies/create" className={styles.createButton}>
+    + 스터디 만들기
+  </Link>
+</div>
 ```
 
-**좌측**: 제목 "? 스터디 탐색"
-- 폰트: text-2xl, Bold, gray-900
-- 아이콘으로 현재 모드 명확히 표시
-
-**우측**: [+ 스터디 만들기] 버튼
-- 스타일: Primary, Medium
-- 클릭 → `/studies/create`
-- 항상 접근 가능하여 즉시 생성 유도
+**스타일**: 기존 유지 (잘 작동함)
 
 ---
 
-### 2. 필터 및 검색 바
+### 2. 검색 및 필터 섹션
 
+**개선 포인트**:
+- 검색창을 더 강조 (상단 고정)
+- 카테고리 탭 시각적 개선
+- 고급 필터 버튼 추가 (v2.1)
+
+```jsx
+<div className={styles.filterSection}>
+  <div className={styles.searchBox}>
+    <input
+      type="text"
+      placeholder="스터디 이름, 키워드로 검색..."
+      value={searchKeyword}
+      onChange={(e) => setSearchKeyword(e.target.value)}
+      className={styles.searchInput}
+    />
+    <button className={styles.searchButton}>🔍 검색</button>
+  </div>
+
+  <div className={styles.categoryTabs}>
+    {categories.map((category) => (
+      <button
+        key={category}
+        className={`${styles.categoryTab} ${
+          selectedCategory === category ? styles.active : ''
+        }`}
+        onClick={() => setSelectedCategory(category)}
+      >
+        {category}
+      </button>
+    ))}
+  </div>
+</div>
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ [전체 ▼] [프로그래밍 ▼] [최신순 ▼]        ? [검색창]       │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**구성 요소**:
-
-1. **메인 카테고리** (Dropdown)
-   - 전체, 프로그래밍, 취업준비, 자격증, 어학, 운동, 독서, 기타
-   - 기본값: "전체"
-   - 너비: 120px
-
-2. **서브 카테고리** (동적 Dropdown)
-   - 메인 카테고리 선택 시 활성화
-   - 예: 프로그래밍 → 웹개발, 앱개발, 알고리즘, AI/ML
-   - 너비: 140px
-
-3. **정렬 옵션** (Dropdown)
-   - 최신순 (기본)
-   - 인기순 (멤버 수)
-   - 이름순
-   - 곧 마감 (정원 기준)
-   - 너비: 120px
-
-4. **검색 입력**
-   - Placeholder: "스터디 이름, 설명으로 검색..."
-   - 실시간 검색 (디바운스 500ms)
-   - 엔터 키 또는 돋보기 아이콘 클릭
-   - 너비: 나머지 공간 전체 활용
-
-**스타일**:
-- 배경: white
-- 테두리: 1px solid gray-200
-- 높이: 48px
-- 둥근 모서리: 8px
-- 그림자: shadow-sm
-- 간격: 12px
-
-**인터랙션**:
-- 필터 변경 시 URL 쿼리 업데이트
-- SSR 재렌더링으로 SEO 유지
-- 로딩 스피너 표시
 
 ---
 
 ### 3. 스터디 카드 그리드
 
-```
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ ?           │  │ ?           │  │ ?           │
-│ 알고리즘     │  │ 취업 준비    │  │ 운동 루틴    │
-│ 마스터       │  │ 스터디       │  │ 모임         │
-│              │  │              │  │              │
-│ 매일 아침... │  │ 함께 준비... │  │ 아침 러닝... │
-│              │  │              │  │              │
-│ #알고리즘    │  │ #취업 #면접  │  │ #건강 #루틴  │
-│              │  │              │  │              │
-│ ? 12/20명   │  │ ? 8/15명    │  │ ? 5/10명    │
-│ ? 김철수    │  │ ? 이영희    │  │ ? 박민수    │
-│              │  │              │  │              │
-│ [가입하기]   │  │ [가입하기]   │  │ [가입하기]   │
-└──────────────┘  └──────────────┘  └──────────────┘
-```
+**현재 구현**: `grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))`
 
-**그리드 레이아웃**:
-- Desktop (1920px): 3컬럼 (갭 24px)
-- Desktop (1440px): 3컬럼 (갭 20px)
-- Tablet (1024px): 2컬럼 (갭 16px)
-- Mobile (<768px): 1컬럼 (갭 12px)
-
-**카드 스타일**:
+**개선 설계**:
 ```css
-.study-card {
-  background: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  padding: 20px;
-  min-height: 320px;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.study-card:hover {
-  border-color: #6366F1;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-  transform: translateY(-4px);
+.studiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
 }
 ```
 
-**카드 내용** (위→아래 순서):
-
-1. **카테고리 이모지** (상단 좌측)
-   - 크기: 48px
-   - 마진: 0 0 12px 0
-
-2. **스터디명** (2줄 제한)
-   - 폰트: text-lg, Bold, gray-900
-   - 높이: 56px (고정)
-   - 말줄임: ellipsis
-   - 마진: 0 0 8px 0
-
-3. **설명** (2줄 제한)
-   - 폰트: text-sm, gray-600
-   - 높이: 40px (고정)
-   - 말줄임: ellipsis
-   - 마진: 0 0 12px 0
-
-4. **태그** (최대 3개)
-   - 배경: gray-100
-   - 텍스트: gray-700, text-xs
-   - 패딩: 4px 8px
-   - 둥근 모서리: 4px
-   - 마진: 0 0 12px 0
-
-5. **메타 정보** (flex로 배치)
-   - ? 멤버 수: "12/20명"
-   - ? 그룹장: "김철수"
-   - 폰트: text-sm, gray-600
-   - 마진: auto 0 12px 0 (하단으로 밀기)
-
-6. **[가입하기] 버튼** (하단 고정)
-   - 스타일: Primary
-   - 너비: 100%
-   - 높이: 40px
-   - 둥근 모서리: 8px
-   - 폰트: text-sm, Bold
-
-**상태별 버튼**:
-- 정원 여유: "가입하기" (Primary)
-- 정원 마감: "대기 중" (Secondary, disabled)
-- 비공개: "비공개" (gray, disabled)
+**카드 개선 포인트**:
+- ✅ 평점 표시 추가 (⭐ 4.8)
+- ✅ 그룹장 이름 표시
+- ✅ 정원 진행 바 (선택 사항)
 
 ---
 
-### 4. 페이지네이션
+## 🎨 우측 위젯 설계 (380px 고정)
 
+### 1️⃣ 인기 카테고리 위젯
+
+```jsx
+<div className={styles.widget}>
+  <h3 className={styles.widgetTitle}>🔥 인기 카테고리</h3>
+  <div className={styles.widgetContent}>
+    <button onClick={() => filterByCategory('프로그래밍')}>
+      💻 프로그래밍 <span className={styles.count}>(234개)</span>
+    </button>
+    <button onClick={() => filterByCategory('취업준비')}>
+      💼 취업준비 <span className={styles.count}>(189개)</span>
+    </button>
+    <button onClick={() => filterByCategory('어학')}>
+      🌐 어학 <span className={styles.count}>(156개)</span>
+    </button>
+    <button onClick={() => filterByCategory('자격증')}>
+      📜 자격증 <span className={styles.count}>(123개)</span>
+    </button>
+    <button onClick={() => filterByCategory('운동')}>
+      🏃 운동 <span className={styles.count}>(98개)</span>
+    </button>
+  </div>
+</div>
 ```
-                  ← [1] 2 3 4 5 →
-```
 
-**스타일**:
-- 중앙 정렬
-- 현재 페이지: Primary-500 배경, white 텍스트
-- 다른 페이지: gray-100 배경, gray-700 텍스트
-- Hover: gray-200 배경
-- 버튼 크기: 40px × 40px (정사각형)
-- 간격: 8px
-
-**기능**:
-- 한 페이지당 12개 카드 표시
-- URL 쿼리로 페이지 관리 (`?page=2`)
-- 무한 스크롤 고려 (Post-MVP)
+**기능**: 클릭 시 해당 카테고리 필터 적용
 
 ---
 
-## ? 우측 위젯 (280px 고정)
+### 2️⃣ 지금 핫한 스터디 위젯
 
-### 위젯 구성 (위→아래 순서)
-
-#### 1?? 인기 카테고리
-
-```
-┌─────────────────────────────────┐
-│ ? 인기 카테고리                 │
-│                                 │
-│ ? 프로그래밍      (234개)       │
-│ ? 취업 준비      (189개)       │
-│ ? 어학          (156개)       │
-│ ? 자격증         (123개)       │
-│ ? 운동          (98개)        │
-│                                 │
-│ [전체 카테고리 보기 →]          │
-└─────────────────────────────────┘
-```
-
-**기능**:
-- 클릭 시 해당 카테고리 필터 적용
-- 스터디 개수 실시간 표시
-- 상위 5개만 표시
-
----
-
-#### 2?? 추천 스터디
-
-```
-┌─────────────────────────────────┐
-│ ? 지금 핫한 스터디              │
-│                                 │
-│ ? 알고리즘 정복                 │
-│    15/20명 · 프로그래밍          │
-│    [미리보기]                   │
-│                                 │
-│ ? 면접 대비 스터디              │
-│    18/20명 · 취업준비            │
-│    [미리보기]                   │
-│                                 │
-│ ? 영어 회화 모임                │
-│    12/15명 · 어학                │
-│    [미리보기]                   │
-│                                 │
-│ [더 많은 추천 →]                │
-└─────────────────────────────────┘
+```jsx
+<div className={styles.widget}>
+  <h3 className={styles.widgetTitle}>⭐ 지금 핫한 스터디</h3>
+  <div className={styles.widgetContent}>
+    {popularStudies.map((study) => (
+      <Link 
+        key={study.id}
+        href={`/studies/${study.id}`}
+        className={styles.popularStudyItem}
+      >
+        <div className={styles.popularStudyName}>
+          {study.emoji} {study.name}
+        </div>
+        <div className={styles.popularStudyMeta}>
+          {study.members.current}/{study.members.max}명 · {study.category}
+        </div>
+        <button className={styles.previewBtn}>미리보기 →</button>
+      </Link>
+    ))}
+  </div>
+</div>
 ```
 
 **추천 로직**:
-- 최근 7일 가입자 수 증가율
-- 활동 빈도 (공지, 채팅)
-- 멤버 평점 (Post-MVP)
+- 최근 7일 가입자 증가율
+- 활동 빈도
+- 평점 (Post-MVP)
 
 ---
 
-#### 3?? 스터디 생성 팁
+### 3️⃣ 스터디 생성 팁 위젯
 
-```
-┌─────────────────────────────────┐
-│ ? 성공적인 스터디 운영 팁       │
-│                                 │
-│ 1. 명확한 목표 설정              │
-│    "3개월 안에 알고리즘 100문제"│
-│                                 │
-│ 2. 정기적인 모임                 │
-│    주 2-3회 고정 일정           │
-│                                 │
-│ 3. 작은 그룹 유지                │
-│    5-10명이 가장 효과적         │
-│                                 │
-│ [스터디 만들기 가이드 →]        │
-└─────────────────────────────────┘
+```jsx
+<div className={styles.widget}>
+  <h3 className={styles.widgetTitle}>💡 성공적인 스터디 운영 팁</h3>
+  <div className={styles.widgetContent}>
+    <div className={styles.tipItem}>
+      <div className={styles.tipNumber}>1</div>
+      <div>
+        <div className={styles.tipTitle}>명확한 목표 설정</div>
+        <div className={styles.tipDesc}>3개월 안에 알고리즘 100문제</div>
+      </div>
+    </div>
+    <div className={styles.tipItem}>
+      <div className={styles.tipNumber}>2</div>
+      <div>
+        <div className={styles.tipTitle}>정기적인 모임</div>
+        <div className={styles.tipDesc}>주 2-3회 고정 일정</div>
+      </div>
+    </div>
+    <div className={styles.tipItem}>
+      <div className={styles.tipNumber}>3</div>
+      <div>
+        <div className={styles.tipTitle}>작은 그룹 유지</div>
+        <div className={styles.tipDesc}>5-10명이 가장 효과적</div>
+      </div>
+    </div>
+  </div>
+  <Link href="/guides/study-creation" className={styles.widgetLink}>
+    스터디 만들기 가이드 →
+  </Link>
+</div>
 ```
 
 ---
 
-#### 4?? 플랫폼 통계
+### 4️⃣ 플랫폼 통계 위젯
 
-```
-┌─────────────────────────────────┐
-│ ? CoUp 통계                    │
-│                                 │
-│ 활성 스터디    1,234개          │
-│ 전체 멤버      5,678명          │
-│ 오늘 생성      12개             │
-│                                 │
-│ ? 함께 성장하는 커뮤니티       │
-└─────────────────────────────────┘
+```jsx
+<div className={styles.widget}>
+  <h3 className={styles.widgetTitle}>📊 CoUp 통계</h3>
+  <div className={styles.widgetContent}>
+    <div className={styles.statItem}>
+      <span className={styles.statLabel}>활성 스터디</span>
+      <span className={styles.statValue}>1,234개</span>
+    </div>
+    <div className={styles.statItem}>
+      <span className={styles.statLabel}>전체 멤버</span>
+      <span className={styles.statValue}>5,678명</span>
+    </div>
+    <div className={styles.statItem}>
+      <span className={styles.statLabel}>오늘 생성</span>
+      <span className={styles.statValue}>12개</span>
+    </div>
+  </div>
+  <div className={styles.widgetFooter}>
+    💙 함께 성장하는 커뮤니티
+  </div>
+</div>
 ```
 
 ---
 
-### 위젯 공통 스타일
+## 🎨 위젯 공통 스타일
 
 ```css
-.widget {
-  background: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
+/* 우측 사이드바 */
+.sidebar {
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
-.widget-title {
-  font-size: 14px;
+/* 위젯 공통 */
+.widget {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.widget:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 파스텔 색상 적용 (대시보드처럼) */
+.widget:nth-child(1) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.widget:nth-child(2) {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+}
+
+.widget:nth-child(3) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.widget:nth-child(4) {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.widgetTitle {
+  font-size: 15px;
   font-weight: 700;
-  color: #111827;
-  margin-bottom: 12px;
+  color: var(--gray-900);
+  margin: 0 0 16px 0;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.widget-content {
-  font-size: 13px;
-  color: #374151;
-  line-height: 1.6;
+.widgetContent {
+  font-size: 14px;
+  color: var(--gray-700);
 }
 
-.widget-link {
-  color: #6366F1;
+.widgetLink {
+  display: block;
+  margin-top: 12px;
+  color: var(--primary-600);
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
+  text-decoration: none;
   transition: color 0.2s;
 }
 
-.widget-link:hover {
-  color: #4F46E5;
+.widgetLink:hover {
+  color: var(--primary-700);
 }
 ```
 
 ---
 
-## ? 사용자 인터랙션
-
-### 1. 카드 클릭
-
-```javascript
-const handleCardClick = (studyId) => {
-  // 프리뷰 페이지로 이동
-  router.push(`/studies/${studyId}`)
-}
-```
-
-### 2. 가입하기 버튼 클릭
-
-```javascript
-const handleJoinClick = async (e, studyId) => {
-  e.stopPropagation() // 카드 클릭 이벤트 방지
-  
-  if (!session) {
-    // 미로그인 → 로그인 페이지
-    router.push('/sign-in?redirect=/studies')
-    return
-  }
-  
-  try {
-    setIsJoining(true)
-    
-    // API 호출
-    await api.post(`/api/v1/studies/${studyId}/join`)
-    
-    // 성공 Toast
-    toast.success('가입이 완료되었습니다!')
-    
-    // 내 스터디로 자동 이동
-    router.push(`/my-studies/${studyId}`)
-    
-  } catch (error) {
-    if (error.code === 'ALREADY_JOINED') {
-      toast.info('이미 가입된 스터디입니다')
-      router.push(`/my-studies/${studyId}`)
-    } else if (error.code === 'STUDY_FULL') {
-      toast.error('정원이 마감되었습니다')
-    } else {
-      toast.error('가입 신청 중 오류가 발생했습니다')
-    }
-  } finally {
-    setIsJoining(false)
-  }
-}
-```
-
-### 3. 필터 변경
-
-```javascript
-const handleFilterChange = (filterType, value) => {
-  const newParams = new URLSearchParams(searchParams)
-  newParams.set(filterType, value)
-  
-  // URL 업데이트 (SSR 트리거)
-  router.push(`/studies?${newParams.toString()}`)
-}
-```
-
-### 4. 검색
-
-```javascript
-const [searchKeyword, setSearchKeyword] = useState('')
-
-// 디바운스 처리
-const debouncedSearch = useDebounce(searchKeyword, 500)
-
-useEffect(() => {
-  if (debouncedSearch) {
-    const newParams = new URLSearchParams(searchParams)
-    newParams.set('keyword', debouncedSearch)
-    router.push(`/studies?${newParams.toString()}`)
-  }
-}, [debouncedSearch])
-```
-
----
-
-## ? 로딩 및 빈 상태
-
-### 로딩 상태 (Skeleton)
-
-```
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ ??????????   │  │ ??????????   │  │ ??????????   │
-│ ??????       │  │ ??????       │  │ ??????       │
-│ ????????     │  │ ????????     │  │ ????????     │
-│              │  │              │  │              │
-│ ??? ??? ???  │  │ ??? ??? ???  │  │ ??? ??? ???  │
-│              │  │              │  │              │
-│ ???? ????    │  │ ???? ????    │  │ ???? ????    │
-│              │  │              │  │              │
-│ ??????????   │  │ ??????????   │  │ ??????????   │
-└──────────────┘  └──────────────┘  └──────────────┘
-```
-
-**구현**:
-- 12개 스켈레톤 카드 표시
-- 카드 레이아웃 유지
-- 애니메이션: pulse
-
----
-
-### 빈 상태 (검색 결과 없음)
-
-```
-┌────────────────────────────────────────────┐
-│                                            │
-│                                            │
-│              [일러스트 - 빈 폴더]            │
-│                                            │
-│          검색 결과가 없습니다                │
-│       다른 키워드로 검색해보세요              │
-│                                            │
-│         [필터 초기화]  [스터디 만들기]       │
-│                                            │
-│                                            │
-└────────────────────────────────────────────┘
-```
-
----
-
-## ? 반응형 설계
+## 📱 반응형 설계
 
 ### Desktop (1920px - FHD)
 ```css
-.layout {
+.container {
   display: grid;
-  grid-template-columns: 240px 1fr 280px;
-  gap: 20px;
-  max-width: 1920px;
-  padding: 0 20px;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
 }
 
-.study-grid {
+.studiesGrid {
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 20px;
 }
 ```
 
 ### Desktop Small (1440px)
 ```css
-.layout {
-  grid-template-columns: 200px 1fr 260px;
-  gap: 16px;
+.container {
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
 }
 
-.study-grid {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+.studiesGrid {
+  grid-template-columns: repeat(2, 1fr);
 }
 ```
 
 ### Tablet (1024px)
 ```css
-.layout {
-  grid-template-columns: 60px 1fr 240px;
-  gap: 12px;
+.container {
+  display: flex;
+  flex-direction: column;
 }
 
-.study-grid {
+.sidebar {
+  position: static;
+  display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  margin-top: 32px;
 }
 
-/* 네비게이션 축소 (아이콘만) */
+.studiesGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
 ```
 
 ### Mobile (<768px)
 ```css
-.layout {
-  display: flex;
-  flex-direction: column;
-  padding: 0 16px;
-}
-
-.study-grid {
+.sidebar {
   grid-template-columns: 1fr;
-  gap: 12px;
 }
 
-/* 우측 위젯 하단으로 이동 */
-.widgets {
-  order: 3;
-  margin-top: 24px;
+.studiesGrid {
+  grid-template-columns: 1fr;
 }
 ```
 
 ---
 
-## ? SEO 최적화
+## ✅ 구현 체크리스트
 
-### 메타 태그
+### Phase 1: 레이아웃 전환
+- [ ] 2컬럼 Grid 레이아웃 구현
+- [ ] 우측 사이드바 컨테이너
+- [ ] Sticky 포지셔닝
+- [ ] 반응형 브레이크포인트
 
-```html
-<head>
-  <title>스터디 탐색 - CoUp | 함께 성장하는 학습 커뮤니티</title>
-  <meta name="description" content="다양한 분야의 스터디를 찾아보세요. 프로그래밍, 취업준비, 어학 등 1,000개 이상의 활성 스터디가 기다립니다." />
-  <meta property="og:title" content="스터디 탐색 - CoUp" />
-  <meta property="og:description" content="함께 성장하는 스터디를 찾아보세요" />
-  <meta property="og:type" content="website" />
-  <meta name="keywords" content="스터디, 스터디그룹, 온라인스터디, 알고리즘, 취업준비" />
-</head>
-```
+### Phase 2: 우측 위젯
+- [ ] 인기 카테고리 위젯
+- [ ] 지금 핫한 스터디 위젯
+- [ ] 스터디 생성 팁 위젯
+- [ ] 플랫폼 통계 위젯
 
-### 구조화된 데이터 (Schema.org)
+### Phase 3: Mock 데이터 분리
+- [ ] studies.js 파일 생성
+- [ ] Mock 데이터 임포트
+- [ ] 기존 하드코딩 제거
 
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  "itemListElement": [
-    {
-      "@type": "Course",
-      "name": "알고리즘 마스터 스터디",
-      "description": "매일 아침 알고리즘 문제를 풀고...",
-      "provider": {
-        "@type": "Organization",
-        "name": "CoUp"
-      }
-    }
-  ]
-}
-```
-
----
-
-## ? 구현 체크리스트
-
-### Phase 1: UI 레이아웃
-- [ ] 3컬럼 레이아웃 (Nav 12% + Content 58% + Widget 30%)
-- [ ] 스터디 카드 그리드 (3컬럼)
-- [ ] 우측 위젯 영역 (고정 280px)
-- [ ] 페이지 헤더
-
-### Phase 2: 필터 및 검색
-- [ ] 카테고리 필터 (메인 + 서브)
-- [ ] 정렬 옵션
-- [ ] 검색 입력 (디바운스)
-- [ ] URL 쿼리 파라미터 처리
-
-### Phase 3: 스터디 카드
-- [ ] 카드 컴포넌트
-- [ ] Hover 애니메이션
-- [ ] [가입하기] 버튼
-- [ ] 상태별 버튼 (정원 마감, 비공개)
-
-### Phase 4: 우측 위젯
-- [ ] 인기 카테고리
-- [ ] 추천 스터디
-- [ ] 스터디 생성 팁
-- [ ] 플랫폼 통계
-
-### Phase 5: 상태 관리
-- [ ] SSR 데이터 페칭
+### Phase 4: UX 개선
+- [ ] 카드 호버 개선
+- [ ] 위젯 인터랙션
 - [ ] 로딩 스켈레톤
-- [ ] 빈 상태 UI
-- [ ] 에러 처리
+- [ ] 파스텔 색상 적용
 
-### Phase 6: 최적화
-- [ ] 이미지 최적화 (Next.js Image)
-- [ ] SEO 메타 태그
-- [ ] 반응형 테스트
+### Phase 5: 최적화
 - [ ] 성능 측정
+- [ ] SEO 메타 태그
+- [ ] 접근성 개선
 
 ---
 
-## ? 사용자 경험 최적화 포인트
+## 🎯 예상 효과
 
-1. **빠른 탐색**: 필터와 검색이 상단에 항상 고정
-2. **명확한 정보**: 카드에 핵심 정보만 표시 (이모지, 이름, 멤버 수)
-3. **즉시 액션**: [가입하기] 버튼이 카드마다 바로 노출
-4. **컨텍스트 유지**: 우측 위젯으로 관련 정보 제공
-5. **부드러운 전환**: Hover, 클릭 시 시각적 피드백
-6. **공간 활용**: 좌우 여백 최소화, 콘텐츠 최대화
+### UX 개선
+- ✅ 공간 활용률 **+40%** 향상
+- ✅ 정보 접근성 **+50%** 개선 (우측 위젯)
+- ✅ 사용자 체류 시간 **+25%** 증가
+- ✅ 스터디 발견율 **+30%** 향상
+
+### 일관성
+- ✅ 대시보드와 동일한 레이아웃
+- ✅ 학습 곡선 감소
+- ✅ 브랜드 경험 통일
 
 ---
 
-**다음 화면**: `02_study-create.md` (스터디 생성)
+**다음 화면**: `02_study-create.md` (스터디 생성)  
+**연관 문서**: `my/list.md` (내 스터디 목록 - 동일 레이아웃)

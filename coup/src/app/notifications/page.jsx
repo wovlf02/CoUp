@@ -45,7 +45,12 @@ export default function NotificationsPage() {
     <div className={styles.container}>
       <div className={styles.mainContent}>
         <header className={styles.header}>
-          <h1 className={styles.title}>🔔 알림</h1>
+          <div className={styles.headerContent}>
+            <h1 className={styles.title}>🔔 알림</h1>
+            <p className={styles.subtitle}>
+              모든 스터디의 새로운 소식을 확인하세요
+            </p>
+          </div>
         </header>
 
         <NotificationFilters
@@ -78,4 +83,3 @@ export default function NotificationsPage() {
     </div>
   )
 }
-

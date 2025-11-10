@@ -1,9 +1,17 @@
-/* 내 스터디 목록 페이지 스타일 */
+/* 내 스터디 목록 페이지 스타일 - 2컬럼 레이아웃 */
 
+/* 2컬럼 레이아웃 컨테이너 */
 .container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 32px 20px;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+}
+
+.mainContent {
+  min-width: 0;
 }
 
 /* 헤더 */
@@ -304,7 +312,451 @@
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 48px;
+  padding: 20px 0;
+}
+
+.paginationButton {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paginationButton:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+.paginationButton.active {
+  background: var(--primary-600);
+  color: white;
+  border-color: var(--primary-600);
+  font-weight: 700;
+}
+
+.paginationArrow {
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paginationArrow:hover:not(:disabled) {
+  border-color: var(--primary-500);
+  color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+.paginationArrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 우측 사이드바 */
+.sidebar {
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: var(--gray-300);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--gray-400);
+}
+
+/* 위젯 공통 스타일 */
+.widget {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.widget:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 파스텔 색상 순환 */
+.widget:nth-child(1) {
+  background: var(--pastel-cyan-bg);
+  border-color: var(--pastel-cyan-border);
+}
+
+.widget:nth-child(1):hover {
+  background: var(--pastel-cyan-hover);
+}
+
+.widget:nth-child(2) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.widget:nth-child(2):hover {
+  background: var(--pastel-yellow-hover);
+}
+
+.widget:nth-child(3) {
+  background: var(--pastel-orange-bg);
+  border-color: var(--pastel-orange-border);
+}
+
+.widget:nth-child(3):hover {
+  background: var(--pastel-orange-hover);
+}
+
+.widget:nth-child(4) {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+.widget:nth-child(4):hover {
+  background: var(--pastel-pink-hover);
+}
+
+.widget:nth-child(5) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.widget:nth-child(5):hover {
+  background: var(--pastel-green-hover);
+}
+
+.widgetTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.widgetContent {
+  font-size: 14px;
+  color: var(--gray-700);
+}
+
+.widgetLink {
+  display: block;
+  margin-top: 12px;
+  color: var(--primary-600);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.widgetLink:hover {
+  color: var(--primary-700);
+}
+
+/* 활동 요약 위젯 */
+.summarySection {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.summarySection:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+}
+
+.summaryValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-600);
+}
+
+.summaryDesc {
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 4px;
+}
+
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.highlight {
+  font-weight: 700;
+  color: var(--danger-600);
+}
+
+/* 급한 할일 위젯 */
+.taskItem {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.taskItem:last-of-type {
+  margin-bottom: 0;
+}
+
+.taskHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.taskStudy {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+.taskDDay {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.taskDDay.today {
+  background: var(--danger-100);
+  color: var(--danger-700);
+}
+
+.taskDDay.tomorrow {
+  background: var(--warning-100);
+  color: var(--warning-700);
+}
+
+.taskTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.taskDate {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+/* 다가오는 일정 위젯 */
+.eventItem {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.eventItem:last-of-type {
+  margin-bottom: 0;
+}
+
+.eventDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  padding: 8px;
+  background: var(--primary-50);
+  border-radius: 8px;
+}
+
+.eventDay {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-700);
+}
+
+.eventTime {
+  font-size: 11px;
+  color: var(--primary-600);
+  margin-top: 2px;
+}
+
+.eventInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.eventStudy {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 4px;
+}
+
+.eventTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 빠른 액션 위젯 */
+.quickActionBtn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--gray-800);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.quickActionBtn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateX(4px);
+}
+
+.quickActionBtn:last-of-type {
+  margin-bottom: 0;
+}
+
+/* 활동 팁 위젯 */
+.tipItem {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tipItem:last-child {
+  margin-bottom: 0;
+}
+
+.tipIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.tipText {
+  flex: 1;
+}
+
+.tipTitle {
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.tipDesc {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
 /* 반응형 */
+@media (max-width: 1440px) {
+  .container {
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .widget {
+    margin-bottom: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 20px 16px;
@@ -350,5 +802,8 @@
   .actionButton {
     width: 100%;
   }
-}
 
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+}

@@ -84,7 +84,12 @@ export default function TasksPage() {
     <div className={styles.container}>
       <div className={styles.mainContent}>
         <header className={styles.header}>
-          <h1 className={styles.title}>✅ 내 할 일</h1>
+          <div className={styles.headerContent}>
+            <h1 className={styles.title}>✅ 내 할 일</h1>
+            <p className={styles.subtitle}>
+              스터디별 할 일을 관리하고 완료하세요
+            </p>
+          </div>
           <button
             className={styles.addButton}
             onClick={() => setShowCreateModal(true)}
