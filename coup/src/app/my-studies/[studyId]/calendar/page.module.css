@@ -1,0 +1,691 @@
+/* 내 스터디 캘린더 페이지 스타일 */
+
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+/* 헤더 - 동일 */
+.header {
+  margin-bottom: 24px;
+}
+
+.backButton {
+  padding: 8px 16px;
+  background: var(--gray-100);
+  border: none;
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+}
+
+.backButton:hover {
+  background: var(--gray-200);
+}
+
+.studyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--pastel-blue-bg) 0%, var(--pastel-cyan-bg) 100%);
+  border: 1px solid var(--pastel-blue-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.studyInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.emoji {
+  font-size: 2.5rem;
+}
+
+.studyName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+/* 탭 */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.tab.active {
+  background: var(--primary-600);
+  color: white;
+}
+
+/* 메인 콘텐츠 */
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 24px;
+}
+
+/* 캘린더 섹션 */
+.calendarSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.calendarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: var(--pastel-purple-bg);
+  border: 1px solid var(--pastel-purple-border);
+  border-radius: 12px;
+}
+
+.calendarTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.addButton {
+  padding: 10px 24px;
+  background: var(--primary-600);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addButton:hover {
+  background: var(--primary-700);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+/* 컨트롤 섹션 */
+.controlSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+}
+
+.viewModes {
+  display: flex;
+  gap: 8px;
+}
+
+.viewMode {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewMode:hover {
+  background: var(--gray-50);
+}
+
+.viewMode.active {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+  color: var(--primary-700);
+  font-weight: 600;
+}
+
+.monthNavigation {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navButton {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.navButton:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.currentMonth {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  min-width: 150px;
+  text-align: center;
+}
+
+.filterButton {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterButton:hover {
+  background: var(--gray-50);
+}
+
+/* 월 뷰 캘린더 */
+.monthView {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.weekdayHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.weekday {
+  text-align: center;
+  padding: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  background: var(--pastel-cyan-bg);
+  border-radius: 8px;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.dayCell {
+  min-height: 100px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.dayCell:hover {
+  background: var(--pastel-blue-bg);
+  border-color: var(--pastel-blue-border);
+}
+
+.dayCell.emptyDay {
+  background: var(--gray-50);
+  cursor: default;
+}
+
+.dayCell.emptyDay:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-200);
+}
+
+.dayCell.today {
+  background: var(--pastel-yellow-bg);
+  border: 2px solid var(--pastel-yellow-border);
+  font-weight: 700;
+}
+
+.dayNumber {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+}
+
+.dayEvents {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eventDot {
+  font-size: 0.875rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 선택된 날짜의 일정 */
+.selectedDayEvents {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.selectedDayTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 20px 0;
+}
+
+.eventCard {
+  padding: 20px;
+  background: var(--pastel-green-bg);
+  border: 1px solid var(--pastel-green-border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.eventCard:hover {
+  background: var(--pastel-green-hover);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+.eventCard:last-child {
+  margin-bottom: 0;
+}
+
+.eventCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.eventTime {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid var(--pastel-green-border);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.eventTitle {
+  flex: 1;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.eventEditBtn {
+  padding: 6px 16px;
+  background: white;
+  border: 1px solid var(--pastel-green-border);
+  border-radius: 6px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.eventEditBtn:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-500);
+  color: var(--primary-700);
+}
+
+.eventLocation,
+.eventAttendees {
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.eventDeleteBtn {
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--pastel-pink-border);
+  border-radius: 6px;
+  color: var(--red-600);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.eventDeleteBtn:hover {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+/* 우측 사이드바 */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.widget {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.widget:nth-child(1) {
+  background: var(--pastel-orange-bg);
+  border-color: var(--pastel-orange-border);
+}
+
+.widget:nth-child(1):hover {
+  background: var(--pastel-orange-hover);
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.15);
+}
+
+.widget:nth-child(2) {
+  background: var(--pastel-cyan-bg);
+  border-color: var(--pastel-cyan-border);
+}
+
+.widget:nth-child(2):hover {
+  background: var(--pastel-cyan-hover);
+  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.15);
+}
+
+.widget:nth-child(3) {
+  background: var(--pastel-pink-bg);
+  border-color: var(--pastel-pink-border);
+}
+
+.widget:nth-child(3):hover {
+  background: var(--pastel-pink-hover);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+}
+
+.widget:nth-child(4) {
+  background: var(--pastel-purple-bg);
+  border-color: var(--pastel-purple-border);
+}
+
+.widget:nth-child(4):hover {
+  background: var(--pastel-purple-hover);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+}
+
+.widget:nth-child(5) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.widget:nth-child(5):hover {
+  background: var(--pastel-yellow-hover);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.15);
+}
+
+.widget:nth-child(6) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.widget:nth-child(6):hover {
+  background: var(--pastel-green-hover);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+.widgetTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 16px 0;
+}
+
+.widgetContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.todayDate {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+}
+
+.todayEvent {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.todayEvent:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(4px);
+}
+
+.todayEventTime {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-700);
+  margin-bottom: 4px;
+}
+
+.todayEventTitle {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.todayEventLocation {
+  font-size: 0.813rem;
+  color: var(--gray-600);
+}
+
+.upcomingEvent {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+}
+
+.upcomingDate {
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--primary-700);
+  margin-bottom: 4px;
+}
+
+.upcomingTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}
+
+.statValue {
+  font-weight: 700;
+  color: var(--primary-700);
+}
+
+.widgetActions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.widgetButton {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.widgetButton:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--primary-700);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+  .mainContent {
+    grid-template-columns: 1fr 280px;
+  }
+
+  .daysGrid {
+    gap: 4px;
+  }
+
+  .dayCell {
+    min-height: 80px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 16px;
+  }
+
+  .mainContent {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    margin-top: 24px;
+  }
+
+  .controlSection {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .monthNavigation {
+    justify-content: center;
+  }
+
+  .daysGrid {
+    gap: 2px;
+  }
+
+  .dayCell {
+    min-height: 60px;
+    padding: 4px;
+  }
+
+  .dayNumber {
+    font-size: 0.875rem;
+  }
+
+  .eventDot {
+    font-size: 0.75rem;
+  }
+
+  .widgetActions {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    flex-shrink: 0;
+  }
+}
+

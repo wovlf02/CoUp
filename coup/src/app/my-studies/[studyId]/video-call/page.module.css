@@ -1,0 +1,579 @@
+/* 내 스터디 화상회의 페이지 스타일 */
+
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+/* 헤더 - 동일 */
+.header {
+  margin-bottom: 24px;
+}
+
+.backButton {
+  padding: 8px 16px;
+  background: var(--gray-100);
+  border: none;
+  border-radius: 8px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+}
+
+.backButton:hover {
+  background: var(--gray-200);
+}
+
+.studyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--pastel-purple-bg) 0%, var(--pastel-pink-bg) 100%);
+  border: 1px solid var(--pastel-purple-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+}
+
+.studyInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.emoji {
+  font-size: 2.5rem;
+}
+
+.studyName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+/* 탭 */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.tab.active {
+  background: var(--primary-600);
+  color: white;
+}
+
+/* 메인 콘텐츠 (통화 전) */
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 24px;
+}
+
+.videoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.videoHeader {
+  padding: 20px 24px;
+  background: var(--pastel-cyan-bg);
+  border: 1px solid var(--pastel-cyan-border);
+  border-radius: 12px;
+}
+
+.videoTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+/* 통화 시작 전 화면 */
+.preCallScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 600px;
+}
+
+.preCallCard {
+  width: 100%;
+  max-width: 600px;
+  padding: 48px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.preCallIcon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+}
+
+.preCallTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 16px 0;
+}
+
+.preCallDesc {
+  font-size: 1rem;
+  color: var(--gray-600);
+  margin: 0 0 32px 0;
+  line-height: 1.6;
+}
+
+.preCallFeatures {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--pastel-blue-bg);
+  border: 1px solid var(--pastel-blue-border);
+  border-radius: 12px;
+  font-size: 0.938rem;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.featureIcon {
+  font-size: 1.5rem;
+}
+
+.startCallButton {
+  width: 100%;
+  padding: 16px 32px;
+  background: var(--primary-600);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 24px;
+}
+
+.startCallButton:hover {
+  background: var(--primary-700);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.deviceCheck {
+  padding: 20px;
+  background: var(--pastel-yellow-bg);
+  border: 1px solid var(--pastel-yellow-border);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.deviceCheckTitle {
+  font-size: 0.938rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 12px 0;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.checkboxLabel:last-child {
+  margin-bottom: 0;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* 통화 중 화면 */
+.callScreen {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px);
+  background: var(--gray-900);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.callHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+}
+
+.callTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.callTime {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.endCallButton {
+  padding: 10px 20px;
+  background: #ef4444;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.938rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.endCallButton:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* 비디오 그리드 */
+.videoGrid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.videoCard {
+  position: relative;
+  background: var(--gray-800);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.videoCard.speaking {
+  border-color: #10b981;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.videoPlaceholder {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-700);
+}
+
+.videoStream {
+  font-size: 2rem;
+  color: var(--gray-400);
+}
+
+.videoOff {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-800);
+}
+
+.avatarPlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--pastel-purple-bg);
+  border: 3px solid var(--pastel-purple-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.participantInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.participantName {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: white;
+}
+
+.participantControls {
+  display: flex;
+  gap: 8px;
+}
+
+.controlIcon {
+  font-size: 1.125rem;
+}
+
+/* 컨트롤 바 */
+.controlBar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.controlButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.controlButton span {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.controlButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.controlButton.active {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+/* 우측 사이드바 */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.widget {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.widget:nth-child(1) {
+  background: var(--pastel-green-bg);
+  border-color: var(--pastel-green-border);
+}
+
+.widget:nth-child(1):hover {
+  background: var(--pastel-green-hover);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+.widget:nth-child(2) {
+  background: var(--pastel-orange-bg);
+  border-color: var(--pastel-orange-border);
+}
+
+.widget:nth-child(2):hover {
+  background: var(--pastel-orange-hover);
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.15);
+}
+
+.widget:nth-child(3) {
+  background: var(--pastel-yellow-bg);
+  border-color: var(--pastel-yellow-border);
+}
+
+.widget:nth-child(3):hover {
+  background: var(--pastel-yellow-hover);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.15);
+}
+
+.widgetTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 16px 0;
+}
+
+.widgetContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.callHistory {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.callHistoryItem {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.callDate {
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+}
+
+.callDuration,
+.callParticipants {
+  color: var(--gray-600);
+  margin-bottom: 4px;
+}
+
+.settingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}
+
+.settingSelect {
+  padding: 6px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.813rem;
+  cursor: pointer;
+}
+
+.tipText {
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  margin: 0 0 8px 0;
+  line-height: 1.6;
+}
+
+.tipText:last-child {
+  margin-bottom: 0;
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+  .mainContent {
+    grid-template-columns: 1fr 280px;
+  }
+
+  .videoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 16px;
+  }
+
+  .mainContent {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    margin-top: 24px;
+  }
+
+  .preCallCard {
+    padding: 32px 24px;
+  }
+
+  .preCallFeatures {
+    grid-template-columns: 1fr;
+  }
+
+  .videoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .controlBar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .controlButton {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab {
+    flex-shrink: 0;
+  }
+}
+
