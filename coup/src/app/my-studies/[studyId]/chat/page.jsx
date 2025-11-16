@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { studyChatData } from '@/mocks/studyChat';
 
 export default function MyStudyChatPage({ params }) {
   const router = useRouter();
@@ -16,12 +17,8 @@ export default function MyStudyChatPage({ params }) {
   const [onlineMembers, setOnlineMembers] = useState([]);
 
   // Mock 데이터
-  const study = {
-    id: studyId,
-    emoji: '💻',
-    name: '알고리즘 마스터 스터디',
-    role: 'OWNER',
-  };
+  const data = studyChatData[studyId] || studyChatData[1];
+  const { study } = data;
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -36,62 +33,8 @@ export default function MyStudyChatPage({ params }) {
 
   // Mock 메시지 데이터
   useEffect(() => {
-    const mockMessages = [
-      {
-        id: 1,
-        type: 'system',
-        content: '2025년 11월 6일',
-        timestamp: new Date('2025-11-06T00:00:00'),
-      },
-      {
-        id: 2,
-        type: 'user',
-        userId: 'user1',
-        userName: '김철수',
-        content: '오늘 문제 풀었어요?',
-        timestamp: new Date('2025-11-06T10:30:00'),
-        isMine: false,
-      },
-      {
-        id: 3,
-        type: 'user',
-        userId: 'me',
-        userName: '나',
-        content: '네, 3문제 완료했습니다',
-        timestamp: new Date('2025-11-06T10:31:00'),
-        isMine: true,
-        readers: ['user1', 'user2'],
-      },
-      {
-        id: 4,
-        type: 'user',
-        userId: 'user2',
-        userName: '이영희',
-        content: '저도 2문제 풀었어요!',
-        timestamp: new Date('2025-11-06T10:32:00'),
-        isMine: false,
-        hasFile: true,
-        fileName: '풀이.pdf',
-        fileSize: '1.2MB',
-      },
-      {
-        id: 5,
-        type: 'user',
-        userId: 'user1',
-        userName: '김철수',
-        content: '좋아요! 파일 확인했습니다 👍',
-        timestamp: new Date('2025-11-06T10:35:00'),
-        isMine: false,
-      },
-    ];
-
-    setMessages(mockMessages);
-
-    setOnlineMembers([
-      { id: 'user1', name: '김철수', role: 'OWNER', status: '채팅 중', lastSeen: '방금 전' },
-      { id: 'user2', name: '이영희', role: 'ADMIN', status: '채팅 중', lastSeen: '1분 전' },
-      { id: 'user3', name: '박민수', role: 'MEMBER', status: '채팅 중', lastSeen: '5분 전' },
-    ]);
+    setMessages(data.messages);
+    setOnlineMembers(data.onlineMembers);
   }, []);
 
   const scrollToBottom = () => {
@@ -339,4 +282,3 @@ export default function MyStudyChatPage({ params }) {
     </div>
   );
 }
-

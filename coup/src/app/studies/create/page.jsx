@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
+import { studyCategories } from '@/mocks/studySettings';
 
 export default function StudyCreatePage() {
   const router = useRouter();
@@ -22,13 +23,7 @@ export default function StudyCreatePage() {
     location: 'online',
   });
 
-  const categories = {
-    '프로그래밍': ['알고리즘/코테', '웹개발', '앱개발', '게임개발', '기타'],
-    '디자인': ['UI/UX', '그래픽', '영상', '3D', '기타'],
-    '어학': ['영어', '중국어', '일본어', '기타'],
-    '취업': ['자소서', '면접', '포트폴리오', '기타'],
-    '자격증': ['정보처리기사', '토익', '토스', '기타'],
-  };
+  const categories = studyCategories;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -351,4 +346,3 @@ export default function StudyCreatePage() {
     </div>
   );
 }
-

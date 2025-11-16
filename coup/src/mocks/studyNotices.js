@@ -1,0 +1,70 @@
+// 스터디 공지사항 Mock 데이터
+
+export const studyNoticesData = {
+  1: {
+    study: {
+      id: 1,
+      emoji: '💻',
+      name: '알고리즘 마스터 스터디',
+      role: 'OWNER',
+    },
+    notices: [
+      {
+        id: 1,
+        title: '이번 주 일정 안내',
+        content: '목요일 14시 주간 회의가 있습니다. 모두 참석 부탁드립니다.',
+        author: { name: '김철수', role: 'OWNER' },
+        createdAt: '2025.11.05 14:23',
+        isPinned: true,
+        isImportant: true,
+        comments: 12,
+        views: 45,
+      },
+      {
+        id: 2,
+        title: '스터디 규칙 필독!',
+        content: '지각 3회 시 퇴출, 과제 미제출 시 사유 공유 필수...',
+        author: { name: '김철수', role: 'OWNER' },
+        createdAt: '2025.10.28 09:15',
+        isPinned: true,
+        isImportant: true,
+        comments: 28,
+        views: 120,
+      },
+      {
+        id: 3,
+        title: '다음 주 과제 안내',
+        content: '백준 1234번을 다음 주까지 풀어오세요.',
+        author: { name: '이영희', role: 'ADMIN' },
+        createdAt: '2시간 전',
+        isPinned: false,
+        isImportant: true,
+        comments: 5,
+        views: 23,
+      },
+      {
+        id: 4,
+        title: '참고 자료 공유',
+        content: '알고리즘 정리 자료입니다. 도움이 되길 바랍니다.',
+        author: { name: '박민수', role: 'MEMBER' },
+        createdAt: '1일 전',
+        isPinned: false,
+        isImportant: false,
+        comments: 8,
+        views: 34,
+      },
+      {
+        id: 5,
+        title: '이번 주 회의록',
+        content: '11/2 주간 회의 내용 정리입니다.',
+        author: { name: '김철수', role: 'OWNER' },
+        createdAt: '3일 전',
+        isPinned: false,
+        isImportant: false,
+        comments: 15,
+        views: 67,
+      },
+    ],
+  },
+};
+

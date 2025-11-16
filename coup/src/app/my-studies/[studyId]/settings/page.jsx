@@ -5,29 +5,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { studySettingsData, studyCategories } from '@/mocks/studySettings';
 
 export default function MyStudySettingsPage({ params }) {
   const router = useRouter();
   const { studyId } = params;
   const [activeTab, setActiveTab] = useState('basic');
   const [errors, setErrors] = useState({});
-  const [formData, setFormData] = useState({
-    name: '알고리즘 마스터 스터디',
-    category: '프로그래밍',
-    subCategory: '알고리즘/코테',
-    description: '매일 아침 알고리즘 문제를 풀고 서로의 풀이를 공유하며 성장하는 스터디입니다.',
-    tags: ['알고리즘', '코테', '백준'],
-    maxMembers: 20,
-    isPublic: true,
-    autoApprove: false,
-  });
 
-  const study = {
-    id: studyId,
-    emoji: '💻',
-    name: '알고리즘 마스터 스터디',
-    role: 'OWNER',
-  };
+  const data = studySettingsData[studyId] || studySettingsData[1];
+  const { study, members } = data;
+  const [formData, setFormData] = useState(data.formData);
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -38,14 +26,6 @@ export default function MyStudySettingsPage({ params }) {
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
     { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
-
-  const members = [
-    { id: 1, name: '김철수', role: 'OWNER', joinedAt: '2024.10.01' },
-    { id: 2, name: '이영희', role: 'ADMIN', joinedAt: '2024.10.02' },
-    { id: 3, name: '박민수', role: 'MEMBER', joinedAt: '2024.10.05' },
-    { id: 4, name: '최지은', role: 'MEMBER', joinedAt: '2024.10.08' },
-    { id: 5, name: '정소현', role: 'MEMBER', joinedAt: '2024.10.12' },
   ];
 
   // 유효성 검사
@@ -229,10 +209,11 @@ export default function MyStudySettingsPage({ params }) {
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className={styles.select}
                     >
-                      <option>프로그래밍</option>
-                      <option>디자인</option>
-                      <option>어학</option>
-                      <option>취업</option>
+                      {studyCategories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
                     </select>
                     <select
                       value={formData.subCategory}

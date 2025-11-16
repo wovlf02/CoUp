@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
+import { studyJoinData } from '@/mocks/studyDetails';
 
 export default function StudyJoinPage({ params }) {
   const router = useRouter();
@@ -28,24 +29,7 @@ export default function StudyJoinPage({ params }) {
   });
 
   // 임시 스터디 데이터
-  const study = {
-    id: studyId,
-    emoji: '💻',
-    name: '알고리즘 마스터 스터디',
-    memberCount: 12,
-    maxMembers: 20,
-    category: '프로그래밍',
-    autoApprove: true,
-    rating: 4.8,
-    reviewCount: 24,
-    rules: [
-      '매일 오전 9시까지 문제 풀이 제출',
-      '주 1회 코드 리뷰 참여 필수',
-      '결석 시 사전 공지',
-      '서로 존중하는 태도',
-      '학습 자료 적극 공유',
-    ],
-  };
+  const study = studyJoinData[studyId] || studyJoinData[1];
 
   const handleNext = () => {
     if (currentStep === 1 && !formData.agreeToRules) {
@@ -539,4 +523,3 @@ export default function StudyJoinPage({ params }) {
     </div>
   );
 }
-

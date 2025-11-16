@@ -5,90 +5,11 @@ import Link from 'next/link'
 import styles from './page.module.css'
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton'
 import EmptyState from '@/components/dashboard/EmptyState'
+import { dashboardData } from '@/mocks/dashboard'
 
 export default function DashboardPage() {
   const [isLoading] = useState(false)
-  const [user] = useState({
-    name: '김민준',
-    avatar: null
-  })
-
-  const stats = [
-    { icon: '📚', label: '참여 스터디', value: 4, color: 'blue' },
-    { icon: '📢', label: '새 공지', value: 3, color: 'green' },
-    { icon: '✅', label: '할 일', value: 5, color: 'orange' },
-    { icon: '📅', label: '다가올 일정', value: 2, color: 'purple' }
-  ]
-
-  const myStudies = [
-    {
-      id: 1,
-      emoji: '📚',
-      name: '코딩테스트 스터디',
-      members: 12,
-      role: 'OWNER',
-      lastActivity: '1시간 전'
-    },
-    {
-      id: 2,
-      emoji: '💼',
-      name: '취업 준비 스터디',
-      members: 8,
-      role: 'MEMBER',
-      lastActivity: '3시간 전'
-    },
-    {
-      id: 3,
-      emoji: '📘',
-      name: '영어 회화 스터디',
-      members: 15,
-      role: 'ADMIN',
-      lastActivity: '5시간 전'
-    }
-  ]
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: '공지',
-      badge: 'notice',
-      study: '코딩테스트 스터디',
-      content: '이번 주 일정 공지',
-      time: '2시간 전'
-    },
-    {
-      id: 2,
-      type: '할일',
-      badge: 'task',
-      study: '취업 준비 스터디',
-      content: '자소서 1차 작성 완료',
-      time: '3시간 전'
-    },
-    {
-      id: 3,
-      type: '파일',
-      badge: 'file',
-      study: '영어 스터디',
-      content: '단어장.pdf 업로드됨',
-      time: '5시간 전'
-    },
-    {
-      id: 4,
-      type: '채팅',
-      badge: 'chat',
-      study: '코딩테스트 스터디',
-      content: '김철수: 오늘 저녁 회의 참석 가능...',
-      time: '6시간 전'
-    },
-    {
-      id: 5,
-      type: '일정',
-      badge: 'calendar',
-      study: '취업 준비 스터디',
-      content: '모의면접 (내일 오후 2시)',
-      time: '1일 전'
-    }
-  ]
+  const { user, stats, myStudies, recentActivities, todayTasks, upcomingEvents, studyStatus } = dashboardData
 
   // 로딩 상태
   if (isLoading) {
@@ -206,27 +127,15 @@ export default function DashboardPage() {
         <div className={styles.widget}>
           <h3 className={styles.widgetTitle}>🔥 오늘의 할 일</h3>
           <div className={styles.widgetContent}>
-            <div className={styles.todoItem}>
-              <input type="checkbox" className={styles.todoCheckbox} />
-              <div className={styles.todoInfo}>
-                <p className={styles.todoText}>백준 1234번 풀이</p>
-                <p className={styles.todoMeta}>코딩테스트 • D-day</p>
+            {todayTasks.map((task, index) => (
+              <div key={index} className={styles.todoItem}>
+                <input type="checkbox" className={styles.todoCheckbox} />
+                <div className={styles.todoInfo}>
+                  <p className={styles.todoText}>{task.text}</p>
+                  <p className={styles.todoMeta}>{task.meta}</p>
+                </div>
               </div>
-            </div>
-            <div className={styles.todoItem}>
-              <input type="checkbox" className={styles.todoCheckbox} />
-              <div className={styles.todoInfo}>
-                <p className={styles.todoText}>자소서 1차 작성</p>
-                <p className={styles.todoMeta}>취업준비 • D-1</p>
-              </div>
-            </div>
-            <div className={styles.todoItem}>
-              <input type="checkbox" className={styles.todoCheckbox} />
-              <div className={styles.todoInfo}>
-                <p className={styles.todoText}>영어 단어 100개 암기</p>
-                <p className={styles.todoMeta}>영어회화 • D-day</p>
-              </div>
-            </div>
+            ))}
             <Link href="/tasks" className={styles.widgetLink}>
               할 일 전체보기 →
             </Link>
@@ -237,36 +146,18 @@ export default function DashboardPage() {
         <div className={styles.widget}>
           <h3 className={styles.widgetTitle}>📅 다가오는 일정</h3>
           <div className={styles.widgetContent}>
-            <div className={styles.eventItem}>
-              <div className={styles.eventDate}>
-                <span className={styles.eventDay}>오늘</span>
-                <span className={styles.eventTime}>14:00</span>
+            {upcomingEvents.map((event, index) => (
+              <div key={index} className={styles.eventItem}>
+                <div className={styles.eventDate}>
+                  <span className={styles.eventDay}>{event.day}</span>
+                  <span className={styles.eventTime}>{event.time}</span>
+                </div>
+                <div className={styles.eventInfo}>
+                  <p className={styles.eventTitle}>{event.title}</p>
+                  <p className={styles.eventStudy}>{event.study}</p>
+                </div>
               </div>
-              <div className={styles.eventInfo}>
-                <p className={styles.eventTitle}>주간 회의</p>
-                <p className={styles.eventStudy}>코딩테스트</p>
-              </div>
-            </div>
-            <div className={styles.eventItem}>
-              <div className={styles.eventDate}>
-                <span className={styles.eventDay}>내일</span>
-                <span className={styles.eventTime}>20:00</span>
-              </div>
-              <div className={styles.eventInfo}>
-                <p className={styles.eventTitle}>모의 면접</p>
-                <p className={styles.eventStudy}>취업준비</p>
-              </div>
-            </div>
-            <div className={styles.eventItem}>
-              <div className={styles.eventDate}>
-                <span className={styles.eventDay}>11/11</span>
-                <span className={styles.eventTime}>23:59</span>
-              </div>
-              <div className={styles.eventInfo}>
-                <p className={styles.eventTitle}>과제 제출</p>
-                <p className={styles.eventStudy}>영어회화</p>
-              </div>
-            </div>
+            ))}
             <Link href="/my-studies" className={styles.widgetLink}>
               일정 전체보기 →
             </Link>
@@ -279,19 +170,19 @@ export default function DashboardPage() {
           <div className={styles.widgetContent}>
             <div className={styles.statItem}>
               <span className={styles.statItemLabel}>총 참여 스터디</span>
-              <span className={styles.statItemValue}>4개</span>
+              <span className={styles.statItemValue}>{studyStatus.totalStudies}개</span>
             </div>
             <div className={styles.statItem}>
               <span className={styles.statItemLabel}>그룹장</span>
-              <span className={styles.statItemValue}>1개</span>
+              <span className={styles.statItemValue}>{studyStatus.leader}개</span>
             </div>
             <div className={styles.statItem}>
               <span className={styles.statItemLabel}>이번 주 출석</span>
-              <span className={styles.statItemValue}>5/7일</span>
+              <span className={styles.statItemValue}>{studyStatus.attendance}일</span>
             </div>
             <div className={styles.statItem}>
               <span className={styles.statItemLabel}>완료한 할 일</span>
-              <span className={styles.statItemValue}>12개</span>
+              <span className={styles.statItemValue}>{studyStatus.completedTasks}개</span>
             </div>
           </div>
         </div>

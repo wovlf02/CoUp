@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { studyVideoCallData } from '@/mocks/studyVideoCall';
 
 export default function MyStudyVideoCallPage({ params }) {
   const router = useRouter();
@@ -14,12 +15,8 @@ export default function MyStudyVideoCallPage({ params }) {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  const study = {
-    id: studyId,
-    emoji: '💻',
-    name: '알고리즘 마스터 스터디',
-    role: 'OWNER',
-  };
+  const data = studyVideoCallData[studyId] || studyVideoCallData[1];
+  const { study, participants, callHistory } = data;
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -30,13 +27,6 @@ export default function MyStudyVideoCallPage({ params }) {
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
     { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
-
-  const participants = [
-    { id: 1, name: '김철수 (나)', role: 'OWNER', isMuted: false, isVideoOn: true, isSpeaking: true },
-    { id: 2, name: '이영희', role: 'ADMIN', isMuted: false, isVideoOn: true, isSpeaking: false },
-    { id: 3, name: '박민수', role: 'MEMBER', isMuted: true, isVideoOn: true, isSpeaking: false },
-    { id: 4, name: '최지은', role: 'MEMBER', isMuted: false, isVideoOn: false, isSpeaking: false },
   ];
 
   const handleStartCall = () => {
@@ -142,16 +132,13 @@ export default function MyStudyVideoCallPage({ params }) {
               <h3 className={styles.widgetTitle}>📊 통화 기록</h3>
               <div className={styles.widgetContent}>
                 <div className={styles.callHistory}>
-                  <div className={styles.callHistoryItem}>
-                    <div className={styles.callDate}>2025.11.05</div>
-                    <div className={styles.callDuration}>⏱️ 1시간 23분</div>
-                    <div className={styles.callParticipants}>👥 8명 참여</div>
-                  </div>
-                  <div className={styles.callHistoryItem}>
-                    <div className={styles.callDate}>2025.11.02</div>
-                    <div className={styles.callDuration}>⏱️ 2시간 15분</div>
-                    <div className={styles.callParticipants}>👥 12명 참여</div>
-                  </div>
+                  {callHistory.map((historyItem) => (
+                    <div key={historyItem.date} className={styles.callHistoryItem}>
+                      <div className={styles.callDate}>{historyItem.date}</div>
+                      <div className={styles.callDuration}>⏱️ {historyItem.duration}</div>
+                      <div className={styles.callParticipants}>👥 {historyItem.participants} 참여</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -280,4 +267,3 @@ export default function MyStudyVideoCallPage({ params }) {
     </div>
   );
 }
-

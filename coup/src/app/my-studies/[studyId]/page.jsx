@@ -5,19 +5,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { myStudyDashboard } from '@/mocks/studyDetails';
 
 export default function MyStudyDashboardPage({ params }) {
   const router = useRouter();
   const { studyId } = params;
 
   // Mock 데이터
-  const study = {
-    id: studyId,
-    emoji: '💻',
-    name: '알고리즘 마스터 스터디',
-    role: 'OWNER',
-    members: { current: 12, max: 20 },
-  };
+  const data = myStudyDashboard[studyId] || myStudyDashboard[1];
+  const { study, weeklyActivity, recentNotices, recentFiles, upcomingEvents, urgentTasks } = data;
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -28,40 +24,6 @@ export default function MyStudyDashboardPage({ params }) {
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
     { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️', adminOnly: true },
-  ];
-
-  const weeklyActivity = {
-    attendance: 85,
-    attendanceCount: '10/12명',
-    taskCompletion: 60,
-    taskCount: '12/20개',
-    messages: 127,
-    notices: 3,
-    files: 5,
-  };
-
-  const recentNotices = [
-    { id: 1, title: '이번 주 일정 안내', author: '김철수', time: '2시간 전' },
-    { id: 2, title: '참고 자료 공유', author: '이영희', time: '1일 전' },
-    { id: 3, title: '스터디 규칙 안내', author: '김철수', time: '3일 전' },
-  ];
-
-  const recentFiles = [
-    { id: 1, name: '알고리즘_문제집.pdf', size: '2.5MB', uploader: '김철수' },
-    { id: 2, name: '면접_준비.xlsx', size: '1.2MB', uploader: '이영희' },
-    { id: 3, name: '코드리뷰.zip', size: '3.1MB', uploader: '박민수' },
-  ];
-
-  const upcomingEvents = [
-    { id: 1, title: '주간 회의', date: '11/7 (목) 14:00', dday: 'D-1' },
-    { id: 2, title: '과제 제출', date: '11/10 (일) 23:59', dday: 'D-4' },
-    { id: 3, title: '모의 코딩테스트', date: '11/13 (수) 20:00', dday: 'D-7' },
-  ];
-
-  const urgentTasks = [
-    { id: 1, title: '백준 1234번 풀이', dday: 'D-1', date: '11/7' },
-    { id: 2, title: '코드 리뷰 준비', dday: 'D-2', date: '11/8' },
-    { id: 3, title: '자소서 1차 작성', dday: 'D-3', date: '11/9' },
   ];
 
   return (
@@ -280,4 +242,3 @@ export default function MyStudyDashboardPage({ params }) {
     </div>
   );
 }
-

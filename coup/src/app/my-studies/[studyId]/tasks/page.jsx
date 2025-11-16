@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { studyTasksData } from '@/mocks/studyTasks';
 
 export default function MyStudyTasksPage({ params }) {
   const router = useRouter();
@@ -12,12 +13,8 @@ export default function MyStudyTasksPage({ params }) {
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [selectedTask, setSelectedTask] = useState(null);
 
-  const study = {
-    id: studyId,
-    emoji: '💻',
-    name: '알고리즘 마스터 스터디',
-    role: 'OWNER',
-  };
+  const data = studyTasksData[studyId] || studyTasksData[1];
+  const { study, columns, tasks } = data;
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -29,124 +26,6 @@ export default function MyStudyTasksPage({ params }) {
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
     { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
   ];
-
-  const columns = [
-    { id: 'todo', title: '📝 할일', count: 8 },
-    { id: 'in_progress', title: '⏳ 진행중', count: 6 },
-    { id: 'done', title: '✅ 완료', count: 8 },
-    { id: 'on_hold', title: '⛔ 보류', count: 2 },
-  ];
-
-  const tasks = {
-    todo: [
-      {
-        id: 1,
-        title: '백준 1234번 풀기',
-        priority: 'urgent',
-        labels: ['알고리즘', '긴급'],
-        dueDate: 'D-1',
-        assignee: { name: '김철수', role: 'OWNER' },
-        comments: 3,
-        checklist: { completed: 2, total: 5 },
-      },
-      {
-        id: 2,
-        title: '알고리즘 공부',
-        priority: 'medium',
-        labels: ['알고리즘'],
-        dueDate: 'D-3',
-        assignee: { name: '박민수', role: 'MEMBER' },
-        comments: 1,
-        checklist: null,
-      },
-      {
-        id: 3,
-        title: '과제 준비',
-        priority: 'low',
-        labels: ['문서'],
-        dueDate: 'D-5',
-        assignee: { name: '전체', role: null },
-        comments: 0,
-        checklist: null,
-      },
-    ],
-    in_progress: [
-      {
-        id: 4,
-        title: '백준 1567번',
-        priority: 'high',
-        labels: ['알고리즘'],
-        dueDate: '진행중',
-        assignee: { name: '이영희', role: 'ADMIN' },
-        comments: 2,
-        checklist: null,
-      },
-      {
-        id: 5,
-        title: '자료 정리',
-        priority: 'medium',
-        labels: ['문서'],
-        dueDate: '50%',
-        assignee: { name: '김철수', role: 'OWNER' },
-        comments: 4,
-        checklist: { completed: 2, total: 4 },
-      },
-      {
-        id: 6,
-        title: '면접 준비',
-        priority: 'high',
-        labels: ['취업'],
-        dueDate: '80%',
-        assignee: { name: '박민수', role: 'MEMBER' },
-        comments: 5,
-        checklist: { completed: 4, total: 5 },
-      },
-    ],
-    done: [
-      {
-        id: 7,
-        title: '스터디 규칙 작성',
-        priority: 'high',
-        labels: ['문서'],
-        dueDate: '완료',
-        assignee: { name: '박민수', role: 'MEMBER' },
-        comments: 12,
-        checklist: null,
-      },
-      {
-        id: 8,
-        title: '회의록 작성',
-        priority: 'medium',
-        labels: ['문서'],
-        dueDate: '완료',
-        assignee: { name: '이영희', role: 'ADMIN' },
-        comments: 8,
-        checklist: null,
-      },
-      {
-        id: 9,
-        title: '코드 리뷰',
-        priority: 'high',
-        labels: ['코드'],
-        dueDate: '완료',
-        assignee: { name: '김철수', role: 'OWNER' },
-        comments: 15,
-        checklist: null,
-      },
-    ],
-    on_hold: [
-      {
-        id: 10,
-        title: '보류 기능 개발',
-        priority: 'low',
-        labels: ['코드'],
-        dueDate: '대기',
-        assignee: { name: '최지은', role: 'MEMBER' },
-        comments: 1,
-        checklist: null,
-      },
-    ],
-  };
 
   const getPriorityIcon = (priority) => {
     const icons = {
@@ -415,4 +294,3 @@ export default function MyStudyTasksPage({ params }) {
     </div>
   );
 }
-

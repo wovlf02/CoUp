@@ -5,53 +5,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { studyPreviewData } from '@/mocks/studyDetails';
 
 export default function StudyPreviewPage({ params }) {
   const router = useRouter();
   const { studyId } = params;
 
   // Mock 데이터
-  const study = {
-    id: studyId,
-    emoji: '💻',
-    name: '알고리즘 마스터 스터디',
-    description: '매일 알고리즘 문제를 풀고 서로의 풀이를 공유하며 성장하는 스터디입니다. 초보자부터 고급자까지 모두 환영합니다!',
-    category: '프로그래밍',
-    subCategory: '알고리즘/코테',
-    tags: ['알고리즘', '코딩테스트', '매일', '백준'],
-    owner: {
-      name: '김철수',
-      imageUrl: null,
-    },
-    members: {
-      current: 12,
-      max: 20,
-    },
-    rating: 4.8,
-    isRecruiting: true,
-    isPublic: true,
-    approvalType: 'manual',
-    activityFrequency: '매일',
-    createdAt: '2024-10-01',
-
-    // 제한된 정보 (미리보기만)
-    recentNotices: [
-      { id: 1, title: '이번 주 일정 안내', createdAt: '2시간 전', isPinned: true },
-      { id: 2, title: '참고 자료 공유', createdAt: '1일 전', isPinned: false },
-    ],
-    topMembers: [
-      { id: 1, name: '김철수', role: 'OWNER', imageUrl: null },
-      { id: 2, name: '이영희', role: 'ADMIN', imageUrl: null },
-      { id: 3, name: '박민수', role: 'MEMBER', imageUrl: null },
-      { id: 4, name: '최지은', role: 'MEMBER', imageUrl: null },
-      { id: 5, name: '정소현', role: 'MEMBER', imageUrl: null },
-    ],
-    rules: [
-      '무단 지각/결석 3회 시 퇴출',
-      '과제 미제출 시 사유 공유 필수',
-      '서로 존중하는 태도',
-    ],
-  };
+  const study = studyPreviewData[studyId] || studyPreviewData[1];
 
   const handleJoin = () => {
     // TODO: 가입 플로우로 이동
@@ -248,4 +209,3 @@ export default function StudyPreviewPage({ params }) {
     </div>
   );
 }
-
