@@ -1,7 +1,7 @@
 // 내 스터디 설정 페이지
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,8 @@ import { studySettingsData, studyCategories } from '@/mocks/studySettings';
 
 export default function MyStudySettingsPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
+  const [studyName, setStudyName] = useState('알고리즘 마스터 스터디');
   const [activeTab, setActiveTab] = useState('basic');
   const [errors, setErrors] = useState({});
 

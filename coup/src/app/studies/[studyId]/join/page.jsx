@@ -1,14 +1,14 @@
 // 스터디 가입 페이지
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { studyJoinData } from '@/mocks/studyDetails';
 
 export default function StudyJoinPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     agreeToRules: false,

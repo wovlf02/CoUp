@@ -1,7 +1,7 @@
 // 내 스터디 캘린더 페이지
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,7 @@ import { studyCalendarData } from '@/mocks/studyCalendar';
 
 export default function MyStudyCalendarPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
   const [viewMode, setViewMode] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 6)); // 2025년 11월 6일
 

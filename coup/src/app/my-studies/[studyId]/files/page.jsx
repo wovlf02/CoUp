@@ -1,7 +1,7 @@
 // 내 스터디 파일 관리 페이지
 'use client';
 
-import { useState, useRef } from 'react';
+import { use, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,7 @@ import { studyFilesData } from '@/mocks/studyFiles';
 
 export default function MyStudyFilesPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);

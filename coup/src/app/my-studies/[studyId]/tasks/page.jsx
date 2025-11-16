@@ -1,7 +1,7 @@
 // 내 스터디 할일 관리 페이지
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,7 @@ import { studyTasksData } from '@/mocks/studyTasks';
 
 export default function MyStudyTasksPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
   const [selectedTask, setSelectedTask] = useState(null);
 

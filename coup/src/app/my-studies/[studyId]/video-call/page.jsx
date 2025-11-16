@@ -1,7 +1,7 @@
 // 내 스터디 화상회의 페이지
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,7 @@ import { studyVideoCallData } from '@/mocks/studyVideoCall';
 
 export default function MyStudyVideoCallPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
   const [isCallActive, setIsCallActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);

@@ -1,7 +1,7 @@
 // 내 스터디 공지사항 페이지
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,7 @@ import { studyNoticesData } from '@/mocks/studyNotices';
 
 export default function MyStudyNoticesPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
   const [activeTab, setActiveTab] = useState('전체');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);

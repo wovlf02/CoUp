@@ -1,7 +1,7 @@
 // 내 스터디 채팅 페이지
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { use, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,7 @@ import { studyChatData } from '@/mocks/studyChat';
 
 export default function MyStudyChatPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
   const messagesEndRef = useRef(null);
   const [content, setContent] = useState('');
   const [messages, setMessages] = useState([]);

@@ -161,6 +161,7 @@ export const studyTips = [
   },
 ];
 
+// 내 스터디 페이지에서 사용하는 추가 데이터
 export const urgentTasks = [
   {
     id: 1,
@@ -223,3 +224,82 @@ export const myActivitySummary = {
   chatMessages: 42,
 };
 
+// 스터디 대시보드 데이터
+export const studyDashboard = {
+  study_1: {
+    study: {
+      id: 1,
+      emoji: '💻',
+      name: '알고리즘 마스터 스터디',
+      role: 'OWNER',
+      members: { current: 12, max: 20 },
+    },
+    weeklyActivity: {
+      attendance: 92,
+      attendanceCount: '11/12',
+      taskCompletion: 75,
+      taskCount: '9/12',
+      messages: 156,
+      notices: 3,
+      files: 8,
+    },
+    recentNotices: [
+      { id: 1, title: '이번 주 문제 리스트', author: '김철수', time: '2시간 전' },
+      { id: 2, title: '주간 회의 안내', author: '이영희', time: '1일 전' },
+      { id: 3, title: '스터디 규칙 업데이트', author: '김철수', time: '3일 전' },
+    ],
+    recentFiles: [
+      { id: 1, name: '알고리즘_풀이.pdf', uploader: '김철수', size: '2.5MB' },
+      { id: 2, name: '회의록_11월.docx', uploader: '이영희', size: '0.8MB' },
+      { id: 3, name: '코드리뷰.zip', uploader: '박민수', size: '3.1MB' },
+    ],
+    upcomingEvents: [
+      { id: 1, title: '주간 회의', date: '11/13 (수) 14:00', dday: 'D-7' },
+      { id: 2, title: '코드 리뷰', date: '11/15 (금) 19:00', dday: 'D-9' },
+      { id: 3, title: '모의 코테', date: '11/20 (수) 14:00', dday: 'D-14' },
+    ],
+    urgentTasks: [
+      { id: 1, title: '백준 1234번 풀기', date: 'D-1' },
+      { id: 2, title: '코드 리뷰 준비', date: 'D-2' },
+      { id: 3, title: '자료 정리', date: 'D-3' },
+    ],
+  },
+  1: {
+    study: {
+      id: 1,
+      emoji: '💻',
+      name: '알고리즘 마스터 스터디',
+      role: 'OWNER',
+      members: { current: 12, max: 20 },
+    },
+    weeklyActivity: {
+      attendance: 92,
+      attendanceCount: '11/12',
+      taskCompletion: 75,
+      taskCount: '9/12',
+      messages: 156,
+      notices: 3,
+      files: 8,
+    },
+    recentNotices: [
+      { id: 1, title: '이번 주 문제 리스트', author: '김철수', time: '2시간 전' },
+      { id: 2, title: '주간 회의 안내', author: '이영희', time: '1일 전' },
+      { id: 3, title: '스터디 규칙 업데이트', author: '김철수', time: '3일 전' },
+    ],
+    recentFiles: [
+      { id: 1, name: '알고리즘_풀이.pdf', uploader: '김철수', size: '2.5MB' },
+      { id: 2, name: '회의록_11월.docx', uploader: '이영희', size: '0.8MB' },
+      { id: 3, name: '코드리뷰.zip', uploader: '박민수', size: '3.1MB' },
+    ],
+    upcomingEvents: [
+      { id: 1, title: '주간 회의', date: '11/13 (수) 14:00', dday: 'D-7' },
+      { id: 2, title: '코드 리뷰', date: '11/15 (금) 19:00', dday: 'D-9' },
+      { id: 3, title: '모의 코테', date: '11/20 (수) 14:00', dday: 'D-14' },
+    ],
+    urgentTasks: [
+      { id: 1, title: '백준 1234번 풀기', date: 'D-1' },
+      { id: 2, title: '코드 리뷰 준비', date: 'D-2' },
+      { id: 3, title: '자료 정리', date: 'D-3' },
+    ],
+  },
+};

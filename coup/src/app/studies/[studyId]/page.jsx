@@ -1,7 +1,7 @@
 // 스터디 프리뷰 페이지 (미가입자용)
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -9,7 +9,7 @@ import { studyPreviewData } from '@/mocks/studyDetails';
 
 export default function StudyPreviewPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
 
   // Mock 데이터
   const study = studyPreviewData[studyId] || studyPreviewData[1];

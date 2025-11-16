@@ -1,18 +1,18 @@
 // 내 스터디 대시보드 (개요)
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { myStudyDashboard } from '@/mocks/studyDetails';
+import { studyDashboard } from '@/mocks/studies';
 
 export default function MyStudyDashboardPage({ params }) {
   const router = useRouter();
-  const { studyId } = params;
+  const { studyId } = use(params);
 
   // Mock 데이터
-  const data = myStudyDashboard[studyId] || myStudyDashboard[1];
+  const data = studyDashboard[studyId] || studyDashboard['study_1'];
   const { study, weeklyActivity, recentNotices, recentFiles, upcomingEvents, urgentTasks } = data;
 
   const tabs = [
