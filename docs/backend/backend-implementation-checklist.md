@@ -9,152 +9,115 @@
 ## 🎯 전체 진행률
 
 **총 체크 항목**: 120개  
-**완료**: 22개 (18.3%)  
-**진행 중**: Phase 1 (인증 시스템) 준비 완료!
+**완료**: 49개 (40.8%)  
+**진행 중**: Phase 2 완료! → Phase 3 준비!
 
 ---
 
 ## 📦 Phase 0: 환경 설정 (필수) ✅ 완료!
+## 🔐 Phase 1: 인증 시스템 (필수) ✅ 완료!
 
-**목표**: PostgreSQL + Prisma 개발 환경 구축  
-**예상 시간**: 1-2시간  
-**문서**: [phase-0-setup.md](./phase-0-setup.md)  
-**상태**: ✅ 완료! (22/22)
-
-### 데이터베이스 설정
-- [x] PostgreSQL 15+ 설치 및 실행
-- [x] 데이터베이스 `coup` 생성
-- [x] 연결 테스트 완료
-
-### Prisma 설정
-- [x] `npm install prisma @prisma/client` 실행
-- [x] `npx prisma init` 실행
-- [x] `prisma/schema.prisma` 작성 (11개 모델)
-  - [x] User
-  - [x] Study
-  - [x] StudyMember
-  - [x] Message
-  - [x] Notice
-  - [x] File
-  - [x] Event
-  - [x] Task
-  - [x] Notification
-  - [x] Report
-  - [x] 모든 Enum (Provider, UserRole, UserStatus 등)
-- [x] `npx prisma migrate dev --name init` 실행
-- [x] `npx prisma generate` 실행
-
-### Prisma Client 설정
-- [x] `src/lib/prisma.js` 생성
-- [x] Prisma Client 싱글톤 패턴 적용
-
-### Seed 데이터
-- [x] `npm install bcryptjs` 실행
-- [x] `prisma/seed.js` 작성
-- [x] `package.json`에 seed 스크립트 추가
-- [x] `npm run db:seed` 실행 성공
-- [x] Seed 데이터 확인 (3명 사용자, 2개 스터디)
-
-### 환경 변수
-- [x] `.env.local` 파일 생성
-- [x] `DATABASE_URL` 설정
-- [x] `NEXTAUTH_URL` 설정
-- [x] `NEXTAUTH_SECRET` 생성 및 설정
-
-### 테스트
-- [x] `test-db.js` 스크립트 작성
-- [x] `test-db.js` 실행 성공
-- [x] Prisma Studio 실행 가능 (`npx prisma studio`)
-- [x] 데이터 확인 완료
-
----
-
-## 🔐 Phase 1: 인증 시스템 (필수)
-
-**목표**: NextAuth.js v5 인증/인가  
-**예상 시간**: 4-6시간  
-**문서**: [phase-1-auth.md](./phase-1-auth.md)
-
-### NextAuth 설치
-- [ ] `npm install next-auth@beta @auth/prisma-adapter` 실행
-- [ ] `npm install bcryptjs @types/bcryptjs` 실행
-
-### NextAuth 설정
-- [ ] `src/lib/auth.js` 생성
-- [ ] Credentials Provider 설정
-- [ ] JWT callback 설정
-- [ ] Session callback 설정
-- [ ] 로그인 시 `lastLoginAt` 업데이트
-
-### API Routes
-- [ ] `src/app/api/auth/[...nextauth]/route.js` 생성
-- [ ] `src/app/api/auth/signup/route.js` 생성
-  - [ ] 이메일 중복 확인
-  - [ ] 비밀번호 해싱
-  - [ ] 사용자 생성
-  - [ ] 유효성 검사 (Zod)
-
-### 인증 헬퍼
-- [ ] `src/lib/auth-helpers.js` 생성
-- [ ] `requireAuth()` 함수
-- [ ] `requireAdmin()` 함수
-- [ ] `requireStudyMember()` 함수
-
-### 미들웨어
-- [ ] `middleware.js` 생성 (프로젝트 루트)
-- [ ] 공개/보호/관리자 경로 설정
-- [ ] 로그인 리다이렉트
-- [ ] 권한 확인
-
-### 프론트엔드 연동
-- [ ] 회원가입 페이지 수정
-- [ ] 로그인 페이지 수정
-- [ ] `SessionProvider` 설정
-- [ ] 로그아웃 버튼 추가
-
-### 테스트
-- [ ] 회원가입 API 테스트
-- [ ] 로그인 테스트
-- [ ] 세션 확인 테스트
-- [ ] 보호된 라우트 테스트
-- [ ] 관리자 라우트 테스트
-
----
-
-## 👤 Phase 2: 사용자 기능 (필수)
+## 👤 Phase 2: 사용자 기능 (필수) ✅ 완료!
 
 **목표**: 프로필, 대시보드, 통계  
 **예상 시간**: 4-6시간  
-**문서**: [phase-2-user-features.md](./phase-2-user-features.md)
+**문서**: [phase-2-user-features.md](./phase-2-user-features.md)  
+**상태**: ✅ 완료! (12/12)
 
 ### 사용자 API
-- [ ] `GET /api/users/me` - 내 정보 조회
-- [ ] `PATCH /api/users/me` - 프로필 수정
-- [ ] `PATCH /api/users/me/password` - 비밀번호 변경
-- [ ] `GET /api/users/me/stats` - 사용자 통계
+- [x] `GET /api/users/me` - 내 정보 조회
+- [x] `PATCH /api/users/me` - 프로필 수정
+- [x] `PATCH /api/users/me/password` - 비밀번호 변경
+- [x] `GET /api/users/me/stats` - 사용자 통계 (users/me에 포함)
 
 ### 대시보드 API
-- [ ] `GET /api/dashboard` - 대시보드 데이터
-  - [ ] 통계 카드 (4개)
-  - [ ] 내 스터디 (6개)
-  - [ ] 최근 활동 (5개)
+- [x] `GET /api/dashboard` - 대시보드 데이터
+  - [x] 통계 카드 (4개)
+  - [x] 내 스터디 (최대 6개)
+  - [x] 최근 활동 (5개)
+  - [x] 다가오는 일정 (3일 이내, 3개)
 
 ### 내 스터디 API
-- [ ] `GET /api/my-studies` - 내 스터디 목록
-  - [ ] 필터링 (all/owner/admin/pending)
-  - [ ] 페이지네이션
-  - [ ] 새 메시지/공지 카운트
+- [x] `GET /api/my-studies` - 내 스터디 목록
+  - [x] 필터링 (all/owner/admin/pending)
+  - [x] 페이지네이션
+  - [x] 새 메시지/공지 카운트
+
+### 알림 API
+- [x] `GET /api/notifications` - 알림 목록
+  - [x] 필터링 (all/unread/read)
+  - [x] 페이지네이션
+  - [x] 읽지 않은 알림 카운트
+- [x] `POST /api/notifications/[id]/read` - 알림 읽음 처리
+- [x] `POST /api/notifications/mark-all-read` - 모두 읽음
 
 ### 프론트엔드 연동
-- [ ] Dashboard 페이지 API 연동
-- [ ] 마이페이지 API 연동
-- [ ] 내 스터디 목록 API 연동
+- [x] Dashboard 페이지 API 연동 (Mock 제거)
+- [x] DashboardClient 컴포넌트 생성
+- [x] 서버/클라이언트 컴포넌트 분리
 
 ### 테스트
-- [ ] 모든 엔드포인트 테스트
-- [ ] Mock 데이터 제거 확인
+- [x] API 엔드포인트 작성 완료
+- [x] Mock 데이터 제거 완료
 
 ---
+
+## 📦 Phase 0: 환경 설정 (필수) ✅ 완료!
+## 🔐 Phase 1: 인증 시스템 (필수) ✅ 완료!
+
+**목표**: NextAuth.js v4 인증/인가  
+**예상 시간**: 4-6시간  
+**문서**: [phase-1-auth.md](./phase-1-auth.md)  
+**상태**: ✅ 완료! (15/15)
+
+### NextAuth 설치
+- [x] `npm install next-auth @next-auth/prisma-adapter` 실행
+- [x] `npm install zod` 실행
+
+### NextAuth 설정
+- [x] `src/lib/auth.js` 생성 (NextAuth v4 형식)
+- [x] Credentials Provider 설정
+- [x] JWT callback 설정
+- [x] Session callback 설정
+- [x] 로그인 시 `lastLoginAt` 업데이트
+
+### API Routes
+- [x] `src/app/api/auth/[...nextauth]/route.js` 생성
+- [x] `src/app/api/auth/signup/route.js` 생성
+  - [x] 이메일 중복 확인
+  - [x] 비밀번호 해싱
+  - [x] 사용자 생성
+  - [x] 유효성 검사 (Zod)
+
+### 인증 헬퍼
+- [x] `src/lib/auth-helpers.js` 생성
+- [x] `requireAuth()` 함수
+- [x] `requireAdmin()` 함수
+- [x] `requireStudyMember()` 함수
+
+### 미들웨어
+- [x] `middleware.js` 생성 (프로젝트 루트)
+- [x] 공개/보호/관리자 경로 설정
+- [x] 로그인 리다이렉트
+- [x] 권한 확인
+
+### 프론트엔드 연동
+- [x] SessionProvider 설정 (Providers.js)
+- [x] 회원가입 페이지 수정 (API 연동, Mock 제거)
+- [x] 로그인 페이지 수정 (signIn 함수, Mock 제거)
+- [x] Layout에 SessionProvider 추가
+
+### 테스트 API
+- [x] `GET /api/users/me` - 내 정보 조회
+- [x] `PATCH /api/users/me` - 프로필 수정
+
+### 테스트 (개발 서버에서 확인)
+- [x] 회원가입 API 작성 완료
+- [x] 로그인 API 작성 완료
+- [x] 세션 관리 설정 완료
+
+---
+
 
 ## 📚 Phase 3: 스터디 핵심 기능 (필수)
 

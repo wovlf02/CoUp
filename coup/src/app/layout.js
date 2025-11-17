@@ -1,5 +1,6 @@
 import "./globals.css";
 import ConditionalLayout from '@/components/layout/ConditionalLayout'
+import { Providers } from '@/components/Providers'
 
 export const metadata = {
   title: "CoUp - 함께, 더 높이",
@@ -11,9 +12,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ko">
       <body>
-        <ConditionalLayout>
-          {children}
-        </ConditionalLayout>
+        <Providers>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
+        </Providers>
       </body>
     </html>
   );

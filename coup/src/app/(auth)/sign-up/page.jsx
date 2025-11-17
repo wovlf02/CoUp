@@ -94,28 +94,26 @@ export default function SignUpPage() {
       setLoading(true)
       setError(null)
 
-      // TODO: 회원가입 API 호출
-      // 1. 이메일 중복 확인
-      // 2. 비밀번호 bcrypt 해싱
-      // 3. DB에 사용자 저장
-      // 4. 자동 로그인
-      // 5. 온보딩 페이지로 이동
-      
-      // 임시: Mock 회원가입
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      console.log('Credentials 회원가입:', { email, password })
-      
-      // TODO: 실제로는 /onboarding으로 이동
-      router.push('/dashboard')
-      
+      // 회원가입 API 호출
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '회원가입에 실패했습니다')
+      }
+
+      // 회원가입 성공 → 로그인 페이지로 이동
+      alert('회원가입이 완료되었습니다! 로그인해주세요.')
+      router.push('/sign-in')
+
     } catch (err) {
       console.error('회원가입 실패:', err)
-      if (err.message === 'EMAIL_EXISTS') {
-        setError('이미 사용 중인 이메일입니다.')
-      } else {
-        setError('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.')
-      }
+      setError(err.message)
       setLoading(false)
     }
   }

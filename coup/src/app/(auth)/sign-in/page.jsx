@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from '@/styles/auth/sign-in.module.css'
@@ -53,23 +54,27 @@ export default function SignInPage() {
       setLoading('credentials')
       setError(null)
 
-      // TODO: NextAuth Credentials Provider 연동
-      // await signIn('credentials', { 
-      //   email, 
-      //   password,
-      //   callbackUrl: '/dashboard' 
-      // })
-      
-      // 임시: Mock 로그인
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      console.log('Credentials 로그인:', { email, password })
-      
-      router.push('/dashboard')
-      
+      // NextAuth.js signIn
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError(result.error)
+        setLoading(null)
+        return
+      }
+
+      if (result?.ok) {
+        router.push('/dashboard')
+        router.refresh()
+      }
+
     } catch (err) {
       console.error('로그인 실패:', err)
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      setError('로그인 중 오류가 발생했습니다.')
       setLoading(null)
     }
   }
@@ -79,16 +84,12 @@ export default function SignInPage() {
       setLoading(provider)
       setError(null)
 
-      // TODO: NextAuth.js 연동
+      // TODO: NextAuth.js OAuth 연동 (나중에 설정)
       // await signIn(provider, { callbackUrl: '/dashboard' })
       
-      // 임시: Mock 로그인
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      console.log(`${provider} 로그인 시도`)
-      
-      router.push('/dashboard')
-      
+      setError(`${provider} 로그인은 아직 지원하지 않습니다.`)
+      setLoading(null)
+
     } catch (err) {
       console.error('로그인 실패:', err)
       setError('로그인에 실패했습니다. 다시 시도해 주세요.')
