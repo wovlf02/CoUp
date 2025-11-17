@@ -939,3 +939,5 @@ const handleCancel = () => {
 ---
 
 **다음 화면**: `03_study-preview.md` (스터디 프리뷰)
+- - -  
+ 

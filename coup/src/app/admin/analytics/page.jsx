@@ -230,7 +230,7 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Right Widget */}
+하고 이        {/* Right Widget */}
         <div className="rightWidget">
           <div className="widget">
             <div className="widgetTitle">📊 요약</div>

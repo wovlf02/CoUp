@@ -1,12 +1,14 @@
 # 21. 관리자 - 통계 분석 (Admin Analytics)
 
 > **화면 ID**: `ADMIN-05`  
-> **라우트**: `/admin/analytics`  
-> **레이아웃**: 반응형 비율 기반 (모든 해상도 대응)  
-> **구조**: 좌측 Admin Nav(12%) + 메인 콘텐츠(70%) + 우측 위젯(18%)  
-> **렌더링**: CSR (차트 렌더링)  
-> **권한**: SYSTEM_ADMIN  
-> **색상**: 레드 계열 (관리자 테마)
+> **라우트**: `/admin/analytics` ✅ 구현됨  
+> **파일**: `app/admin/analytics/page.jsx` ✅  
+> **레이아웃**: AdminLayout 사용  
+> **구조**: AdminLayout + adminPageWrapper + adminMainContent + rightWidget  
+> **렌더링**: CSR ('use client')  
+> **권한**: SYSTEM_ADMIN (미들웨어 필요)  
+> **상태관리**: useState (period)  
+> **차트**: Recharts (UserGrowthChart, StudyActivityChart, EngagementChart)
 
 ---
 
@@ -492,20 +494,156 @@ Response:
 
 ---
 
-## ✅ 구현 체크리스트
+## ✅ 구현 상태 및 제한사항
 
-- [ ] 사용자 성장 차트
-- [ ] 카테고리 분포 차트
-- [ ] 활동 통계
-- [ ] 전환 퍼널
-- [ ] 참여도 추이
-- [ ] 시간대별 히트맵
-- [ ] 디바이스 분포
-- [ ] 인기 기능 랭킹
-- [ ] 기간 선택 필터
-- [ ] CSV 다운로드
-- [ ] 자동 갱신
-- [ ] 반응형
+### 2025-11-17 기준 - UI 90% 완료 (기능 일부 미구현)
+
+**파일 위치**: `/admin/analytics/page.jsx` ✅  
+**점검 완료**: 2025-11-17  
+**상세 체크리스트**: `docs/IMPLEMENTATION_CHECKLIST.md` 참조
+
+### 메인 콘텐츠 영역 (90% 완료)
+- ✅ 페이지 헤더 "통계 분석"
+- ✅ 상단 기간 선택 필터 버튼 (주간/월간/연간)
+  - useState로 period 상태 관리
+  - active 스타일 토글
+- ✅ 사용자 성장 차트 섹션
+  - UserGrowthChart 컴포넌트 (Recharts LineChart)
+  - 3개 라인: total(#6366F1), active(#10B981), new(#3B82F6)
+  - ⚠️ "📥 CSV 다운로드" 버튼 (UI만, 기능 미구현)
+  - userGrowthData mock 데이터 (7개 데이터 포인트: 11/1~11/25)
+- ✅ 2컬럼 그리드 (twoColumnGrid)
+  - 좌: 스터디 카테고리 분포
+    - StudyActivityChart 컴포넌트 (Recharts BarChart)
+    - 6개 카테고리 (프로그래밍, 취업/자격증, 어학, 운동/취미, 디자인, 기타)
+    - COLORS 배열로 색상 지정
+  - 우: 사용자 활동 (chartPlaceholder 내 수동 구현)
+    - 활성 사용자 95% (프로그레스 바)
+    - 신규 가입 4% (프로그레스 바)
+    - 탈퇴 1% (프로그레스 바)
+    - ⚠️ 4개 통계 (평균 체류 시간, 페이지뷰, 세션, 이탈률) - 하드코딩
+- ✅ 전환 퍼널 섹션
+  - 4단계 (방문→회원가입→스터디생성→활성화)
+  - conversionFunnel map 렌더링
+  - 전환율 계산 및 표시
+  - 전체 전환율 36%, 목표 대비 -4%
+- ✅ 참여도 추이 섹션
+  - EngagementChart 컴포넌트 (Recharts LineChart)
+  - 일간 참여도 데이터 (월~일, 7개 데이터 포인트)
+  - ⚠️ 평균/최고/최저 통계 표시 (하드코딩: "평균 78%, 최고 85%, 최저 65%")
+- ✅ 2컬럼 그리드 (하단)
+  - 좌: 디바이스 분포
+    - Desktop/Mobile/Tablet
+    - deviceDistribution map 렌더링
+    - 프로그레스 바 표시
+  - 우: 인기 기능 (사용 빈도)
+    - popularFeatures map 렌더링
+    - 순위 번호 + 기능명 + 횟수
+
+### 우측 위젯 영역 (80% 완료)
+- ✅ 📊 요약 위젯
+  - ⚠️ 총 사용자: 1,234명 (하드코딩, mock 데이터 미연결)
+  - ⚠️ 총 스터디: 156개 (하드코딩)
+  - ⚠️ 총 메시지: 12,345개 (하드코딩)
+  - ⚠️ 총 파일: 2,456개 (하드코딩)
+  - 📝 개선 필요: adminStats mock 데이터와 연결 필요
+- ✅ 📅 기간 선택 위젯
+  - ⚠️ 4개 버튼: 오늘/어제/이번주/이번달 (UI만, 클릭 이벤트 미구현)
+- ✅ 🔄 새로고침 위젯
+  - ⚠️ 수동 새로고침 버튼 (UI만, 기능 미구현)
+  - ⚠️ 자동 갱신 체크박스 (UI만, 기능 미구현)
+  - ⚠️ "마지막: 5초 전" 텍스트 (정적)
+
+### 차트 컴포넌트 (100% 완료)
+- ✅ UserGrowthChart.jsx
+  - Recharts LineChart
+  - 3개 라인 (total, active, new)
+  - ResponsiveContainer 사용
+  - CartesianGrid, XAxis, YAxis, Tooltip, Legend 완비
+- ✅ StudyActivityChart.jsx
+  - Recharts BarChart
+  - Cell 컴포넌트로 각 Bar 색상 지정
+  - COLORS 배열: ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+- ✅ EngagementChart.jsx
+  - Recharts LineChart
+  - 1개 라인 (engagement)
+  - 간결한 구조
+
+### 데이터 소스 (Mock 데이터)
+- ✅ `@/mocks/admin` 에서 import
+- ✅ `userGrowthData`: 7개 데이터 포인트 (11/1, 11/5, 11/9, 11/13, 11/17, 11/21, 11/25)
+  - 각 항목: { date, total, active, new, churned }
+- ✅ `studyActivitiesData`: 6개 카테고리
+  - 각 항목: { category, count, percentage }
+- ✅ `analyticsData` 객체:
+  - `conversionFunnel`: 4단계 (visit, signup, create, active)
+  - `engagementTrend`: 7일 (Mon~Sun)
+  - `deviceDistribution`: 3개 (desktop, mobile, tablet)
+  - `popularFeatures`: 7개 기능
+- ⚠️ `adminStats`는 import했으나 미사용 (우측 위젯에 하드코딩)
+
+### 스타일링 (100% 완료)
+- ✅ `page.module.css` 분리 (약 400줄)
+- ✅ AdminLayout 사용
+- ✅ 글로벌 클래스: adminPageWrapper / adminMainContent / rightWidget
+- ✅ 모듈 클래스:
+  - `.analyticsPage`: 메인 컨테이너
+  - `.chartSection`: 차트 섹션 공통 스타일
+  - `.twoColumnGrid`: 2컬럼 그리드 (반응형)
+  - `.filterButton`, `.downloadButton`, `.refreshButton`: 버튼 스타일
+  - `.userActivityBar`, `.progressBarContainer`: 프로그레스 바
+  - `.funnelContainer`, `.funnelStages`: 퍼널 스타일
+  - `.deviceItem`, `.featureItem`: 디바이스/기능 리스트
+- ✅ 반응형: `@media (max-width: 1024px)` - twoColumnGrid 세로 배치
+
+## 📊 구현 체크리스트
+
+### Phase 1: 기본 UI ✅ (100% 완료)
+- ✅ 페이지 레이아웃 (AdminLayout)
+- ✅ 헤더 및 기간 선택 버튼
+- ✅ 차트 섹션 컨테이너
+
+### Phase 2: 사용자 성장 차트 ✅ (100% 완료)
+- ✅ UserGrowthChart 컴포넌트
+- ✅ Recharts LineChart
+- ✅ CSV 다운로드 버튼 UI
+
+### Phase 3: 카테고리 및 활동 ✅ (100% 완료)
+- ✅ StudyActivityChart (카테고리 분포)
+- ✅ 사용자 활동 프로그레스 바
+- ✅ 활동 통계 (체류시간/페이지뷰/세션/이탈률)
+
+### Phase 4: 전환 퍼널 ✅ (100% 완료)
+- ✅ 4단계 퍼널 렌더링
+- ✅ 전환율 계산 표시
+- ✅ 전체 전환율 요약
+
+### Phase 5: 참여도 추이 ✅ (100% 완료)
+- ✅ EngagementChart 컴포넌트
+- ✅ 일간 참여도 라인 차트
+- ✅ 평균/최고/최저 통계
+
+### Phase 6: 디바이스 및 인기 기능 ✅ (100% 완료)
+- ✅ 디바이스 분포 (Desktop/Mobile/Tablet)
+- ✅ 프로그레스 바 표시
+- ✅ 인기 기능 순위 (1-7위)
+
+### Phase 7: 우측 위젯 ⚠️ (80% 완료 - UI만)
+- ✅ 요약 위젯 (4개 주요 지표)
+- ✅ 기간 선택 위젯
+- ✅ 새로고침 위젯
+
+### Phase 8: API 연동 및 추가 기능 ❌ (미구현)
+- ❌ CSV 다운로드 기능 구현 (버튼만 존재)
+- ❌ 상단 기간 선택 버튼 동작 구현 (state는 있으나 데이터 필터링 미적용)
+- ❌ 우측 위젯 기간 선택 버튼 동작
+- ❌ 자동 갱신 기능 구현 (체크박스만 존재)
+- ❌ 수동 새로고침 기능 구현
+- ❌ 우측 위젯 요약 데이터 동적 연결 (adminStats와 연결 필요)
+- ❌ 시간대별 히트맵 추가 (설계만 존재, 코드 없음)
+- ❌ API 연동 (현재 모든 데이터 mock)
+- ❌ 실시간 데이터 업데이트
+- ✅ 반응형 디자인 (twoColumnGrid만 적용, 전체 반응형은 미완성)
 
 ---
 
