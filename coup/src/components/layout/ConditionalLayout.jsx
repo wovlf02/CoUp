@@ -5,7 +5,7 @@ import MainLayout from '@/components/layout/MainLayout'
 
 /**
  * 조건부 레이아웃 래퍼
- * - 로그인/회원가입/랜딩/법적 페이지: 네비게이션 없음
+ * - 로그인/회원가입/랜딩/법적/관리자 페이지: 네비게이션 없음
  * - 나머지 모든 페이지: MainLayout (네비게이션 + 헤더) 적용
  */
 export default function ConditionalLayout({ children }) {
@@ -17,7 +17,8 @@ export default function ConditionalLayout({ children }) {
     '/sign-in',
     '/sign-up',
     '/privacy',
-    '/terms'
+    '/terms',
+    '/admin' // 관리자 페이지 (AdminLayout 사용)
   ]
 
   // 현재 경로가 제외 목록에 있는지 확인
@@ -28,13 +29,10 @@ export default function ConditionalLayout({ children }) {
     return pathname.startsWith(path)
   })
 
-  // 관리자 페이지 여부 확인
-  const isAdminPage = pathname.startsWith('/admin')
-
   if (!shouldShowLayout) {
     return <>{children}</>
   }
 
-  return <MainLayout isAdmin={isAdminPage}>{children}</MainLayout>
+  return <MainLayout>{children}</MainLayout>
 }
 

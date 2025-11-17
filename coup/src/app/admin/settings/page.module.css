@@ -1,0 +1,410 @@
+.settingsPage {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.tab {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6B7280;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+.tab.active {
+  background: #3B82F6;
+  color: white;
+}
+
+.tabContent {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 32px;
+}
+
+.section {
+  margin-bottom: 40px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.subTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.formGroup {
+  margin-bottom: 24px;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.subLabel {
+  display: block;
+  font-size: 0.75rem;
+  color: #6B7280;
+  margin-bottom: 6px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 20px;
+}
+
+.radioGroup label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.inputRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.input {
+  padding: 8px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  width: 100px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3B82F6;
+}
+
+.unit {
+  margin-left: 8px;
+  font-size: 0.875rem;
+  color: #6B7280;
+}
+
+.adminList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.adminCard {
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.adminInfo {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.adminAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #6366F1;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.adminEmail {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.adminRole {
+  font-size: 0.75rem;
+  color: #6B7280;
+  margin-bottom: 4px;
+}
+
+.adminMeta {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+}
+
+.adminActions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  padding: 6px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.actionBtn:hover {
+  border-color: #3B82F6;
+  color: #3B82F6;
+}
+
+.actionBtn.danger {
+  color: #3B82F6;
+  border-color: #3B82F6;
+}
+
+.actionBtn.danger:hover {
+  background: #3B82F6;
+  color: white;
+}
+
+.addButton {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed #E5E7EB;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #6B7280;
+  transition: all 0.2s;
+}
+
+.addButton:hover {
+  border-color: #3B82F6;
+  color: #3B82F6;
+}
+
+.roleCard {
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.roleHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+}
+
+.roleList {
+  margin: 0;
+  padding-left: 28px;
+  font-size: 0.875rem;
+  color: #6B7280;
+  line-height: 1.8;
+}
+
+.backupButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #10B981;
+  color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.backupButton:hover {
+  background: #059669;
+}
+
+.backupList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.backupItem {
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.backupName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.backupMeta {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.backupActions {
+  display: flex;
+  gap: 8px;
+}
+
+.backupActions {
+  display: flex;
+  gap: 8px;
+}
+
+.roleIcon {
+  font-size: 1.25rem;
+  margin-right: 4px;
+}
+
+.radioGroupSpaced {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.inputLimited {
+  max-width: 200px;
+}
+
+.widgetLimited {
+  min-width: 200px;
+  max-width: 250px;
+}
+
+.widgetRecentChange {
+  font-size: 0.875rem;
+  margin-bottom: 12px;
+}
+
+.widgetRecentDate {
+  color: #6B7280;
+  margin-bottom: 4px;
+}
+
+.widgetRecentUser {
+  font-weight: 600;
+}
+
+.widgetRecentItem {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin-bottom: 8px;
+}
+
+.widgetGuide {
+  font-size: 0.875rem;
+  color: #6B7280;
+  line-height: 1.6;
+}
+
+.widgetGuideParagraph {
+  margin-bottom: 12px;
+}
+
+.widgetRoleSection {
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}
+
+.widgetRoleLabel {
+  color: #6B7280;
+  margin-bottom: 4px;
+}
+
+.widgetRoleValue {
+  font-weight: 600;
+  color: #3B82F6;
+}
+
+.widgetPermission {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin-top: 12px;
+}
+
+@media (max-width: 1024px) {
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .inputRow {
+    grid-template-columns: 1fr;
+  }
+
+  .adminCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .backupItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+

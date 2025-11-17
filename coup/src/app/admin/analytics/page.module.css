@@ -1,0 +1,340 @@
+.analyticsPage {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.chartSection {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chartTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.filterButton {
+  padding: 8px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.filterButton:hover {
+  border-color: #3B82F6;
+  color: #3B82F6;
+}
+
+.filterButton.active {
+  background: #3B82F6;
+  color: white;
+  border-color: #3B82F6;
+}
+
+.downloadButton {
+  padding: 8px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.downloadButton:hover {
+  border-color: #10B981;
+  color: #10B981;
+}
+
+.chartPlaceholder {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #F9FAFB;
+  border-radius: 8px;
+  color: #9CA3AF;
+  font-size: 1rem;
+}
+
+.twoColumnGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.periodButton {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-align: left;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.periodButton:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+.refreshButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #3B82F6;
+  color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.refreshButton:hover {
+  background: #2563EB;
+}
+
+.userActivityBar {
+  margin-bottom: 20px;
+}
+
+.userActivityLabel {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin-bottom: 8px;
+}
+
+.userActivityProgress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progressBarContainer {
+  flex: 1;
+  height: 12px;
+  background: #F3F4F6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progressBarFill.active {
+  background: #10B981;
+}
+
+.progressBarFill.new {
+  background: #3B82F6;
+}
+
+.progressBarFill.churned {
+  background: #EF4444;
+}
+
+.progressPercent {
+  font-size: 1.125rem;
+  font-weight: 600;
+  min-width: 40px;
+}
+
+.statsRow {
+  border-top: 1px solid #E5E7EB;
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+.statsItem {
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.statsLabel {
+  color: #6B7280;
+}
+
+.statsValue {
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.funnelContainer {
+  padding: 40px;
+}
+
+.funnelStages {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.funnelStage {
+  margin-bottom: 0;
+}
+
+.funnelStageHeader {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.funnelStageName {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.funnelStageCount {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.funnelBar {
+  height: 40px;
+  background: #F3F4F6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.funnelBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1 0%, #3B82F6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  transition: width 0.3s ease;
+}
+
+.funnelArrow {
+  text-align: center;
+  margin: 8px 0;
+  color: #6B7280;
+  font-size: 0.875rem;
+}
+
+.funnelSummary {
+  text-align: center;
+  margin-top: 30px;
+  padding: 16px;
+  background: #F9FAFB;
+  border-radius: 8px;
+}
+
+.funnelSummaryLabel {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin-bottom: 4px;
+}
+
+.funnelSummaryValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.funnelSummaryNote {
+  font-size: 0.875rem;
+  color: #EF4444;
+  margin-top: 4px;
+}
+
+.deviceItem {
+  margin-bottom: 16px;
+}
+
+.deviceHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.deviceName {
+  font-size: 0.875rem;
+}
+
+.deviceCount {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.deviceBar {
+  height: 8px;
+  background: #F3F4F6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.deviceBarFill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.deviceBarFill.desktop {
+  background: #6366F1;
+}
+
+.deviceBarFill.mobile {
+  background: #10B981;
+}
+
+.deviceBarFill.tablet {
+  background: #F59E0B;
+}
+
+.featureItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+}
+
+.featureRank {
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.featureName {
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.featureCount {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6366F1;
+}
+
+@media (max-width: 1024px) {
+  .twoColumnGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
