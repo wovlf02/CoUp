@@ -58,8 +58,8 @@
 
 .twoColumnGrid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
 }
 
 .threeColumnGrid {
@@ -75,12 +75,12 @@
 }
 
 .reportCard {
-  background: white;
+  background: #FAFAFA;
   border: 1px solid #E5E7EB;
   border-left: 4px solid #F59E0B;
   border-radius: 8px;
   padding: 16px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .reportCard:hover {
@@ -128,6 +128,10 @@
   font-size: 0.875rem;
   color: #374151;
   margin-bottom: 4px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .reportMeta {
@@ -258,12 +262,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .twoColumnGrid,
-  .threeColumnGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .statusGrid {
+  .twoColumnGrid {
     grid-template-columns: 1fr;
   }
 }
@@ -488,5 +487,3 @@
     flex-wrap: wrap;
   }
 }
-
-

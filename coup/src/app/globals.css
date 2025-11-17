@@ -67,6 +67,20 @@ button {
   outline-offset: 2px;
 }
 
+/* 관리자 페이지 레이아웃 */
+.adminPageWrapper {
+  display: flex;
+  gap: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.adminMainContent {
+  flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 304px);
+}
+
 /* 관리자 페이지 공통 스타일 */
 .contentHeader {
   background: white;
@@ -105,14 +119,11 @@ button {
 
 /* 위젯 스타일 */
 .rightWidget {
-  position: fixed;
-  right: 20px;
-  top: 100px;
   width: 280px;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  z-index: 10;
 }
 
 .widget {
@@ -137,8 +148,23 @@ button {
 }
 
 @media (max-width: 1400px) {
+  .adminPageWrapper {
+    flex-direction: column;
+  }
+
+  .adminMainContent {
+    max-width: 100%;
+  }
+
   .rightWidget {
-    display: none;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .widget {
+    flex: 1;
+    min-width: 280px;
   }
 }
 
@@ -150,6 +176,16 @@ button {
   }
 
   .refreshButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .rightWidget {
+    flex-direction: column;
+  }
+
+  .widget {
     width: 100%;
   }
 }
