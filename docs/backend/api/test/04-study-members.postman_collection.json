@@ -1,0 +1,163 @@
+{
+  "info": {
+    "name": "CoUp - 04. 스터디 멤버 관리",
+    "description": "가입, 승인, 강퇴, 역할 변경",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "studyId",
+      "value": "study-1",
+      "type": "string",
+      "description": "Seed 데이터의 스터디 ID"
+    },
+    {
+      "key": "targetUserId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. 스터디 가입 신청",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"introduction\": \"안녕하세요! 열심히 참여하겠습니다.\",\n  \"motivation\": \"알고리즘 실력을 향상시키고 싶습니다\",\n  \"level\": \"중급\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/join",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "join"]
+        },
+        "description": "🔒 **인증 필요**\n\n**선택 필드:**\n- introduction (10-200자)\n- motivation (10-200자)\n- level (초급/중급/상급)\n\n**자동 승인:**\n- autoApprove=true → 즉시 ACTIVE\n- autoApprove=false → PENDING (승인 대기)"
+      }
+    },
+    {
+      "name": "2. 가입 신청 목록",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/join-requests",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "join-requests"]
+        },
+        "description": "🔒 **ADMIN+ 권한 필요**\n\nPENDING 상태의 가입 신청 목록"
+      }
+    },
+    {
+      "name": "3. 가입 승인",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/members/{{targetUserId}}/approve",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "members", "{{targetUserId}}", "approve"]
+        },
+        "description": "🔒 **ADMIN+ 권한 필요**\n\nPENDING → ACTIVE\n승인 알림 자동 생성"
+      }
+    },
+    {
+      "name": "4. 가입 거절",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/members/{{targetUserId}}/reject",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "members", "{{targetUserId}}", "reject"]
+        },
+        "description": "🔒 **ADMIN+ 권한 필요**\n\n멤버십 레코드 삭제"
+      }
+    },
+    {
+      "name": "5. 멤버 목록",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/members?status=ACTIVE&role=",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "members"],
+          "query": [
+            {
+              "key": "status",
+              "value": "ACTIVE",
+              "description": "ACTIVE | PENDING"
+            },
+            {
+              "key": "role",
+              "value": "",
+              "description": "OWNER | ADMIN | MEMBER",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "🔒 **MEMBER+ 권한 필요**\n\n**정렬:**\n1. 역할 순 (OWNER > ADMIN > MEMBER)\n2. 가입일 순"
+      }
+    },
+    {
+      "name": "6. 역할 변경",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"ADMIN\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/members/{{targetUserId}}/role",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "members", "{{targetUserId}}", "role"]
+        },
+        "description": "🔒 **OWNER만 가능**\n\n**가능한 역할:**\n- MEMBER ↔ ADMIN\n\n**불가능:**\n- OWNER 변경"
+      }
+    },
+    {
+      "name": "7. 멤버 강퇴",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/members/{{targetUserId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "members", "{{targetUserId}}"]
+        },
+        "description": "🔒 **ADMIN+ 권한 필요**\n\n**제약:**\n- 자기 자신 강퇴 불가\n- OWNER 강퇴 불가\n\nstatus → KICKED\n강퇴 알림 자동 생성"
+      }
+    },
+    {
+      "name": "8. 스터디 탈퇴",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/studies/{{studyId}}/leave",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "studies", "{{studyId}}", "leave"]
+        },
+        "description": "🔒 **인증 필요**\n\n**제약:**\n- OWNER는 탈퇴 불가\n  (스터디 삭제 또는 소유권 이전 필요)\n\nstatus → LEFT"
+      }
+    }
+  ]
+}
+

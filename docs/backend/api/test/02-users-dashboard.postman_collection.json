@@ -1,0 +1,191 @@
+{
+  "info": {
+    "name": "CoUp - 02. 사용자 & 대시보드",
+    "description": "사용자 정보, 프로필, 대시보드",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "사용자 API",
+      "item": [
+        {
+          "name": "1. 내 정보 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "🔒 **인증 필요**\n\n현재 로그인한 사용자의 정보와 통계를 조회합니다."
+          }
+        },
+        {
+          "name": "2. 프로필 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"수정된 이름\",\n  \"bio\": \"새로운 자기소개입니다\",\n  \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "🔒 **인증 필요**\n\n**수정 가능:**\n- name (2자 이상)\n- bio (500자 이하)\n- avatar (URL)\n\n**수정 불가:**\n- email, role, status"
+          }
+        },
+        {
+          "name": "3. 비밀번호 변경",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me", "password"]
+            },
+            "description": "🔒 **인증 필요**\n\n현재 비밀번호 확인 후 새 비밀번호로 변경\n\n⚠️ OAuth 계정은 비밀번호 변경 불가"
+          }
+        }
+      ]
+    },
+    {
+      "name": "대시보드 API",
+      "item": [
+        {
+          "name": "1. 대시보드 데이터",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard"]
+            },
+            "description": "🔒 **인증 필요**\n\n**응답 데이터:**\n- stats: 통계 (스터디, 할일, 알림, 완료)\n- myStudies: 내 스터디 (최대 6개)\n- recentActivities: 최근 활동 (5개)\n- upcomingEvents: 다가오는 일정 (3일 이내, 3개)"
+          }
+        },
+        {
+          "name": "2. 내 스터디 목록",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/my-studies?filter=all&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "my-studies"],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "all",
+                  "description": "all | owner | admin | pending"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "🔒 **인증 필요**\n\n**필터:**\n- all: 모든 스터디\n- owner: 내가 소유자인 스터디\n- admin: 관리자 권한 스터디\n- pending: 가입 대기 중"
+          }
+        }
+      ]
+    },
+    {
+      "name": "알림 API",
+      "item": [
+        {
+          "name": "1. 알림 목록",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications?filter=unread&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                {
+                  "key": "filter",
+                  "value": "unread",
+                  "description": "all | unread | read"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "🔒 **인증 필요**"
+          }
+        },
+        {
+          "name": "2. 알림 읽음 처리",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/:notificationId/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", ":notificationId", "read"],
+              "variable": [
+                {
+                  "key": "notificationId",
+                  "value": "알림ID",
+                  "description": "읽음 처리할 알림 ID"
+                }
+              ]
+            },
+            "description": "🔒 **인증 필요**"
+          }
+        },
+        {
+          "name": "3. 모든 알림 읽음",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/mark-all-read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "mark-all-read"]
+            },
+            "description": "🔒 **인증 필요**\n\n읽지 않은 모든 알림을 읽음 처리"
+          }
+        }
+      ]
+    }
+  ]
+}
+

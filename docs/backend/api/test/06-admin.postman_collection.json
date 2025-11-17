@@ -1,0 +1,205 @@
+{
+  "info": {
+    "name": "CoUp - 06. 관리자 API",
+    "description": "통계, 사용자 관리, 스터디 관리, 신고 처리",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "targetUserId",
+      "value": ""
+    },
+    {
+      "key": "targetStudyId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "📊 통계",
+      "item": [
+        {
+          "name": "관리자 대시보드 통계",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "stats"]
+            },
+            "description": "🔒 **ADMIN+**\n\n**응답:**\n- users: 사용자 통계\n- studies: 스터디 통계\n- tasks: 할일 통계\n- reports: 신고 통계\n- notifications: 알림 통계"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 사용자 관리",
+      "item": [
+        {
+          "name": "1. 사용자 목록",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?search=&status=ACTIVE&role=USER&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {"key": "search", "value": "", "description": "이메일/이름"},
+                {"key": "status", "value": "ACTIVE", "description": "ACTIVE|SUSPENDED|DELETED"},
+                {"key": "role", "value": "USER", "description": "USER|ADMIN|SYSTEM_ADMIN"},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "🔒 **ADMIN+**"
+          }
+        },
+        {
+          "name": "2. 사용자 상세",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{targetUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{targetUserId}}"]
+            },
+            "description": "🔒 **ADMIN+**\n\n스터디 목록, 신고 이력 포함"
+          }
+        },
+        {
+          "name": "3. 계정 정지",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"부적절한 행동\",\n  \"days\": 7\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{targetUserId}}/suspend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{targetUserId}}", "suspend"]
+            },
+            "description": "🔒 **ADMIN+**\n\n**제약:**\n- 자기 자신 정지 불가\n- SYSTEM_ADMIN은 일반 ADMIN이 정지 불가\n\nstatus → SUSPENDED\n정지 알림 자동 생성"
+          }
+        },
+        {
+          "name": "4. 정지 해제",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{targetUserId}}/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{targetUserId}}", "restore"]
+            },
+            "description": "🔒 **ADMIN+**\n\nstatus → ACTIVE\n복구 알림 자동 생성"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 스터디 관리",
+      "item": [
+        {
+          "name": "1. 스터디 목록",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/studies?search=&category=&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "studies"],
+              "query": [
+                {"key": "search", "value": ""},
+                {"key": "category", "value": ""},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            },
+            "description": "🔒 **ADMIN+**"
+          }
+        },
+        {
+          "name": "2. 스터디 상세",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/studies/{{targetStudyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "studies", "{{targetStudyId}}"]
+            },
+            "description": "🔒 **ADMIN+**\n\n멤버 목록, 공지 목록 포함"
+          }
+        },
+        {
+          "name": "3. 스터디 삭제",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/studies/{{targetStudyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "studies", "{{targetStudyId}}"]
+            },
+            "description": "🔒 **ADMIN+**\n\n⚠️ CASCADE 삭제"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚨 신고 관리",
+      "item": [
+        {
+          "name": "1. 신고 목록",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports?status=PENDING&priority=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports"],
+              "query": [
+                {"key": "status", "value": "PENDING", "description": "PENDING|IN_PROGRESS|RESOLVED|REJECTED"},
+                {"key": "priority", "value": "", "description": "LOW|MEDIUM|HIGH|URGENT"}
+              ]
+            },
+            "description": "🔒 **ADMIN+**"
+          }
+        },
+        {
+          "name": "2. 신고 상세",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/:reportId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", ":reportId"],
+              "variable": [{"key": "reportId", "value": ""}]
+            },
+            "description": "🔒 **ADMIN+**"
+          }
+        },
+        {
+          "name": "3. 신고 처리",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"suspend\",\n  \"resolution\": \"부적절한 행동으로 7일 정지 처리\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/:reportId/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", ":reportId", "process"],
+              "variable": [{"key": "reportId", "value": ""}]
+            },
+            "description": "🔒 **ADMIN+**\n\n**action:**\n- warn: 경고만\n- suspend: 사용자 정지\n- delete: 삭제 (사용자/스터디/메시지)\n- reject: 신고 기각"
+          }
+        }
+      ]
+    }
+  ]
+}
+

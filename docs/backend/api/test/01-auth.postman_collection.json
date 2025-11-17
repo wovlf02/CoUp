@@ -1,0 +1,132 @@
+{
+  "info": {
+    "name": "CoUp - 01. 인증 API",
+    "description": "회원가입, 로그인, 세션 관리",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. 회원가입",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 응답 확인",
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "// userId 저장",
+              "const jsonData = pm.response.json();",
+              "if (jsonData.user && jsonData.user.id) {",
+              "    pm.collectionVariables.set(\"userId\", jsonData.user.id);",
+              "    console.log(\"User ID saved:\", jsonData.user.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"postman@test.com\",\n  \"password\": \"password123\",\n  \"name\": \"Postman 테스터\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signup"]
+        },
+        "description": "새 계정 생성\n\n**필수 필드:**\n- email: 이메일 형식\n- password: 최소 8자\n- name: 최소 2자 (선택)"
+      },
+      "response": []
+    },
+    {
+      "name": "2. 로그인 (Credentials)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// 쿠키에서 세션 토큰 추출",
+              "const cookies = pm.cookies.all();",
+              "console.log(\"Cookies:\", cookies);",
+              "",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"kim@example.com\",\n  \"password\": \"password123\",\n  \"redirect\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/callback/credentials",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "callback", "credentials"]
+        },
+        "description": "**테스트 계정 (Seed 데이터):**\n- Email: kim@example.com\n- Password: password123\n\n**관리자 계정:**\n- Email: admin@example.com\n- Password: password123"
+      },
+      "response": []
+    },
+    {
+      "name": "3. 세션 확인",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/session",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "session"]
+        },
+        "description": "현재 로그인된 사용자 세션 정보 확인"
+      },
+      "response": []
+    },
+    {
+      "name": "4. 로그아웃",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/signout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "signout"]
+        },
+        "description": "로그아웃 (세션 쿠키 삭제)"
+      },
+      "response": []
+    }
+  ]
+}
+
