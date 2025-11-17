@@ -9,61 +9,63 @@
 ## 🎯 전체 진행률
 
 **총 체크 항목**: 120개  
-**완료**: 0개 (0%)  
-**진행 중**: Phase 0 (환경 설정)
+**완료**: 22개 (18.3%)  
+**진행 중**: Phase 1 (인증 시스템) 준비 완료!
 
 ---
 
-## 📦 Phase 0: 환경 설정 (필수)
+## 📦 Phase 0: 환경 설정 (필수) ✅ 완료!
 
 **목표**: PostgreSQL + Prisma 개발 환경 구축  
 **예상 시간**: 1-2시간  
-**문서**: [phase-0-setup.md](./phase-0-setup.md)
+**문서**: [phase-0-setup.md](./phase-0-setup.md)  
+**상태**: ✅ 완료! (22/22)
 
 ### 데이터베이스 설정
-- [ ] PostgreSQL 15+ 설치 및 실행
-- [ ] 데이터베이스 `coup` 생성
-- [ ] 연결 테스트 완료
+- [x] PostgreSQL 15+ 설치 및 실행
+- [x] 데이터베이스 `coup` 생성
+- [x] 연결 테스트 완료
 
 ### Prisma 설정
-- [ ] `npm install prisma @prisma/client` 실행
-- [ ] `npx prisma init` 실행
-- [ ] `prisma/schema.prisma` 작성 (11개 모델)
-  - [ ] User
-  - [ ] Study
-  - [ ] StudyMember
-  - [ ] Message
-  - [ ] Notice
-  - [ ] File
-  - [ ] Event
-  - [ ] Task
-  - [ ] Notification
-  - [ ] Report
-  - [ ] 모든 Enum (Provider, UserRole, UserStatus 등)
-- [ ] `npx prisma migrate dev --name init` 실행
-- [ ] `npx prisma generate` 실행
+- [x] `npm install prisma @prisma/client` 실행
+- [x] `npx prisma init` 실행
+- [x] `prisma/schema.prisma` 작성 (11개 모델)
+  - [x] User
+  - [x] Study
+  - [x] StudyMember
+  - [x] Message
+  - [x] Notice
+  - [x] File
+  - [x] Event
+  - [x] Task
+  - [x] Notification
+  - [x] Report
+  - [x] 모든 Enum (Provider, UserRole, UserStatus 등)
+- [x] `npx prisma migrate dev --name init` 실행
+- [x] `npx prisma generate` 실행
 
 ### Prisma Client 설정
-- [ ] `src/lib/prisma.js` 생성
-- [ ] Prisma Client 싱글톤 패턴 적용
+- [x] `src/lib/prisma.js` 생성
+- [x] Prisma Client 싱글톤 패턴 적용
 
 ### Seed 데이터
-- [ ] `npm install bcryptjs` 실행
-- [ ] `prisma/seed.js` 작성
-- [ ] `package.json`에 seed 스크립트 추가
-- [ ] `npm run db:seed` 실행 성공
-- [ ] Seed 데이터 확인 (3명 사용자, 2개 스터디)
+- [x] `npm install bcryptjs` 실행
+- [x] `prisma/seed.js` 작성
+- [x] `package.json`에 seed 스크립트 추가
+- [x] `npm run db:seed` 실행 성공
+- [x] Seed 데이터 확인 (3명 사용자, 2개 스터디)
 
 ### 환경 변수
-- [ ] `.env.local` 파일 생성
-- [ ] `DATABASE_URL` 설정
-- [ ] `NEXTAUTH_URL` 설정
-- [ ] `NEXTAUTH_SECRET` 생성 및 설정
+- [x] `.env.local` 파일 생성
+- [x] `DATABASE_URL` 설정
+- [x] `NEXTAUTH_URL` 설정
+- [x] `NEXTAUTH_SECRET` 생성 및 설정
 
 ### 테스트
-- [ ] `test-db.js` 스크립트 실행
-- [ ] Prisma Studio 실행 (`npx prisma studio`)
-- [ ] 데이터 확인 완료
+- [x] `test-db.js` 스크립트 작성
+- [x] `test-db.js` 실행 성공
+- [x] Prisma Studio 실행 가능 (`npx prisma studio`)
+- [x] 데이터 확인 완료
 
 ---
 

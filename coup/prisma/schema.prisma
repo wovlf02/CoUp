@@ -1,0 +1,374 @@
+// Prisma 설정
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 사용자 (User)
+// ============================================
+model User {
+  id       String   @id @default(cuid())
+  email    String   @unique
+  password String? // null for OAuth users
+  name     String?
+  avatar   String?
+  bio      String?
+  provider Provider @default(CREDENTIALS)
+  role     UserRole @default(USER)
+
+  // 소셜 로그인
+  googleId String? @unique
+  githubId String? @unique
+
+  // 상태
+  status         UserStatus @default(ACTIVE)
+  suspendedUntil DateTime?
+  suspendReason  String?
+
+  // 타임스탬프
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  // 관계
+  ownedStudies   Study[]        @relation("StudyOwner")
+  studyMembers   StudyMember[]
+  messages       Message[]
+  notifications  Notification[]
+  tasks          Task[]
+  reports        Report[]
+  createdNotices Notice[]
+  uploadedFiles  File[]         @relation("FileUploader")
+  createdEvents  Event[]        @relation("EventCreator")
+
+  @@index([email])
+  @@index([status])
+}
+
+enum Provider {
+  CREDENTIALS
+  GOOGLE
+  GITHUB
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SYSTEM_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+// ============================================
+// 스터디 (Study)
+// ============================================
+model Study {
+  id          String  @id @default(cuid())
+  ownerId     String
+  name        String
+  emoji       String  @default("📚")
+  description String  @db.Text
+  category    String
+  subCategory String?
+
+  // 설정
+  maxMembers   Int     @default(20)
+  isPublic     Boolean @default(true)
+  autoApprove  Boolean @default(true)
+  isRecruiting Boolean @default(true)
+
+  // 평가
+  rating      Float? @default(0)
+  reviewCount Int?   @default(0)
+
+  // 메타
+  tags       String[] // PostgreSQL array
+  inviteCode String   @unique @default(cuid())
+
+  // 타임스탬프
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  owner    User          @relation("StudyOwner", fields: [ownerId], references: [id])
+  members  StudyMember[]
+  messages Message[]
+  notices  Notice[]
+  files    File[]
+  events   Event[]
+  tasks    Task[]
+
+  @@index([category])
+  @@index([isPublic, isRecruiting])
+  @@index([ownerId])
+  @@index([rating])
+}
+
+// ============================================
+// 스터디 멤버 (StudyMember)
+// ============================================
+model StudyMember {
+  id      String       @id @default(cuid())
+  studyId String
+  userId  String
+  role    MemberRole   @default(MEMBER)
+  status  MemberStatus @default(PENDING)
+
+  // 가입 정보
+  introduction String? @db.Text
+  motivation   String?
+  level        String?
+
+  // 타임스탬프
+  joinedAt   DateTime  @default(now())
+  approvedAt DateTime?
+
+  // 관계
+  study Study @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([studyId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  KICKED
+  LEFT
+}
+
+// ============================================
+// 채팅 메시지 (Message)
+// ============================================
+model Message {
+  id      String  @id @default(cuid())
+  studyId String
+  userId  String
+  content String  @db.Text
+  fileId  String?
+
+  // 읽음 처리
+  readers String[] // User IDs array
+
+  // 타임스탬프
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  study Study @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+  file  File? @relation(fields: [fileId], references: [id])
+
+  @@index([studyId, createdAt])
+}
+
+// ============================================
+// 공지사항 (Notice)
+// ============================================
+model Notice {
+  id       String @id @default(cuid())
+  studyId  String
+  authorId String
+  title    String
+  content  String @db.Text
+
+  // 상태
+  isPinned    Boolean @default(false)
+  isImportant Boolean @default(false)
+
+  // 통계
+  views Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  study  Study @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id])
+
+  @@index([studyId, isPinned, createdAt])
+  @@index([authorId])
+}
+
+// ============================================
+// 파일 (File)
+// ============================================
+model File {
+  id         String  @id @default(cuid())
+  studyId    String
+  uploaderId String
+  name       String
+  size       Int
+  type       String
+  url        String
+  folderId   String?
+
+  downloads Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  study    Study     @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  uploader User      @relation("FileUploader", fields: [uploaderId], references: [id])
+  messages Message[]
+
+  @@index([studyId, folderId])
+  @@index([uploaderId])
+}
+
+// ============================================
+// 캘린더 일정 (Event)
+// ============================================
+model Event {
+  id          String   @id @default(cuid())
+  studyId     String
+  createdById String
+  title       String
+  date        DateTime @db.Date
+  startTime   String
+  endTime     String
+  location    String?
+  color       String   @default("#6366F1")
+
+  createdAt DateTime @default(now())
+
+  study     Study @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  createdBy User  @relation("EventCreator", fields: [createdById], references: [id])
+
+  @@index([studyId, date])
+  @@index([createdById])
+}
+
+// ============================================
+// 할일 (Task)
+// ============================================
+model Task {
+  id          String     @id @default(cuid())
+  studyId     String?
+  userId      String
+  title       String
+  description String?    @db.Text
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+  study Study? @relation(fields: [studyId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completed])
+  @@index([studyId, status])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ============================================
+// 알림 (Notification)
+// ============================================
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  studyId    String?
+  studyName  String?
+  studyEmoji String?
+  message    String
+  data       Json? // 추가 데이터
+
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+enum NotificationType {
+  JOIN_APPROVED
+  NOTICE
+  FILE
+  EVENT
+  TASK
+  MEMBER
+  KICK
+  CHAT
+}
+
+// ============================================
+// 신고 (Report)
+// ============================================
+model Report {
+  id         String     @id @default(cuid())
+  reporterId String
+  targetType TargetType
+  targetId   String
+  type       ReportType
+  reason     String     @db.Text
+  evidence   Json? // 증거 자료
+
+  status   ReportStatus @default(PENDING)
+  priority Priority     @default(MEDIUM)
+
+  // 처리
+  processedBy String?
+  processedAt DateTime?
+  resolution  String?   @db.Text
+
+  createdAt DateTime @default(now())
+
+  reporter User @relation(fields: [reporterId], references: [id])
+
+  @@index([status, priority, createdAt])
+}
+
+enum TargetType {
+  USER
+  STUDY
+  MESSAGE
+}
+
+enum ReportType {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE
+  COPYRIGHT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
