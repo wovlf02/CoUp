@@ -53,8 +53,12 @@ model User {
   lastLoginAt   DateTime?
   
   // 관계
+  ownedStudies  Study[]   @relation("StudyOwner")
   studyMembers  StudyMember[]
   messages      Message[]
+  notices       Notice[]
+  uploadedFiles File[]    @relation("FileUploader")
+  createdEvents Event[]   @relation("EventCreator")
   notifications Notification[]
   tasks         Task[]
   reports       Report[]
@@ -87,9 +91,10 @@ enum UserStatus {
 ```prisma
 model Study {
   id            String   @id @default(cuid())
+  ownerId       String
   name          String
   emoji         String   @default("📚")
-  description   String
+  description   String   @db.Text
   category      String
   subCategory   String?
   
@@ -99,15 +104,20 @@ model Study {
   autoApprove   Boolean  @default(true)
   isRecruiting  Boolean  @default(true)
   
+  // 평가
+  rating        Float?   @default(0)
+  reviewCount   Int?     @default(0)
+  
   // 메타
   tags          String[] // PostgreSQL array
-  inviteCode    String   @unique
+  inviteCode    String   @unique @default(cuid())
   
   // 타임스탬프
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
   // 관계
+  owner         User     @relation("StudyOwner", fields: [ownerId], references: [id])
   members       StudyMember[]
   messages      Message[]
   notices       Notice[]
@@ -117,6 +127,8 @@ model Study {
   
   @@index([category])
   @@index([isPublic, isRecruiting])
+  @@index([ownerId])
+  @@index([rating])
 }
 ```
 
@@ -195,7 +207,7 @@ model Notice {
   studyId       String
   authorId      String
   title         String
-  content       String
+  content       String   @db.Text
   
   // 상태
   isPinned      Boolean  @default(false)
@@ -203,14 +215,15 @@ model Notice {
   
   // 통계
   views         Int      @default(0)
-  comments      Int      @default(0)
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
   study         Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  author        User     @relation(fields: [authorId], references: [id])
   
-  @@index([studyId, isPinned])
+  @@index([studyId, isPinned, createdAt])
+  @@index([authorId])
 }
 ```
 
@@ -219,9 +232,11 @@ model Notice {
 ```prisma
 model File {
   id            String   @id @default(cuid())
+  uploader      User     @relation("FileUploader", fields: [uploaderId], references: [id])
   studyId       String
   uploaderId    String
   name          String
+  @@index([uploaderId])
   size          Int
   type          String
   url           String
@@ -229,8 +244,9 @@ model File {
   
   downloads     Int      @default(0)
   
+  createdById   String
   createdAt     DateTime @default(now())
-  
+  date          DateTime @db.Date
   study         Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
   messages      Message[]
   
@@ -239,8 +255,10 @@ model File {
 ```
 
 ### Event (일정)
+  createdBy     User     @relation("EventCreator", fields: [createdById], references: [id])
 
 ```prisma
+  @@index([createdById])
 model Event {
   id            String   @id @default(cuid())
   studyId       String
@@ -327,6 +345,7 @@ enum NotificationType {
   EVENT
   TASK
   MEMBER
+  CHAT
   KICK
 }
 ```
