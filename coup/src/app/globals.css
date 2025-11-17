@@ -66,3 +66,90 @@ button {
   outline: 2px solid var(--primary-500);
   outline-offset: 2px;
 }
+
+/* 관리자 페이지 공통 스타일 */
+.contentHeader {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.contentTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.refreshButton {
+  background: #3B82F6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.refreshButton:hover {
+  background: #2563EB;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+/* 위젯 스타일 */
+.rightWidget {
+  position: fixed;
+  right: 20px;
+  top: 100px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 10;
+}
+
+.widget {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.widgetTitle {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  border-bottom: 1px solid #E5E7EB;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.widgetContent {
+  padding: 20px;
+}
+
+@media (max-width: 1400px) {
+  .rightWidget {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .contentHeader {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .refreshButton {
+    width: 100%;
+  }
+}
