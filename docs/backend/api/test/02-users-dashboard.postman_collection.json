@@ -153,6 +153,17 @@
         },
         {
           "name": "2. 알림 읽음 처리",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// 먼저 알림 목록을 조회하여 실제 알림 ID를 가져옵니다",
+                  "// Postman Collection Runner에서 자동으로 실행됩니다"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
@@ -163,12 +174,12 @@
               "variable": [
                 {
                   "key": "notificationId",
-                  "value": "알림ID",
-                  "description": "읽음 처리할 알림 ID"
+                  "value": "",
+                  "description": "⚠️ 먼저 '1. 알림 목록' 요청으로 실제 알림 ID를 복사하세요!"
                 }
               ]
             },
-            "description": "🔒 **인증 필요**"
+            "description": "🔒 **인증 필요**\n\n⚠️ **사용 방법:**\n1. 먼저 '1. 알림 목록' 실행\n2. 응답에서 알림 ID 복사 (예: clxx123...)\n3. URL의 :notificationId를 실제 ID로 교체\n4. 요청 전송\n\n**또는 Postman 변수 사용:**\n- Collection Variables에서 notificationId 설정\n- URL을 {{baseUrl}}/api/notifications/{{notificationId}}/read 로 변경"
           }
         },
         {

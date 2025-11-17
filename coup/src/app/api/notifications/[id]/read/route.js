@@ -8,7 +8,7 @@ export async function POST(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
     const userId = session.user.id
 
     // 알림 소유권 확인

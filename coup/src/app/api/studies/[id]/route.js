@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
 
     // 스터디 조회
     const study = await prisma.study.findUnique({
@@ -127,7 +127,7 @@ export async function PATCH(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
 
     // 스터디 소유자 확인
@@ -186,7 +186,7 @@ export async function DELETE(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
 
     // 스터디 소유자 확인
     const study = await prisma.study.findUnique({

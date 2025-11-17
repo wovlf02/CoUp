@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "CoUp - 01. 인증 API",
-    "description": "회원가입, 로그인, 세션 관리",
+    "name": "CoUp - 01. 인증 API (커스텀)",
+    "description": "JWT 기반 커스텀 로그인 API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -11,7 +11,7 @@
       "type": "string"
     },
     {
-      "key": "userId",
+      "key": "authToken",
       "value": "",
       "type": "string"
     }
@@ -24,17 +24,12 @@
           "listen": "test",
           "script": {
             "exec": [
-              "// 응답 확인",
               "pm.test(\"Status code is 201\", function () {",
               "    pm.response.to.have.status(201);",
               "});",
               "",
-              "// userId 저장",
               "const jsonData = pm.response.json();",
-              "if (jsonData.user && jsonData.user.id) {",
-              "    pm.collectionVariables.set(\"userId\", jsonData.user.id);",
-              "    console.log(\"User ID saved:\", jsonData.user.id);",
-              "}"
+              "console.log(\"User created:\", jsonData);"
             ]
           }
         }
@@ -56,24 +51,27 @@
           "host": ["{{baseUrl}}"],
           "path": ["api", "auth", "signup"]
         },
-        "description": "새 계정 생성\n\n**필수 필드:**\n- email: 이메일 형식\n- password: 최소 8자\n- name: 최소 2자 (선택)"
-      },
-      "response": []
+        "description": "새 계정 생성"
+      }
     },
     {
-      "name": "2. 로그인 (Credentials)",
+      "name": "2. 로그인 (커스텀 API)",
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "// 쿠키에서 세션 토큰 추출",
-              "const cookies = pm.cookies.all();",
-              "console.log(\"Cookies:\", cookies);",
-              "",
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
-              "});"
+              "});",
+              "",
+              "const jsonData = pm.response.json();",
+              "if (jsonData.token) {",
+              "    pm.collectionVariables.set('authToken', jsonData.token);",
+              "    console.log('Token saved:', jsonData.token);",
+              "}",
+              "",
+              "console.log('User:', jsonData.user);"
             ]
           }
         }
@@ -88,45 +86,41 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"kim@example.com\",\n  \"password\": \"password123\",\n  \"redirect\": false\n}"
+          "raw": "{\n  \"email\": \"kim@example.com\",\n  \"password\": \"password123\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/auth/callback/credentials",
+          "raw": "{{baseUrl}}/api/auth/login",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "auth", "callback", "credentials"]
+          "path": ["api", "auth", "login"]
         },
-        "description": "**테스트 계정 (Seed 데이터):**\n- Email: kim@example.com\n- Password: password123\n\n**관리자 계정:**\n- Email: admin@example.com\n- Password: password123"
-      },
-      "response": []
+        "description": "**JWT 기반 로그인**\n\n응답:\n- user: 사용자 정보\n- token: JWT 토큰\n- 쿠키: auth-token (HttpOnly)\n\n**테스트 계정:**\n- kim@example.com / password123\n- admin@example.com / password123"
+      }
     },
     {
-      "name": "3. 세션 확인",
+      "name": "3. 세션 확인 (내 정보)",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/auth/session",
+          "raw": "{{baseUrl}}/api/auth/me",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "auth", "session"]
+          "path": ["api", "auth", "me"]
         },
-        "description": "현재 로그인된 사용자 세션 정보 확인"
-      },
-      "response": []
+        "description": "🔒 **인증 필요**\n\n쿠키의 auth-token으로 현재 로그인 사용자 확인"
+      }
     },
     {
       "name": "4. 로그아웃",
       "request": {
-        "method": "GET",
+        "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/auth/signout",
+          "raw": "{{baseUrl}}/api/auth/logout",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "auth", "signout"]
+          "path": ["api", "auth", "logout"]
         },
-        "description": "로그아웃 (세션 쿠키 삭제)"
-      },
-      "response": []
+        "description": "auth-token 쿠키 삭제"
+      }
     }
   ]
 }
-

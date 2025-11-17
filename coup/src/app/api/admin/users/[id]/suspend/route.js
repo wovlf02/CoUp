@@ -8,7 +8,7 @@ export async function POST(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { reason, days } = body // days: 정지 기간 (일)
 

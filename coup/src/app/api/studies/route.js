@@ -117,16 +117,10 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const { getServerSession } = await import("next-auth/next")
-  const { authOptions } = await import("@/lib/auth")
-  const session = await getServerSession(authOptions)
+  const { requireAuth } = await import("@/lib/auth-helpers")
+  const session = await requireAuth()
 
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: "로그인이 필요합니다" },
-      { status: 401 }
-    )
-  }
+  if (session instanceof NextResponse) return session
 
   try {
     const body = await request.json()

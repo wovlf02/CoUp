@@ -4,7 +4,7 @@ import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 
 export async function PATCH(request, { params }) {
-  const { id: studyId, eventId } = params
+  const { id: studyId, eventId } = await params
 
   const result = await requireStudyMember(studyId, 'ADMIN')
   if (result instanceof NextResponse) return result
@@ -51,7 +51,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const { id: studyId, eventId } = params
+  const { id: studyId, eventId } = await params
 
   const result = await requireStudyMember(studyId, 'ADMIN')
   if (result instanceof NextResponse) return result

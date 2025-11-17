@@ -1,42 +1,79 @@
 // src/lib/auth-helpers.js
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "./auth"
 import { NextResponse } from "next/server"
 import { prisma } from "./prisma"
+import { verifyJWT } from "./jwt"
+import { cookies } from "next/headers"
 
 /**
- * 로그인 확인
+ * 로그인 확인 (JWT 기반)
  * API Route에서 사용
  */
 export async function requireAuth() {
-  const session = await getServerSession(authOptions)
+  // JWT 토큰 확인 (Next.js 15: cookies()는 Promise)
+  const cookieStore = await cookies()
+  const token = cookieStore.get('auth-token')?.value
 
-  if (!session?.user) {
+  if (!token) {
     return NextResponse.json(
       { error: "로그인이 필요합니다" },
       { status: 401 }
     )
   }
 
-  return session
+  const decoded = verifyJWT(token)
+  if (!decoded) {
+    return NextResponse.json(
+      { error: "유효하지 않은 토큰입니다" },
+      { status: 401 }
+    )
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      avatar: true,
+      role: true,
+      status: true,
+      bio: true
+    }
+  })
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "사용자를 찾을 수 없습니다" },
+      { status: 404 }
+    )
+  }
+
+  if (user.status !== 'ACTIVE') {
+    return NextResponse.json(
+      { error: "비활성화된 계정입니다" },
+      { status: 403 }
+    )
+  }
+
+  return { user }
 }
 
 /**
  * 관리자 확인
  */
 export async function requireAdmin() {
-  const session = await requireAuth()
+  const result = await requireAuth()
 
-  if (session instanceof NextResponse) return session
+  if (result instanceof NextResponse) return result
 
-  if (!['ADMIN', 'SYSTEM_ADMIN'].includes(session.user.role)) {
+  if (!['ADMIN', 'SYSTEM_ADMIN'].includes(result.user.role)) {
     return NextResponse.json(
       { error: "관리자 권한이 필요합니다" },
       { status: 403 }
     )
   }
 
-  return session
+  return result
 }
 
 /**
@@ -45,14 +82,14 @@ export async function requireAdmin() {
  * @param {string} minRole - 최소 요구 역할 (MEMBER, ADMIN, OWNER)
  */
 export async function requireStudyMember(studyId, minRole = 'MEMBER') {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
+  const result = await requireAuth()
+  if (result instanceof NextResponse) return result
 
   const member = await prisma.studyMember.findUnique({
     where: {
       studyId_userId: {
         studyId,
-        userId: session.user.id
+        userId: result.user.id
       }
     }
   })
@@ -73,13 +110,6 @@ export async function requireStudyMember(studyId, minRole = 'MEMBER') {
     )
   }
 
-  return { session, member }
-}
-
-/**
- * 서버 컴포넌트에서 세션 가져오기
- */
-export async function getSession() {
-  return await getServerSession(authOptions)
+  return { session: result, member }
 }
 

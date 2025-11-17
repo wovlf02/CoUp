@@ -8,7 +8,7 @@ export async function POST(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { action, resolution } = body
     // action: 'warn' | 'suspend' | 'delete' | 'reject'

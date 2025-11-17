@@ -6,7 +6,7 @@ import { readFile } from "fs/promises"
 import { join } from "path"
 
 export async function GET(request, { params }) {
-  const { id: studyId, fileId } = params
+  const { id: studyId, fileId } = await params
 
   const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result

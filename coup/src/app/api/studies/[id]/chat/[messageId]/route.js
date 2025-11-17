@@ -4,7 +4,7 @@ import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 
 export async function DELETE(request, { params }) {
-  const { id: studyId, messageId } = params
+  const { id: studyId, messageId } = await params
 
   const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result

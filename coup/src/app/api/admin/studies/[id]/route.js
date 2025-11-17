@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
 
     const study = await prisma.study.findUnique({
       where: { id },
@@ -75,7 +75,7 @@ export async function DELETE(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
 
     const study = await prisma.study.findUnique({
       where: { id }

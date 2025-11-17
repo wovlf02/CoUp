@@ -4,7 +4,7 @@ import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(request, { params }) {
-  const { id: studyId } = params
+  const { id: studyId } = await params
 
   const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result

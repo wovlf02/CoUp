@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
 
     const report = await prisma.report.findUnique({
       where: { id },

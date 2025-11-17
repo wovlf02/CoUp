@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 // 강퇴
 export async function DELETE(request, { params }) {
-  const { id: studyId, userId } = params
+  const { id: studyId, userId } = await params
 
   const result = await requireStudyMember(studyId, 'ADMIN')
   if (result instanceof NextResponse) return result

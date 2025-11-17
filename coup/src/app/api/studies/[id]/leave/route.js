@@ -8,7 +8,7 @@ export async function DELETE(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id: studyId } = params
+    const { id: studyId } = await params
     const userId = session.user.id
 
     // 멤버 확인

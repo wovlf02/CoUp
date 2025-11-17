@@ -8,7 +8,7 @@ export async function POST(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id: studyId } = params
+    const { id: studyId } = await params
     const body = await request.json()
     const { introduction, motivation, level } = body
 

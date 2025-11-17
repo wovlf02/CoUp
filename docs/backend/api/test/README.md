@@ -46,33 +46,56 @@ npm run db:seed
 
 ## 🔐 인증 방법
 
-### NextAuth.js 세션 쿠키 사용
+### JWT 기반 커스텀 로그인 ✅
 
-CoUp은 **세션 기반 인증**을 사용합니다. 로그인 후 쿠키에 저장된 세션 토큰으로 인증됩니다.
+CoUp은 **JWT (JSON Web Token) 기반 인증**을 사용합니다. 로그인 후 쿠키에 저장된 JWT 토큰으로 인증됩니다.
 
 #### Step 1: 로그인
 
 **Collection**: `01-auth.postman_collection.json`  
-**요청**: `2. 로그인 (Credentials)`
+**요청**: `2. 로그인 (커스텀 API)`
 
 ```http
-POST http://localhost:3000/api/auth/callback/credentials
+POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
   "email": "kim@example.com",
-  "password": "password123",
-  "redirect": false
+  "password": "password123"
+}
+```
+
+**응답:**
+```json
+{
+  "success": true,
+  "message": "로그인 성공",
+  "user": {
+    "id": "...",
+    "email": "kim@example.com",
+    "name": "김민준",
+    "role": "USER",
+    "avatar": "..."
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
 #### Step 2: 쿠키 자동 저장
 
-Postman이 자동으로 `next-auth.session-token` 쿠키를 저장합니다.
+Postman이 자동으로 `auth-token` 쿠키를 저장합니다 (HttpOnly).
 
 #### Step 3: 이후 모든 요청에 쿠키 자동 포함
 
-로그인 후 같은 도메인(`localhost:3000`)의 모든 요청에 세션 쿠키가 자동으로 포함됩니다.
+로그인 후 같은 도메인(`localhost:3000`)의 모든 요청에 JWT 쿠키가 자동으로 포함됩니다.
+
+#### Step 4: 세션 확인
+
+```http
+GET http://localhost:3000/api/auth/me
+```
+
+현재 로그인된 사용자 정보를 반환합니다.
 
 ---
 
@@ -272,6 +295,65 @@ lee@example.com, park@example.com, choi@example.com 등
 {{targetUserId}}   // 수동 설정
 ```
 
+### ⚠️ 동적 파라미터 사용법
+
+일부 API는 URL에 동적 ID가 필요합니다.
+
+#### 방법 1: 수동으로 ID 복사 (권장)
+
+```
+1. 먼저 목록 조회 API 실행 (예: GET /api/notifications)
+2. 응답에서 실제 ID 복사 (예: clxx123...)
+3. URL의 :notificationId를 실제 ID로 교체
+4. 전송
+
+예시:
+/api/notifications/:notificationId/read
+→ /api/notifications/clxx12345abcde/read
+```
+
+#### 방법 2: Postman 변수 사용
+
+**Step 1: 목록 조회 후 ID 복사**
+```http
+GET /api/notifications
+
+응답:
+{
+  "data": [
+    {
+      "id": "clxx12345abcde",  // ← 이 ID 복사
+      "message": "..."
+    }
+  ]
+}
+```
+
+**Step 2: Collection Variables 설정**
+1. Collection 클릭
+2. Variables 탭
+3. `notificationId` 변수에 복사한 ID 입력
+4. Save
+
+**Step 3: URL에서 변수 사용**
+```
+{{baseUrl}}/api/notifications/{{notificationId}}/read
+```
+
+### 주의사항
+
+❌ **잘못된 사용:**
+```
+/api/notifications/알림ID/read  // ← 한글 그대로 사용하면 404 에러!
+/api/notifications/:notificationId/read  // ← :notificationId 그대로 사용하면 404!
+```
+
+✅ **올바른 사용:**
+```
+/api/notifications/clxx12345abcde/read  // ← 실제 ID 사용
+/api/notifications/{{notificationId}}/read  // ← 변수 사용
+```
+
 ### 변수 확인 방법
 
 1. Collection 클릭
@@ -366,17 +448,37 @@ targetUserId = (사용자 ID)
 - 스터디 OWNER/ADMIN 계정으로 로그인
 - 또는 관리자 계정 (admin@example.com) 사용
 
-### 3. 404 Not Found
+### 3. 404 Not Found - "알림을 찾을 수 없습니다" / "리소스를 찾을 수 없습니다"
+**원인**: 잘못된 ID 또는 리소스 없음  
+**해결**:
+1. **먼저 목록 조회**: `GET /api/notifications` 실행
+2. **실제 ID 복사**: 응답에서 ID 복사 (예: `clxx123...`)
+3. **URL 수정**: `:notificationId`를 실제 ID로 교체
+4. **재시도**
+
+**잘못된 예:**
+```
+/api/notifications/알림ID/read  ❌
+/api/notifications/:notificationId/read  ❌
+```
+
+**올바른 예:**
+```
+/api/notifications/clxx12345abcde/read  ✅
+```
+
+### 4. 404 Not Found (일반)
 **원인**: 잘못된 ID 또는 리소스 없음  
 **해결**:
 - `{{studyId}}` 등 변수 값 확인
 - Seed 데이터 재실행 (`npm run db:seed`)
+- Prisma Studio로 실제 데이터 확인 (`npm run db:studio`)
 
-### 4. 세션 쿠키 없음
+### 5. 세션 쿠키 없음
 **원인**: 로그아웃 또는 세션 만료  
 **해결**: 다시 로그인
 
-### 5. 변수가 undefined
+### 6. 변수가 undefined
 **원인**: 자동 저장 스크립트 미실행  
 **해결**: 
 - Tests 탭 확인

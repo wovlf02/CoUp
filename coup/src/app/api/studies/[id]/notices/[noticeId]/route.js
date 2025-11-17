@@ -4,7 +4,7 @@ import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(request, { params }) {
-  const { id: studyId, noticeId } = params
+  const { id: studyId, noticeId } = await params
 
   const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result
@@ -51,7 +51,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
-  const { id: studyId, noticeId } = params
+  const { id: studyId, noticeId } = await params
 
   const result = await requireStudyMember(studyId, 'ADMIN')
   if (result instanceof NextResponse) return result
@@ -108,7 +108,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const { id: studyId, noticeId } = params
+  const { id: studyId, noticeId } = await params
 
   const result = await requireStudyMember(studyId, 'ADMIN')
   if (result instanceof NextResponse) return result

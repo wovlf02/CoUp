@@ -8,7 +8,7 @@ export async function PATCH(request, { params }) {
   if (session instanceof NextResponse) return session
 
   try {
-    const { id } = params
+    const { id } = await params
 
     const task = await prisma.task.findUnique({
       where: { id }
