@@ -305,7 +305,7 @@ export default function MyStudyNoticesPage({ params }) {
                   </div>
                 </div>
               ))
-            }
+            )}
           </div>
         </div>
 
