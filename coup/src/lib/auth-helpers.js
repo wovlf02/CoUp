@@ -1,7 +1,7 @@
 // src/lib/auth-helpers.js
 import { NextResponse } from "next/server"
 import { prisma } from "./prisma"
-import { verifyJWT } from "./jwt"
+import { verifyAccessToken } from "./jwt"
 import { cookies } from "next/headers"
 
 /**
@@ -11,13 +11,13 @@ import { cookies } from "next/headers"
 export async function getSession() {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get('auth-token')?.value
+    const token = cookieStore.get('access-token')?.value
 
     if (!token) {
       return null
     }
 
-    const decoded = verifyJWT(token)
+    const decoded = verifyAccessToken(token)
     if (!decoded) {
       return null
     }
@@ -53,7 +53,7 @@ export async function getSession() {
 export async function requireAuth() {
   // JWT 토큰 확인 (Next.js 15: cookies()는 Promise)
   const cookieStore = await cookies()
-  const token = cookieStore.get('auth-token')?.value
+  const token = cookieStore.get('access-token')?.value
 
   if (!token) {
     return NextResponse.json(
@@ -62,7 +62,7 @@ export async function requireAuth() {
     )
   }
 
-  const decoded = verifyJWT(token)
+  const decoded = verifyAccessToken(token)
   if (!decoded) {
     return NextResponse.json(
       { error: "유효하지 않은 토큰입니다" },

@@ -1,18 +1,8 @@
 // middleware.js
 import { NextResponse } from "next/server"
-import jwt from 'jsonwebtoken'
+import { verifyAccessToken } from "./src/lib/jwt"
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key'
-
-function verifyJWT(token) {
-  try {
-    return jwt.verify(token, JWT_SECRET)
-  } catch (error) {
-    return null
-  }
-}
-
-export function middleware(req) {
+export async function middleware(req) {
   const { pathname } = req.nextUrl
 
   // 공개 경로는 항상 허용
@@ -28,23 +18,93 @@ export function middleware(req) {
     return NextResponse.next()
   }
 
-  // API 경로는 제외 (각 API에서 처리)
+  // API 경로 중 인증 관련은 제외
+  if (pathname.startsWith('/api/auth/')) {
+    return NextResponse.next()
+  }
+
+  // 다른 API 경로도 제외 (각 API에서 처리)
   if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
-  // JWT 토큰 검증
-  const token = req.cookies.get('auth-token')?.value
+  // Access Token 검증
+  const accessToken = req.cookies.get('access-token')?.value
+  const refreshToken = req.cookies.get('refresh-token')?.value
 
-  if (!token) {
+  if (!accessToken) {
+    // Access Token이 없으면 로그인 페이지로
+    if (!refreshToken) {
+      return NextResponse.redirect(new URL('/sign-in', req.url))
+    }
+
+    // Refresh Token이 있으면 자동 갱신 시도
+    try {
+      const refreshResponse = await fetch(new URL('/api/auth/refresh', req.url), {
+        method: 'POST',
+        headers: {
+          'Cookie': `refresh-token=${refreshToken}`
+        }
+      })
+
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        const response = NextResponse.next()
+
+        // 새로운 Access Token을 쿠키에 설정
+        response.cookies.set('access-token', data.accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 15 * 60,
+          path: '/'
+        })
+
+        return response
+      }
+    } catch (error) {
+      console.error('Auto refresh failed:', error)
+    }
+
+    // 자동 갱신 실패 시 로그인 페이지로
     return NextResponse.redirect(new URL('/sign-in', req.url))
   }
 
-  const decoded = verifyJWT(token)
+  const decoded = verifyAccessToken(accessToken)
   if (!decoded) {
-    // 토큰이 유효하지 않으면 쿠키 삭제 후 로그인 페이지로
+    // Access Token이 만료되었고 Refresh Token이 있으면 갱신 시도
+    if (refreshToken) {
+      try {
+        const refreshResponse = await fetch(new URL('/api/auth/refresh', req.url), {
+          method: 'POST',
+          headers: {
+            'Cookie': `refresh-token=${refreshToken}`
+          }
+        })
+
+        if (refreshResponse.ok) {
+          const data = await refreshResponse.json()
+          const response = NextResponse.next()
+
+          response.cookies.set('access-token', data.accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60,
+            path: '/'
+          })
+
+          return response
+        }
+      } catch (error) {
+        console.error('Auto refresh failed:', error)
+      }
+    }
+
+    // 갱신 실패 시 토큰 삭제 후 로그인 페이지로
     const response = NextResponse.redirect(new URL('/sign-in', req.url))
-    response.cookies.delete('auth-token')
+    response.cookies.delete('access-token')
+    response.cookies.delete('refresh-token')
     return response
   }
 

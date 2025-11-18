@@ -1,7 +1,8 @@
 // src/app/api/auth/signup/route.js
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { signJWT } from "@/lib/jwt"
+import { signAccessToken, generateRefreshToken } from "@/lib/jwt"
+import { saveRefreshToken } from "@/lib/redis"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
@@ -55,12 +56,16 @@ export async function POST(request) {
       }
     })
 
-    // JWT 토큰 생성 (자동 로그인)
-    const token = signJWT({
+    // Access Token 생성 (15분)
+    const accessToken = signAccessToken({
       userId: user.id,
       email: user.email,
       role: user.role
     })
+
+    // Refresh Token 생성 및 Redis에 저장 (7일)
+    const refreshToken = generateRefreshToken()
+    await saveRefreshToken(user.id, refreshToken, 7 * 24 * 60 * 60) // 7일
 
     // 응답 생성
     const response = NextResponse.json(
@@ -68,17 +73,25 @@ export async function POST(request) {
         success: true,
         message: "회원가입이 완료되었습니다",
         user,
-        token
+        accessToken
       },
       { status: 201 }
     )
 
     // 쿠키에 토큰 설정 (자동 로그인)
-    response.cookies.set('auth-token', token, {
+    response.cookies.set('access-token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7일
+      maxAge: 15 * 60, // 15분
+      path: '/'
+    })
+
+    response.cookies.set('refresh-token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60, // 7일
       path: '/'
     })
 

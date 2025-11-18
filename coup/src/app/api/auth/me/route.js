@@ -1,12 +1,12 @@
 // src/app/api/auth/me/route.js
 import { NextResponse } from "next/server"
-import { verifyJWT } from "@/lib/jwt"
+import { verifyAccessToken } from "@/lib/jwt"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(request) {
   try {
     // 쿠키에서 토큰 가져오기
-    const token = request.cookies.get('auth-token')?.value
+    const token = request.cookies.get('access-token')?.value
 
     if (!token) {
       return NextResponse.json(
@@ -16,7 +16,7 @@ export async function GET(request) {
     }
 
     // JWT 검증
-    const decoded = verifyJWT(token)
+    const decoded = verifyAccessToken(token)
     if (!decoded) {
       return NextResponse.json(
         { error: "유효하지 않은 토큰입니다" },
