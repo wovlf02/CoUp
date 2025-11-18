@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs')
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Starting comprehensive seed...')
+  console.log('🌱 Starting MASSIVE comprehensive seed...')
 
   // 기존 데이터 삭제 (개발용)
   await prisma.notification.deleteMany()
@@ -17,6 +17,7 @@ async function main() {
   await prisma.studyMember.deleteMany()
   await prisma.study.deleteMany()
   await prisma.report.deleteMany()
+  await prisma.setting.deleteMany()
   await prisma.user.deleteMany()
 
   console.log('✅ Cleaned existing data')
@@ -25,127 +26,78 @@ async function main() {
   const hashedPassword = await bcrypt.hash('password123', 10)
 
   // ============================================
-  // 사용자 생성 (10명)
+  // 사용자 생성 (50명으로 확장!)
   // ============================================
   const users = []
   
-  const user1 = await prisma.user.create({
-    data: {
-      email: 'kim@example.com',
-      password: hashedPassword,
-      name: '김민준',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kim',
-      bio: '백엔드 개발자입니다. 알고리즘과 클린 코드에 관심이 많습니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user1)
+  const userNames = [
+    { name: '김민준', email: 'kim@example.com', bio: '백엔드 개발자입니다. 알고리즘과 클린 코드에 관심이 많습니다.', seed: 'kim' },
+    { name: '이서연', email: 'lee@example.com', bio: '프론트엔드 개발자입니다. React와 TypeScript를 좋아합니다.', seed: 'lee' },
+    { name: '박준혁', email: 'park@example.com', bio: '풀스택 개발자 지망생입니다.', seed: 'park' },
+    { name: '최지우', email: 'choi@example.com', bio: '취업 준비 중입니다. 함께 성장해요!', seed: 'choi' },
+    { name: '정수아', email: 'jung@example.com', bio: '디자이너에서 개발자로 전향 중입니다.', seed: 'jung' },
+    { name: '강태양', email: 'kang@example.com', bio: '데이터 분석가입니다.', seed: 'kang' },
+    { name: '한유진', email: 'han@example.com', bio: 'AI/ML에 관심이 많습니다.', seed: 'han' },
+    { name: '윤서준', email: 'yoon@example.com', bio: '게임 개발자 지망생입니다.', seed: 'yoon' },
+    { name: '임하은', email: 'lim@example.com', bio: '모바일 앱 개발자입니다.', seed: 'lim' },
+    { name: '장민호', email: 'jang@example.com', bio: 'DevOps 엔지니어를 꿈꿉니다.', seed: 'jang' },
+    { name: '오세영', email: 'oh@example.com', bio: '블록체인 개발에 관심있습니다.', seed: 'oh' },
+    { name: '신다은', email: 'shin@example.com', bio: 'UI/UX 디자이너입니다.', seed: 'shin' },
+    { name: '조현우', email: 'jo@example.com', bio: '보안 전문가가 되고 싶습니다.', seed: 'jo' },
+    { name: '배수빈', email: 'bae@example.com', bio: '클라우드 아키텍트 준비중', seed: 'bae' },
+    { name: '송지민', email: 'song@example.com', bio: '데이터 사이언티스트입니다.', seed: 'song' },
+    { name: '홍길동', email: 'hong@example.com', bio: '자바 백엔드 개발자', seed: 'hong' },
+    { name: '권나영', email: 'kwon@example.com', bio: 'Vue.js 전문가', seed: 'kwon' },
+    { name: '문재인', email: 'moon@example.com', bio: 'Angular 개발자', seed: 'moon' },
+    { name: '안철수', email: 'ahn@example.com', bio: 'Spring Boot 마스터', seed: 'ahn' },
+    { name: '김유신', email: 'kimy@example.com', bio: 'Node.js 백엔드', seed: 'kimy' },
+    { name: '이순신', email: 'leey@example.com', bio: 'Go 언어 개발자', seed: 'leey' },
+    { name: '세종대왕', email: 'sejong@example.com', bio: 'Python Django 전문', seed: 'sejong' },
+    { name: '신사임당', email: 'shins@example.com', bio: 'iOS 개발자', seed: 'shins' },
+    { name: '유관순', email: 'yu@example.com', bio: 'Android 개발자', seed: 'yu' },
+    { name: '안중근', email: 'ahnjg@example.com', bio: 'Flutter 개발자', seed: 'ahnjg' },
+    { name: '김구', email: 'kimk@example.com', bio: 'React Native 전문', seed: 'kimk' },
+    { name: '윤봉길', email: 'yoonbg@example.com', bio: '머신러닝 엔지니어', seed: 'yoonbg' },
+    { name: '이봉창', email: 'leebc@example.com', bio: '딥러닝 연구자', seed: 'leebc' },
+    { name: '장보고', email: 'jangjb@example.com', bio: '빅데이터 분석가', seed: 'jangjb' },
+    { name: '김홍도', email: 'kimhd@example.com', bio: '그래픽 프로그래머', seed: 'kimhd' },
+    { name: '신윤복', email: 'shinyb@example.com', bio: '게임 개발자', seed: 'shinyb' },
+    { name: '허난설헌', email: 'heo@example.com', bio: '웹 퍼블리셔', seed: 'heo' },
+    { name: '황진이', email: 'hwang@example.com', bio: 'SEO 전문가', seed: 'hwang' },
+    { name: '이황', email: 'leeh@example.com', bio: '소프트웨어 아키텍트', seed: 'leeh' },
+    { name: '이이', email: 'leei@example.com', bio: '시스템 분석가', seed: 'leei' },
+    { name: '정약용', email: 'jeong@example.com', bio: '프로젝트 매니저', seed: 'jeong' },
+    { name: '박지원', email: 'parkjw@example.com', bio: '기술 블로거', seed: 'parkjw' },
+    { name: '김정호', email: 'kimjh@example.com', bio: 'GIS 개발자', seed: 'kimjh' },
+    { name: '전봉준', email: 'jeon@example.com', bio: '블록체인 개발자', seed: 'jeon' },
+    { name: '김좌진', email: 'kimjj@example.com', bio: 'IoT 개발자', seed: 'kimjj' },
+    { name: '안창호', email: 'ahnch@example.com', bio: '임베디드 개발자', seed: 'ahnch' },
+    { name: '방정환', email: 'bang@example.com', bio: '교육용 앱 개발자', seed: 'bang' },
+    { name: '유일한', email: 'yuil@example.com', bio: '핀테크 개발자', seed: 'yuil' },
+    { name: '김대건', email: 'kimdg@example.com', bio: 'e커머스 개발자', seed: 'kimdg' },
+    { name: '최제우', email: 'choijw@example.com', bio: '헬스케어 앱 개발', seed: 'choijw' },
+    { name: '강감찬', email: 'kanggc@example.com', bio: '보안 개발자', seed: 'kanggc' },
+    { name: '을지문덕', email: 'eulji@example.com', bio: '네트워크 엔지니어', seed: 'eulji' },
+    { name: '연개소문', email: 'yeon@example.com', bio: '시스템 관리자', seed: 'yeon' },
+    { name: '대조영', email: 'dae@example.com', bio: '클라우드 엔지니어', seed: 'dae' },
+  ]
 
-  const user2 = await prisma.user.create({
-    data: {
-      email: 'lee@example.com',
-      password: hashedPassword,
-      name: '이서연',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lee',
-      bio: '프론트엔드 개발자입니다. React와 TypeScript를 좋아합니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user2)
+  for (const userData of userNames) {
+    const user = await prisma.user.create({
+      data: {
+        email: userData.email,
+        password: hashedPassword,
+        name: userData.name,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.seed}`,
+        bio: userData.bio,
+        role: 'USER',
+        status: 'ACTIVE',
+      },
+    })
+    users.push(user)
+  }
 
-  const user3 = await prisma.user.create({
-    data: {
-      email: 'park@example.com',
-      password: hashedPassword,
-      name: '박준혁',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=park',
-      bio: '풀스택 개발자 지망생입니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user3)
-
-  const user4 = await prisma.user.create({
-    data: {
-      email: 'choi@example.com',
-      password: hashedPassword,
-      name: '최지우',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=choi',
-      bio: '취업 준비 중입니다. 함께 성장해요!',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user4)
-
-  const user5 = await prisma.user.create({
-    data: {
-      email: 'jung@example.com',
-      password: hashedPassword,
-      name: '정수아',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jung',
-      bio: '디자이너에서 개발자로 전향 중입니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user5)
-
-  const user6 = await prisma.user.create({
-    data: {
-      email: 'kang@example.com',
-      password: hashedPassword,
-      name: '강태양',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kang',
-      bio: '데이터 분석가입니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user6)
-
-  const user7 = await prisma.user.create({
-    data: {
-      email: 'han@example.com',
-      password: hashedPassword,
-      name: '한유진',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=han',
-      bio: 'AI/ML에 관심이 많습니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user7)
-
-  const user8 = await prisma.user.create({
-    data: {
-      email: 'yoon@example.com',
-      password: hashedPassword,
-      name: '윤서준',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=yoon',
-      bio: '게임 개발자 지망생입니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user8)
-
-  const user9 = await prisma.user.create({
-    data: {
-      email: 'lim@example.com',
-      password: hashedPassword,
-      name: '임하은',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lim',
-      bio: '모바일 앱 개발자입니다.',
-      role: 'USER',
-      status: 'ACTIVE',
-    },
-  })
-  users.push(user9)
-
+  // 관리자 추가
   const admin = await prisma.user.create({
     data: {
       email: 'admin@example.com',
@@ -161,435 +113,361 @@ async function main() {
   console.log(`✅ Users created: ${users.length + 1} users`)
 
   // ============================================
-  // 스터디 생성 (8개 - 다양한 카테고리)
+  // 스터디 생성 (30개로 확장!)
   // ============================================
   const studies = []
 
-  const study1 = await prisma.study.create({
-    data: {
-      ownerId: user1.id,
-      name: '알고리즘 마스터 스터디',
-      emoji: '💻',
-      description: '매일 알고리즘 문제를 풀고 서로의 풀이를 공유하며 성장하는 스터디입니다. 백준, 프로그래머스 문제를 중심으로 진행합니다.',
-      category: '프로그래밍',
-      subCategory: '알고리즘/코테',
-      maxMembers: 20,
-      isPublic: true,
-      autoApprove: false,
-      isRecruiting: true,
-      rating: 4.8,
-      reviewCount: 15,
-      tags: ['알고리즘', '코딩테스트', '매일', '백준', '프로그래머스'],
-    },
-  })
-  studies.push(study1)
+  const studyData = [
+    { name: '알고리즘 마스터 스터디', emoji: '💻', description: '매일 알고리즘 문제를 풀고 서로의 풀이를 공유하며 성장하는 스터디입니다.', category: '프로그래밍', subCategory: '알고리즘/코테', maxMembers: 20, autoApprove: false, rating: 4.8, reviewCount: 25, tags: ['알고리즘', '코딩테스트', '매일', '백준'] },
+    { name: '취업 준비 스터디', emoji: '💼', description: '함께 이력서와 면접을 준비하는 스터디입니다.', category: '취업', subCategory: '면접준비', maxMembers: 15, autoApprove: true, rating: 4.5, reviewCount: 18, tags: ['취업', '면접', '자소서'] },
+    { name: 'React 심화 스터디', emoji: '⚛️', description: 'React 고급 패턴과 최신 기술을 학습합니다.', category: '프로그래밍', subCategory: '프론트엔드', maxMembers: 12, autoApprove: false, rating: 4.9, reviewCount: 30, tags: ['React', 'Next.js', 'TypeScript'] },
+    { name: '토익 900점 달성', emoji: '📚', description: '3개월 안에 토익 900점을 목표로 합니다.', category: '어학', subCategory: '영어', maxMembers: 20, autoApprove: true, rating: 4.6, reviewCount: 22, tags: ['토익', '영어', '매일학습'] },
+    { name: 'CS 기초 다지기', emoji: '🖥️', description: '컴퓨터 공학 기초를 탄탄하게!', category: '프로그래밍', subCategory: 'CS', maxMembers: 15, autoApprove: false, rating: 4.7, reviewCount: 20, tags: ['CS', '운영체제', '네트워크'] },
+    { name: '독서 모임 - 개발자의 글쓰기', emoji: '📖', description: '개발 관련 책을 읽고 토론하는 모임입니다.', category: '독서', subCategory: '개발서적', maxMembers: 10, autoApprove: true, rating: 4.4, reviewCount: 15, tags: ['독서', '개발서적'] },
+    { name: '머신러닝 스터디', emoji: '🤖', description: '머신러닝 기초부터 실전 프로젝트까지!', category: '프로그래밍', subCategory: 'AI/ML', maxMembers: 12, autoApprove: false, rating: 4.8, reviewCount: 28, tags: ['머신러닝', 'AI', 'Python'] },
+    { name: '아침 운동 모임', emoji: '🏃', description: '아침 6시, 함께 운동해요!', category: '취미', subCategory: '운동', maxMembers: 8, autoApprove: true, rating: 4.3, reviewCount: 12, tags: ['운동', '아침'] },
+    { name: 'Vue.js 마스터하기', emoji: '🟢', description: 'Vue 3 완전 정복 스터디', category: '프로그래밍', subCategory: '프론트엔드', maxMembers: 15, autoApprove: false, rating: 4.6, reviewCount: 19, tags: ['Vue', 'Vuex', 'Nuxt'] },
+    { name: 'Spring Boot 실전', emoji: '🍃', description: 'Spring Boot로 실무 프로젝트', category: '프로그래밍', subCategory: '백엔드', maxMembers: 18, autoApprove: true, rating: 4.7, reviewCount: 24, tags: ['Spring', 'Java', 'JPA'] },
+    { name: 'AWS 자격증 준비', emoji: '☁️', description: 'AWS Solutions Architect 취득', category: '자격증', subCategory: '클라우드', maxMembers: 12, autoApprove: false, rating: 4.5, reviewCount: 16, tags: ['AWS', '자격증', '클라우드'] },
+    { name: '파이썬 데이터 분석', emoji: '🐍', description: 'Pandas, NumPy 완전정복', category: '프로그래밍', subCategory: '데이터분석', maxMembers: 16, autoApprove: true, rating: 4.6, reviewCount: 21, tags: ['Python', 'Pandas', '데이터분석'] },
+    { name: '디자인 패턴 스터디', emoji: '🎨', description: 'GoF 디자인 패턴 학습', category: '프로그래밍', subCategory: '디자인패턴', maxMembers: 10, autoApprove: false, rating: 4.8, reviewCount: 17, tags: ['디자인패턴', '객체지향', 'GoF'] },
+    { name: 'SQL 튜닝 마스터', emoji: '🗄️', description: '데이터베이스 성능 최적화', category: '프로그래밍', subCategory: '데이터베이스', maxMembers: 12, autoApprove: true, rating: 4.7, reviewCount: 19, tags: ['SQL', 'MySQL', '튜닝'] },
+    { name: 'iOS 앱 개발', emoji: '📱', description: 'Swift로 앱 만들기', category: '프로그래밍', subCategory: '모바일', maxMembers: 14, autoApprove: false, rating: 4.5, reviewCount: 14, tags: ['iOS', 'Swift', 'SwiftUI'] },
+    { name: 'Android Kotlin', emoji: '🤖', description: 'Kotlin으로 안드로이드 개발', category: '프로그래밍', subCategory: '모바일', maxMembers: 14, autoApprove: true, rating: 4.6, reviewCount: 18, tags: ['Android', 'Kotlin', 'Jetpack'] },
+    { name: 'Docker & Kubernetes', emoji: '🐳', description: '컨테이너 오케스트레이션 학습', category: '프로그래밍', subCategory: 'DevOps', maxMembers: 15, autoApprove: false, rating: 4.8, reviewCount: 22, tags: ['Docker', 'Kubernetes', 'DevOps'] },
+    { name: '블록체인 개발', emoji: '⛓️', description: 'Solidity와 스마트 컨트랙트', category: '프로그래밍', subCategory: '블록체인', maxMembers: 10, autoApprove: true, rating: 4.4, reviewCount: 13, tags: ['블록체인', 'Solidity', 'Web3'] },
+    { name: 'Unity 게임 개발', emoji: '🎮', description: 'Unity로 3D 게임 만들기', category: '프로그래밍', subCategory: '게임개발', maxMembers: 12, autoApprove: false, rating: 4.7, reviewCount: 20, tags: ['Unity', 'C#', '게임'] },
+    { name: 'GraphQL 실전', emoji: '🔺', description: 'GraphQL API 구축', category: '프로그래밍', subCategory: '백엔드', maxMembers: 10, autoApprove: true, rating: 4.5, reviewCount: 11, tags: ['GraphQL', 'Apollo', 'API'] },
+    { name: '정보처리기사 준비', emoji: '📝', description: '정보처리기사 자격증 취득', category: '자격증', subCategory: 'IT', maxMembers: 25, autoApprove: true, rating: 4.4, reviewCount: 35, tags: ['정보처리기사', '자격증', '필기'] },
+    { name: 'TOEIC Speaking', emoji: '🗣️', description: '토익 스피킹 Level 7 목표', category: '어학', subCategory: '영어', maxMembers: 15, autoApprove: false, rating: 4.6, reviewCount: 16, tags: ['토익스피킹', '영어회화'] },
+    { name: 'JLPT N2 합격', emoji: '🇯🇵', description: '일본어능력시험 N2 대비', category: '어학', subCategory: '일본어', maxMembers: 18, autoApprove: true, rating: 4.5, reviewCount: 19, tags: ['JLPT', '일본어', 'N2'] },
+    { name: '중국어 HSK 6급', emoji: '🇨🇳', description: 'HSK 6급 합격반', category: '어학', subCategory: '중국어', maxMembers: 12, autoApprove: false, rating: 4.3, reviewCount: 10, tags: ['HSK', '중국어', '6급'] },
+    { name: '사진 촬영 모임', emoji: '📷', description: '주말 출사 모임', category: '취미', subCategory: '사진', maxMembers: 10, autoApprove: true, rating: 4.7, reviewCount: 14, tags: ['사진', '촬영', '출사'] },
+    { name: '기타 연주 동호회', emoji: '🎸', description: '어쿠스틱 기타 연습', category: '취미', subCategory: '음악', maxMembers: 8, autoApprove: false, rating: 4.6, reviewCount: 12, tags: ['기타', '음악', '연주'] },
+    { name: '등산 모임', emoji: '⛰️', description: '주말 산행 모임', category: '취미', subCategory: '야외활동', maxMembers: 15, autoApprove: true, rating: 4.5, reviewCount: 18, tags: ['등산', '산행', '아웃도어'] },
+    { name: '요리 클래스', emoji: '👨‍🍳', description: '집밥 요리 배우기', category: '취미', subCategory: '요리', maxMembers: 12, autoApprove: false, rating: 4.8, reviewCount: 20, tags: ['요리', '집밥', '레시피'] },
+    { name: '주식 투자 공부', emoji: '📈', description: '가치투자 학습 모임', category: '재테크', subCategory: '주식', maxMembers: 20, autoApprove: true, rating: 4.4, reviewCount: 22, tags: ['주식', '투자', '재테크'] },
+    { name: '부동산 스터디', emoji: '🏠', description: '부동산 투자 기초', category: '재테크', subCategory: '부동산', maxMembers: 15, autoApprove: false, rating: 4.3, reviewCount: 13, tags: ['부동산', '투자', '경매'] },
+  ]
 
-  const study2 = await prisma.study.create({
-    data: {
-      ownerId: user2.id,
-      name: '취업 준비 스터디',
-      emoji: '💼',
-      description: '함께 이력서와 면접을 준비하는 스터디입니다. 매주 모의 면접을 진행합니다.',
-      category: '취업',
-      subCategory: '면접준비',
-      maxMembers: 15,
-      isPublic: true,
-      autoApprove: true,
-      isRecruiting: true,
-      rating: 4.5,
-      reviewCount: 8,
-      tags: ['취업', '면접', '자소서', '이력서'],
-    },
-  })
-  studies.push(study2)
+  for (let i = 0; i < studyData.length; i++) {
+    const data = studyData[i]
+    const ownerIndex = i % users.length
 
-  const study3 = await prisma.study.create({
-    data: {
-      ownerId: user3.id,
-      name: 'React 심화 스터디',
-      emoji: '⚛️',
-      description: 'React 고급 패턴과 최신 기술을 학습합니다. Next.js, TypeScript도 다룹니다.',
-      category: '프로그래밍',
-      subCategory: '프론트엔드',
-      maxMembers: 12,
-      isPublic: true,
-      autoApprove: false,
-      isRecruiting: true,
-      rating: 4.9,
-      reviewCount: 20,
-      tags: ['React', 'Next.js', 'TypeScript', '프론트엔드'],
-    },
-  })
-  studies.push(study3)
-
-  const study4 = await prisma.study.create({
-    data: {
-      ownerId: user4.id,
-      name: '토익 900점 달성',
-      emoji: '📚',
-      description: '3개월 안에 토익 900점을 목표로 합니다. 매일 학습 인증!',
-      category: '어학',
-      subCategory: '영어',
-      maxMembers: 20,
-      isPublic: true,
-      autoApprove: true,
-      isRecruiting: true,
-      rating: 4.6,
-      reviewCount: 12,
-      tags: ['토익', '영어', '매일학습', '인증'],
-    },
-  })
-  studies.push(study4)
-
-  const study5 = await prisma.study.create({
-    data: {
-      ownerId: user5.id,
-      name: 'CS 기초 다지기',
-      emoji: '🖥️',
-      description: '컴퓨터 공학 기초를 탄탄하게! 운영체제, 네트워크, 데이터베이스를 학습합니다.',
-      category: '프로그래밍',
-      subCategory: 'CS',
-      maxMembers: 15,
-      isPublic: true,
-      autoApprove: false,
-      isRecruiting: true,
-      rating: 4.7,
-      reviewCount: 10,
-      tags: ['CS', '운영체제', '네트워크', '데이터베이스'],
-    },
-  })
-  studies.push(study5)
-
-  const study6 = await prisma.study.create({
-    data: {
-      ownerId: user6.id,
-      name: '독서 모임 - 개발자의 글쓰기',
-      emoji: '📖',
-      description: '개발 관련 책을 읽고 토론하는 모임입니다.',
-      category: '독서',
-      subCategory: '개발서적',
-      maxMembers: 10,
-      isPublic: true,
-      autoApprove: true,
-      isRecruiting: true,
-      rating: 4.4,
-      reviewCount: 6,
-      tags: ['독서', '개발서적', '토론'],
-    },
-  })
-  studies.push(study6)
-
-  const study7 = await prisma.study.create({
-    data: {
-      ownerId: user7.id,
-      name: '머신러닝 스터디',
-      emoji: '🤖',
-      description: '머신러닝 기초부터 실전 프로젝트까지!',
-      category: '프로그래밍',
-      subCategory: 'AI/ML',
-      maxMembers: 12,
-      isPublic: true,
-      autoApprove: false,
-      isRecruiting: true,
-      rating: 4.8,
-      reviewCount: 14,
-      tags: ['머신러닝', 'AI', 'Python', '프로젝트'],
-    },
-  })
-  studies.push(study7)
-
-  const study8 = await prisma.study.create({
-    data: {
-      ownerId: user8.id,
-      name: '아침 운동 모임',
-      emoji: '🏃',
-      description: '아침 6시, 함께 운동해요!',
-      category: '취미',
-      subCategory: '운동',
-      maxMembers: 8,
-      isPublic: true,
-      autoApprove: true,
-      isRecruiting: true,
-      rating: 4.3,
-      reviewCount: 5,
-      tags: ['운동', '아침', '건강'],
-    },
-  })
-  studies.push(study8)
+    const study = await prisma.study.create({
+      data: {
+        ownerId: users[ownerIndex].id,
+        name: data.name,
+        emoji: data.emoji,
+        description: data.description,
+        category: data.category,
+        subCategory: data.subCategory,
+        maxMembers: data.maxMembers,
+        isPublic: true,
+        autoApprove: data.autoApprove,
+        isRecruiting: i < 25, // 처음 25개만 모집중
+        rating: data.rating,
+        reviewCount: data.reviewCount,
+        tags: data.tags,
+      },
+    })
+    studies.push(study)
+  }
 
   console.log(`✅ Studies created: ${studies.length} studies`)
 
   // ============================================
-  // 스터디 멤버 생성 (user1이 여러 스터디 참여)
+  // 스터디 멤버 생성 (200명 이상!)
   // ============================================
-  const memberData = [
-    // Study 1 - 알고리즘 (4명)
-    { studyId: study1.id, userId: user1.id, role: 'OWNER', status: 'ACTIVE', introduction: '스터디장입니다!', level: '상급' },
-    { studyId: study1.id, userId: user2.id, role: 'ADMIN', status: 'ACTIVE', introduction: '열심히 하겠습니다!', level: '중급' },
-    { studyId: study1.id, userId: user3.id, role: 'MEMBER', status: 'ACTIVE', introduction: '잘 부탁드립니다', level: '초급' },
-    { studyId: study1.id, userId: user4.id, role: 'MEMBER', status: 'ACTIVE', introduction: '화이팅!', level: '중급' },
-    
-    // Study 2 - 취업 (5명, user1 포함)
-    { studyId: study2.id, userId: user2.id, role: 'OWNER', status: 'ACTIVE', introduction: '취준 스터디장', level: '중급' },
-    { studyId: study2.id, userId: user1.id, role: 'MEMBER', status: 'ACTIVE', introduction: '이직 준비 중', level: '중급' },
-    { studyId: study2.id, userId: user4.id, role: 'MEMBER', status: 'ACTIVE', introduction: '첫 취업 준비', level: '초급' },
-    { studyId: study2.id, userId: user5.id, role: 'MEMBER', status: 'ACTIVE', introduction: '전직 준비', level: '초급' },
-    { studyId: study2.id, userId: user6.id, role: 'MEMBER', status: 'PENDING', introduction: '가입 신청합니다', level: '초급' },
-    
-    // Study 3 - React (user1 포함)
-    { studyId: study3.id, userId: user3.id, role: 'OWNER', status: 'ACTIVE', introduction: 'React 전문가', level: '상급' },
-    { studyId: study3.id, userId: user1.id, role: 'MEMBER', status: 'ACTIVE', introduction: 'React 배우고 싶습니다', level: '중급' },
-    { studyId: study3.id, userId: user2.id, role: 'MEMBER', status: 'ACTIVE', introduction: 'Next.js 마스터하기', level: '중급' },
-    
-    // Study 4 - 토익 (user1 포함)
-    { studyId: study4.id, userId: user4.id, role: 'OWNER', status: 'ACTIVE', introduction: '함께 목표 달성!', level: '중급' },
-    { studyId: study4.id, userId: user1.id, role: 'MEMBER', status: 'ACTIVE', introduction: '영어 공부 시작', level: '초급' },
-    { studyId: study4.id, userId: user5.id, role: 'MEMBER', status: 'ACTIVE', introduction: '900점 가자!', level: '중급' },
-    
-    // Study 5 - CS (user1 포함)
-    { studyId: study5.id, userId: user5.id, role: 'OWNER', status: 'ACTIVE', introduction: 'CS 기초 정리', level: '중급' },
-    { studyId: study5.id, userId: user1.id, role: 'ADMIN', status: 'ACTIVE', introduction: 'CS 함께 공부해요', level: '중급' },
-    { studyId: study5.id, userId: user7.id, role: 'MEMBER', status: 'ACTIVE', introduction: '기초부터 차근차근', level: '초급' },
-    
-    // Study 6 - 독서 (user1 포함)
-    { studyId: study6.id, userId: user6.id, role: 'OWNER', status: 'ACTIVE', introduction: '독서 모임장', level: '상급' },
-    { studyId: study6.id, userId: user1.id, role: 'MEMBER', status: 'ACTIVE', introduction: '책 좋아합니다', level: '중급' },
-    
-    // Study 7 - ML
-    { studyId: study7.id, userId: user7.id, role: 'OWNER', status: 'ACTIVE', introduction: 'ML 연구자', level: '상급' },
-    { studyId: study7.id, userId: user8.id, role: 'MEMBER', status: 'ACTIVE', introduction: 'AI 배우고 싶어요', level: '초급' },
-    
-    // Study 8 - 운동
-    { studyId: study8.id, userId: user8.id, role: 'OWNER', status: 'ACTIVE', introduction: '아침형 인간', level: '중급' },
-    { studyId: study8.id, userId: user9.id, role: 'MEMBER', status: 'ACTIVE', introduction: '건강 챙기기', level: '초급' },
-  ]
+  const memberData = []
+
+  // 각 스터디에 5-15명씩 랜덤 배정
+  for (let i = 0; i < studies.length; i++) {
+    const study = studies[i]
+    const memberCount = Math.floor(Math.random() * 11) + 5 // 5-15명
+    const ownerIndex = i % users.length
+
+    // OWNER 추가
+    memberData.push({
+      studyId: study.id,
+      userId: users[ownerIndex].id,
+      role: 'OWNER',
+      status: 'ACTIVE',
+      introduction: '스터디장입니다!',
+      level: '상급',
+      joinedAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
+      approvedAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
+    })
+
+    // 멤버 추가
+    const usedUserIds = new Set([users[ownerIndex].id])
+    for (let j = 1; j < memberCount; j++) {
+      let userIndex
+      do {
+        userIndex = Math.floor(Math.random() * users.length)
+      } while (usedUserIds.has(users[userIndex].id))
+
+      usedUserIds.add(users[userIndex].id)
+
+      const isPending = Math.random() < 0.1 // 10% 확률로 대기중
+      const isAdmin = !isPending && Math.random() < 0.2 // 20% 확률로 ADMIN
+
+      memberData.push({
+        studyId: study.id,
+        userId: users[userIndex].id,
+        role: isAdmin ? 'ADMIN' : 'MEMBER',
+        status: isPending ? 'PENDING' : 'ACTIVE',
+        introduction: isPending ? '가입 신청합니다!' : '열심히 하겠습니다!',
+        level: ['초급', '중급', '상급'][Math.floor(Math.random() * 3)],
+        joinedAt: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000),
+        approvedAt: isPending ? null : new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000),
+      })
+    }
+  }
 
   for (const data of memberData) {
-    await prisma.studyMember.create({
-      data: {
-        ...data,
-        approvedAt: data.status === 'ACTIVE' ? new Date() : null,
-      }
-    })
+    await prisma.studyMember.create({ data })
   }
 
   console.log(`✅ Study members created: ${memberData.length} memberships`)
 
   // ============================================
-  // 공지사항 생성 (각 스터디마다)
+  // 공지사항 생성 (60개)
   // ============================================
-  const notices = []
-  
-  // Study 1 공지
-  await prisma.notice.create({
-    data: {
-      studyId: study1.id,
-      authorId: user1.id,
-      title: '📢 스터디 규칙 안내',
-      content: `안녕하세요! 스터디 규칙을 안내드립니다.
-
-1. 매일 1문제씩 풀고 코드를 공유해주세요
-2. 주 1회 온라인 모임 참석 필수
-3. 질문은 언제든 환영합니다!
-
-함께 성장하는 스터디가 되었으면 좋겠습니다 😊`,
-      isPinned: true,
-      isImportant: true,
-      views: 25,
-    },
-  })
-
-  await prisma.notice.create({
-    data: {
-      studyId: study1.id,
-      authorId: user1.id,
-      title: '이번 주 학습 내용',
-      content: '이번 주는 동적 프로그래밍(DP) 문제를 집중적으로 풀어봅시다!',
-      isPinned: false,
-      isImportant: false,
-      views: 12,
-    },
-  })
-
-  // Study 2 공지
-  await prisma.notice.create({
-    data: {
-      studyId: study2.id,
-      authorId: user2.id,
-      title: '이번 주 모의 면접 일정',
-      content: '이번 주 토요일 오후 2시에 모의 면접을 진행합니다. 참여해주세요!',
-      isPinned: true,
-      isImportant: true,
-      views: 18,
-    },
-  })
-
-  // Study 3 공지
-  await prisma.notice.create({
-    data: {
-      studyId: study3.id,
-      authorId: user3.id,
-      title: 'Next.js 14 새 기능 소개',
-      content: 'Server Actions와 새로운 캐싱 전략에 대해 알아봅시다.',
-      isPinned: false,
-      isImportant: false,
-      views: 15,
-    },
-  })
-
-  console.log('✅ Notices created')
-
-  // ============================================
-  // 할일 생성 (user1의 할일 - 15개)
-  // ============================================
-  const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const nextWeek = new Date(today)
-  nextWeek.setDate(nextWeek.getDate() + 7)
-
-  const tasks = [
-    // 미완료 할일 (10개)
-    { studyId: study1.id, userId: user1.id, title: '백준 1234번 풀이', description: 'DP 문제', status: 'TODO', priority: 'HIGH', dueDate: tomorrow, completed: false },
-    { studyId: study1.id, userId: user1.id, title: '프로그래머스 Level 2', description: '3개 문제 풀기', status: 'IN_PROGRESS', priority: 'MEDIUM', dueDate: nextWeek, completed: false },
-    { studyId: study2.id, userId: user1.id, title: '이력서 수정', description: '프로젝트 경험 추가', status: 'TODO', priority: 'HIGH', dueDate: tomorrow, completed: false },
-    { studyId: study2.id, userId: user1.id, title: '자기소개서 작성', description: '기업 지원용', status: 'IN_PROGRESS', priority: 'URGENT', dueDate: today, completed: false },
-    { studyId: study3.id, userId: user1.id, title: 'React 프로젝트 리팩토링', description: 'Hooks 최적화', status: 'TODO', priority: 'MEDIUM', dueDate: nextWeek, completed: false },
-    { studyId: study4.id, userId: user1.id, title: '토익 RC 100문제', description: '오늘 학습량', status: 'TODO', priority: 'HIGH', dueDate: today, completed: false },
-    { studyId: study5.id, userId: user1.id, title: '운영체제 복습', description: '프로세스와 스레드', status: 'TODO', priority: 'MEDIUM', dueDate: nextWeek, completed: false },
-    { studyId: null, userId: user1.id, title: '개인 블로그 포스팅', description: '이번 주 학습 내용 정리', status: 'TODO', priority: 'LOW', dueDate: nextWeek, completed: false },
-    { studyId: study1.id, userId: user1.id, title: '알고리즘 개념 정리', description: '그래프 알고리즘', status: 'REVIEW', priority: 'MEDIUM', dueDate: nextWeek, completed: false },
-    { studyId: study6.id, userId: user1.id, title: '클린 코드 3장 읽기', description: '함수 챕터', status: 'TODO', priority: 'LOW', dueDate: nextWeek, completed: false },
-    
-    // 완료한 할일 (5개 - 이번 달)
-    { studyId: study1.id, userId: user1.id, title: '백준 5678번 완료', description: 'DFS 문제', status: 'DONE', priority: 'MEDIUM', completed: true, completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
-    { studyId: study2.id, userId: user1.id, title: '포트폴리오 업데이트', description: '최신 프로젝트 추가', status: 'DONE', priority: 'HIGH', completed: true, completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
-    { studyId: study3.id, userId: user1.id, title: 'Next.js 튜토리얼', description: '공식 문서 완주', status: 'DONE', priority: 'MEDIUM', completed: true, completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
-    { studyId: study4.id, userId: user1.id, title: '토익 모의고사', description: '1회 풀이', status: 'DONE', priority: 'HIGH', completed: true, completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
-    { studyId: study5.id, userId: user1.id, title: '네트워크 프로토콜 학습', description: 'TCP/IP', status: 'DONE', priority: 'MEDIUM', completed: true, completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+  const noticeTitles = [
+    '스터디 규칙 안내',
+    '이번 주 학습 내용',
+    '모의 면접 일정',
+    '과제 제출 안내',
+    '다음 주 일정 변경',
+    '중간 점검 공지',
+    '온라인 모임 링크',
+    '스터디 자료 공유',
   ]
+
+  let noticeCount = 0
+  for (let i = 0; i < studies.length; i++) {
+    const study = studies[i]
+    const noticeNum = Math.floor(Math.random() * 3) + 1 // 1-3개
+
+    for (let j = 0; j < noticeNum; j++) {
+      await prisma.notice.create({
+        data: {
+          studyId: study.id,
+          authorId: study.ownerId,
+          title: noticeTitles[Math.floor(Math.random() * noticeTitles.length)],
+          content: `공지사항 내용입니다. 잘 확인해주세요!\n\n중요한 내용이니 꼭 읽어주시기 바랍니다.`,
+          isPinned: j === 0 && Math.random() < 0.3,
+          isImportant: Math.random() < 0.3,
+          views: Math.floor(Math.random() * 50),
+          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+        },
+      })
+      noticeCount++
+    }
+  }
+
+  console.log(`✅ Notices created: ${noticeCount} notices`)
+
+  // ============================================
+  // 할일 생성 (300개)
+  // ============================================
+  const taskTitles = [
+    '알고리즘 문제 풀이',
+    '프로젝트 진행',
+    '자료 조사',
+    '발표 준비',
+    '코드 리뷰',
+    '문서 작성',
+    '테스트 코드 작성',
+    '배포 준비',
+  ]
+
+  const tasks = []
+  for (let i = 0; i < 300; i++) {
+    const userIndex = i % users.length
+    const hasStudy = Math.random() < 0.7
+    const studyIndex = Math.floor(Math.random() * studies.length)
+
+    const daysOffset = Math.floor(Math.random() * 60) - 30 // -30 ~ +30일
+    const dueDate = new Date(Date.now() + daysOffset * 24 * 60 * 60 * 1000)
+    const isCompleted = daysOffset < 0 && Math.random() < 0.6
+
+    tasks.push({
+      studyId: hasStudy ? studies[studyIndex].id : null,
+      userId: users[userIndex].id,
+      title: taskTitles[Math.floor(Math.random() * taskTitles.length)],
+      description: '할일 상세 내용입니다.',
+      status: isCompleted ? 'DONE' : ['TODO', 'IN_PROGRESS', 'REVIEW'][Math.floor(Math.random() * 3)],
+      priority: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'][Math.floor(Math.random() * 4)],
+      dueDate,
+      completed: isCompleted,
+      completedAt: isCompleted ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) : null,
+      createdAt: new Date(Date.now() - Math.random() * 45 * 24 * 60 * 60 * 1000),
+    })
+  }
 
   for (const task of tasks) {
     await prisma.task.create({ data: task })
   }
 
-  console.log(`✅ Tasks created: ${tasks.length} tasks (10 pending, 5 completed)`)
+  console.log(`✅ Tasks created: ${tasks.length} tasks`)
 
   // ============================================
-  // 캘린더 일정 생성 (다가오는 일정)
+  // 캘린더 일정 생성 (100개)
   // ============================================
-  const events = [
-    {
-      studyId: study1.id,
-      createdById: user1.id,
-      title: '주간 알고리즘 스터디',
-      date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 내일
-      startTime: '19:00',
-      endTime: '21:00',
-      location: 'Zoom',
-      color: '#6366F1',
-    },
-    {
-      studyId: study2.id,
-      createdById: user2.id,
-      title: '모의 면접',
-      date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 모레
-      startTime: '14:00',
-      endTime: '16:00',
-      location: 'Google Meet',
-      color: '#10B981',
-    },
-    {
-      studyId: study3.id,
-      createdById: user3.id,
-      title: 'React 프로젝트 리뷰',
-      date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3일 후
-      startTime: '20:00',
-      endTime: '22:00',
-      location: 'Discord',
-      color: '#F59E0B',
-    },
-    {
-      studyId: study4.id,
-      createdById: user4.id,
-      title: '토익 모의고사',
-      date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5일 후
-      startTime: '10:00',
-      endTime: '12:00',
-      location: '스터디룸',
-      color: '#EF4444',
-    },
-    {
-      studyId: study5.id,
-      createdById: user5.id,
-      title: 'CS 스터디 세션',
-      date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1주일 후
-      startTime: '19:30',
-      endTime: '21:30',
-      location: 'Zoom',
-      color: '#8B5CF6',
-    },
+  const eventTitles = [
+    '주간 스터디 모임',
+    '프로젝트 발표',
+    '코드 리뷰',
+    '모의 면접',
+    '팀 미팅',
+    '온라인 세미나',
   ]
+
+  const events = []
+  for (let i = 0; i < 100; i++) {
+    const studyIndex = i % studies.length
+    const study = studies[studyIndex]
+
+    const daysOffset = Math.floor(Math.random() * 90) - 30 // -30 ~ +60일
+    const eventDate = new Date(Date.now() + daysOffset * 24 * 60 * 60 * 1000)
+
+    events.push({
+      studyId: study.id,
+      createdById: study.ownerId,
+      title: eventTitles[Math.floor(Math.random() * eventTitles.length)],
+      date: eventDate,
+      startTime: ['09:00', '10:00', '14:00', '19:00', '20:00'][Math.floor(Math.random() * 5)],
+      endTime: ['11:00', '12:00', '16:00', '21:00', '22:00'][Math.floor(Math.random() * 5)],
+      location: ['Zoom', 'Google Meet', 'Discord', '스터디룸'][Math.floor(Math.random() * 4)],
+      color: ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][Math.floor(Math.random() * 5)],
+    })
+  }
 
   for (const event of events) {
     await prisma.event.create({ data: event })
   }
 
-  console.log(`✅ Events created: ${events.length} upcoming events`)
+  console.log(`✅ Events created: ${events.length} events`)
 
   // ============================================
-  // 알림 생성 (20개 - 다양한 타입)
+  // 알림 생성 (500개)
   // ============================================
-  const notifications = [
-    // 읽지 않은 알림 (10개)
-    { userId: user1.id, type: 'JOIN_APPROVED', studyId: study3.id, studyName: study3.name, studyEmoji: study3.emoji, message: 'React 심화 스터디 가입이 승인되었습니다', isRead: false, createdAt: new Date(Date.now() - 10 * 60 * 1000) },
-    { userId: user1.id, type: 'NOTICE', studyId: study1.id, studyName: study1.name, studyEmoji: study1.emoji, message: '새 공지사항: 이번 주 학습 내용', isRead: false, createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'EVENT', studyId: study1.id, studyName: study1.name, studyEmoji: study1.emoji, message: '내일 주간 알고리즘 스터디가 있습니다', isRead: false, createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'TASK', studyId: study2.id, studyName: study2.name, studyEmoji: study2.emoji, message: '자기소개서 작성 마감일이 오늘입니다', isRead: false, createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'CHAT', studyId: study3.id, studyName: study3.name, studyEmoji: study3.emoji, message: '이서연님이 메시지를 보냈습니다', isRead: false, createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'MEMBER', studyId: study5.id, studyName: study5.name, studyEmoji: study5.emoji, message: '강태양님이 스터디에 가입했습니다', isRead: false, createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'FILE', studyId: study1.id, studyName: study1.name, studyEmoji: study1.emoji, message: '새 파일이 업로드되었습니다', isRead: false, createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'NOTICE', studyId: study2.id, studyName: study2.name, studyEmoji: study2.emoji, message: '새 공지사항: 이번 주 모의 면접 일정', isRead: false, createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'TASK', studyId: study4.id, studyName: study4.name, studyEmoji: study4.emoji, message: '토익 RC 100문제 할일이 생성되었습니다', isRead: false, createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'EVENT', studyId: study2.id, studyName: study2.name, studyEmoji: study2.emoji, message: '모레 모의 면접이 예정되어 있습니다', isRead: false, createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-    
-    // 읽은 알림 (10개)
-    { userId: user1.id, type: 'JOIN_APPROVED', studyId: study4.id, studyName: study4.name, studyEmoji: study4.emoji, message: '토익 900점 달성 가입이 승인되었습니다', isRead: true, createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'NOTICE', studyId: study3.id, studyName: study3.name, studyEmoji: study3.emoji, message: '새 공지사항: Next.js 14 새 기능 소개', isRead: true, createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'CHAT', studyId: study1.id, studyName: study1.name, studyEmoji: study1.emoji, message: '박준혁님이 메시지를 보냈습니다', isRead: true, createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'TASK', studyId: study1.id, studyName: study1.name, studyEmoji: study1.emoji, message: '백준 5678번 완료를 완료하셨습니다', isRead: true, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'MEMBER', studyId: study6.id, studyName: study6.name, studyEmoji: study6.emoji, message: '독서 모임에 가입하셨습니다', isRead: true, createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'JOIN_APPROVED', studyId: study5.id, studyName: study5.name, studyEmoji: study5.emoji, message: 'CS 기초 다지기 가입이 승인되었습니다', isRead: true, createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'EVENT', studyId: study5.id, studyName: study5.name, studyEmoji: study5.emoji, message: 'CS 스터디 세션이 예정되어 있습니다', isRead: true, createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'TASK', studyId: study3.id, studyName: study3.name, studyEmoji: study3.emoji, message: 'Next.js 튜토리얼을 완료하셨습니다', isRead: true, createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'NOTICE', studyId: study1.id, studyName: study1.name, studyEmoji: study1.emoji, message: '새 공지사항: 스터디 규칙 안내', isRead: true, createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
-    { userId: user1.id, type: 'JOIN_APPROVED', studyId: study2.id, studyName: study2.name, studyEmoji: study2.emoji, message: '취업 준비 스터디 가입이 승인되었습니다', isRead: true, createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
-  ]
+  const notificationTypes = ['JOIN_APPROVED', 'NOTICE', 'FILE', 'EVENT', 'TASK', 'MEMBER', 'KICK', 'CHAT']
+  const notifications = []
+
+  for (let i = 0; i < 500; i++) {
+    const userIndex = i % users.length
+    const studyIndex = Math.floor(Math.random() * studies.length)
+    const study = studies[studyIndex]
+
+    const hoursAgo = Math.floor(Math.random() * 720) // 0-30일 전
+    const isRead = hoursAgo > 24 && Math.random() < 0.7
+
+    notifications.push({
+      userId: users[userIndex].id,
+      type: notificationTypes[Math.floor(Math.random() * notificationTypes.length)],
+      studyId: study.id,
+      studyName: study.name,
+      studyEmoji: study.emoji,
+      message: `${study.name}에서 새로운 활동이 있습니다`,
+      isRead,
+      createdAt: new Date(Date.now() - hoursAgo * 60 * 60 * 1000),
+    })
+  }
 
   for (const notification of notifications) {
     await prisma.notification.create({ data: notification })
   }
 
-  console.log(`✅ Notifications created: ${notifications.length} notifications (10 unread, 10 read)`)
+  console.log(`✅ Notifications created: ${notifications.length} notifications`)
 
   // ============================================
-  // 채팅 메시지 생성
+  // 채팅 메시지 생성 (1000개)
   // ============================================
-  const messages = [
-    { studyId: study1.id, userId: user1.id, content: '안녕하세요! 스터디에 오신 것을 환영합니다 😊', readers: [user1.id, user2.id, user3.id] },
-    { studyId: study1.id, userId: user2.id, content: '감사합니다! 열심히 하겠습니다 🔥', readers: [user1.id, user2.id] },
-    { studyId: study1.id, userId: user3.id, content: '잘 부탁드립니다!', readers: [user1.id] },
-    { studyId: study2.id, userId: user2.id, content: '이번 주 모의 면접 준비해주세요~', readers: [user1.id, user2.id] },
-    { studyId: study2.id, userId: user1.id, content: '네 알겠습니다!', readers: [user1.id] },
-    { studyId: study3.id, userId: user3.id, content: 'Next.js 14 정말 좋네요', readers: [user1.id, user3.id] },
-    { studyId: study3.id, userId: user1.id, content: 'Server Actions 사용해보셨나요?', readers: [user1.id] },
+  const messageTemplates = [
+    '안녕하세요!',
+    '좋은 의견이네요',
+    '저도 동의합니다',
+    '질문이 있습니다',
+    '감사합니다!',
+    '화이팅!',
+    '다음 주 모임 참석 가능하신가요?',
+    '자료 공유드립니다',
   ]
+
+  const messages = []
+  for (let i = 0; i < 1000; i++) {
+    const studyIndex = Math.floor(Math.random() * studies.length)
+    const study = studies[studyIndex]
+
+    // 해당 스터디의 멤버 중 랜덤 선택
+    const studyMembers = memberData.filter(m => m.studyId === study.id && m.status === 'ACTIVE')
+    if (studyMembers.length === 0) continue
+
+    const member = studyMembers[Math.floor(Math.random() * studyMembers.length)]
+    const hoursAgo = Math.floor(Math.random() * 720)
+
+    messages.push({
+      studyId: study.id,
+      userId: member.userId,
+      content: messageTemplates[Math.floor(Math.random() * messageTemplates.length)],
+      readers: Math.random() < 0.5 ? [member.userId] : studyMembers.slice(0, Math.floor(Math.random() * 3) + 1).map(m => m.userId),
+      createdAt: new Date(Date.now() - hoursAgo * 60 * 60 * 1000),
+    })
+  }
 
   for (const message of messages) {
     await prisma.message.create({ data: message })
   }
 
   console.log(`✅ Messages created: ${messages.length} messages`)
+
+  // ============================================
+  // 신고 생성 (50개)
+  // ============================================
+  const reportTypes = ['SPAM', 'HARASSMENT', 'INAPPROPRIATE', 'COPYRIGHT']
+  const reportStatuses = ['PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED']
+  const priorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT']
+
+  const reports = []
+  for (let i = 0; i < 50; i++) {
+    const reporterIndex = Math.floor(Math.random() * users.length)
+    const targetType = ['USER', 'STUDY', 'MESSAGE'][Math.floor(Math.random() * 3)]
+
+    let targetId
+    if (targetType === 'USER') {
+      targetId = users[Math.floor(Math.random() * users.length)].id
+    } else if (targetType === 'STUDY') {
+      targetId = studies[Math.floor(Math.random() * studies.length)].id
+    } else {
+      targetId = 'msg_' + Math.random().toString(36).substr(2, 9)
+    }
+
+    const status = reportStatuses[Math.floor(Math.random() * reportStatuses.length)]
+    const daysAgo = Math.floor(Math.random() * 60)
+
+    reports.push({
+      reporterId: users[reporterIndex].id,
+      targetType,
+      targetId,
+      type: reportTypes[Math.floor(Math.random() * reportTypes.length)],
+      reason: '부적절한 콘텐츠가 포함되어 있습니다.',
+      status,
+      priority: priorities[Math.floor(Math.random() * priorities.length)],
+      processedBy: status !== 'PENDING' ? admin.id : null,
+      processedAt: status !== 'PENDING' ? new Date(Date.now() - Math.random() * daysAgo * 24 * 60 * 60 * 1000) : null,
+      resolution: status === 'RESOLVED' ? '처리 완료되었습니다.' : null,
+      createdAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
+    })
+  }
+
+  for (const report of reports) {
+    await prisma.report.create({ data: report })
+  }
+
+  console.log(`✅ Reports created: ${reports.length} reports`)
 
   // ============================================
   // 시스템 설정 생성
@@ -618,26 +496,27 @@ async function main() {
 
   console.log(`✅ Settings created: ${settings.length} system settings`)
 
-  console.log('\n🎉 Comprehensive seed completed successfully!')
+  console.log('\n🎉 MASSIVE seed completed successfully!')
   console.log('\n📊 Summary:')
-  console.log(`  - Users: 10 (9 regular + 1 admin)`)
-  console.log(`  - Studies: 8 (다양한 카테고리)`)
-  console.log(`  - Study Members: ${memberData.length} (user1은 6개 스터디 참여)`)
-  console.log(`  - Notices: 4`)
-  console.log(`  - Tasks: ${tasks.length} (10 pending, 5 completed this month)`)
-  console.log(`  - Events: ${events.length} (다가오는 일정)`)
-  console.log(`  - Notifications: ${notifications.length} (10 unread, 10 read)`)
+  console.log(`  - Users: ${users.length + 1} (50 regular + 1 admin)`)
+  console.log(`  - Studies: ${studies.length} (다양한 카테고리)`)
+  console.log(`  - Study Members: ${memberData.length}`)
+  console.log(`  - Notices: ${noticeCount}`)
+  console.log(`  - Tasks: ${tasks.length}`)
+  console.log(`  - Events: ${events.length}`)
+  console.log(`  - Notifications: ${notifications.length}`)
   console.log(`  - Messages: ${messages.length}`)
+  console.log(`  - Reports: ${reports.length}`)
   console.log(`  - Settings: ${settings.length}`)
   console.log('\n✅ You can now login with:')
   console.log('  Email: kim@example.com')
   console.log('  Password: password123')
-  console.log('\n📈 Dashboard will show:')
-  console.log('  - 6 active studies')
-  console.log('  - 10 pending tasks')
-  console.log('  - 10 unread notifications')
-  console.log('  - 5 completed tasks this month')
-  console.log('  - Recent activities and upcoming events')
+  console.log('\n  Or any other user:')
+  console.log('  Email: lee@example.com, park@example.com, etc.')
+  console.log('  Password: password123')
+  console.log('\n  Admin:')
+  console.log('  Email: admin@example.com')
+  console.log('  Password: password123')
 }
 
 main()

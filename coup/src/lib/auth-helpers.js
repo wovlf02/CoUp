@@ -5,6 +5,48 @@ import { verifyJWT } from "./jwt"
 import { cookies } from "next/headers"
 
 /**
+ * 세션 가져오기 (Server Component용)
+ * 로그인되지 않은 경우 null 반환
+ */
+export async function getSession() {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('auth-token')?.value
+
+    if (!token) {
+      return null
+    }
+
+    const decoded = verifyJWT(token)
+    if (!decoded) {
+      return null
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        role: true,
+        status: true,
+        bio: true
+      }
+    })
+
+    if (!user || user.status !== 'ACTIVE') {
+      return null
+    }
+
+    return { user }
+  } catch (error) {
+    console.error('getSession error:', error)
+    return null
+  }
+}
+
+/**
  * 로그인 확인 (JWT 기반)
  * API Route에서 사용
  */
@@ -112,4 +154,3 @@ export async function requireStudyMember(studyId, minRole = 'MEMBER') {
 
   return { session: result, member }
 }
-

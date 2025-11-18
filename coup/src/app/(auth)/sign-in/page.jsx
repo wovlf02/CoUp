@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from '@/styles/auth/sign-in.module.css'
@@ -54,20 +53,28 @@ export default function SignInPage() {
       setLoading('credentials')
       setError(null)
 
-      // NextAuth.js signIn
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
+      // 커스텀 JWT 로그인 API 사용
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       })
 
-      if (result?.error) {
-        setError(result.error)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || '로그인에 실패했습니다')
         setLoading(null)
         return
       }
 
-      if (result?.ok) {
+      if (data.success) {
+        // 로그인 성공 - 대시보드로 이동
         router.push('/dashboard')
         router.refresh()
       }
