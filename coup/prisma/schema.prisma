@@ -45,6 +45,7 @@ model User {
   createdNotices Notice[]
   uploadedFiles  File[]         @relation("FileUploader")
   createdEvents  Event[]        @relation("EventCreator")
+  refreshTokens  RefreshToken[]
 
   @@index([email])
   @@index([status])
@@ -394,3 +395,22 @@ enum SettingType {
   BOOLEAN
   JSON
 }
+
+// ============================================
+// Refresh Token (RefreshToken)
+// ============================================
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
