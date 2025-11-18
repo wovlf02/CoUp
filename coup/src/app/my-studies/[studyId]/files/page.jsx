@@ -21,7 +21,7 @@ export default function MyStudyFilesPage({ params }) {
   const uploadFileMutation = useUploadFile();
   const deleteFileMutation = useDeleteFile();
 
-  const study = studyData?.study;
+  const study = studyData?.data;
   const files = filesData?.files || [];
   const folders = []; // TODO: 폴더 기능 구현
 

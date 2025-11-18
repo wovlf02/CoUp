@@ -20,7 +20,7 @@ export default function MyStudyChatPage({ params }) {
   const sendMessageMutation = useSendMessage();
   const deleteMessageMutation = useDeleteMessage();
 
-  const study = studyData?.study;
+  const study = studyData?.data;
   const messages = messagesData?.messages || [];
   const onlineMembers = []; // TODO: Socket.io로 실시간 온라인 멤버 구현
 

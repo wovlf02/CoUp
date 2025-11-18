@@ -18,7 +18,7 @@ export default function MyStudyVideoCallPage({ params }) {
   // 실제 API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
 
-  const study = studyData?.study;
+  const study = studyData?.data;
   const participants = []; // TODO: 화상회의 참여자 실시간 데이터 (WebRTC/Socket.io)
   const callHistory = []; // TODO: 통화 기록 API 구현
 

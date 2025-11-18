@@ -21,7 +21,7 @@ export default function MyStudyCalendarPage({ params }) {
   const updateEventMutation = useUpdateEvent();
   const deleteEventMutation = useDeleteEvent();
 
-  const study = studyData?.study;
+  const study = studyData?.data;
   const events = eventsData?.events || [];
 
   const tabs = [
@@ -291,7 +291,7 @@ export default function MyStudyCalendarPage({ params }) {
                     )}
                   </div>
                 ))
-              }
+              )}
             </div>
           </div>
 

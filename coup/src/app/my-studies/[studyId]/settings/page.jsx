@@ -29,7 +29,7 @@ export default function MyStudySettingsPage({ params }) {
   const kickMemberMutation = useKickMember();
   const leaveStudyMutation = useLeaveStudy();
 
-  const study = studyData?.study;
+  const study = studyData?.data;
   const members = membersData?.members || [];
 
   const [formData, setFormData] = useState({

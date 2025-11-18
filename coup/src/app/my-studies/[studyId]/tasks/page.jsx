@@ -21,7 +21,7 @@ export default function MyStudyTasksPage({ params }) {
   const deleteTaskMutation = useDeleteTask();
   const toggleTaskMutation = useToggleTask();
 
-  const study = studyData?.study;
+  const study = studyData?.data;
   const allTasks = tasksData?.tasks || [];
 
   // 상태별로 할일 분류
