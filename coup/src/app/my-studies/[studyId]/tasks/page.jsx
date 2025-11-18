@@ -5,16 +5,37 @@ import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { studyTasksData } from '@/mocks/studyTasks';
+import { useStudy, useTasks, useCreateTask, useUpdateTask, useDeleteTask, useToggleTask } from '@/lib/hooks/useApi';
 
 export default function MyStudyTasksPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
-  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
+  const [viewMode, setViewMode] = useState('kanban');
   const [selectedTask, setSelectedTask] = useState(null);
 
-  const data = studyTasksData[studyId] || studyTasksData[1];
-  const { study, columns, tasks } = data;
+  // 실제 API Hooks
+  const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
+  const { data: tasksData, isLoading: tasksLoading } = useTasks({ studyId });
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
+  const toggleTaskMutation = useToggleTask();
+
+  const study = studyData?.study;
+  const allTasks = tasksData?.tasks || [];
+
+  // 상태별로 할일 분류
+  const tasksByStatus = {
+    todo: allTasks.filter(t => t.status === 'TODO'),
+    inProgress: allTasks.filter(t => t.status === 'IN_PROGRESS'),
+    done: allTasks.filter(t => t.status === 'DONE')
+  };
+
+  const columns = [
+    { id: 'todo', title: '할 일', count: tasksByStatus.todo.length },
+    { id: 'inProgress', title: '진행 중', count: tasksByStatus.inProgress.length },
+    { id: 'done', title: '완료', count: tasksByStatus.done.length }
+  ];
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -29,17 +50,48 @@ export default function MyStudyTasksPage({ params }) {
 
   const getPriorityIcon = (priority) => {
     const icons = {
-      urgent: '🔴',
-      high: '🟠',
-      medium: '🟡',
-      low: '⚪',
+      HIGH: '🔴',
+      MEDIUM: '🟡',
+      LOW: '⚪',
     };
     return icons[priority] || '⚪';
   };
 
   const getPriorityClass = (priority) => {
-    return styles[`priority${priority.charAt(0).toUpperCase() + priority.slice(1)}`];
+    return styles[`priority${priority}`] || '';
   };
+
+  const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  };
+
+  const handleToggleTask = async (taskId) => {
+    try {
+      await toggleTaskMutation.mutateAsync(taskId);
+    } catch (error) {
+      alert('할일 상태 변경 실패: ' + error.message);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!confirm('할일을 삭제하시겠습니까?')) return;
+
+    try {
+      await deleteTaskMutation.mutateAsync(taskId);
+    } catch (error) {
+      alert('할일 삭제 실패: ' + error.message);
+    }
+  };
+
+  if (studyLoading) {
+    return <div className={styles.container}>로딩 중...</div>;
+  }
+
+  if (!study) {
+    return <div className={styles.container}>스터디를 찾을 수 없습니다.</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -80,7 +132,7 @@ export default function MyStudyTasksPage({ params }) {
           {/* 헤더 */}
           <div className={styles.taskHeader}>
             <h2 className={styles.taskTitle}>✅ 할일 관리</h2>
-            <button className={styles.addButton}>+ 할일 추가</button>
+            <Link href="/tasks" className={styles.addButton}>+ 할일 추가</Link>
           </div>
 
           {/* 뷰 모드 & 필터 */}
@@ -99,88 +151,84 @@ export default function MyStudyTasksPage({ params }) {
                 목록 뷰
               </button>
             </div>
-            <div className={styles.controls}>
-              <button className={styles.filterButton}>필터 ▼</button>
-              <input
-                type="text"
-                placeholder="할일 검색..."
-                className={styles.searchInput}
-              />
+          </div>
+
+          {tasksLoading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>할일 로딩 중...</div>
+          ) : allTasks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+              할일을 추가해보세요! ✨
             </div>
-          </div>
-
-          {/* 칸반 보드 */}
-          <div className={styles.kanbanBoard}>
-            {columns.map((column) => (
-              <div key={column.id} className={styles.kanbanColumn}>
-                <div className={styles.columnHeader}>
-                  <h3 className={styles.columnTitle}>{column.title}</h3>
-                  <span className={styles.columnCount}>({column.count}개)</span>
-                </div>
-
-                <div className={styles.taskList}>
-                  {tasks[column.id].map((task) => (
-                    <div
-                      key={task.id}
-                      className={`${styles.taskCard} ${getPriorityClass(task.priority)}`}
-                      onClick={() => setSelectedTask(task)}
-                    >
-                      <div className={styles.taskCardHeader}>
-                        <span className={styles.priorityIcon}>
-                          {getPriorityIcon(task.priority)}
-                        </span>
-                        <h4 className={styles.taskCardTitle}>{task.title}</h4>
-                        <button className={styles.taskMenu}>⋮</button>
-                      </div>
-
-                      <div className={styles.taskLabels}>
-                        {task.labels.map((label) => (
-                          <span key={label} className={styles.taskLabel}>
-                            #{label}
-                          </span>
-                        ))}
-                      </div>
-
-                      {task.checklist && (
-                        <div className={styles.taskProgress}>
-                          <div className={styles.progressBar}>
-                            <div
-                              className={styles.progressFill}
-                              style={{
-                                width: `${(task.checklist.completed / task.checklist.total) * 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <span className={styles.progressText}>
-                            {task.checklist.completed}/{task.checklist.total}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className={styles.taskCardFooter}>
-                        <span className={styles.taskDueDate}>📅 {task.dueDate}</span>
-                        <span className={styles.taskAssignee}>
-                          👤 {task.assignee.name}
-                        </span>
-                      </div>
-
-                      {task.comments > 0 && (
-                        <div className={styles.taskStats}>
-                          <span className={styles.taskComments}>💬 {task.comments}</span>
-                        </div>
-                      )}
+          ) : (
+            <>
+              {/* 칸반 보드 */}
+              <div className={styles.kanbanBoard}>
+                {columns.map((column) => (
+                  <div key={column.id} className={styles.kanbanColumn}>
+                    <div className={styles.columnHeader}>
+                      <h3 className={styles.columnTitle}>{column.title}</h3>
+                      <span className={styles.columnCount}>({column.count}개)</span>
                     </div>
-                  ))}
 
-                  <button className={styles.addTaskButton}>+ 추가</button>
-                </div>
+                    <div className={styles.taskList}>
+                      {tasksByStatus[column.id].map((task) => (
+                        <div
+                          key={task.id}
+                          className={`${styles.taskCard} ${getPriorityClass(task.priority)}`}
+                          onClick={() => setSelectedTask(task)}
+                        >
+                          <div className={styles.taskCardHeader}>
+                            <span className={styles.priorityIcon}>
+                              {getPriorityIcon(task.priority)}
+                            </span>
+                            <h4 className={styles.taskCardTitle}>{task.title}</h4>
+                            <button className={styles.taskMenu}>⋮</button>
+                          </div>
+
+                          {task.description && (
+                            <p className={styles.taskDescription}>{task.description}</p>
+                          )}
+
+                          <div className={styles.taskCardFooter}>
+                            {task.dueDate && (
+                              <span className={styles.taskDueDate}>📅 {formatDate(task.dueDate)}</span>
+                            )}
+                            <button
+                              className={styles.taskToggleBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleTask(task.id);
+                              }}
+                            >
+                              {task.completed ? '✅' : '⭕'}
+                            </button>
+                          </div>
+
+                          <div className={styles.taskActions}>
+                            <button
+                              className={styles.taskActionBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTask(task.id);
+                              }}
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      <Link href="/tasks" className={styles.addTaskButton}>+ 추가</Link>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className={styles.dragHint}>
-            💡 드래그하여 상태 변경 →
-          </div>
+              <div className={styles.dragHint}>
+                💡 할일 페이지(/tasks)에서 관리할 수 있습니다 →
+              </div>
+            </>
+          )}
         </div>
 
         {/* 우측 위젯 */}
@@ -191,91 +239,56 @@ export default function MyStudyTasksPage({ params }) {
             <div className={styles.widgetContent}>
               <div className={styles.statRow}>
                 <span>전체:</span>
-                <span className={styles.statValue}>24개</span>
+                <span className={styles.statValue}>{allTasks.length}개</span>
               </div>
               <div className={styles.statRow}>
                 <span>완료:</span>
-                <span className={styles.statValue}>12개</span>
+                <span className={styles.statValue}>{tasksByStatus.done.length}개</span>
               </div>
               <div className={styles.statRow}>
                 <span>진행률:</span>
-                <span className={styles.statValue}>50%</span>
+                <span className={styles.statValue}>
+                  {allTasks.length > 0
+                    ? Math.round((tasksByStatus.done.length / allTasks.length) * 100)
+                    : 0}%
+                </span>
               </div>
-              <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: '50%' }}></div>
-              </div>
+              {allTasks.length > 0 && (
+                <div className={styles.progressBar}>
+                  <div
+                    className={styles.progressFill}
+                    style={{ width: `${(tasksByStatus.done.length / allTasks.length) * 100}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* 급한 할일 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>⚠️ 급한 할일 (D-3 이내)</h3>
-            <div className={styles.widgetContent}>
-              {tasks.todo.slice(0, 2).map((task) => (
-                <div key={task.id} className={styles.urgentTask}>
-                  <div className={styles.urgentTaskTitle}>📌 {task.title}</div>
-                  <div className={styles.urgentTaskMeta}>
-                    {task.dueDate} · {task.assignee.name}
+          {tasksByStatus.todo.length > 0 && (
+            <div className={styles.widget}>
+              <h3 className={styles.widgetTitle}>⚠️ 할 일</h3>
+              <div className={styles.widgetContent}>
+                {tasksByStatus.todo.slice(0, 3).map((task) => (
+                  <div key={task.id} className={styles.urgentTask}>
+                    <div className={styles.urgentTaskTitle}>📌 {task.title}</div>
+                    {task.dueDate && (
+                      <div className={styles.urgentTaskMeta}>
+                        {formatDate(task.dueDate)}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 내 할일 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>👤 내 할일</h3>
-            <div className={styles.widgetContent}>
-              <div className={styles.statRow}>
-                <span>진행 중:</span>
-                <span>3개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>완료:</span>
-                <span>5개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>이번 주:</span>
-                <span className={styles.statValue}>8개</span>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* 라벨 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>🏷️ 라벨</h3>
-            <div className={styles.widgetContent}>
-              <div className={styles.labelItem}>
-                <span className={styles.labelDot} style={{ background: '#ef4444' }}></span>
-                <span>#긴급</span>
-                <span className={styles.labelCount}>(3)</span>
-              </div>
-              <div className={styles.labelItem}>
-                <span className={styles.labelDot} style={{ background: '#3b82f6' }}></span>
-                <span>#알고리즘</span>
-                <span className={styles.labelCount}>(8)</span>
-              </div>
-              <div className={styles.labelItem}>
-                <span className={styles.labelDot} style={{ background: '#10b981' }}></span>
-                <span>#문서</span>
-                <span className={styles.labelCount}>(4)</span>
-              </div>
-              <div className={styles.labelItem}>
-                <span className={styles.labelDot} style={{ background: '#f59e0b' }}></span>
-                <span>#코드</span>
-                <span className={styles.labelCount}>(6)</span>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* 빠른 액션 */}
           <div className={styles.widget}>
             <h3 className={styles.widgetTitle}>⚡ 빠른 액션</h3>
             <div className={styles.widgetActions}>
-              <button className={styles.widgetButton}>+ 할일 추가</button>
-              <button className={styles.widgetButton}>🔍 필터</button>
-              <button className={styles.widgetButton}>📊 통계</button>
-              <button className={styles.widgetButton}>⚙️ 설정</button>
+              <Link href="/tasks" className={styles.widgetButton}>+ 할일 추가</Link>
+              <Link href="/tasks" className={styles.widgetButton}>📊 전체 보기</Link>
             </div>
           </div>
 

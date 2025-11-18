@@ -5,7 +5,7 @@ import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { studyVideoCallData } from '@/mocks/studyVideoCall';
+import { useStudy } from '@/lib/hooks/useApi';
 
 export default function MyStudyVideoCallPage({ params }) {
   const router = useRouter();
@@ -15,8 +15,12 @@ export default function MyStudyVideoCallPage({ params }) {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  const data = studyVideoCallData[studyId] || studyVideoCallData[1];
-  const { study, participants, callHistory } = data;
+  // 실제 API Hooks
+  const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
+
+  const study = studyData?.study;
+  const participants = []; // TODO: 화상회의 참여자 실시간 데이터 (WebRTC/Socket.io)
+  const callHistory = []; // TODO: 통화 기록 API 구현
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -30,6 +34,7 @@ export default function MyStudyVideoCallPage({ params }) {
   ];
 
   const handleStartCall = () => {
+    // TODO: WebRTC 화상회의 시작 로직
     setIsCallActive(true);
   };
 
@@ -38,6 +43,14 @@ export default function MyStudyVideoCallPage({ params }) {
       setIsCallActive(false);
     }
   };
+
+  if (studyLoading) {
+    return <div className={styles.container}>로딩 중...</div>;
+  }
+
+  if (!study) {
+    return <div className={styles.container}>스터디를 찾을 수 없습니다.</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -122,6 +135,13 @@ export default function MyStudyVideoCallPage({ params }) {
                     <span>마이크 권한 허용</span>
                   </label>
                 </div>
+
+                <div style={{ marginTop: '2rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px' }}>
+                  <p style={{ color: '#92400e', fontSize: '14px' }}>
+                    💡 <strong>참고:</strong> 화상회의 기능은 WebRTC를 사용하여 구현됩니다.
+                    현재는 UI만 구현되어 있으며, 실제 화상통화 기능은 별도 구현이 필요합니다.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -129,16 +149,15 @@ export default function MyStudyVideoCallPage({ params }) {
           {/* 우측 위젯 */}
           <aside className={styles.sidebar}>
             <div className={styles.widget}>
-              <h3 className={styles.widgetTitle}>📊 통화 기록</h3>
+              <h3 className={styles.widgetTitle}>📊 스터디 정보</h3>
               <div className={styles.widgetContent}>
-                <div className={styles.callHistory}>
-                  {callHistory.map((historyItem) => (
-                    <div key={historyItem.date} className={styles.callHistoryItem}>
-                      <div className={styles.callDate}>{historyItem.date}</div>
-                      <div className={styles.callDuration}>⏱️ {historyItem.duration}</div>
-                      <div className={styles.callParticipants}>👥 {historyItem.participants} 참여</div>
-                    </div>
-                  ))}
+                <div className={styles.statRow}>
+                  <span>멤버:</span>
+                  <span className={styles.statValue}>{study.memberCount || 0}명</span>
+                </div>
+                <div className={styles.statRow}>
+                  <span>카테고리:</span>
+                  <span>{study.category}</span>
                 </div>
               </div>
             </div>
@@ -182,44 +201,26 @@ export default function MyStudyVideoCallPage({ params }) {
             <h3 className={styles.callTitle}>
               {study.emoji} {study.name}
             </h3>
-            <div className={styles.callTime}>⏱️ 00:15:32</div>
+            <div className={styles.callTime}>⏱️ 00:00:00</div>
             <button className={styles.endCallButton} onClick={handleEndCall}>
               ❌ 나가기
             </button>
           </div>
 
           <div className={styles.videoGrid}>
-            {participants.map((participant) => (
-              <div
-                key={participant.id}
-                className={`${styles.videoCard} ${
-                  participant.isSpeaking ? styles.speaking : ''
-                }`}
-              >
-                <div className={styles.videoPlaceholder}>
-                  {participant.isVideoOn ? (
-                    <div className={styles.videoStream}>📹 Video Stream</div>
-                  ) : (
-                    <div className={styles.videoOff}>
-                      <div className={styles.avatarPlaceholder}>
-                        {participant.name[0]}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className={styles.participantInfo}>
-                  <span className={styles.participantName}>{participant.name}</span>
-                  <div className={styles.participantControls}>
-                    <span className={styles.controlIcon}>
-                      {participant.isMuted ? '🔇' : '🎤'}
-                    </span>
-                    <span className={styles.controlIcon}>
-                      {participant.isVideoOn ? '📹' : '📹'}
-                    </span>
-                  </div>
+            <div className={styles.videoCard}>
+              <div className={styles.videoPlaceholder}>
+                <div className={styles.videoOff}>
+                  <div className={styles.avatarPlaceholder}>나</div>
+                  <p style={{ marginTop: '1rem', color: '#64748b' }}>
+                    화상회의 기능은 WebRTC로 구현 예정입니다.
+                  </p>
                 </div>
               </div>
-            ))}
+              <div className={styles.participantInfo}>
+                <span className={styles.participantName}>나</span>
+              </div>
+            </div>
           </div>
 
           <div className={styles.controlBar}>

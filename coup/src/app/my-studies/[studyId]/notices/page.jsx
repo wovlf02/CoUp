@@ -4,8 +4,9 @@
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useStudy, useNotices, useDeleteNotice, useTogglePinNotice } from '@/lib/hooks/useApi';
+import NoticeCreateEditModal from '@/components/studies/NoticeCreateEditModal';
 import styles from './page.module.css';
-import { studyNoticesData } from '@/mocks/studyNotices';
 
 export default function MyStudyNoticesPage({ params }) {
   const router = useRouter();
@@ -15,9 +16,32 @@ export default function MyStudyNoticesPage({ params }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
 
-  // Mock 데이터
-  const data = studyNoticesData[studyId] || studyNoticesData[1];
-  const { study, notices } = data;
+  // 실제 API 호출
+  const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
+  const { data: noticesData, isLoading: noticesLoading } = useNotices(studyId);
+  const deleteNotice = useDeleteNotice();
+  const togglePin = useTogglePinNotice();
+
+  const study = studyData?.data;
+  const notices = noticesData?.data || [];
+
+  // 로딩 상태
+  if (studyLoading || noticesLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>공지사항을 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // 스터디 없음
+  if (!study) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>스터디를 찾을 수 없습니다.</div>
+      </div>
+    );
+  }
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -40,12 +64,29 @@ export default function MyStudyNoticesPage({ params }) {
     regular: notices.filter(n => !n.isImportant && !n.isPinned).length,
   };
 
-  const canEdit = (notice) => {
-    return ['OWNER', 'ADMIN'].includes(study.role);
+  const canEdit = () => {
+    return ['OWNER', 'ADMIN'].includes(study.myRole);
   };
 
-  const handleNoticeClick = (notice) => {
-    setSelectedNotice(notice);
+  const handleDelete = async (noticeId) => {
+    if (!confirm('정말 이 공지를 삭제하시겠습니까?')) return;
+
+    try {
+      await deleteNotice.mutateAsync({ studyId, noticeId });
+      alert('공지가 삭제되었습니다');
+    } catch (error) {
+      console.error('공지 삭제 실패:', error);
+      alert('공지 삭제에 실패했습니다');
+    }
+  };
+
+  const handleTogglePin = async (noticeId) => {
+    try {
+      await togglePin.mutateAsync({ studyId, noticeId });
+    } catch (error) {
+      console.error('고정 토글 실패:', error);
+      alert('고정 처리에 실패했습니다');
+    }
   };
 
   return (
@@ -90,7 +131,10 @@ export default function MyStudyNoticesPage({ params }) {
             {canEdit() && (
               <button
                 className={styles.createButton}
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  setSelectedNotice(null);
+                  setIsModalOpen(true);
+                }}
               >
                 + 새 공지
               </button>
@@ -143,11 +187,7 @@ export default function MyStudyNoticesPage({ params }) {
             <div className={styles.pinnedSection}>
               <h3 className={styles.sectionLabel}>📌 고정 공지 ({pinnedNotices.length})</h3>
               {pinnedNotices.map((notice) => (
-                <div
-                  key={notice.id}
-                  className={styles.noticeCard}
-                  onClick={() => handleNoticeClick(notice)}
-                >
+                <div key={notice.id} className={styles.noticeCard}>
                   <div className={styles.noticeCardHeader}>
                     <div className={styles.noticeTitleRow}>
                       <span className={styles.pinnedIcon}>📌</span>
@@ -156,23 +196,41 @@ export default function MyStudyNoticesPage({ params }) {
                         <span className={styles.importantBadge}>⭐ 중요</span>
                       )}
                     </div>
-                    {canEdit(notice) && (
+                    {canEdit() && (
                       <div className={styles.noticeActions}>
-                        <button className={styles.actionBtn}>수정</button>
-                        <button className={styles.actionBtn}>삭제</button>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => {
+                            setSelectedNotice(notice);
+                            setIsModalOpen(true);
+                          }}
+                        >
+                          수정
+                        </button>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => handleTogglePin(notice.id)}
+                        >
+                          고정 해제
+                        </button>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => handleDelete(notice.id)}
+                        >
+                          삭제
+                        </button>
                       </div>
                     )}
                   </div>
 
                   <div className={styles.noticeAuthor}>
-                    {notice.author.name}({notice.author.role}) · {notice.createdAt}
+                    {notice.author?.name || '작성자'}({notice.author?.role || 'MEMBER'}) · {new Date(notice.createdAt).toLocaleString()}
                   </div>
 
                   <p className={styles.noticeContent}>{notice.content}</p>
 
                   <div className={styles.noticeStats}>
-                    <span className={styles.stat}>💬 {notice.comments}</span>
-                    <span className={styles.stat}>👁 {notice.views}</span>
+                    <span className={styles.stat}>👁 {notice.views || 0}</span>
                   </div>
                 </div>
               ))}
@@ -182,79 +240,103 @@ export default function MyStudyNoticesPage({ params }) {
           {/* 일반 공지 */}
           <div className={styles.regularSection}>
             <h3 className={styles.sectionLabel}>📄 최근 공지 ({regularNotices.length})</h3>
-            {regularNotices.map((notice) => (
-              <div
-                key={notice.id}
-                className={styles.noticeCard}
-                onClick={() => handleNoticeClick(notice)}
-              >
-                <div className={styles.noticeCardHeader}>
-                  <div className={styles.noticeTitleRow}>
-                    <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
-                    {notice.isImportant && (
-                      <span className={styles.importantBadge}>⭐ 중요</span>
+            {regularNotices.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>공지사항이 없습니다</p>
+                {canEdit() && (
+                  <button
+                    className={styles.createButton}
+                    onClick={() => {
+                      setSelectedNotice(null);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    첫 공지 작성하기
+                  </button>
+                )}
+              </div>
+            ) : (
+              regularNotices.map((notice) => (
+                <div key={notice.id} className={styles.noticeCard}>
+                  <div className={styles.noticeCardHeader}>
+                    <div className={styles.noticeTitleRow}>
+                      <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
+                      {notice.isImportant && (
+                        <span className={styles.importantBadge}>⭐ 중요</span>
+                      )}
+                    </div>
+                    {canEdit() ? (
+                      <div className={styles.noticeActions}>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => {
+                            setSelectedNotice(notice);
+                            setIsModalOpen(true);
+                          }}
+                        >
+                          수정
+                        </button>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => handleTogglePin(notice.id)}
+                        >
+                          고정
+                        </button>
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => handleDelete(notice.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    ) : (
+                      <button className={styles.reportBtn}>신고</button>
                     )}
                   </div>
-                  {canEdit(notice) ? (
-                    <div className={styles.noticeActions}>
-                      <button className={styles.actionBtn}>수정</button>
-                      <button className={styles.actionBtn}>삭제</button>
-                    </div>
-                  ) : (
-                    <button className={styles.reportBtn}>신고</button>
-                  )}
-                </div>
 
-                <div className={styles.noticeAuthor}>
-                  {notice.author.name}({notice.author.role}) · {notice.createdAt}
-                </div>
+                  <div className={styles.noticeAuthor}>
+                    {notice.author?.name || '작성자'}({notice.author?.role || 'MEMBER'}) · {new Date(notice.createdAt).toLocaleString()}
+                  </div>
 
-                <p className={styles.noticeContent}>{notice.content}</p>
+                  <p className={styles.noticeContent}>{notice.content}</p>
 
-                <div className={styles.noticeStats}>
-                  <span className={styles.stat}>💬 {notice.comments}</span>
-                  <span className={styles.stat}>👁 {notice.views}</span>
+                  <div className={styles.noticeStats}>
+                    <span className={styles.stat}>👁 {notice.views || 0}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            }
           </div>
         </div>
 
         {/* 우측 위젯 */}
         <aside className={styles.sidebar}>
           {/* 고정 공지 요약 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>📌 고정 공지</h3>
-            <div className={styles.widgetContent}>
-              {pinnedNotices.slice(0, 3).map((notice) => (
-                <div key={notice.id} className={styles.pinnedItem}>
-                  <div className={styles.pinnedItemTitle}>{notice.title}</div>
-                  <div className={styles.pinnedItemTime}>{notice.createdAt}</div>
-                </div>
-              ))}
+          {pinnedNotices.length > 0 && (
+            <div className={styles.widget}>
+              <h3 className={styles.widgetTitle}>📌 고정 공지</h3>
+              <div className={styles.widgetContent}>
+                {pinnedNotices.slice(0, 3).map((notice) => (
+                  <div key={notice.id} className={styles.pinnedItem}>
+                    <div className={styles.pinnedItemTitle}>{notice.title}</div>
+                    <div className={styles.pinnedItemTime}>{new Date(notice.createdAt).toLocaleDateString()}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            {pinnedNotices.length > 3 && (
-              <Link href="#" className={styles.widgetLink}>
-                전체 보기 →
-              </Link>
-            )}
-          </div>
+          )}
 
           {/* 빠른 작성 */}
           {canEdit() && (
             <div className={styles.widget}>
               <h3 className={styles.widgetTitle}>⚡ 빠른 작성</h3>
               <div className={styles.widgetContent}>
-                <p className={styles.widgetText}>자주 사용하는 템플릿:</p>
-                <div className={styles.templateButtons}>
-                  <button className={styles.templateBtn}>📅 일정 공지</button>
-                  <button className={styles.templateBtn}>📝 과제 안내</button>
-                  <button className={styles.templateBtn}>📢 중요 공지</button>
-                  <button className={styles.templateBtn}>💡 참고 자료</button>
-                </div>
                 <button
                   className={styles.newNoticeBtn}
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setSelectedNotice(null);
+                    setIsModalOpen(true);
+                  }}
                 >
                   + 새 공지 작성
                 </button>
@@ -282,56 +364,26 @@ export default function MyStudyNoticesPage({ params }) {
                 <span>• 일반:</span>
                 <span>{noticeStats.regular}개</span>
               </div>
-              <div className={styles.statRow}>
-                <span>이번 주 작성:</span>
-                <span className={styles.statValue}>8개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>평균 조회수:</span>
-                <span className={styles.statValue}>42회</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 알림 설정 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>🔔 알림 설정</h3>
-            <div className={styles.widgetContent}>
-              <label className={styles.checkboxLabel}>
-                <input type="checkbox" defaultChecked />
-                <span>새 공지 알림</span>
-              </label>
-              <label className={styles.checkboxLabel}>
-                <input type="checkbox" defaultChecked />
-                <span>댓글 알림</span>
-              </label>
-              <label className={styles.checkboxLabel}>
-                <input type="checkbox" />
-                <span>중요 공지만 알림</span>
-              </label>
-            </div>
-          </div>
-
-          {/* 작성 가이드 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>📝 작성 권한</h3>
-            <div className={styles.widgetContent}>
-              <p className={styles.widgetText}>
-                ADMIN+ 만 공지를 작성할 수 있습니다
-              </p>
-              <div className={styles.tipSection}>
-                <h4 className={styles.tipTitle}>🎯 작성 팁</h4>
-                <ul className={styles.tipList}>
-                  <li>제목을 명확하게</li>
-                  <li>중요한 내용은 강조</li>
-                  <li>관련 파일 첨부</li>
-                  <li>@멘션으로 특정인 알림</li>
-                </ul>
-              </div>
             </div>
           </div>
         </aside>
       </div>
+
+      {/* 공지 작성/수정 모달 */}
+      {isModalOpen && (
+        <NoticeCreateEditModal
+          studyId={studyId}
+          notice={selectedNotice}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedNotice(null);
+          }}
+          onSuccess={() => {
+            setIsModalOpen(false);
+            setSelectedNotice(null);
+          }}
+        />
+      )}
     </div>
   );
 }

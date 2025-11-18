@@ -4,11 +4,10 @@ import { useState } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import UserDetailModal from '@/components/admin/UserDetailModal'
 import SuspendUserModal from '@/components/admin/SuspendUserModal'
-import { adminUsers } from '@/mocks/admin'
+import { useAdminUsers, useAdminUser, useSuspendUser, useRestoreUser } from '@/lib/hooks/useApi'
 import styles from './page.module.css'
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState(adminUsers)
   const [selectedUsers, setSelectedUsers] = useState([])
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -18,12 +17,27 @@ export default function AdminUsersPage() {
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false)
   const usersPerPage = 10
 
+  // 실제 API Hooks
+  const { data: usersData, isLoading } = useAdminUsers({
+    page: currentPage,
+    limit: usersPerPage,
+    status: statusFilter !== 'all' ? statusFilter.toUpperCase() : undefined,
+    search: searchQuery || undefined
+  })
+  const suspendUserMutation = useSuspendUser()
+  const restoreUserMutation = useRestoreUser()
+
+  const users = usersData?.data || []
+  const totalPages = usersData?.pagination?.totalPages || 1
+  const totalUsers = usersData?.pagination?.total || 0
+
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return `${date.getMonth() + 1}/${date.getDate()}`
   }
 
   const formatTimeAgo = (dateString) => {
+    if (!dateString) return '알 수 없음'
     const now = new Date()
     const date = new Date(dateString)
     const diffInMinutes = Math.floor((now - date) / (1000 * 60))
@@ -34,24 +48,9 @@ export default function AdminUsersPage() {
     return `${Math.floor(diffInMinutes / 1440)}일 전`
   }
 
-  const filteredUsers = users.filter(user => {
-    if (statusFilter !== 'all' && user.status.toLowerCase() !== statusFilter) {
-      return false
-    }
-    if (searchQuery && !user.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !user.email.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false
-    }
-    return true
-  })
-
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
-  const startIndex = (currentPage - 1) * usersPerPage
-  const displayedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage)
-
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedUsers(displayedUsers.map(u => u.id))
+      setSelectedUsers(users.map(u => u.id))
     } else {
       setSelectedUsers([])
     }
@@ -75,12 +74,21 @@ export default function AdminUsersPage() {
     setIsSuspendModalOpen(true)
   }
 
-  const handleConfirmSuspend = (data) => {
-    console.log('계정 정지:', data)
-    alert(`계정이 정지되었습니다.\\n사용자: ${data.userId}\\n기간: ${data.duration}\\n사유: ${data.details}`)
-    setIsSuspendModalOpen(false)
-    setSelectedUser(null)
-    // 실제로는 여기서 users 상태를 업데이트해야 함
+  const handleConfirmSuspend = async (data) => {
+    try {
+      await suspendUserMutation.mutateAsync({
+        id: data.userId,
+        data: {
+          duration: data.duration,
+          reason: data.details
+        }
+      })
+      alert(`계정이 정지되었습니다.\n사용자: ${data.userId}\n기간: ${data.duration}\n사유: ${data.details}`)
+      setIsSuspendModalOpen(false)
+      setSelectedUser(null)
+    } catch (error) {
+      alert('계정 정지 실패: ' + error.message)
+    }
   }
 
   return (
@@ -92,7 +100,7 @@ export default function AdminUsersPage() {
             <div className="contentHeader">
               <h1 className="contentTitle">사용자 관리</h1>
               <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>
-                전체 {filteredUsers.length}명
+                전체 {totalUsers}명
               </span>
             </div>
 
@@ -102,7 +110,10 @@ export default function AdminUsersPage() {
                 <select
                   className={styles.filterSelect}
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value)
+                    setCurrentPage(1)
+                  }}
                 >
                   <option value="all">전체</option>
                   <option value="active">활성</option>
@@ -116,7 +127,10 @@ export default function AdminUsersPage() {
                 className={styles.searchInput}
                 placeholder="🔍 이름, 이메일로 검색..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setCurrentPage(1)
+                }}
               />
 
               <button className={styles.filterSelect}>
@@ -145,117 +159,136 @@ export default function AdminUsersPage() {
                 </div>
               )}
 
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={{ width: '50px' }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.length === displayedUsers.length && displayedUsers.length > 0}
-                        onChange={handleSelectAll}
-                      />
-                    </th>
-                    <th>사용자</th>
-                    <th>이메일</th>
-                    <th>가입일</th>
-                    <th>활동</th>
-                    <th>상태</th>
-                    <th>액션</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedUsers.map(user => (
-                    <tr
-                      key={user.id}
-                      className={user.status === 'SUSPENDED' ? styles.suspended : ''}
-                      onClick={() => handleUserClick(user)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(user.id)}
-                          onChange={() => handleSelectUser(user.id)}
-                        />
-                      </td>
-                      <td>
-                        <div className={styles.userCell}>
-                          <div className={styles.userAvatar}>
-                            {user.name.charAt(0)}
-                          </div>
-                          <div className={styles.userDetails}>
-                            <div className={styles.userName}>{user.name}</div>
-                            <div className={styles.userProvider}>
-                              {user.provider === 'GOOGLE' && '🔵 Google'}
-                              {user.provider === 'GITHUB' && '🐙 GitHub'}
-                              {user.provider === 'EMAIL' && '📧 Email'}
+              {isLoading ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}>로딩 중...</div>
+              ) : users.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                  사용자가 없습니다.
+                </div>
+              ) : (
+                <>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: '50px' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.length === users.length && users.length > 0}
+                            onChange={handleSelectAll}
+                          />
+                        </th>
+                        <th>사용자</th>
+                        <th>이메일</th>
+                        <th>가입일</th>
+                        <th>활동</th>
+                        <th>상태</th>
+                        <th>액션</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map(user => (
+                        <tr
+                          key={user.id}
+                          className={user.status === 'SUSPENDED' ? styles.suspended : ''}
+                          onClick={() => handleUserClick(user)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedUsers.includes(user.id)}
+                              onChange={() => handleSelectUser(user.id)}
+                            />
+                          </td>
+                          <td>
+                            <div className={styles.userCell}>
+                              <div className={styles.userAvatar}>
+                                {user.name?.charAt(0) || 'U'}
+                              </div>
+                              <div className={styles.userDetails}>
+                                <div className={styles.userName}>{user.name || '알 수 없음'}</div>
+                                <div className={styles.userProvider}>
+                                  {user.provider === 'GOOGLE' && '🔵 Google'}
+                                  {user.provider === 'GITHUB' && '🐙 GitHub'}
+                                  {user.provider === 'EMAIL' && '📧 Email'}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{user.email}</td>
-                      <td>{formatDate(user.createdAt)}</td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <span className={`${styles.onlineIndicator} ${
-                            user.status === 'ACTIVE' ? styles.online : styles.offline
-                          }`} />
-                          {formatTimeAgo(user.lastLoginAt)}
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${styles[user.status.toLowerCase()]}`}>
-                          {user.status === 'ACTIVE' && '활성'}
-                          {user.status === 'SUSPENDED' && '정지'}
-                          {user.status === 'DELETED' && '탈퇴'}
-                        </span>
-                      </td>
-                      <td>
-                        <button className={styles.actionButton}>
-                          ⋯
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          </td>
+                          <td>{user.email}</td>
+                          <td>{formatDate(user.createdAt)}</td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span className={`${styles.onlineIndicator} ${
+                                user.status === 'ACTIVE' ? styles.online : styles.offline
+                              }`} />
+                              {formatTimeAgo(user.lastLoginAt)}
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`${styles.statusBadge} ${styles[user.status?.toLowerCase()]}`}>
+                              {user.status === 'ACTIVE' && '활성'}
+                              {user.status === 'SUSPENDED' && '정지'}
+                              {user.status === 'DELETED' && '탈퇴'}
+                            </span>
+                          </td>
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <button className={styles.actionButton}>
+                              ⋯
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
-              {/* Pagination */}
-              <div className={styles.pagination}>
-                <div style={{ fontSize: '0.875rem', color: '#6B7280' }}>
-                  {startIndex + 1}-{Math.min(startIndex + usersPerPage, filteredUsers.length)} / {filteredUsers.length}
-                </div>
-                <div className={styles.paginationButtons}>
-                  <button
-                    className={styles.pageButton}
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    ←
-                  </button>
-                  {[...Array(Math.min(5, totalPages))].map((_, i) => (
-                    <button
-                      key={i + 1}
-                      className={`${styles.pageButton} ${currentPage === i + 1 ? styles.active : ''}`}
-                      onClick={() => setCurrentPage(i + 1)}
+                  {/* Pagination */}
+                  <div className={styles.pagination}>
+                    <div style={{ fontSize: '0.875rem', color: '#6B7280' }}>
+                      {(currentPage - 1) * usersPerPage + 1}-{Math.min(currentPage * usersPerPage, totalUsers)} / {totalUsers}
+                    </div>
+                    <div className={styles.paginationButtons}>
+                      <button
+                        className={styles.pageButton}
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        ←
+                      </button>
+                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                        const pageNum = i + 1
+                        return (
+                          <button
+                            key={pageNum}
+                            className={`${styles.pageButton} ${currentPage === pageNum ? styles.active : ''}`}
+                            onClick={() => setCurrentPage(pageNum)}
+                          >
+                            {pageNum}
+                          </button>
+                        )
+                      })}
+                      <button
+                        className={styles.pageButton}
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        →
+                      </button>
+                    </div>
+                    <select
+                      className={styles.filterSelect}
+                      value={usersPerPage}
+                      onChange={(e) => {
+                        // TODO: usersPerPage 변경 처리
+                      }}
                     >
-                      {i + 1}
-                    </button>
-                  ))}
-                  <button
-                    className={styles.pageButton}
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    →
-                  </button>
-                </div>
-                <select className={styles.filterSelect}>
-                  <option>10개씩</option>
-                  <option>20개씩</option>
-                  <option>50개씩</option>
-                </select>
-              </div>
+                      <option value={10}>10개씩</option>
+                      <option value={20}>20개씩</option>
+                      <option value={50}>50개씩</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -270,7 +303,7 @@ export default function AdminUsersPage() {
                   전체 사용자
                 </div>
                 <div style={{ fontSize: '2rem', fontWeight: '700', color: '#111827' }}>
-                  {users.length}
+                  {totalUsers}
                 </div>
               </div>
               <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', marginTop: '12px' }}>

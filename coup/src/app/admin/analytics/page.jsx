@@ -5,15 +5,72 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import UserGrowthChart from '@/components/admin/UserGrowthChart'
 import StudyActivityChart from '@/components/admin/StudyActivityChart'
 import EngagementChart from '@/components/admin/EngagementChart'
-import {
-  userGrowthData,
-  studyActivitiesData,
-  analyticsData
-} from '@/mocks/admin'
+import { useAdminStats } from '@/lib/hooks/useApi'
 import styles from './page.module.css'
 
 export default function AdminAnalyticsPage() {
   const [period, setPeriod] = useState('monthly')
+
+  // 실제 API Hook
+  const { data: statsData, isLoading } = useAdminStats()
+
+  const stats = statsData?.data || {}
+
+  // Mock 데이터 (차트용 - 추후 API 추가 시 교체)
+  const userGrowthData = [
+    { date: '1일', count: 10 },
+    { date: '5일', count: 25 },
+    { date: '10일', count: 45 },
+    { date: '15일', count: 70 },
+    { date: '20일', count: 95 },
+    { date: '25일', count: 120 },
+    { date: '30일', count: 145 }
+  ]
+
+  const studyActivitiesData = stats.studies?.byCategory || []
+
+  const engagementTrend = [
+    { day: '월', rate: 75 },
+    { day: '화', rate: 80 },
+    { day: '수', rate: 85 },
+    { day: '목', rate: 78 },
+    { day: '금', rate: 82 },
+    { day: '토', rate: 65 },
+    { day: '일', rate: 68 }
+  ]
+
+  const conversionFunnel = [
+    { stage: 'visit', count: 1000, conversionRate: 100 },
+    { stage: 'signup', count: 800, conversionRate: 80 },
+    { stage: 'create', count: 450, conversionRate: 56 },
+    { stage: 'active', count: 360, conversionRate: 45 }
+  ]
+
+  const deviceDistribution = [
+    { device: 'desktop', count: 720, percentage: 60 },
+    { device: 'mobile', count: 360, percentage: 30 },
+    { device: 'tablet', count: 120, percentage: 10 }
+  ]
+
+  const popularFeatures = [
+    { feature: '채팅', count: 8500 },
+    { feature: '파일 공유', count: 5200 },
+    { feature: '캘린더', count: 4800 },
+    { feature: '할일 관리', count: 4200 },
+    { feature: '공지사항', count: 3600 }
+  ]
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="adminPageWrapper">
+          <div className="adminMainContent">
+            <div style={{ textAlign: 'center', padding: '3rem' }}>로딩 중...</div>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout>
@@ -75,48 +132,48 @@ export default function AdminAnalyticsPage() {
                     <div className={styles.userActivityLabel}>활성 사용자</div>
                     <div className={styles.userActivityProgress}>
                       <div className={styles.progressBarContainer}>
-                        <div className={`${styles.progressBarFill} ${styles.active}`} style={{ width: '95%' }} />
+                        <div className={`${styles.progressBarFill} ${styles.active}`} style={{ width: `${Math.round((stats.users?.active || 0) / (stats.users?.total || 1) * 100)}%` }} />
                       </div>
-                      <span className={styles.progressPercent}>95%</span>
+                      <span className={styles.progressPercent}>{Math.round((stats.users?.active || 0) / (stats.users?.total || 1) * 100)}%</span>
                     </div>
                   </div>
 
                   <div className={styles.userActivityBar}>
-                    <div className={styles.userActivityLabel}>신규 가입</div>
+                    <div className={styles.userActivityLabel}>신규 가입 (이번 주)</div>
                     <div className={styles.userActivityProgress}>
                       <div className={styles.progressBarContainer}>
-                        <div className={`${styles.progressBarFill} ${styles.new}`} style={{ width: '4%' }} />
+                        <div className={`${styles.progressBarFill} ${styles.new}`} style={{ width: `${Math.min(100, Math.round((stats.users?.newThisWeek || 0) / (stats.users?.total || 1) * 100))}%` }} />
                       </div>
-                      <span className={styles.progressPercent}>4%</span>
+                      <span className={styles.progressPercent}>{stats.users?.newThisWeek || 0}명</span>
                     </div>
                   </div>
 
                   <div className={styles.userActivityBar}>
-                    <div className={styles.userActivityLabel}>탈퇴</div>
+                    <div className={styles.userActivityLabel}>정지</div>
                     <div className={styles.userActivityProgress}>
                       <div className={styles.progressBarContainer}>
-                        <div className={`${styles.progressBarFill} ${styles.churned}`} style={{ width: '1%' }} />
+                        <div className={`${styles.progressBarFill} ${styles.churned}`} style={{ width: `${Math.round((stats.users?.suspended || 0) / (stats.users?.total || 1) * 100)}%` }} />
                       </div>
-                      <span className={styles.progressPercent}>1%</span>
+                      <span className={styles.progressPercent}>{Math.round((stats.users?.suspended || 0) / (stats.users?.total || 1) * 100)}%</span>
                     </div>
                   </div>
 
                   <div className={styles.statsRow}>
                     <div className={styles.statsItem}>
-                      <span className={styles.statsLabel}>평균 체류 시간:</span>
-                      <span className={styles.statsValue}>23분</span>
+                      <span className={styles.statsLabel}>전체 사용자:</span>
+                      <span className={styles.statsValue}>{stats.users?.total || 0}명</span>
                     </div>
                     <div className={styles.statsItem}>
-                      <span className={styles.statsLabel}>총 페이지뷰:</span>
-                      <span className={styles.statsValue}>12,345</span>
+                      <span className={styles.statsLabel}>활성 사용자:</span>
+                      <span className={styles.statsValue}>{stats.users?.active || 0}명</span>
                     </div>
                     <div className={styles.statsItem}>
-                      <span className={styles.statsLabel}>총 세션:</span>
-                      <span className={styles.statsValue}>3,456</span>
+                      <span className={styles.statsLabel}>오늘 가입:</span>
+                      <span className={styles.statsValue}>{stats.users?.newToday || 0}명</span>
                     </div>
                     <div className={styles.statsItem}>
-                      <span className={styles.statsLabel}>이탈률:</span>
-                      <span className={styles.statsValue}>15%</span>
+                      <span className={styles.statsLabel}>정지:</span>
+                      <span className={styles.statsValue}>{stats.users?.suspended || 0}명</span>
                     </div>
                   </div>
                 </div>
@@ -130,7 +187,7 @@ export default function AdminAnalyticsPage() {
               </div>
               <div className={styles.funnelContainer}>
                 <div className={styles.funnelStages}>
-                  {analyticsData.conversionFunnel.map((stage, index) => (
+                  {conversionFunnel.map((stage, index) => (
                     <div key={index} className={styles.funnelStage}>
                       <div className={styles.funnelStageHeader}>
                         <span className={styles.funnelStageName}>
@@ -149,9 +206,9 @@ export default function AdminAnalyticsPage() {
                           {stage.conversionRate}%
                         </div>
                       </div>
-                      {index < analyticsData.conversionFunnel.length - 1 && (
+                      {index < conversionFunnel.length - 1 && (
                         <div className={styles.funnelArrow}>
-                          ↓ {analyticsData.conversionFunnel[index + 1].conversionRate}%
+                          ↓ {conversionFunnel[index + 1].conversionRate}%
                         </div>
                       )}
                     </div>
@@ -159,9 +216,9 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div className={styles.funnelSummary}>
                   <div className={styles.funnelSummaryLabel}>전체 전환율</div>
-                  <div className={styles.funnelSummaryValue}>36%</div>
+                  <div className={styles.funnelSummaryValue}>45%</div>
                   <div className={styles.funnelSummaryNote}>
-                    목표 (40%) 대비: -4%
+                    목표 (40%) 대비: +5%
                   </div>
                 </div>
               </div>
@@ -172,9 +229,9 @@ export default function AdminAnalyticsPage() {
               <div className={styles.chartHeader}>
                 <h2 className={styles.chartTitle}>참여도 추이 (일간)</h2>
               </div>
-              <EngagementChart data={analyticsData.engagementTrend} />
+              <EngagementChart data={engagementTrend} />
               <div className={styles.chartPlaceholder}>
-                평균 참여도: 78% | 최고: 85% (수요일) | 최저: 65% (주말)
+                평균 참여도: 78% | 최고: 85% (수요일) | 최저: 65% (토요일)
               </div>
             </div>
 
@@ -185,7 +242,7 @@ export default function AdminAnalyticsPage() {
                   <h2 className={styles.chartTitle}>디바이스 분포</h2>
                 </div>
                 <div className={styles.chartPlaceholder}>
-                  {analyticsData.deviceDistribution.map((item, index) => (
+                  {deviceDistribution.map((item, index) => (
                     <div key={index} className={styles.deviceItem}>
                       <div className={styles.deviceHeader}>
                         <span className={styles.deviceName}>
@@ -213,7 +270,7 @@ export default function AdminAnalyticsPage() {
                   <h2 className={styles.chartTitle}>인기 기능 (사용 빈도)</h2>
                 </div>
                 <div className={styles.chartPlaceholder}>
-                  {analyticsData.popularFeatures.map((item, index) => (
+                  {popularFeatures.map((item, index) => (
                     <div key={index} className={styles.featureItem}>
                       <div>
                         <span className={styles.featureRank}>{index + 1}.</span>
@@ -230,7 +287,7 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-하고 이        {/* Right Widget */}
+        {/* Right Widget */}
         <div className="rightWidget">
           <div className="widget">
             <div className="widgetTitle">📊 요약</div>
@@ -240,7 +297,7 @@ export default function AdminAnalyticsPage() {
                   총 사용자
                 </div>
                 <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
-                  1,234명
+                  {stats.users?.total || 0}명
                 </div>
               </div>
               <div style={{ marginBottom: '16px' }}>
@@ -248,23 +305,23 @@ export default function AdminAnalyticsPage() {
                   총 스터디
                 </div>
                 <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
-                  156개
+                  {stats.studies?.total || 0}개
                 </div>
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <div style={{ fontSize: '0.75rem', color: '#6B7280', marginBottom: '4px' }}>
-                  총 메시지
+                  총 할일
                 </div>
                 <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
-                  12,345개
+                  {stats.tasks?.total || 0}개
                 </div>
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: '#6B7280', marginBottom: '4px' }}>
-                  총 파일
+                  미처리 신고
                 </div>
                 <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
-                  2,456개
+                  {stats.reports?.pending || 0}개
                 </div>
               </div>
             </div>
@@ -291,7 +348,7 @@ export default function AdminAnalyticsPage() {
                   <input type="checkbox" id="auto-refresh" />
                   <label htmlFor="auto-refresh" style={{ marginLeft: '4px' }}>자동 갱신</label>
                 </div>
-                <div>마지막: 5초 전</div>
+                <div>마지막: 방금 전</div>
               </div>
             </div>
           </div>

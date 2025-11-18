@@ -3,8 +3,8 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useStudy, useJoinStudy } from '@/lib/hooks/useApi';
 import styles from './page.module.css';
-import { studyJoinData } from '@/mocks/studyDetails';
 
 export default function StudyJoinPage({ params }) {
   const router = useRouter();
@@ -15,21 +15,30 @@ export default function StudyJoinPage({ params }) {
     introduction: '',
     purpose: '',
     level: '',
-    notifications: {
-      notice: true,
-      chat: true,
-      event: true,
-      task: false,
-    },
-    channels: {
-      web: true,
-      email: true,
-      kakao: false,
-    },
   });
 
-  // 임시 스터디 데이터
-  const study = studyJoinData[studyId] || studyJoinData[1];
+  // 실제 API 호출
+  const { data: studyData, isLoading } = useStudy(studyId);
+  const joinStudy = useJoinStudy();
+  const study = studyData?.data;
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>스터디 정보를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // 스터디 없음
+  if (!study) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>스터디를 찾을 수 없습니다.</div>
+      </div>
+    );
+  }
 
   const handleNext = () => {
     if (currentStep === 1 && !formData.agreeToRules) {
@@ -45,9 +54,16 @@ export default function StudyJoinPage({ params }) {
 
   const handleSubmit = async () => {
     try {
-      console.log('가입 신청:', formData);
+      await joinStudy.mutateAsync({
+        id: studyId,
+        data: {
+          introduction: formData.introduction,
+          purpose: formData.purpose,
+          level: formData.level,
+        }
+      });
 
-      // API 호출 시뮬레이션
+      // 자동 승인 여부에 따라 다른 메시지
       if (study.autoApprove) {
         alert('🎉 가입이 완료되었습니다!');
         router.push(`/my-studies/${studyId}`);
@@ -56,28 +72,9 @@ export default function StudyJoinPage({ params }) {
         router.push('/studies');
       }
     } catch (error) {
-      alert('가입 신청 중 오류가 발생했습니다.');
+      console.error('가입 신청 실패:', error);
+      alert('가입 신청 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
-  };
-
-  const toggleNotification = (key) => {
-    setFormData({
-      ...formData,
-      notifications: {
-        ...formData.notifications,
-        [key]: !formData.notifications[key],
-      },
-    });
-  };
-
-  const toggleChannel = (key) => {
-    setFormData({
-      ...formData,
-      channels: {
-        ...formData.channels,
-        [key]: !formData.channels[key],
-      },
-    });
   };
 
   return (
@@ -125,18 +122,24 @@ export default function StudyJoinPage({ params }) {
                 우리 스터디의 규칙을 확인해주세요
               </p>
 
-              <ul className={styles.rulesList}>
-                {study.rules.map((rule, index) => (
-                  <li key={index} className={styles.ruleItem}>
-                    <span className={styles.ruleIcon}>✓</span>
-                    <span className={styles.ruleText}>{rule}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <button className={styles.detailLink}>
-                📖 상세 규칙 보기 →
-              </button>
+              <div className={styles.rulesList}>
+                <div className={styles.ruleItem}>
+                  <span className={styles.ruleIcon}>✓</span>
+                  <span className={styles.ruleText}>정기 모임에 성실히 참여합니다</span>
+                </div>
+                <div className={styles.ruleItem}>
+                  <span className={styles.ruleIcon}>✓</span>
+                  <span className={styles.ruleText}>과제 및 할일을 기한 내 완료합니다</span>
+                </div>
+                <div className={styles.ruleItem}>
+                  <span className={styles.ruleIcon}>✓</span>
+                  <span className={styles.ruleText}>멤버들과 존중하며 소통합니다</span>
+                </div>
+                <div className={styles.ruleItem}>
+                  <span className={styles.ruleIcon}>✓</span>
+                  <span className={styles.ruleText}>불참 시 최소 1일 전 공지합니다</span>
+                </div>
+              </div>
 
               <div className={styles.agreeBox}>
                 <label className={styles.agreeLabel}>
@@ -194,7 +197,7 @@ export default function StudyJoinPage({ params }) {
                   className={styles.textarea}
                   rows={5}
                   maxLength={300}
-                  placeholder="안녕하세요! 백엔드 개발자 준비 중인 김철수입니다. 함께 성장하고 싶습니다!"
+                  placeholder="안녕하세요! 함께 성장하고 싶습니다!"
                 />
                 <span className={styles.charCount}>
                   {formData.introduction.length}/300자
@@ -204,108 +207,40 @@ export default function StudyJoinPage({ params }) {
               <div className={styles.formGroup}>
                 <label className={styles.label}>가입 동기</label>
                 <div className={styles.radioGroup}>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="purpose"
-                      value="취업 준비"
-                      checked={formData.purpose === '취업 준비'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, purpose: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>취업 준비</span>
-                  </label>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="purpose"
-                      value="실력 향상"
-                      checked={formData.purpose === '실력 향상'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, purpose: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>실력 향상</span>
-                  </label>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="purpose"
-                      value="네트워킹"
-                      checked={formData.purpose === '네트워킹'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, purpose: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>네트워킹</span>
-                  </label>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="purpose"
-                      value="자격증"
-                      checked={formData.purpose === '자격증'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, purpose: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>자격증</span>
-                  </label>
+                  {['취업 준비', '실력 향상', '네트워킹', '자격증'].map(purpose => (
+                    <label key={purpose} className={styles.radioLabel}>
+                      <input
+                        type="radio"
+                        name="purpose"
+                        value={purpose}
+                        checked={formData.purpose === purpose}
+                        onChange={(e) =>
+                          setFormData({ ...formData, purpose: e.target.value })
+                        }
+                      />
+                      <span className={styles.radioText}>{purpose}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>현재 실력 수준</label>
                 <div className={styles.radioGroup}>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="level"
-                      value="입문"
-                      checked={formData.level === '입문'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, level: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>입문</span>
-                  </label>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="level"
-                      value="초급"
-                      checked={formData.level === '초급'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, level: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>초급</span>
-                  </label>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="level"
-                      value="중급"
-                      checked={formData.level === '중급'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, level: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>중급</span>
-                  </label>
-                  <label className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="level"
-                      value="고급"
-                      checked={formData.level === '고급'}
-                      onChange={(e) =>
-                        setFormData({ ...formData, level: e.target.value })
-                      }
-                    />
-                    <span className={styles.radioText}>고급</span>
-                  </label>
+                  {['입문', '초급', '중급', '고급'].map(level => (
+                    <label key={level} className={styles.radioLabel}>
+                      <input
+                        type="radio"
+                        name="level"
+                        value={level}
+                        checked={formData.level === level}
+                        onChange={(e) =>
+                          setFormData({ ...formData, level: e.target.value })
+                        }
+                      />
+                      <span className={styles.radioText}>{level}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -325,121 +260,55 @@ export default function StudyJoinPage({ params }) {
             </div>
           )}
 
-          {/* Step 3: 알림 설정 */}
+          {/* Step 3: 최종 확인 */}
           {currentStep === 3 && (
             <div className={styles.stepCard}>
-              <h2 className={styles.stepTitle}>🔔 Step 3/3: 알림 설정</h2>
+              <h2 className={styles.stepTitle}>✅ Step 3/3: 최종 확인</h2>
               <p className={styles.stepDescription}>
-                어떤 알림을 받고 싶으신가요?
+                가입 신청 전 정보를 확인해주세요
               </p>
 
-              <div className={styles.checkboxGroup}>
-                <div className={styles.checkboxItem}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={formData.notifications.notice}
-                      onChange={() => toggleNotification('notice')}
-                    />
-                    <div className={styles.checkboxContent}>
-                      <div className={styles.checkboxTitle}>새 공지 알림 받기</div>
-                      <div className={styles.checkboxDesc}>
-                        새로운 공지가 작성되면 알림을 보내드립니다
-                      </div>
-                    </div>
-                  </label>
+              <div className={styles.summaryBox}>
+                <h3>가입 정보 요약</h3>
+                <div className={styles.summaryItem}>
+                  <strong>스터디:</strong> {study.name}
                 </div>
-
-                <div className={styles.checkboxItem}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={formData.notifications.chat}
-                      onChange={() => toggleNotification('chat')}
-                    />
-                    <div className={styles.checkboxContent}>
-                      <div className={styles.checkboxTitle}>채팅 메시지 알림 받기</div>
-                      <div className={styles.checkboxDesc}>
-                        채팅에 새 메시지가 오면 알림을 보내드립니다
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className={styles.checkboxItem}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={formData.notifications.event}
-                      onChange={() => toggleNotification('event')}
-                    />
-                    <div className={styles.checkboxContent}>
-                      <div className={styles.checkboxTitle}>일정 알림 받기</div>
-                      <div className={styles.checkboxDesc}>
-                        다가오는 일정을 미리 알려드립니다
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className={styles.checkboxItem}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={formData.notifications.task}
-                      onChange={() => toggleNotification('task')}
-                    />
-                    <div className={styles.checkboxContent}>
-                      <div className={styles.checkboxTitle}>할일 마감 알림 받기</div>
-                      <div className={styles.checkboxDesc}>
-                        할일 마감일이 다가오면 알림을 보내드립니다
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.label}>알림 채널</label>
-                <div className={styles.channelGroup}>
-                  <button
-                    className={`${styles.channelButton} ${
-                      formData.channels.web ? styles.active : ''
-                    }`}
-                    onClick={() => toggleChannel('web')}
-                  >
-                    🌐 웹 푸시
-                  </button>
-                  <button
-                    className={`${styles.channelButton} ${
-                      formData.channels.email ? styles.active : ''
-                    }`}
-                    onClick={() => toggleChannel('email')}
-                  >
-                    📧 이메일
-                  </button>
-                  <button
-                    className={`${styles.channelButton} ${
-                      formData.channels.kakao ? styles.active : ''
-                    }`}
-                    onClick={() => toggleChannel('kakao')}
-                  >
-                    💬 카카오톡
-                  </button>
-                </div>
+                {formData.introduction && (
+                  <div className={styles.summaryItem}>
+                    <strong>자기소개:</strong> {formData.introduction}
+                  </div>
+                )}
+                {formData.purpose && (
+                  <div className={styles.summaryItem}>
+                    <strong>가입 동기:</strong> {formData.purpose}
+                  </div>
+                )}
+                {formData.level && (
+                  <div className={styles.summaryItem}>
+                    <strong>실력 수준:</strong> {formData.level}
+                  </div>
+                )}
               </div>
 
               <div className={styles.hint}>
                 <span>💡</span>
-                <span>알림 설정은 나중에 변경할 수 있습니다</span>
+                <span>
+                  {study.autoApprove
+                    ? '가입 후 바로 모든 기능을 이용할 수 있습니다!'
+                    : '그룹장 승인 후 이용 가능합니다. (평균 1일 이내)'}
+                </span>
               </div>
 
               <div className={styles.buttonGroup}>
                 <button onClick={handleBack} className={styles.backBtn}>
                   ← 이전
                 </button>
-                <button onClick={handleSubmit} className={styles.submitBtn}>
-                  🎉 가입하기
+                <button
+                  onClick={handleSubmit}
+                  className={styles.submitBtn}
+                  disabled={joinStudy.isPending}
+                >
+                  {joinStudy.isPending ? '가입 중...' : '🎉 가입하기'}
                 </button>
               </div>
             </div>
@@ -458,7 +327,7 @@ export default function StudyJoinPage({ params }) {
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>멤버</span>
               <span className={styles.infoValue}>
-                {study.memberCount}/{study.maxMembers}명
+                {study.currentMembers}/{study.maxMembers}명
               </span>
             </div>
             <div className={styles.infoRow}>
@@ -471,15 +340,12 @@ export default function StudyJoinPage({ params }) {
                 {study.autoApprove ? '자동 승인' : '수동 승인'}
               </span>
             </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>평점</span>
-              <div className={styles.rating}>
-                <span className={styles.stars}>⭐⭐⭐⭐⭐</span>
-                <span className={styles.infoValue}>
-                  {study.rating} ({study.reviewCount}명)
-                </span>
+            {study.rating && (
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>평점</span>
+                <span className={styles.infoValue}>⭐ {study.rating}</span>
               </div>
-            </div>
+            )}
           </div>
 
           {/* 가입 혜택 */}
@@ -507,16 +373,6 @@ export default function StudyJoinPage({ params }) {
                 <span>화상 스터디</span>
               </li>
             </ul>
-          </div>
-
-          {/* 참고사항 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>💡 참고사항</h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--gray-700)', margin: 0 }}>
-              {study.autoApprove
-                ? '가입 후 바로 모든 기능을 이용할 수 있습니다!'
-                : '그룹장 승인 후 이용 가능합니다. (평균 1일 이내)'}
-            </p>
           </div>
         </aside>
       </div>

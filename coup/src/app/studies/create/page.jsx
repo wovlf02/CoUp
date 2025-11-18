@@ -3,11 +3,21 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCreateStudy } from '@/lib/hooks/useApi';
 import styles from './page.module.css';
-import { studyCategories } from '@/mocks/studySettings';
+
+// 카테고리 상수 (정적 데이터)
+const STUDY_CATEGORIES = {
+  '개발': ['웹 개발', '앱 개발', '알고리즘', '데이터 분석', '인공지능', '게임 개발', '백엔드', '프론트엔드'],
+  '언어': ['영어', '일본어', '중국어', '스페인어', '프랑스어', '독일어', '기타'],
+  '취업/자격증': ['공무원', '토익/토플', '자격증', '면접 준비', '이력서 작성', '포트폴리오'],
+  '교양/취미': ['독서', '글쓰기', '그림', '음악', '운동', '요리', '여행'],
+  '학업': ['수학', '과학', '영어', '논문', '시험 준비', '프로젝트'],
+};
 
 export default function StudyCreatePage() {
   const router = useRouter();
+  const createStudy = useCreateStudy();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -18,18 +28,42 @@ export default function StudyCreatePage() {
     tags: [],
     maxMembers: 20,
     isPublic: true,
-    approvalType: 'auto', // auto | manual
+    autoApprove: true, // API 필드명에 맞게 수정
     activityFrequency: '',
     location: 'online',
   });
 
-  const categories = studyCategories;
+  const categories = STUDY_CATEGORIES;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: API 호출
-    console.log('스터디 생성:', formData);
-    router.push('/studies');
+
+    // 폼 검증
+    if (!formData.name || !formData.category || !formData.subCategory || !formData.description) {
+      alert('필수 항목을 모두 입력해주세요');
+      return;
+    }
+
+    try {
+      const studyData = {
+        name: formData.name,
+        emoji: formData.emoji,
+        category: formData.category,
+        subCategory: formData.subCategory,
+        description: formData.description,
+        tags: formData.tags,
+        maxMembers: formData.maxMembers,
+        isPublic: formData.isPublic,
+        autoApprove: formData.autoApprove,
+      };
+
+      const result = await createStudy.mutateAsync(studyData);
+      alert('🎉 스터디가 생성되었습니다!');
+      router.push(`/my-studies/${result.data.id}`);
+    } catch (error) {
+      console.error('스터디 생성 실패:', error);
+      alert('스터디 생성에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -98,6 +132,7 @@ export default function StudyCreatePage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className={styles.input}
+                maxLength={50}
                 required
               />
               <span className={styles.hint}>2-50자 사이로 입력해주세요</span>
@@ -175,6 +210,7 @@ export default function StudyCreatePage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className={styles.textarea}
                 rows={5}
+                maxLength={500}
                 required
               />
               <span className={styles.hint}>
@@ -272,7 +308,7 @@ export default function StudyCreatePage() {
                 max="100"
                 value={formData.maxMembers}
                 onChange={(e) =>
-                  setFormData({ ...formData, maxMembers: parseInt(e.target.value) })
+                  setFormData({ ...formData, maxMembers: parseInt(e.target.value) || 2 })
                 }
                 className={styles.input}
                 required
@@ -310,18 +346,18 @@ export default function StudyCreatePage() {
                 <label className={styles.radioLabel}>
                   <input
                     type="radio"
-                    name="approvalType"
-                    checked={formData.approvalType === 'auto'}
-                    onChange={() => setFormData({ ...formData, approvalType: 'auto' })}
+                    name="autoApprove"
+                    checked={formData.autoApprove}
+                    onChange={() => setFormData({ ...formData, autoApprove: true })}
                   />
                   <span>자동 승인 - 신청 즉시 멤버로 가입</span>
                 </label>
                 <label className={styles.radioLabel}>
                   <input
                     type="radio"
-                    name="approvalType"
-                    checked={formData.approvalType === 'manual'}
-                    onChange={() => setFormData({ ...formData, approvalType: 'manual' })}
+                    name="autoApprove"
+                    checked={!formData.autoApprove}
+                    onChange={() => setFormData({ ...formData, autoApprove: false })}
                   />
                   <span>수동 승인 - 관리자가 직접 승인</span>
                 </label>
@@ -336,8 +372,12 @@ export default function StudyCreatePage() {
               >
                 ← 이전
               </button>
-              <button type="submit" className={styles.submitButton}>
-                🎉 스터디 만들기
+              <button
+                type="submit"
+                className={styles.submitButton}
+                disabled={createStudy.isPending}
+              >
+                {createStudy.isPending ? '생성 중...' : '🎉 스터디 만들기'}
               </button>
             </div>
           </div>

@@ -1,21 +1,38 @@
 // 스터디 프리뷰 페이지 (미가입자용)
 'use client';
 
-import { use, useState } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useStudy } from '@/lib/hooks/useApi';
 import styles from './page.module.css';
-import { studyPreviewData } from '@/mocks/studyDetails';
 
 export default function StudyPreviewPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
 
-  // Mock 데이터
-  const study = studyPreviewData[studyId] || studyPreviewData[1];
+  // 실제 API 호출
+  const { data: studyData, isLoading } = useStudy(studyId);
+  const study = studyData?.data;
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>스터디 정보를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // 스터디 없음
+  if (!study) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>스터디를 찾을 수 없습니다.</div>
+      </div>
+    );
+  }
 
   const handleJoin = () => {
-    // TODO: 가입 플로우로 이동
     router.push(`/studies/${studyId}/join`);
   };
 
@@ -45,18 +62,20 @@ export default function StudyPreviewPage({ params }) {
 
             <div className={styles.studyMeta}>
               <span className={styles.category}>
-                {study.category} · {study.subCategory}
+                {study.category} {study.subCategory && `· ${study.subCategory}`}
               </span>
-              <div className={styles.rating}>⭐ {study.rating}</div>
+              {study.rating && <div className={styles.rating}>⭐ {study.rating}</div>}
             </div>
 
-            <div className={styles.tags}>
-              {study.tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            {study.tags && study.tags.length > 0 && (
+              <div className={styles.tags}>
+                {study.tags.map((tag) => (
+                  <span key={tag} className={styles.tag}>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
             <p className={styles.description}>{study.description}</p>
 
@@ -64,22 +83,26 @@ export default function StudyPreviewPage({ params }) {
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>멤버</span>
                 <span className={styles.statValue}>
-                  {study.members.current}/{study.members.max}명
+                  {study.currentMembers}/{study.maxMembers}명
                 </span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statLabel}>활동 빈도</span>
-                <span className={styles.statValue}>{study.activityFrequency}</span>
               </div>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>가입 방식</span>
                 <span className={styles.statValue}>
-                  {study.approvalType === 'auto' ? '자동 승인' : '수동 승인'}
+                  {study.autoApprove ? '자동 승인' : '수동 승인'}
+                </span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>공개 설정</span>
+                <span className={styles.statValue}>
+                  {study.isPublic ? '전체 공개' : '비공개'}
                 </span>
               </div>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>개설일</span>
-                <span className={styles.statValue}>2024.10.01</span>
+                <span className={styles.statValue}>
+                  {new Date(study.createdAt).toLocaleDateString()}
+                </span>
               </div>
             </div>
 
@@ -88,16 +111,10 @@ export default function StudyPreviewPage({ params }) {
             </button>
           </div>
 
-          {/* 스터디 규칙 */}
+          {/* 스터디 소개 */}
           <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>📋 스터디 규칙</h2>
-            <ul className={styles.rulesList}>
-              {study.rules.map((rule, index) => (
-                <li key={index} className={styles.ruleItem}>
-                  {rule}
-                </li>
-              ))}
-            </ul>
+            <h2 className={styles.sectionTitle}>📝 상세 소개</h2>
+            <p className={styles.detailText}>{study.description}</p>
           </div>
 
           {/* 최근 공지 미리보기 */}
@@ -105,15 +122,6 @@ export default function StudyPreviewPage({ params }) {
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>📢 최근 공지</h2>
               <span className={styles.lockBadge}>🔒 가입 후 전체 확인</span>
-            </div>
-            <div className={styles.previewList}>
-              {study.recentNotices.map((notice) => (
-                <div key={notice.id} className={styles.previewItem}>
-                  {notice.isPinned && <span className={styles.pinIcon}>📌</span>}
-                  <span className={styles.previewTitle}>{notice.title}</span>
-                  <span className={styles.previewTime}>{notice.createdAt}</span>
-                </div>
-              ))}
             </div>
             <div className={styles.blurOverlay}>
               <p>가입 후 모든 공지를 확인할 수 있습니다</p>
@@ -123,28 +131,8 @@ export default function StudyPreviewPage({ params }) {
           {/* 멤버 미리보기 */}
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>👥 멤버 ({study.members.current}명)</h2>
-              <span className={styles.lockBadge}>🔒 상위 5명만 표시</span>
-            </div>
-            <div className={styles.membersList}>
-              {study.topMembers.map((member) => (
-                <div key={member.id} className={styles.memberItem}>
-                  <div className={styles.memberAvatar}>
-                    {member.imageUrl ? (
-                      <img src={member.imageUrl} alt={member.name} />
-                    ) : (
-                      <span>{member.name[0]}</span>
-                    )}
-                  </div>
-                  <div className={styles.memberInfo}>
-                    <span className={styles.memberName}>{member.name}</span>
-                    <span className={styles.memberRole}>
-                      {member.role === 'OWNER' ? '👑 그룹장' :
-                       member.role === 'ADMIN' ? '⭐ 관리자' : '👤 멤버'}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              <h2 className={styles.sectionTitle}>👥 멤버 ({study.currentMembers}명)</h2>
+              <span className={styles.lockBadge}>🔒 가입 후 확인</span>
             </div>
             <div className={styles.blurOverlay}>
               <p>가입 후 모든 멤버를 확인할 수 있습니다</p>
@@ -171,18 +159,22 @@ export default function StudyPreviewPage({ params }) {
             <div className={styles.infoList}>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>그룹장</span>
-                <span className={styles.infoValue}>{study.owner.name}</span>
+                <span className={styles.infoValue}>
+                  {study.owner?.name || '관리자'}
+                </span>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>멤버 수</span>
                 <span className={styles.infoValue}>
-                  {study.members.current}/{study.members.max}명
+                  {study.currentMembers}/{study.maxMembers}명
                 </span>
               </div>
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>평점</span>
-                <span className={styles.infoValue}>⭐ {study.rating}</span>
-              </div>
+              {study.rating && (
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>평점</span>
+                  <span className={styles.infoValue}>⭐ {study.rating}</span>
+                </div>
+              )}
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>공개 여부</span>
                 <span className={styles.infoValue}>

@@ -9,14 +9,7 @@ import StudyActivityChart from '@/components/admin/StudyActivityChart'
 import ReportDetailModal from '@/components/admin/ReportDetailModal'
 import UserDetailModal from '@/components/admin/UserDetailModal'
 import SuspendUserModal from '@/components/admin/SuspendUserModal'
-import { 
-  adminStats, 
-  userGrowthData, 
-  studyActivitiesData,
-  recentReports,
-  recentUsers,
-  systemStatus
-} from '@/mocks/admin'
+import { useAdminStats, useAdminReports, useSuspendUser } from '@/lib/hooks/useApi'
 import styles from './page.module.css'
 
 export default function AdminDashboard() {
@@ -27,6 +20,27 @@ export default function AdminDashboard() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false)
+
+  // 실제 API Hooks
+  const { data: statsData, isLoading: statsLoading } = useAdminStats()
+  const { data: reportsData } = useAdminReports({ status: 'PENDING', limit: 5 })
+  const suspendUserMutation = useSuspendUser()
+
+  const adminStats = statsData?.stats || {
+    totalUsers: 0,
+    activeStudies: 0,
+    newSignupsToday: 0,
+    pendingReports: 0,
+    totalUsersChange: 0,
+    activeStudiesChange: 0
+  }
+
+  const recentReports = reportsData?.reports || []
+
+  // Mock 데이터 (차트용 - 실제로는 API에서 가져와야 함)
+  const userGrowthData = statsData?.userGrowth || []
+  const studyActivitiesData = statsData?.studyActivities || []
+  const systemStatus = statsData?.systemStatus || { cpu: 0, memory: 0, disk: 0 }
 
   const formatTimeAgo = (dateString) => {
     const now = new Date()
@@ -50,7 +64,7 @@ export default function AdminDashboard() {
 
   const handleProcessReport = (data) => {
     console.log('신고 처리:', data)
-    alert(`신고가 처리되었습니다.\\n액션: ${data.action}\\n메모: ${data.memo}`)
+    alert(`신고가 처리되었습니다.\n액션: ${data.action}\n메모: ${data.memo}`)
     setIsReportModalOpen(false)
     setSelectedReport(null)
   }
@@ -60,11 +74,33 @@ export default function AdminDashboard() {
     setIsSuspendModalOpen(true)
   }
 
-  const handleConfirmSuspend = (data) => {
-    console.log('계정 정지:', data)
-    alert(`계정이 정지되었습니다.\\n사용자: ${data.userId}\\n기간: ${data.duration}\\n사유: ${data.details}`)
-    setIsSuspendModalOpen(false)
-    setSelectedUser(null)
+  const handleConfirmSuspend = async (data) => {
+    try {
+      await suspendUserMutation.mutateAsync({
+        id: data.userId,
+        data: {
+          duration: data.duration,
+          reason: data.details
+        }
+      })
+      alert(`계정이 정지되었습니다.\n사용자: ${data.userId}\n기간: ${data.duration}\n사유: ${data.details}`)
+      setIsSuspendModalOpen(false)
+      setSelectedUser(null)
+    } catch (error) {
+      alert('계정 정지 실패: ' + error.message)
+    }
+  }
+
+  if (statsLoading) {
+    return (
+      <AdminLayout>
+        <div className="adminPageWrapper">
+          <div className="adminMainContent">
+            <div style={{ textAlign: 'center', padding: '3rem' }}>로딩 중...</div>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -141,7 +177,13 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-              <UserGrowthChart data={userGrowthData} />
+              {userGrowthData.length > 0 ? (
+                <UserGrowthChart data={userGrowthData} />
+              ) : (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                  차트 데이터 없음
+                </div>
+              )}
             </div>
 
             {/* Recent Reports & Status */}
@@ -158,51 +200,57 @@ export default function AdminDashboard() {
                   </button>
                 </div>
                 <div className={styles.cardList}>
-                  {recentReports.map(report => (
-                    <div
-                      key={report.id}
-                      className={`${styles.reportCard} ${
-                        report.priority === 'URGENT' ? styles.urgent : ''
-                      } ${
-                        report.status === 'RESOLVED' ? styles.resolved : ''
-                      }`}
-                    >
-                      <div className={styles.reportHeader}>
-                        <span className={`${styles.reportType} ${styles[report.type.toLowerCase()]}`}>
-                          {report.type === 'SPAM' && '⚠️ 스팸'}
-                          {report.type === 'HARASSMENT' && '🟠 욕설'}
-                          {report.type === 'INAPPROPRIATE' && '🟡 부적절'}
-                        </span>
-                      </div>
-                      <div className={styles.reportInfo}>
-                        대상: {report.targetName}
-                      </div>
-                      <div className={styles.reportInfo}>
-                        신고자: {report.reporter.name}
-                      </div>
-                      <div className={styles.reportMeta}>
-                        <span>{formatTimeAgo(report.createdAt)}</span>
-                        <span>·</span>
-                        <span>{report.status === 'PENDING' ? '미처리' : '처리완료'}</span>
-                      </div>
-                      {report.status === 'PENDING' && (
-                        <div className={styles.reportActions}>
-                          <button
-                            className={`${styles.actionButton} ${styles.primary}`}
-                            onClick={() => handleReportClick(report)}
-                          >
-                            처리하기
-                          </button>
-                          <button
-                            className={styles.actionButton}
-                            onClick={() => handleReportClick(report)}
-                          >
-                            상세보기
-                          </button>
-                        </div>
-                      )}
+                  {recentReports.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                      신고 내역이 없습니다.
                     </div>
-                  ))}
+                  ) : (
+                    recentReports.map(report => (
+                      <div
+                        key={report.id}
+                        className={`${styles.reportCard} ${
+                          report.priority === 'URGENT' ? styles.urgent : ''
+                        } ${
+                          report.status === 'RESOLVED' ? styles.resolved : ''
+                        }`}
+                      >
+                        <div className={styles.reportHeader}>
+                          <span className={`${styles.reportType} ${styles[report.type?.toLowerCase()]}`}>
+                            {report.type === 'SPAM' && '⚠️ 스팸'}
+                            {report.type === 'HARASSMENT' && '🟠 욕설'}
+                            {report.type === 'INAPPROPRIATE' && '🟡 부적절'}
+                          </span>
+                        </div>
+                        <div className={styles.reportInfo}>
+                          대상: {report.targetName || '알 수 없음'}
+                        </div>
+                        <div className={styles.reportInfo}>
+                          신고자: {report.reporter?.name || '알 수 없음'}
+                        </div>
+                        <div className={styles.reportMeta}>
+                          <span>{formatTimeAgo(report.createdAt)}</span>
+                          <span>·</span>
+                          <span>{report.status === 'PENDING' ? '미처리' : '처리완료'}</span>
+                        </div>
+                        {report.status === 'PENDING' && (
+                          <div className={styles.reportActions}>
+                            <button
+                              className={`${styles.actionButton} ${styles.primary}`}
+                              onClick={() => handleReportClick(report)}
+                            >
+                              처리하기
+                            </button>
+                            <button
+                              className={styles.actionButton}
+                              onClick={() => handleReportClick(report)}
+                            >
+                              상세보기
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  }
                 </div>
               </div>
 
@@ -213,7 +261,7 @@ export default function AdminDashboard() {
                 <div className={styles.statusGrid}>
                   <div className={styles.statusCard}>
                     <div className={styles.statusLabel}>활성 사용자</div>
-                    <div className={styles.statusValue}>{adminStats.totalUsers - 54}</div>
+                    <div className={styles.statusValue}>{Math.max(0, adminStats.totalUsers - 54)}</div>
                     <div className={styles.statusSubtext}>현재 접속 중</div>
                   </div>
 
@@ -253,7 +301,13 @@ export default function AdminDashboard() {
               <div className={styles.chartHeader}>
                 <h2 className={styles.chartTitle}>스터디 활동 현황 (주간)</h2>
               </div>
-              <StudyActivityChart data={studyActivitiesData} />
+              {studyActivitiesData.length > 0 ? (
+                <StudyActivityChart data={studyActivitiesData} />
+              ) : (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                  차트 데이터 없음
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,20 +1,39 @@
 // 내 스터디 대시보드 (개요)
 'use client';
 
-import { use, useState } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useStudy } from '@/lib/hooks/useApi';
 import styles from './page.module.css';
-import { studyDashboard } from '@/mocks/studies';
 
 export default function MyStudyDashboardPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
 
-  // Mock 데이터
-  const data = studyDashboard[studyId] || studyDashboard['study_1'];
-  const { study, weeklyActivity, recentNotices, recentFiles, upcomingEvents, urgentTasks } = data;
+  // 실제 API 호출
+  const { data: studyData, isLoading } = useStudy(studyId);
+  const study = studyData?.data;
 
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>스터디 정보를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // 스터디 없음
+  if (!study) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>스터디를 찾을 수 없습니다.</div>
+      </div>
+    );
+  }
+
+  // 탭 데이터
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
     { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
@@ -25,6 +44,22 @@ export default function MyStudyDashboardPage({ params }) {
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
     { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️', adminOnly: true },
   ];
+
+  // Mock 데이터 (임시 - 추후 실제 API로 교체)
+  const weeklyActivity = {
+    attendance: 85,
+    attendanceCount: '6/7',
+    taskCompletion: 70,
+    taskCount: '7/10',
+    messages: 42,
+    notices: 3,
+    files: 5,
+  };
+
+  const recentNotices = [];
+  const recentFiles = [];
+  const upcomingEvents = [];
+  const urgentTasks = [];
 
   return (
     <div className={styles.container}>
@@ -40,12 +75,12 @@ export default function MyStudyDashboardPage({ params }) {
             <div>
               <h1 className={styles.studyName}>{study.name}</h1>
               <p className={styles.studyMeta}>
-                👥 {study.members.current}/{study.members.max}명
+                👥 {study.currentMembers}/{study.maxMembers}명
               </p>
             </div>
           </div>
-          <span className={`${styles.roleBadge} ${styles[study.role.toLowerCase()]}`}>
-            {study.role === 'OWNER' ? '👑' : study.role === 'ADMIN' ? '⭐' : '👤'} {study.role}
+          <span className={`${styles.roleBadge} ${styles[study.myRole?.toLowerCase() || 'member']}`}>
+            {study.myRole === 'OWNER' ? '👑' : study.myRole === 'ADMIN' ? '⭐' : '👤'} {study.myRole || 'MEMBER'}
           </span>
         </div>
       </div>
@@ -53,7 +88,7 @@ export default function MyStudyDashboardPage({ params }) {
       {/* 탭 네비게이션 */}
       <div className={styles.tabs}>
         {tabs
-          .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.role))
+          .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.myRole))
           .map((tab) => (
             <Link
               key={tab.label}
@@ -110,6 +145,23 @@ export default function MyStudyDashboardPage({ params }) {
             </div>
           </div>
 
+          {/* 스터디 소개 */}
+          <div className={styles.gridCard}>
+            <h3 className={styles.cardTitle}>📝 스터디 소개</h3>
+            <p className={styles.description}>{study.description}</p>
+            <div className={styles.studyDetails}>
+              <span className={styles.detailItem}>📂 {study.category}</span>
+              {study.subCategory && <span className={styles.detailItem}>• {study.subCategory}</span>}
+            </div>
+            {study.tags && study.tags.length > 0 && (
+              <div className={styles.tags}>
+                {study.tags.map(tag => (
+                  <span key={tag} className={styles.tag}>#{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* 그리드 섹션 */}
           <div className={styles.grid}>
             {/* 최근 공지 */}
@@ -121,16 +173,20 @@ export default function MyStudyDashboardPage({ params }) {
                 </Link>
               </div>
               <div className={styles.listItems}>
-                {recentNotices.map((notice) => (
-                  <div key={notice.id} className={styles.listItem}>
-                    <div className={styles.itemContent}>
-                      <span className={styles.itemTitle}>{notice.title}</span>
-                      <span className={styles.itemMeta}>
-                        {notice.author} · {notice.time}
-                      </span>
+                {recentNotices.length === 0 ? (
+                  <p className={styles.emptyText}>최근 공지가 없습니다</p>
+                ) : (
+                  recentNotices.map((notice) => (
+                    <div key={notice.id} className={styles.listItem}>
+                      <div className={styles.itemContent}>
+                        <span className={styles.itemTitle}>{notice.title}</span>
+                        <span className={styles.itemMeta}>
+                          {notice.author} · {notice.time}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -143,16 +199,20 @@ export default function MyStudyDashboardPage({ params }) {
                 </Link>
               </div>
               <div className={styles.listItems}>
-                {recentFiles.map((file) => (
-                  <div key={file.id} className={styles.listItem}>
-                    <div className={styles.itemContent}>
-                      <span className={styles.itemTitle}>{file.name}</span>
-                      <span className={styles.itemMeta}>
-                        {file.uploader} · {file.size}
-                      </span>
+                {recentFiles.length === 0 ? (
+                  <p className={styles.emptyText}>최근 파일이 없습니다</p>
+                ) : (
+                  recentFiles.map((file) => (
+                    <div key={file.id} className={styles.listItem}>
+                      <div className={styles.itemContent}>
+                        <span className={styles.itemTitle}>{file.name}</span>
+                        <span className={styles.itemMeta}>
+                          {file.uploader} · {file.size}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -165,15 +225,19 @@ export default function MyStudyDashboardPage({ params }) {
                 </Link>
               </div>
               <div className={styles.listItems}>
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className={styles.listItem}>
-                    <div className={styles.itemContent}>
-                      <span className={styles.itemTitle}>{event.title}</span>
-                      <span className={styles.itemMeta}>{event.date}</span>
+                {upcomingEvents.length === 0 ? (
+                  <p className={styles.emptyText}>예정된 일정이 없습니다</p>
+                ) : (
+                  upcomingEvents.map((event) => (
+                    <div key={event.id} className={styles.listItem}>
+                      <div className={styles.itemContent}>
+                        <span className={styles.itemTitle}>{event.title}</span>
+                        <span className={styles.itemMeta}>{event.date}</span>
+                      </div>
+                      <span className={styles.ddayBadge}>{event.dday}</span>
                     </div>
-                    <span className={styles.ddayBadge}>{event.dday}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -186,15 +250,19 @@ export default function MyStudyDashboardPage({ params }) {
                 </Link>
               </div>
               <div className={styles.listItems}>
-                {urgentTasks.map((task) => (
-                  <div key={task.id} className={styles.listItem}>
-                    <div className={styles.itemContent}>
-                      <span className={styles.itemTitle}>{task.title}</span>
-                      <span className={styles.itemMeta}>{task.date}</span>
+                {urgentTasks.length === 0 ? (
+                  <p className={styles.emptyText}>급한 할일이 없습니다</p>
+                ) : (
+                  urgentTasks.map((task) => (
+                    <div key={task.id} className={styles.listItem}>
+                      <div className={styles.itemContent}>
+                        <span className={styles.itemTitle}>{task.title}</span>
+                        <span className={styles.itemMeta}>{task.date}</span>
+                      </div>
+                      <span className={styles.urgentBadge}>{task.dday}</span>
                     </div>
-                    <span className={styles.urgentBadge}>{task.dday}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -205,18 +273,9 @@ export default function MyStudyDashboardPage({ params }) {
           <div className={styles.widget}>
             <h3 className={styles.widgetTitle}>📊 스터디 현황</h3>
             <div className={styles.widgetContent}>
-              <p className={styles.widgetText}>다음 일정: D-7</p>
-              <p className={styles.widgetText}>2025.11.13 (수) 14:00</p>
-              <p className={styles.widgetText}>주간 회의</p>
-            </div>
-          </div>
-
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>👥 온라인 (3명)</h3>
-            <div className={styles.widgetContent}>
-              <div className={styles.onlineMember}>🟢 김철수</div>
-              <div className={styles.onlineMember}>🟢 이영희</div>
-              <div className={styles.onlineMember}>🟢 박민수</div>
+              <p className={styles.widgetText}>총 멤버: {study.currentMembers}명</p>
+              <p className={styles.widgetText}>모집 상태: {study.isRecruiting ? '모집 중' : '모집 마감'}</p>
+              <p className={styles.widgetText}>공개 여부: {study.isPublic ? '공개' : '비공개'}</p>
             </div>
           </div>
 
@@ -226,15 +285,17 @@ export default function MyStudyDashboardPage({ params }) {
               <Link href={`/my-studies/${studyId}/chat`} className={styles.widgetButton}>
                 💬 채팅
               </Link>
-              <Link href={`/my-studies/${studyId}/video-call`} className={styles.widgetButton}>
-                📹 화상
+              <Link href={`/my-studies/${studyId}/notices`} className={styles.widgetButton}>
+                📢 공지
               </Link>
-              <Link href="/studies" className={styles.widgetButton}>
-                🔍 초대
+              <Link href={`/my-studies/${studyId}/files`} className={styles.widgetButton}>
+                📁 파일
               </Link>
-              <Link href={`/my-studies/${studyId}/settings`} className={styles.widgetButton}>
-                📊 통계
-              </Link>
+              {['OWNER', 'ADMIN'].includes(study.myRole) && (
+                <Link href={`/my-studies/${studyId}/settings`} className={styles.widgetButton}>
+                  ⚙️ 설정
+                </Link>
+              )}
             </div>
           </div>
         </div>

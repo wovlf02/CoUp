@@ -5,7 +5,7 @@ import { use, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { studyFilesData } from '@/mocks/studyFiles';
+import { useStudy, useFiles, useUploadFile, useDeleteFile } from '@/lib/hooks/useApi';
 
 export default function MyStudyFilesPage({ params }) {
   const router = useRouter();
@@ -13,11 +13,17 @@ export default function MyStudyFilesPage({ params }) {
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [currentPath, setCurrentPath] = useState(['루트']);
   const [activeFilter, setActiveFilter] = useState('전체');
 
-  const data = studyFilesData[studyId] || studyFilesData[1];
-  const { study, folders, files } = data;
+  // 실제 API Hooks
+  const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
+  const { data: filesData, isLoading: filesLoading, refetch } = useFiles(studyId);
+  const uploadFileMutation = useUploadFile();
+  const deleteFileMutation = useDeleteFile();
+
+  const study = studyData?.study;
+  const files = filesData?.files || [];
+  const folders = []; // TODO: 폴더 기능 구현
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -31,17 +37,29 @@ export default function MyStudyFilesPage({ params }) {
   ];
 
   const getFileIcon = (type) => {
-    const icons = {
-      pdf: '📄',
-      image: '🖼️',
-      spreadsheet: '📊',
-      document: '📝',
-      archive: '📦',
-      video: '🎬',
-      audio: '🎵',
-      code: '💻',
-    };
-    return icons[type] || '📄';
+    if (!type) return '📄';
+    if (type.includes('pdf')) return '📄';
+    if (type.includes('image')) return '🖼️';
+    if (type.includes('video')) return '🎬';
+    if (type.includes('audio')) return '🎵';
+    if (type.includes('zip') || type.includes('rar')) return '📦';
+    if (type.includes('word')) return '📝';
+    if (type.includes('excel') || type.includes('spreadsheet')) return '📊';
+    return '📄';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   };
 
   const handleDragOver = (e) => {
@@ -60,9 +78,21 @@ export default function MyStudyFilesPage({ params }) {
     handleFileUpload(droppedFiles);
   };
 
-  const handleFileUpload = (files) => {
-    console.log('Uploading files:', files);
-    // TODO: 실제 업로드 로직
+  const handleFileUpload = async (fileList) => {
+    for (const file of fileList) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        await uploadFileMutation.mutateAsync({
+          studyId,
+          formData
+        });
+      } catch (error) {
+        alert(`파일 업로드 실패 (${file.name}): ${error.message}`);
+      }
+    }
+    await refetch();
   };
 
   const handleFileSelect = (fileId) => {
@@ -80,6 +110,35 @@ export default function MyStudyFilesPage({ params }) {
       setSelectedFiles(files.map((f) => f.id));
     }
   };
+
+  const handleDeleteFile = async (fileId, fileName) => {
+    if (!confirm(`${fileName} 파일을 삭제하시겠습니까?`)) return;
+
+    try {
+      await deleteFileMutation.mutateAsync({ studyId, fileId });
+      setSelectedFiles(prev => prev.filter(id => id !== fileId));
+      await refetch();
+    } catch (error) {
+      alert('파일 삭제 실패: ' + error.message);
+    }
+  };
+
+  const handleDownload = (fileUrl, fileName) => {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (studyLoading) {
+    return <div className={styles.container}>로딩 중...</div>;
+  }
+
+  if (!study) {
+    return <div className={styles.container}>스터디를 찾을 수 없습니다.</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -123,8 +182,9 @@ export default function MyStudyFilesPage({ params }) {
             <button
               className={styles.uploadButton}
               onClick={() => fileInputRef.current?.click()}
+              disabled={uploadFileMutation.isPending}
             >
-              ⬆️ 파일 업로드
+              {uploadFileMutation.isPending ? '⏳ 업로드 중...' : '⬆️ 파일 업로드'}
             </button>
             <input
               ref={fileInputRef}
@@ -150,24 +210,6 @@ export default function MyStudyFilesPage({ params }) {
                 </button>
               ))}
             </div>
-            <input
-              type="text"
-              placeholder="파일명, 업로더 검색..."
-              className={styles.searchInput}
-            />
-          </div>
-
-          {/* 경로 네비게이션 */}
-          <div className={styles.breadcrumb}>
-            <span className={styles.breadcrumbLabel}>📂 경로:</span>
-            {currentPath.map((path, index) => (
-              <span key={index} className={styles.breadcrumbItem}>
-                <button className={styles.breadcrumbLink}>{path}</button>
-                {index < currentPath.length - 1 && (
-                  <span className={styles.breadcrumbSeparator}>›</span>
-                )}
-              </span>
-            ))}
           </div>
 
           {/* 드래그 앤 드롭 영역 */}
@@ -184,86 +226,80 @@ export default function MyStudyFilesPage({ params }) {
                 {isDragging ? '파일을 놓으세요' : '파일을 드래그하거나 클릭하세요'}
               </p>
               <p className={styles.dropZoneHint}>
-                지원 형식: 모든 파일 (최대 50MB) · 한 번에 최대 10개
+                지원 형식: 모든 파일 (최대 50MB)
               </p>
             </div>
           </div>
-
-          {/* 폴더 목록 */}
-          {folders.length > 0 && (
-            <div className={styles.folderSection}>
-              <h3 className={styles.sectionLabel}>📂 폴더 ({folders.length})</h3>
-              <div className={styles.folderGrid}>
-                {folders.map((folder) => (
-                  <div key={folder.id} className={styles.folderCard}>
-                    <div className={styles.folderIcon}>📁</div>
-                    <div className={styles.folderInfo}>
-                      <h4 className={styles.folderName}>{folder.name}</h4>
-                      <p className={styles.folderMeta}>
-                        {folder.fileCount}개 · {folder.size}
-                      </p>
-                    </div>
-                    <button className={styles.folderOpenBtn}>열기</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* 파일 목록 */}
           <div className={styles.fileListSection}>
             <div className={styles.fileListHeader}>
               <h3 className={styles.sectionLabel}>📄 파일 ({files.length})</h3>
-              <button className={styles.newFolderBtn}>+ 새 폴더</button>
             </div>
 
-            {/* 테이블 헤더 */}
-            <div className={styles.tableHeader}>
-              <div className={styles.tableCheckbox}>
-                <input
-                  type="checkbox"
-                  checked={selectedFiles.length === files.length}
-                  onChange={handleSelectAll}
-                />
+            {filesLoading ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>파일 로딩 중...</div>
+            ) : files.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                첫 파일을 업로드해보세요! 📤
               </div>
-              <div className={styles.tableName}>이름</div>
-              <div className={styles.tableSize}>크기</div>
-              <div className={styles.tableUploader}>업로더</div>
-              <div className={styles.tableDate}>날짜</div>
-              <div className={styles.tableActions}>액션</div>
-            </div>
-
-            {/* 파일 행 */}
-            {files.map((file) => (
-              <div key={file.id} className={styles.fileRow}>
-                <div className={styles.fileCheckbox}>
-                  <input
-                    type="checkbox"
-                    checked={selectedFiles.includes(file.id)}
-                    onChange={() => handleFileSelect(file.id)}
-                  />
-                </div>
-                <div className={styles.fileName}>
-                  <span className={styles.fileIcon}>{getFileIcon(file.type)}</span>
-                  <div className={styles.fileNameText}>
-                    <span className={styles.fileNameMain}>{file.name}</span>
-                    <span className={styles.fileDownloads}>⬇ {file.downloads}회</span>
+            ) : (
+              <>
+                {/* 테이블 헤더 */}
+                <div className={styles.tableHeader}>
+                  <div className={styles.tableCheckbox}>
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles.length === files.length && files.length > 0}
+                      onChange={handleSelectAll}
+                    />
                   </div>
+                  <div className={styles.tableName}>이름</div>
+                  <div className={styles.tableSize}>크기</div>
+                  <div className={styles.tableUploader}>업로더</div>
+                  <div className={styles.tableDate}>날짜</div>
+                  <div className={styles.tableActions}>액션</div>
                 </div>
-                <div className={styles.fileSize}>{file.size}</div>
-                <div className={styles.fileUploader}>
-                  {file.uploader.name}({file.uploader.role})
-                </div>
-                <div className={styles.fileDate}>{file.uploadedAt}</div>
-                <div className={styles.fileActions}>
-                  <button className={styles.actionBtn}>다운로드</button>
-                  <button className={styles.actionBtn}>공유</button>
-                  {study.role !== 'MEMBER' && (
-                    <button className={styles.actionBtn}>삭제</button>
-                  )}
-                </div>
-              </div>
-            ))}
+
+                {/* 파일 행 */}
+                {files.map((file) => (
+                  <div key={file.id} className={styles.fileRow}>
+                    <div className={styles.fileCheckbox}>
+                      <input
+                        type="checkbox"
+                        checked={selectedFiles.includes(file.id)}
+                        onChange={() => handleFileSelect(file.id)}
+                      />
+                    </div>
+                    <div className={styles.fileName}>
+                      <span className={styles.fileIcon}>{getFileIcon(file.type)}</span>
+                      <div className={styles.fileNameText}>
+                        <span className={styles.fileNameMain}>{file.name}</span>
+                      </div>
+                    </div>
+                    <div className={styles.fileSize}>{formatFileSize(file.size)}</div>
+                    <div className={styles.fileUploader}>
+                      {file.uploader?.name || '알 수 없음'}
+                    </div>
+                    <div className={styles.fileDate}>{formatDate(file.createdAt)}</div>
+                    <div className={styles.fileActions}>
+                      <button
+                        className={styles.actionBtn}
+                        onClick={() => handleDownload(file.url, file.name)}
+                      >
+                        다운로드
+                      </button>
+                      <button
+                        className={styles.actionBtn}
+                        onClick={() => handleDeleteFile(file.id, file.name)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
 
           {/* 선택된 파일 액션 */}
@@ -272,30 +308,25 @@ export default function MyStudyFilesPage({ params }) {
               <span className={styles.selectedCount}>
                 선택된 파일 ({selectedFiles.length}개):
               </span>
-              <button className={styles.bulkActionBtn}>일괄 다운로드</button>
-              <button className={styles.bulkActionBtn}>이동</button>
-              <button className={styles.bulkActionBtn}>삭제</button>
+              <button
+                className={styles.bulkActionBtn}
+                onClick={() => {
+                  if (confirm(`${selectedFiles.length}개 파일을 삭제하시겠습니까?`)) {
+                    selectedFiles.forEach(fileId => {
+                      const file = files.find(f => f.id === fileId);
+                      if (file) handleDeleteFile(fileId, file.name);
+                    });
+                  }
+                }}
+              >
+                삭제
+              </button>
             </div>
           )}
         </div>
 
         {/* 우측 위젯 */}
         <aside className={styles.sidebar}>
-          {/* 저장 공간 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>💾 저장 공간</h3>
-            <div className={styles.widgetContent}>
-              <div className={styles.storageInfo}>
-                <span className={styles.storageText}>128MB / 2GB</span>
-                <span className={styles.storagePercent}>6%</span>
-              </div>
-              <div className={styles.storageBar}>
-                <div className={styles.storageBarFill} style={{ width: '6%' }}></div>
-              </div>
-              <p className={styles.storageHint}>1.87GB 남음</p>
-            </div>
-          </div>
-
           {/* 빠른 액션 */}
           <div className={styles.widget}>
             <h3 className={styles.widgetTitle}>⚡ 빠른 액션</h3>
@@ -306,9 +337,6 @@ export default function MyStudyFilesPage({ params }) {
               >
                 📤 업로드
               </button>
-              <button className={styles.widgetButton}>📁 새 폴더</button>
-              <button className={styles.widgetButton}>🔗 공유 링크</button>
-              <button className={styles.widgetButton}>📊 통계</button>
             </div>
           </div>
 
@@ -318,65 +346,32 @@ export default function MyStudyFilesPage({ params }) {
             <div className={styles.widgetContent}>
               <div className={styles.statRow}>
                 <span>전체 파일:</span>
-                <span className={styles.statValue}>48개</span>
+                <span className={styles.statValue}>{files.length}개</span>
               </div>
               <div className={styles.statRow}>
-                <span>폴더:</span>
-                <span>5개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>이번 주 업로드:</span>
-                <span className={styles.statValue}>8개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>총 다운로드:</span>
-                <span>243회</span>
+                <span>총 용량:</span>
+                <span>{formatFileSize(files.reduce((sum, f) => sum + (f.size || 0), 0))}</span>
               </div>
             </div>
           </div>
 
           {/* 최근 파일 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>📁 최근 파일</h3>
-            <div className={styles.widgetContent}>
-              {files.slice(0, 3).map((file) => (
-                <div key={file.id} className={styles.recentFile}>
-                  <span className={styles.recentFileIcon}>{getFileIcon(file.type)}</span>
-                  <div className={styles.recentFileInfo}>
-                    <div className={styles.recentFileName}>{file.name}</div>
-                    <div className={styles.recentFileTime}>{file.uploadedAt}</div>
+          {files.length > 0 && (
+            <div className={styles.widget}>
+              <h3 className={styles.widgetTitle}>📁 최근 파일</h3>
+              <div className={styles.widgetContent}>
+                {files.slice(0, 3).map((file) => (
+                  <div key={file.id} className={styles.recentFile}>
+                    <span className={styles.recentFileIcon}>{getFileIcon(file.type)}</span>
+                    <div className={styles.recentFileInfo}>
+                      <div className={styles.recentFileName}>{file.name}</div>
+                      <div className={styles.recentFileTime}>{formatDate(file.createdAt)}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 파일 형식 */}
-          <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>📎 파일 형식</h3>
-            <div className={styles.widgetContent}>
-              <div className={styles.statRow}>
-                <span>PDF:</span>
-                <span>18개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>이미지:</span>
-                <span>12개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>문서:</span>
-                <span>8개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>압축:</span>
-                <span>6개</span>
-              </div>
-              <div className={styles.statRow}>
-                <span>기타:</span>
-                <span>4개</span>
+                ))}
               </div>
             </div>
-          </div>
+          )}
 
           {/* 팁 */}
           <div className={styles.widget}>
@@ -386,10 +381,7 @@ export default function MyStudyFilesPage({ params }) {
                 • 드래그&드롭으로 빠른 업로드
               </p>
               <p className={styles.tipText}>
-                • 폴더로 파일 체계적 관리
-              </p>
-              <p className={styles.tipText}>
-                • 공유 링크로 외부 공유 가능
+                • 최대 50MB 파일 업로드 가능
               </p>
             </div>
           </div>

@@ -5,7 +5,6 @@ import NotificationCard from '@/components/notifications/NotificationCard'
 import NotificationFilters from '@/components/notifications/NotificationFilters'
 import NotificationStats from '@/components/notifications/NotificationStats'
 import NotificationTypeFilter from '@/components/notifications/NotificationTypeFilter'
-import NotificationSettings from '@/components/notifications/NotificationSettings'
 import NotificationEmpty from '@/components/notifications/NotificationEmpty'
 import { useNotifications, useMarkAllNotificationsAsRead, useMarkNotificationAsRead } from '@/lib/hooks/useApi'
 import styles from './page.module.css'
@@ -28,11 +27,27 @@ export default function NotificationsPage() {
     return notifications
   }, [notifications, filter])
 
+  // 알림 타입별 통계 (클라이언트에서 계산)
+  const notificationTypeStats = useMemo(() => {
+    const byType = {}
+    notifications.forEach(n => {
+      byType[n.type] = (byType[n.type] || 0) + 1
+    })
+    return {
+      total: stats.total,
+      unread: stats.unread,
+      byType
+    }
+  }, [notifications, stats])
+
   const handleMarkAllAsRead = async () => {
+    if (!confirm('모든 알림을 읽음 처리하시겠습니까?')) return
+
     try {
       await markAllAsRead.mutateAsync()
       alert('모든 알림을 읽음 처리했습니다!')
     } catch (error) {
+      console.error('알림 읽음 처리 실패:', error)
       alert('알림 읽음 처리에 실패했습니다.')
     }
   }
@@ -47,8 +62,8 @@ export default function NotificationsPage() {
     }
 
     // 알림 데이터에 따라 링크로 이동
-    if (notification.data?.studyId) {
-      window.location.href = `/my-studies/${notification.data.studyId}`
+    if (notification.studyId) {
+      window.location.href = `/my-studies/${notification.studyId}`
     }
   }
 
@@ -60,19 +75,6 @@ export default function NotificationsPage() {
       </div>
     )
   }
-
-  // 알림 타입별 통계 (클라이언트에서 계산)
-  const notificationStats = useMemo(() => {
-    const byType = {}
-    notifications.forEach(n => {
-      byType[n.type] = (byType[n.type] || 0) + 1
-    })
-    return {
-      total: stats.total,
-      unread: stats.unread,
-      byType
-    }
-  }, [notifications, stats])
 
   return (
     <div className={styles.container}>
@@ -109,8 +111,8 @@ export default function NotificationsPage() {
       </div>
 
       <aside className={styles.sidebar}>
-        <NotificationStats stats={notificationStats} />
-        <NotificationTypeFilter stats={notificationStats} />
+        <NotificationStats notifications={notifications} />
+        <NotificationTypeFilter stats={notificationTypeStats} />
       </aside>
     </div>
   )

@@ -1,21 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useCreateNotice, useUpdateNotice } from '@/lib/hooks/useApi'
 import styles from './NoticeCreateEditModal.module.css'
-import { createNotice, updateNotice } from '@/mocks/notices'
 
 export default function NoticeCreateEditModal({ studyId, notice, onClose, onSuccess }) {
   const isEditMode = !!notice
+  const createNotice = useCreateNotice()
+  const updateNotice = useUpdateNotice()
 
   const [formData, setFormData] = useState({
     title: notice?.title || '',
     content: notice?.content || '',
-    isPinned: notice?.isPinned || false
+    isPinned: notice?.isPinned || false,
+    isImportant: notice?.isImportant || false
   })
   const [showPreview, setShowPreview] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     // 유효성 검사
@@ -35,18 +38,28 @@ export default function NoticeCreateEditModal({ studyId, notice, onClose, onSucc
       return
     }
 
-    // 공지사항 생성/수정
-    if (isEditMode) {
-      const updated = updateNotice(notice.id, formData)
-      alert('공지사항이 수정되었습니다!')
-      onSuccess(updated)
-    } else {
-      const newNotice = createNotice(studyId, formData)
-      alert('공지사항이 작성되었습니다!')
-      onSuccess(newNotice)
-    }
+    try {
+      // 공지사항 생성/수정
+      if (isEditMode) {
+        await updateNotice.mutateAsync({
+          studyId,
+          noticeId: notice.id,
+          data: formData
+        })
+        alert('공지사항이 수정되었습니다!')
+      } else {
+        await createNotice.mutateAsync({
+          studyId,
+          data: formData
+        })
+        alert('공지사항이 작성되었습니다!')
+      }
 
-    onClose()
+      onSuccess()
+    } catch (error) {
+      console.error('공지 저장 실패:', error)
+      alert('공지사항 저장에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   const handleChange = (field, value) => {
@@ -97,69 +110,27 @@ export default function NoticeCreateEditModal({ studyId, notice, onClose, onSucc
             {errors.title && (
               <span className={styles.errorMessage}>{errors.title}</span>
             )}
-            <span className={styles.charCount}>
-              {formData.title.length} / 100
-            </span>
+            <span className={styles.charCount}>{formData.title.length}/100</span>
           </div>
 
           {/* 내용 */}
           <div className={styles.formGroup}>
-            <div className={styles.labelRow}>
-              <label className={styles.label}>
-                내용 <span className={styles.required}>*</span>
-                <span className={styles.hint}>(Markdown 지원)</span>
-              </label>
-              <div className={styles.tabs}>
-                <button
-                  type="button"
-                  className={`${styles.tab} ${!showPreview ? styles.active : ''}`}
-                  onClick={() => setShowPreview(false)}
-                >
-                  작성
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.tab} ${showPreview ? styles.active : ''}`}
-                  onClick={() => setShowPreview(true)}
-                >
-                  미리보기
-                </button>
-              </div>
-            </div>
-
-            {!showPreview ? (
-              <textarea
-                className={`${styles.textarea} ${errors.content ? styles.error : ''}`}
-                placeholder="공지사항 내용을 입력하세요&#10;&#10;Markdown 문법을 사용할 수 있습니다:&#10;- # 제목&#10;- **굵게**&#10;- [링크](URL)&#10;- ```코드```"
-                value={formData.content}
-                onChange={(e) => handleChange('content', e.target.value)}
-                rows={12}
-              />
-            ) : (
-              <div className={styles.preview}>
-                {formData.content ? (
-                  <div dangerouslySetInnerHTML={{
-                    __html: formData.content
-                      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                      .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                      .replace(/\*(.*)\*/gim, '<em>$1</em>')
-                      .replace(/\n/gim, '<br />')
-                  }} />
-                ) : (
-                  <div className={styles.previewEmpty}>
-                    내용을 입력하면 미리보기가 표시됩니다
-                  </div>
-                )}
-              </div>
-            )}
+            <label className={styles.label}>
+              내용 <span className={styles.required}>*</span>
+            </label>
+            <textarea
+              className={`${styles.textarea} ${errors.content ? styles.error : ''}`}
+              placeholder="공지사항 내용을 입력하세요"
+              value={formData.content}
+              onChange={(e) => handleChange('content', e.target.value)}
+              rows={10}
+            />
             {errors.content && (
               <span className={styles.errorMessage}>{errors.content}</span>
             )}
           </div>
 
-          {/* 상단 고정 */}
+          {/* 옵션 */}
           <div className={styles.formGroup}>
             <label className={styles.checkboxLabel}>
               <input
@@ -167,12 +138,23 @@ export default function NoticeCreateEditModal({ studyId, notice, onClose, onSucc
                 checked={formData.isPinned}
                 onChange={(e) => handleChange('isPinned', e.target.checked)}
               />
-              <span>상단 고정</span>
+              <span>📌 상단 고정</span>
+            </label>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formData.isImportant}
+                onChange={(e) => handleChange('isImportant', e.target.checked)}
+              />
+              <span>⭐ 중요 공지</span>
             </label>
           </div>
 
           {/* 버튼 */}
-          <div className={styles.buttonGroup}>
+          <div className={styles.modalFooter}>
             <button
               type="button"
               className={styles.cancelButton}
@@ -180,8 +162,16 @@ export default function NoticeCreateEditModal({ studyId, notice, onClose, onSucc
             >
               취소
             </button>
-            <button type="submit" className={styles.submitButton}>
-              {isEditMode ? '수정하기' : '작성하기'}
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={createNotice.isPending || updateNotice.isPending}
+            >
+              {createNotice.isPending || updateNotice.isPending
+                ? '저장 중...'
+                : isEditMode
+                ? '수정하기'
+                : '작성하기'}
             </button>
           </div>
         </form>
@@ -189,4 +179,3 @@ export default function NoticeCreateEditModal({ studyId, notice, onClose, onSucc
     </div>
   )
 }
-

@@ -1,38 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import styles from '@/app/dashboard/page.module.css'
 import DashboardSkeleton from './DashboardSkeleton'
 import EmptyState from './EmptyState'
+import { useDashboard } from '@/lib/hooks/useApi'
 
-export default function DashboardClient({ user, dashboardData: initialData }) {
-  const [isLoading, setIsLoading] = useState(!initialData)
-  const [data, setData] = useState(initialData)
-
-  useEffect(() => {
-    if (!initialData) {
-      // 클라이언트에서 데이터 가져오기
-      fetch('/api/dashboard')
-        .then(res => res.json())
-        .then(result => {
-          if (result.success) {
-            setData(result.data)
-          }
-          setIsLoading(false)
-        })
-        .catch(error => {
-          console.error('Failed to load dashboard:', error)
-          setIsLoading(false)
-        })
-    }
-  }, [initialData])
+export default function DashboardClient({ user }) {
+  // 실제 API Hook 사용
+  const { data: dashboardData, isLoading } = useDashboard()
 
   if (isLoading) {
     return <DashboardSkeleton />
   }
 
-  if (!data) {
+  if (!dashboardData?.data) {
     return (
       <div className={styles.container}>
         <div className={styles.mainContent}>
@@ -46,7 +28,7 @@ export default function DashboardClient({ user, dashboardData: initialData }) {
     )
   }
 
-  const { stats, myStudies, recentActivities, upcomingEvents } = data
+  const { stats, myStudies, recentActivities, upcomingEvents } = dashboardData.data
 
   // 통계 카드 데이터
   const statsCards = [
@@ -242,4 +224,3 @@ function formatRelativeTime(dateString) {
 
   return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
-

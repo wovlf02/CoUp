@@ -1,22 +1,64 @@
 // 내 스터디 설정 페이지
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { studySettingsData, studyCategories } from '@/mocks/studySettings';
+import { useStudy, useUpdateStudy, useDeleteStudy, useStudyMembers, useChangeMemberRole, useKickMember, useLeaveStudy } from '@/lib/hooks/useApi';
+
+const STUDY_CATEGORIES = [
+  { main: '개발', sub: ['알고리즘/코테', '웹개발', '앱개발', 'AI/ML', '데이터과학'] },
+  { main: '언어', sub: ['영어', '중국어', '일본어', '기타'] },
+  { main: '취업/자격증', sub: ['공무원', '자격증', '취업준비'] },
+  { main: '교양/취미', sub: ['독서', '운동', '음악', '미술'] },
+  { main: '학업', sub: ['수능', '편입', '대학공부'] }
+];
 
 export default function MyStudySettingsPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
-  const [studyName, setStudyName] = useState('알고리즘 마스터 스터디');
   const [activeTab, setActiveTab] = useState('basic');
+
+  // 실제 API Hooks
+  const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
+  const { data: membersData, refetch: refetchMembers } = useStudyMembers(studyId);
+  const updateStudyMutation = useUpdateStudy();
+  const deleteStudyMutation = useDeleteStudy();
+  const changeMemberRoleMutation = useChangeMemberRole();
+  const kickMemberMutation = useKickMember();
+  const leaveStudyMutation = useLeaveStudy();
+
+  const study = studyData?.study;
+  const members = membersData?.members || [];
+
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    subCategory: '',
+    description: '',
+    tags: [],
+    isPublic: true,
+    autoApprove: false,
+    maxMembers: 50
+  });
+
   const [errors, setErrors] = useState({});
 
-  const data = studySettingsData[studyId] || studySettingsData[1];
-  const { study, members } = data;
-  const [formData, setFormData] = useState(data.formData);
+  useEffect(() => {
+    if (study) {
+      setFormData({
+        name: study.name || '',
+        category: study.category || '',
+        subCategory: study.subCategory || '',
+        description: study.description || '',
+        tags: study.tags || [],
+        isPublic: study.isPublic !== undefined ? study.isPublic : true,
+        autoApprove: study.autoApprove || false,
+        maxMembers: study.maxMembers || 50
+      });
+    }
+  }, [study]);
 
   const tabs = [
     { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
@@ -51,46 +93,73 @@ export default function MyStudySettingsPage({ params }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       alert('입력 내용을 확인해주세요.');
       return;
     }
 
-    if (confirm('변경사항을 저장하시겠습니까?')) {
-      console.log('저장:', formData);
+    if (!confirm('변경사항을 저장하시겠습니까?')) return;
+
+    try {
+      await updateStudyMutation.mutateAsync({
+        id: studyId,
+        data: formData
+      });
       alert('저장되었습니다!');
       setErrors({});
+    } catch (error) {
+      alert('저장 실패: ' + error.message);
     }
   };
 
-  const handleDeleteStudy = () => {
+  const handleDeleteStudy = async () => {
     const confirmation = prompt('스터디를 삭제하려면 "삭제"를 입력하세요:');
     if (confirmation === '삭제') {
-      console.log('스터디 삭제');
-      alert('스터디가 삭제되었습니다.');
-      router.push('/my-studies');
+      try {
+        await deleteStudyMutation.mutateAsync(studyId);
+        alert('스터디가 삭제되었습니다.');
+        router.push('/my-studies');
+      } catch (error) {
+        alert('스터디 삭제 실패: ' + error.message);
+      }
     }
   };
 
-  const handleRoleChange = (memberId, newRole) => {
-    if (confirm(`멤버의 역할을 ${newRole}로 변경하시겠습니까?`)) {
-      console.log(`멤버 ${memberId} 역할 변경: ${newRole}`);
+  const handleRoleChange = async (memberId, userId, newRole) => {
+    if (!confirm(`멤버의 역할을 ${newRole}로 변경하시겠습니까?`)) return;
+
+    try {
+      await changeMemberRoleMutation.mutateAsync({ studyId, userId, role: newRole });
       alert('역할이 변경되었습니다.');
+      await refetchMembers();
+    } catch (error) {
+      alert('역할 변경 실패: ' + error.message);
     }
   };
 
-  const handleKickMember = (memberId, memberName) => {
-    if (confirm(`${memberName}님을 스터디에서 강퇴하시겠습니까?`)) {
-      console.log(`멤버 ${memberId} 강퇴`);
+  const handleKickMember = async (userId, memberName) => {
+    if (!confirm(`${memberName}님을 스터디에서 강퇴하시겠습니까?`)) return;
+
+    try {
+      await kickMemberMutation.mutateAsync({ studyId, userId });
       alert('멤버가 강퇴되었습니다.');
+      await refetchMembers();
+    } catch (error) {
+      alert('강퇴 실패: ' + error.message);
     }
   };
 
-  const handleCopyInviteLink = () => {
-    const inviteLink = `${window.location.origin}/studies/${studyId}/join?invite=abc123`;
-    navigator.clipboard.writeText(inviteLink);
-    alert('초대 링크가 복사되었습니다!');
+  const handleLeaveStudy = async () => {
+    if (!confirm('정말 스터디를 탈퇴하시겠습니까?')) return;
+
+    try {
+      await leaveStudyMutation.mutateAsync(studyId);
+      alert('스터디를 탈퇴했습니다.');
+      router.push('/my-studies');
+    } catch (error) {
+      alert('탈퇴 실패: ' + error.message);
+    }
   };
 
   const handleTagAdd = (e) => {
@@ -105,6 +174,18 @@ export default function MyStudySettingsPage({ params }) {
       e.target.value = '';
     }
   };
+
+  if (studyLoading) {
+    return <div className={styles.container}>로딩 중...</div>;
+  }
+
+  if (!study) {
+    return <div className={styles.container}>스터디를 찾을 수 없습니다.</div>;
+  }
+
+  const userRole = study.role || study.myRole || 'MEMBER';
+  const isOwner = userRole === 'OWNER';
+  const isAdmin = userRole === 'ADMIN' || isOwner;
 
   return (
     <div className={styles.container}>
@@ -121,7 +202,7 @@ export default function MyStudySettingsPage({ params }) {
               <h1 className={styles.studyName}>{study.name}</h1>
             </div>
           </div>
-          <span className={styles.roleBadge}>{study.role}</span>
+          <span className={styles.roleBadge}>{userRole}</span>
         </div>
       </div>
 
@@ -162,13 +243,15 @@ export default function MyStudySettingsPage({ params }) {
             >
               멤버 관리
             </button>
-            <button
-              className={`${styles.settingsTab} ${activeTab === 'privacy' ? styles.active : ''}`}
-              onClick={() => setActiveTab('privacy')}
-            >
-              공개 설정
-            </button>
-            {study.role === 'OWNER' && (
+            {isAdmin && (
+              <button
+                className={`${styles.settingsTab} ${activeTab === 'privacy' ? styles.active : ''}`}
+                onClick={() => setActiveTab('privacy')}
+              >
+                공개 설정
+              </button>
+            )}
+            {isOwner && (
               <button
                 className={`${styles.settingsTab} ${activeTab === 'danger' ? styles.active : ''}`}
                 onClick={() => setActiveTab('danger')}
@@ -179,7 +262,7 @@ export default function MyStudySettingsPage({ params }) {
           </div>
 
           {/* 기본 정보 */}
-          {activeTab === 'basic' && (
+          {activeTab === 'basic' && isAdmin && (
             <div className={styles.settingsContent}>
               <div className={styles.settingsCard}>
                 <h3 className={styles.cardTitle}>📝 기본 정보</h3>
@@ -210,20 +293,11 @@ export default function MyStudySettingsPage({ params }) {
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className={styles.select}
                     >
-                      {studyCategories.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
+                      {STUDY_CATEGORIES.map((cat) => (
+                        <option key={cat.main} value={cat.main}>
+                          {cat.main}
                         </option>
                       ))}
-                    </select>
-                    <select
-                      value={formData.subCategory}
-                      onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
-                      className={styles.select}
-                    >
-                      <option>알고리즘/코테</option>
-                      <option>웹개발</option>
-                      <option>앱개발</option>
                     </select>
                   </div>
                 </div>
@@ -275,18 +349,15 @@ export default function MyStudySettingsPage({ params }) {
                 </div>
 
                 <div className={styles.formActions}>
-                  <button
-                    className={styles.cancelButton}
-                    onClick={() => {
-                      if (confirm('변경사항을 취소하시겠습니까?')) {
-                        window.location.reload();
-                      }
-                    }}
-                  >
+                  <button className={styles.cancelButton} onClick={() => router.back()}>
                     취소
                   </button>
-                  <button className={styles.saveButton} onClick={handleSave}>
-                    변경사항 저장
+                  <button
+                    className={styles.saveButton}
+                    onClick={handleSave}
+                    disabled={updateStudyMutation.isPending}
+                  >
+                    {updateStudyMutation.isPending ? '저장 중...' : '변경사항 저장'}
                   </button>
                 </div>
               </div>
@@ -303,32 +374,35 @@ export default function MyStudySettingsPage({ params }) {
                   {members.map((member) => (
                     <div key={member.id} className={styles.memberItem}>
                       <div className={styles.memberInfo}>
-                        <div className={styles.memberAvatar}>{member.name[0]}</div>
+                        <div className={styles.memberAvatar}>{member.user?.name?.[0] || 'U'}</div>
                         <div className={styles.memberDetails}>
-                          <div className={styles.memberName}>{member.name}</div>
+                          <div className={styles.memberName}>{member.user?.name || '알 수 없음'}</div>
                           <div className={styles.memberMeta}>
-                            가입: {member.joinedAt}
+                            가입: {new Date(member.joinedAt).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
                       <div className={styles.memberActions}>
-                        <select
-                          value={member.role}
-                          className={styles.roleSelect}
-                          disabled={member.role === 'OWNER'}
-                          onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                        >
-                          <option value="OWNER">OWNER</option>
-                          <option value="ADMIN">ADMIN</option>
-                          <option value="MEMBER">MEMBER</option>
-                        </select>
-                        {member.role !== 'OWNER' && (
-                          <button
-                            className={styles.kickButton}
-                            onClick={() => handleKickMember(member.id, member.name)}
-                          >
-                            강퇴
-                          </button>
+                        {isAdmin && member.role !== 'OWNER' ? (
+                          <>
+                            <select
+                              value={member.role}
+                              className={styles.roleSelect}
+                              onChange={(e) => handleRoleChange(member.id, member.userId, e.target.value)}
+                            >
+                              <option value="MEMBER">MEMBER</option>
+                              <option value="ADMIN">ADMIN</option>
+                              {isOwner && <option value="OWNER">OWNER</option>}
+                            </select>
+                            <button
+                              className={styles.kickButton}
+                              onClick={() => handleKickMember(member.userId, member.user?.name)}
+                            >
+                              강퇴
+                            </button>
+                          </>
+                        ) : (
+                          <span className={styles.roleLabel}>{member.role}</span>
                         )}
                       </div>
                     </div>
@@ -339,7 +413,7 @@ export default function MyStudySettingsPage({ params }) {
           )}
 
           {/* 공개 설정 */}
-          {activeTab === 'privacy' && (
+          {activeTab === 'privacy' && isAdmin && (
             <div className={styles.settingsContent}>
               <div className={styles.settingsCard}>
                 <h3 className={styles.cardTitle}>🔒 공개 설정</h3>
@@ -401,30 +475,13 @@ export default function MyStudySettingsPage({ params }) {
                   </span>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>초대 링크</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="text"
-                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/studies/${studyId}/join?invite=abc123`}
-                      className={styles.input}
-                      readOnly
-                      style={{ flex: 1 }}
-                    />
-                    <button
-                      className={styles.saveButton}
-                      onClick={handleCopyInviteLink}
-                      style={{ whiteSpace: 'nowrap' }}
-                    >
-                      복사
-                    </button>
-                  </div>
-                  <span className={styles.hint}>초대 링크를 공유하여 멤버를 초대하세요</span>
-                </div>
-
                 <div className={styles.formActions}>
-                  <button className={styles.saveButton} onClick={handleSave}>
-                    변경사항 저장
+                  <button
+                    className={styles.saveButton}
+                    onClick={handleSave}
+                    disabled={updateStudyMutation.isPending}
+                  >
+                    {updateStudyMutation.isPending ? '저장 중...' : '변경사항 저장'}
                   </button>
                 </div>
               </div>
@@ -432,7 +489,7 @@ export default function MyStudySettingsPage({ params }) {
           )}
 
           {/* 위험 구역 */}
-          {activeTab === 'danger' && study.role === 'OWNER' && (
+          {activeTab === 'danger' && (
             <div className={styles.settingsContent}>
               <div className={`${styles.settingsCard} ${styles.dangerCard}`}>
                 <h3 className={styles.cardTitle}>⚠️ 위험 구역</h3>
@@ -440,17 +497,33 @@ export default function MyStudySettingsPage({ params }) {
                   아래 작업은 되돌릴 수 없습니다. 신중하게 진행해주세요.
                 </p>
 
-                <div className={styles.dangerAction}>
-                  <div className={styles.dangerInfo}>
-                    <h4 className={styles.dangerTitle}>스터디 삭제</h4>
-                    <p className={styles.dangerDesc}>
-                      스터디와 모든 데이터가 영구적으로 삭제됩니다.
-                    </p>
+                {!isOwner && (
+                  <div className={styles.dangerAction}>
+                    <div className={styles.dangerInfo}>
+                      <h4 className={styles.dangerTitle}>스터디 탈퇴</h4>
+                      <p className={styles.dangerDesc}>
+                        스터디에서 나가며 모든 데이터 접근 권한을 잃습니다.
+                      </p>
+                    </div>
+                    <button className={styles.deleteButton} onClick={handleLeaveStudy}>
+                      스터디 탈퇴
+                    </button>
                   </div>
-                  <button className={styles.deleteButton} onClick={handleDeleteStudy}>
-                    스터디 삭제
-                  </button>
-                </div>
+                )}
+
+                {isOwner && (
+                  <div className={styles.dangerAction}>
+                    <div className={styles.dangerInfo}>
+                      <h4 className={styles.dangerTitle}>스터디 삭제</h4>
+                      <p className={styles.dangerDesc}>
+                        스터디와 모든 데이터가 영구적으로 삭제됩니다.
+                      </p>
+                    </div>
+                    <button className={styles.deleteButton} onClick={handleDeleteStudy}>
+                      스터디 삭제
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
