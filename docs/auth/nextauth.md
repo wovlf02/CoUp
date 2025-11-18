@@ -140,12 +140,12 @@ DATABASE_URL="postgresql://..."
 
 ### 1. NextAuth 구성
 
-```typescript
-// src/lib/auth.ts (신규)
+```javascript
+// src/lib/auth.js (신규)
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
-import GitHubProvider from "next-auth/providers/github"
+import GitHubProvider from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
@@ -245,44 +245,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 - 강제 로그아웃 어려움 → Database에 revoked token 테이블 추가
 - 모든 디바이스 로그아웃 어려움 → 사용자별 token version 관리
 
-### 3. 타입 정의
+### 3. JSDoc 타입 정의
 
-```typescript
-// src/types/next-auth.d.ts (신규)
-import { DefaultSession, DefaultUser } from "next-auth"
-import { JWT } from "next-auth/jwt"
+```javascript
+// src/lib/auth.js에 추가
+/**
+ * @typedef {Object} SessionUser
+ * @property {string} id
+ * @property {string} email
+ * @property {string} name
+ * @property {string} image
+ * @property {"USER" | "ADMIN" | "SYSTEM_ADMIN"} role
+ * @property {"ACTIVE" | "SUSPENDED" | "DELETED"} status
+ * @property {string} provider
+ */
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string
-      role: "USER" | "ADMIN" | "SYSTEM_ADMIN"
-      status: "ACTIVE" | "SUSPENDED" | "DELETED"
-      provider: string
-    } & DefaultSession["user"]
-  }
-  
-  interface User extends DefaultUser {
-    role: "USER" | "ADMIN" | "SYSTEM_ADMIN"
-    status: "ACTIVE" | "SUSPENDED" | "DELETED"
-    provider?: string
-  }
-}
+/**
+ * @typedef {Object} Session
+ * @property {SessionUser} user
+ */
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    userId: string
-    role: "USER" | "ADMIN" | "SYSTEM_ADMIN"
-    status: "ACTIVE" | "SUSPENDED" | "DELETED"
-    provider: string
-  }
-}
+/**
+ * @typedef {Object} JWT
+ * @property {string} userId
+ * @property {"USER" | "ADMIN" | "SYSTEM_ADMIN"} role
+ * @property {"ACTIVE" | "SUSPENDED" | "DELETED"} status
+ * @property {string} provider
+ */
 ```
+
+> **Note**: JavaScript 프로젝트이므로 TypeScript 타입 정의 파일(.d.ts)은 필요하지 않습니다. JSDoc 주석으로 타입 힌트를 제공합니다.
 
 ### 4. 미들웨어 개선
 
-```typescript
-// middleware.ts (수정)
+```javascript
+// middleware.js (수정)
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
@@ -325,8 +322,8 @@ export const config = {
 
 ### 5. 클라이언트 세션 관리
 
-```typescript
-// src/lib/session-provider.tsx (신규)
+```javascript
+// src/lib/session-provider.jsx (신규)
 "use client"
 import { SessionProvider } from "next-auth/react"
 
@@ -399,24 +396,27 @@ export default function RootLayout({ children }) {
 
 ### 1. NextAuth 설정 파일
 
-```typescript
-// src/lib/auth.ts
-import NextAuth, { NextAuthConfig } from "next-auth"
+```javascript
+// src/lib/auth.js
+import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import GitHubProvider from "next-auth/providers/github"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
-import { z } from "zod"
 
-// 로그인 스키마
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-})
+// 로그인 검증 함수
+function validateLoginCredentials(email, password) {
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    throw new Error("유효하지 않은 이메일입니다")
+  }
+  if (!password || typeof password !== 'string' || password.length < 8) {
+    throw new Error("비밀번호는 최소 8자 이상이어야 합니다")
+  }
+}
 
-export const authConfig: NextAuthConfig = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   
   providers: [
@@ -430,7 +430,8 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         try {
           // 유효성 검사
-          const { email, password } = loginSchema.parse(credentials)
+          const { email, password } = credentials
+          validateLoginCredentials(email, password)
           
           // 사용자 조회
           const user = await prisma.user.findUnique({
@@ -488,14 +489,14 @@ export const authConfig: NextAuthConfig = {
     }),
     
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true, // 이메일 기반 계정 연동
     }),
     
     GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
     }),
   ],
@@ -519,7 +520,7 @@ export const authConfig: NextAuthConfig = {
       if (trigger === "update") {
         // 사용자 정보 다시 조회
         const updatedUser = await prisma.user.findUnique({
-          where: { id: token.userId as string },
+          where: { id: token.userId },
           select: { role: true, status: true }
         })
         
@@ -534,10 +535,10 @@ export const authConfig: NextAuthConfig = {
     
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.userId as string
-        session.user.role = token.role as any
-        session.user.status = token.status as any
-        session.user.provider = token.provider as string
+        session.user.id = token.userId
+        session.user.role = token.role
+        session.user.status = token.status
+        session.user.provider = token.provider
       }
       return session
     },
@@ -548,7 +549,7 @@ export const authConfig: NextAuthConfig = {
         try {
           // 기존 사용자 확인
           const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! }
+            where: { email: user.email }
           })
           
           if (existingUser) {
@@ -570,10 +571,10 @@ export const authConfig: NextAuthConfig = {
             // 새 사용자 생성
             await prisma.user.create({
               data: {
-                email: user.email!,
-                name: user.name || user.email!.split('@')[0],
+                email: user.email,
+                name: user.name || user.email.split('@')[0],
                 avatar: user.image,
-                provider: account.provider.toUpperCase() as any,
+                provider: account.provider.toUpperCase(),
                 [account.provider === 'google' ? 'googleId' : 'githubId']: account.providerAccountId,
                 role: 'USER',
                 status: 'ACTIVE',
@@ -628,15 +629,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
 
 ### 2. API Route Handler
 
-```typescript
-// src/app/api/auth/[...nextauth]/route.ts
+```javascript
+// src/app/api/auth/[...nextauth]/route.js
 export { handlers as GET, handlers as POST } from "@/lib/auth"
 ```
 
 ### 3. 미들웨어
 
-```typescript
-// middleware.ts
+```javascript
+// middleware.js
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
@@ -694,14 +695,15 @@ export const config = {
 
 ### 4. Auth Helpers (교체)
 
-```typescript
-// src/lib/auth-helpers.ts
+```javascript
+// src/lib/auth-helpers.js
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
 /**
  * 서버 컴포넌트용 세션 가져오기
+ * @returns {Promise<Session|null>}
  */
 export async function getSession() {
   return await auth()
@@ -709,6 +711,7 @@ export async function getSession() {
 
 /**
  * API Route에서 인증 확인
+ * @returns {Promise<{user: SessionUser}|NextResponse>}
  */
 export async function requireAuth() {
   const session = await auth()
@@ -732,6 +735,7 @@ export async function requireAuth() {
 
 /**
  * 관리자 권한 확인
+ * @returns {Promise<{user: SessionUser}|NextResponse>}
  */
 export async function requireAdmin() {
   const result = await requireAuth()
@@ -750,8 +754,11 @@ export async function requireAdmin() {
 
 /**
  * 스터디 멤버 확인
+ * @param {string} studyId
+ * @param {string} minRole
+ * @returns {Promise<{session: any, member: any}|NextResponse>}
  */
-export async function requireStudyMember(studyId: string, minRole = 'MEMBER') {
+export async function requireStudyMember(studyId, minRole = 'MEMBER') {
   const result = await requireAuth()
   if (result instanceof NextResponse) return result
   
@@ -785,6 +792,7 @@ export async function requireStudyMember(studyId: string, minRole = 'MEMBER') {
 
 /**
  * 현재 사용자 정보 가져오기 (상세)
+ * @returns {Promise<User|null>}
  */
 export async function getCurrentUser() {
   const session = await auth()
@@ -815,8 +823,8 @@ export async function getCurrentUser() {
 
 ### 5. 클라이언트 Hooks
 
-```typescript
-// src/hooks/useAuth.ts
+```javascript
+// src/hooks/useAuth.js
 "use client"
 import { useSession } from "next-auth/react"
 
@@ -834,8 +842,8 @@ export function useAuth() {
 
 ### 6. 로그인/회원가입 페이지 수정
 
-```tsx
-// src/app/(auth)/sign-in/page.tsx
+```jsx
+// src/app/(auth)/sign-in/page.jsx
 "use client"
 import { signIn } from "next-auth/react"
 import { useState } from "react"
@@ -851,7 +859,7 @@ export default function SignInPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setLoading(true)
@@ -920,8 +928,8 @@ export default function SignInPage() {
 }
 ```
 
-```tsx
-// src/app/(auth)/sign-up/page.tsx
+```jsx
+// src/app/(auth)/sign-up/page.jsx
 "use client"
 import { signIn } from "next-auth/react"
 import { useState } from "react"
@@ -937,7 +945,7 @@ export default function SignUpPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setLoading(true)
@@ -967,7 +975,7 @@ export default function SignUpPage() {
         router.push("/dashboard")
         router.refresh()
       }
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message)
     } finally {
       setLoading(false)

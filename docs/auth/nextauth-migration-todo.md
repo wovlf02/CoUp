@@ -12,16 +12,16 @@
 
 ## Phase 1: 준비 및 설정 (예상 2시간)
 
-### 1.1 패키지 설치 ⚪
+### 1.1 패키지 설치 🟢
 ```bash
 npm install next-auth@latest @auth/prisma-adapter
-npm install -D @types/next-auth
 ```
 
 **확인 사항:**
-- [ ] package.json에 패키지 추가됨
-- [ ] node_modules 정상 설치
-- [ ] 타입 정의 인식됨
+- [x] package.json에 패키지 추가됨
+- [x] node_modules 정상 설치
+
+> **Note**: JavaScript 프로젝트이므로 @types/next-auth는 설치하지 않습니다.
 
 ---
 
@@ -52,44 +52,32 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 
 ---
 
-### 1.3 타입 정의 파일 생성 ⚪
+### 1.3 JSDoc 타입 힌트 추가 (선택) ⚪
 
-**파일: `src/types/next-auth.d.ts` (신규)**
-```typescript
-import { DefaultSession, DefaultUser } from "next-auth"
-import { JWT } from "next-auth/jwt"
+**파일: `src/lib/auth.js` 상단에 추가**
+```javascript
+/**
+ * @typedef {Object} SessionUser
+ * @property {string} id
+ * @property {string} email
+ * @property {string} name
+ * @property {string} image
+ * @property {"USER" | "ADMIN" | "SYSTEM_ADMIN"} role
+ * @property {"ACTIVE" | "SUSPENDED" | "DELETED"} status
+ * @property {string} provider
+ */
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string
-      role: "USER" | "ADMIN" | "SYSTEM_ADMIN"
-      status: "ACTIVE" | "SUSPENDED" | "DELETED"
-      provider: string
-    } & DefaultSession["user"]
-  }
-  
-  interface User extends DefaultUser {
-    role: "USER" | "ADMIN" | "SYSTEM_ADMIN"
-    status: "ACTIVE" | "SUSPENDED" | "DELETED"
-    provider?: string
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    userId: string
-    role: "USER" | "ADMIN" | "SYSTEM_ADMIN"
-    status: "ACTIVE" | "SUSPENDED" | "DELETED"
-    provider: string
-  }
-}
+/**
+ * @typedef {Object} Session
+ * @property {SessionUser} user
+ */
 ```
 
 **작업:**
-- [ ] 파일 생성
-- [ ] TypeScript 컴파일 확인
-- [ ] IDE에서 타입 인식 확인
+- [ ] JSDoc 주석 추가 (선택 사항)
+- [ ] IDE에서 자동완성 확인
+
+> **Note**: JavaScript 프로젝트이므로 .d.ts 파일은 필요하지 않습니다. JSDoc 주석으로 타입 힌트를 제공할 수 있습니다.
 
 ---
 
@@ -111,7 +99,7 @@ declare module "next-auth/jwt" {
 
 ### 2.1 NextAuth 설정 파일 생성 ⚪
 
-**파일: `src/lib/auth.ts` (신규)**
+**파일: `src/lib/auth.js` (신규)**
 
 상세 코드는 [nextauth.md](./nextauth.md#1-nextauth-설정-파일) 참조
 
@@ -144,9 +132,9 @@ declare module "next-auth/jwt" {
 
 ### 2.2 API Route Handler 생성 ⚪
 
-**파일: `src/app/api/auth/[...nextauth]/route.ts` (수정)**
+**파일: `src/app/api/auth/[...nextauth]/route.js` (수정)**
 
-```typescript
+```javascript
 export { handlers as GET, handlers as POST } from "@/lib/auth"
 ```
 
@@ -159,17 +147,13 @@ export { handlers as GET, handlers as POST } from "@/lib/auth"
 
 ### 2.3 SessionProvider 컴포넌트 생성 ⚪
 
-**파일: `src/lib/session-provider.tsx` (신규)**
+**파일: `src/lib/session-provider.jsx` (신규)**
 
-```tsx
+```jsx
 "use client"
 import { SessionProvider } from "next-auth/react"
 
-export default function AuthSessionProvider({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AuthSessionProvider({ children }) {
   return <SessionProvider>{children}</SessionProvider>
 }
 ```
@@ -182,9 +166,9 @@ export default function AuthSessionProvider({
 
 ### 2.4 Layout에 SessionProvider 추가 ⚪
 
-**파일: `src/app/layout.tsx` (또는 `.js`) (수정)**
+**파일: `src/app/layout.js` (수정)**
 
-```tsx
+```jsx
 import AuthSessionProvider from "@/lib/session-provider"
 
 export default function RootLayout({ children }) {
@@ -223,7 +207,7 @@ Copy-Item middleware.js middleware.js.backup
 
 ### 3.2 새로운 미들웨어 작성 ⚪
 
-**파일: `middleware.ts` (신규/교체)**
+**파일: `middleware.js` (신규/교체)**
 
 상세 코드는 [nextauth.md](./nextauth.md#3-미들웨어) 참조
 
@@ -271,7 +255,7 @@ Copy-Item src/lib/auth-helpers.js src/lib/auth-helpers.js.backup
 
 ### 4.2 새로운 Auth Helpers 작성 ⚪
 
-**파일: `src/lib/auth-helpers.ts` (교체)**
+**파일: `src/lib/auth-helpers.js` (교체)**
 
 상세 코드는 [nextauth.md](./nextauth.md#4-auth-helpers-교체) 참조
 
@@ -332,7 +316,7 @@ Get-ChildItem -Path "src/app/api" -Recurse -Filter "*.js" | Select-String -Patte
 
 ### 5.2 회원가입 API 수정 ⚪
 
-**파일: `src/app/api/auth/signup/route.ts` (수정)**
+**파일: `src/app/api/auth/signup/route.js` (수정)**
 
 **변경 사항:**
 - 회원가입만 처리 (자동 로그인 제거)
@@ -352,9 +336,9 @@ Get-ChildItem -Path "src/app/api" -Recurse -Filter "*.js" | Select-String -Patte
 
 ### 6.1 Custom Hook 생성 ⚪
 
-**파일: `src/hooks/useAuth.ts` (신규)**
+**파일: `src/hooks/useAuth.js` (신규)**
 
-```typescript
+```javascript
 "use client"
 import { useSession } from "next-auth/react"
 
@@ -379,7 +363,7 @@ export function useAuth() {
 
 ### 6.2 로그인 페이지 수정 ⚪
 
-**파일: `src/app/(auth)/sign-in/page.tsx` (수정)**
+**파일: `src/app/(auth)/sign-in/page.jsx` (수정)**
 
 상세 코드는 [nextauth.md](./nextauth.md#6-로그인회원가입-페이지-수정) 참조
 
@@ -399,7 +383,7 @@ export function useAuth() {
 
 ### 6.3 회원가입 페이지 수정 ⚪
 
-**파일: `src/app/(auth)/sign-up/page.tsx` (수정)**
+**파일: `src/app/(auth)/sign-up/page.jsx` (수정)**
 
 **주요 변경:**
 - [ ] 회원가입 API 호출

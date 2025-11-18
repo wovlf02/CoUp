@@ -104,7 +104,7 @@ JWT 기반 인증에서 NextAuth로 마이그레이션하는 전체 설계 문�
 ## 🔑 핵심 개념
 
 ### NextAuth Session Strategy
-```typescript
+```javascript
 // JWT 전략 사용
 session: {
   strategy: "jwt",
@@ -113,7 +113,8 @@ session: {
 ```
 
 ### 세션 사용 (클라이언트)
-```typescript
+```javascript
+"use client"
 import { useSession } from "next-auth/react"
 
 function Component() {
@@ -127,8 +128,9 @@ function Component() {
 ```
 
 ### 세션 사용 (서버)
-```typescript
+```javascript
 import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export default async function Page() {
   const session = await auth()
@@ -142,7 +144,8 @@ export default async function Page() {
 ```
 
 ### 로그인/로그아웃
-```typescript
+```javascript
+"use client"
 import { signIn, signOut } from "next-auth/react"
 
 // 로그인
@@ -228,6 +231,6 @@ A: Phase별로 Git 커밋하고 백업하면 언제든 롤백 가능합니다.
 ---
 
 **작성일**: 2025-01-18  
-**버전**: 1.0  
+**버전**: 1.0
 **작성자**: GitHub Copilot
 
