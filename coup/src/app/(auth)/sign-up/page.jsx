@@ -1,21 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { signIn, useSession } from 'next-auth/react'
 import styles from '@/styles/auth/sign-up.module.css'
-import { useSocket } from '@/contexts/SocketContext'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { user, setUser } = useSocket()
+  const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
 
   // 이미 로그인된 사용자는 대시보드로 리다이렉션
   useEffect(() => {
-    if (user) {
-      router.push('/dashboard')
+    if (status === 'authenticated') {
+      router.push(callbackUrl)
     }
-  }, [user, router])
+  }, [status, router, callbackUrl])
 
   // Form state
   const [email, setEmail] = useState('')
@@ -116,14 +118,25 @@ export default function SignUpPage() {
         throw new Error(data.error || '회원가입에 실패했습니다')
       }
 
-      // 회원가입 성공 시 자동 로그인 (API에서 토큰 설정됨)
-      if (data.success && data.user) {
-        // 소켓 컨텍스트에 사용자 정보 업데이트 (소켓 연결 트리거)
-        setUser(data.user)
+      // 회원가입 성공 후 자동 로그인 (NextAuth signIn 사용)
+      if (data.success) {
+        const result = await signIn('credentials', {
+          email,
+          password,
+          redirect: false,
+        })
 
-        // 대시보드로 이동
-        router.push('/dashboard')
-        router.refresh()
+        if (result?.error) {
+          setError('회원가입은 성공했으나 로그인에 실패했습니다. 로그인 페이지에서 다시 시도해주세요.')
+          setLoading(false)
+          return
+        }
+
+        if (result?.ok) {
+          // 대시보드로 이동
+          router.push(callbackUrl)
+          router.refresh()
+        }
       }
 
     } catch (err) {
@@ -144,6 +157,17 @@ export default function SignUpPage() {
     validateEmail(email) && 
     password.length >= 8 && 
     password === confirmPassword
+
+  // 로딩 중이면 표시하지 않음
+  if (status === 'loading') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.loading}>로딩 중...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>

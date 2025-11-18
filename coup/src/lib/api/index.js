@@ -2,11 +2,13 @@
 import { api } from './client'
 
 // ==================== 인증 API ====================
+// NextAuth 사용으로 대부분의 인증 API는 더 이상 필요하지 않습니다.
+// - 로그인: signIn('credentials', { email, password }) 사용
+// - 로그아웃: signOut({ callbackUrl: '/' }) 사용
+// - 현재 사용자: useSession() 또는 getSession() 사용
 export const authApi = {
-  login: (credentials) => api.post('/api/auth/login', credentials),
+  // 회원가입만 API로 유지 (회원가입 후 signIn 호출)
   signup: (data) => api.post('/api/auth/signup', data),
-  logout: () => api.post('/api/auth/logout'),
-  me: () => api.get('/api/auth/me'),
 }
 
 // ==================== 사용자 API ====================

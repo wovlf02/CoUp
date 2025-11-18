@@ -18,6 +18,7 @@ async function fetchAPI(endpoint, options = {}) {
       'Content-Type': 'application/json',
       ...options.headers,
     },
+    credentials: 'include', // ⭐ NextAuth 쿠키 포함 (중요!)
     ...options,
   }
 
@@ -90,7 +91,9 @@ export const api = {
   upload: (endpoint, formData) => {
     return fetchAPI(endpoint, {
       method: 'POST',
-      headers: {}, // Content-Type을 자동으로 설정
+      headers: {
+        // Content-Type을 명시하지 않아야 multipart/form-data 경계가 자동 설정됨
+      },
       body: formData,
     })
   },

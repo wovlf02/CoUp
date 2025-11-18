@@ -1,21 +1,68 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { signIn, useSession } from 'next-auth/react'
 import styles from '@/styles/auth/sign-in.module.css'
-import { useSocket } from '@/contexts/SocketContext'
 
 export default function SignInPage() {
   const router = useRouter()
-  const { user, setUser } = useSocket()
+  const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
 
-  // 이미 로그인된 사용자는 대시보드로 리다이렉션
+  // 중복 실행 방지
+  const isValidatingRef = useRef(false)
+  const hasValidatedRef = useRef(false)
+
+  // 이미 로그인된 사용자는 세션 검증 후 리다이렉션
   useEffect(() => {
-    if (user) {
-      router.push('/dashboard')
+    // 이미 검증했거나 검증 중이면 스킵
+    if (hasValidatedRef.current || isValidatingRef.current) {
+      return
     }
-  }, [user, router])
+
+    if (status === 'authenticated' && session?.user?.id) {
+      isValidatingRef.current = true
+
+      console.log('🔍 Validating session for user:', session.user.id)
+
+      fetch('/api/auth/validate-session', { credentials: 'include' })
+        .then(r => r.json())
+        .then(async data => {
+          hasValidatedRef.current = true
+
+          if (data.valid) {
+            // 세션 유효 - 리다이렉트
+            console.log('✅ Valid session, redirecting to:', callbackUrl)
+            router.push(callbackUrl)
+          } else if (data.shouldLogout) {
+            // 세션 무효 - NextAuth로 완전히 로그아웃
+            console.warn('⚠️ Invalid session detected:', data.error)
+            console.log('🔄 Signing out completely...')
+
+            // NextAuth signOut으로 세션 완전 제거
+            await signOut({
+              redirect: false // 리다이렉트 방지
+            })
+
+            // 로컬 스토리지도 정리
+            localStorage.clear()
+            sessionStorage.clear()
+
+            console.log('✅ Session cleared. Page will remain on sign-in.')
+          }
+        })
+        .catch(err => {
+          console.error('❌ Session validation error:', err)
+          hasValidatedRef.current = true
+        })
+        .finally(() => {
+          isValidatingRef.current = false
+        })
+    }
+  }, [status, session?.user?.id, router, callbackUrl])
 
   // Form state
   const [email, setEmail] = useState('')
@@ -24,7 +71,13 @@ export default function SignInPage() {
   
   // UI state
   const [loading, setLoading] = useState(null) // 'credentials' | 'google' | 'github' | null
-  const [error, setError] = useState(null)
+  const errorParam = searchParams.get('error')
+  const [error, setError] = useState(
+    errorParam === 'account-deleted' ? '삭제된 계정입니다.' :
+    errorParam === 'account-suspended' ? '정지된 계정입니다.' :
+    errorParam === 'CredentialsSignin' ? '이메일 또는 비밀번호가 일치하지 않습니다.' :
+    null
+  )
   const [formErrors, setFormErrors] = useState({})
 
   // Validation
@@ -62,32 +115,22 @@ export default function SignInPage() {
       setLoading('credentials')
       setError(null)
 
-      // 커스텀 JWT 로그인 API 사용
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+      // NextAuth signIn 사용
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || '로그인에 실패했습니다')
+      if (result?.error) {
+        setError(result.error)
         setLoading(null)
         return
       }
 
-      if (data.success) {
-        // 소켓 컨텍스트에 사용자 정보 업데이트 (소켓 연결 트리거)
-        setUser(data.user)
-
+      if (result?.ok) {
         // 로그인 성공 - 대시보드로 이동
-        router.push('/dashboard')
+        router.push(callbackUrl)
         router.refresh()
       }
 
@@ -103,9 +146,9 @@ export default function SignInPage() {
       setLoading(provider)
       setError(null)
 
-      // TODO: NextAuth.js OAuth 연동 (나중에 설정)
-      // await signIn(provider, { callbackUrl: '/dashboard' })
-      
+      // TODO: OAuth 로그인 (나중에 설정)
+      // await signIn(provider, { callbackUrl })
+
       setError(`${provider} 로그인은 아직 지원하지 않습니다.`)
       setLoading(null)
 
@@ -121,6 +164,37 @@ export default function SignInPage() {
   }
 
   const isFormValid = email && password && validateEmail(email) && password.length >= 8
+
+  // 세션 초기화 함수
+  const handleClearSession = () => {
+    console.log('🧹 Manually clearing session...')
+
+    // 쿠키 삭제
+    document.cookie.split(";").forEach(cookie => {
+      const name = cookie.split("=")[0].trim()
+      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/"
+    })
+
+    // 스토리지 삭제
+    localStorage.clear()
+    sessionStorage.clear()
+
+    console.log('✅ Session cleared! Reloading...')
+
+    // 페이지 새로고침
+    window.location.reload()
+  }
+
+  // 로딩 중이면 표시하지 않음
+  if (status === 'loading') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.loading}>로딩 중...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
@@ -274,6 +348,22 @@ export default function SignInPage() {
         <div className={styles.signupLink}>
           아직 계정이 없으신가요? <Link href="/sign-up">회원가입</Link>
         </div>
+
+        {/* 문제 해결 버튼 (에러 발생 시에만 표시) */}
+        {(error || errorParam) && (
+          <div className={styles.troubleshootSection}>
+            <button
+              type="button"
+              onClick={handleClearSession}
+              className={styles.clearSessionButton}
+            >
+              🧹 세션 초기화 (문제 해결)
+            </button>
+            <p className={styles.troubleshootHint}>
+              로그인에 계속 문제가 있다면 위 버튼을 클릭하세요
+            </p>
+          </div>
+        )}
 
         <div className={styles.footer}>
           <div className={styles.footerLinks}>

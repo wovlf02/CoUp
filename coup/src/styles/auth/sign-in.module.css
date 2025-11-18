@@ -306,6 +306,46 @@
   text-decoration: underline;
 }
 
+/* 문제 해결 섹션 */
+.troubleshootSection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #fff7ed; /* orange-50 */
+  border: 1px solid #fed7aa; /* orange-200 */
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.clearSessionButton {
+  width: 100%;
+  padding: 0.75rem;
+  background: #f97316; /* orange-500 */
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.clearSessionButton:hover {
+  background: #ea580c; /* orange-600 */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.clearSessionButton:active {
+  transform: translateY(0);
+}
+
+.troubleshootHint {
+  margin-top: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: #c2410c; /* orange-700 */
+  line-height: 1.4;
+}
+
 .footer {
   text-align: center;
   margin-top: 1.5rem;

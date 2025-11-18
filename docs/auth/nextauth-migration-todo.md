@@ -3,14 +3,32 @@
 > 상세 설계: [nextauth.md](./nextauth.md)
 
 ## 진행 상태
-- 🟢 완료
-- 🟡 진행 중
-- ⚪ 대기 중
-- 🔴 문제 발생
+- 🟢 완료: Phase 1-6
+- ⚪ 대기 중: Phase 7-12
+- 🔴 문제 발생: 없음
+
+### 완료된 작업 요약
+- ✅ NextAuth 패키지 설치
+- ✅ 환경 변수 설정 (NEXTAUTH_URL, NEXTAUTH_SECRET)
+- ✅ NextAuth 설정 파일 생성 (src/lib/auth.js)
+- ✅ API Route Handler 업데이트
+- ✅ SessionProvider 생성 및 적용
+- ✅ 미들웨어 NextAuth 기반으로 교체
+- ✅ Auth Helpers NextAuth 기반으로 교체
+- ✅ 로그인/회원가입 페이지 NextAuth 사용으로 업데이트
+- ✅ 기존 Auth API 제거 (login, logout, refresh, me)
+- ✅ 회원가입 API 단순화
+- ✅ 로그아웃 버튼 signOut() 사용으로 업데이트
+- ✅ SocketContext NextAuth 통합
+- ✅ useAuth 커스텀 훅 생성
+
+### 다음 단계
+- ⏭️ Phase 7: OAuth 추가 (선택 사항)
+- ⏭️ Phase 8-12: 레거시 정리, 테스트, 문서화, 배포
 
 ---
 
-## Phase 1: 준비 및 설정 (예상 2시간)
+## Phase 1: 준비 및 설정 (예상 2시간) 🟢
 
 ### 1.1 패키지 설치 🟢
 ```bash
@@ -25,13 +43,13 @@ npm install next-auth@latest @auth/prisma-adapter
 
 ---
 
-### 1.2 환경 변수 설정 ⚪
+### 1.2 환경 변수 설정 🟢
 
-**파일: `.env.local` (또는 `.env`)**
+**파일: `.env`**
 ```env
 # NextAuth 기본
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-nextauth-secret-key-here-min-32-characters"
+NEXTAUTH_SECRET="HQ6ftpRrkCdn7UHQjmDEJu2qsqrpmsDM8HHz9zduH4tsWepzVElOlWiStGufcIwOcBDx0qzjLqVsI0YP8wBebA=="
 
 # OAuth Providers (선택 사항)
 GOOGLE_CLIENT_ID="your-google-client-id"
@@ -42,46 +60,25 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 ```
 
 **작업:**
-- [ ] NEXTAUTH_SECRET 생성 (최소 32자)
-  ```bash
-  # PowerShell에서 실행
-  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-  ```
-- [ ] `.env.local` 파일 생성/수정
+- [x] NEXTAUTH_SECRET 생성 (최소 32자)
+- [x] `.env` 파일 수정
 - [ ] `.env.example` 파일 업데이트
 
 ---
 
-### 1.3 JSDoc 타입 힌트 추가 (선택) ⚪
+### 1.3 JSDoc 타입 힌트 추가 (선택) 🟢
 
 **파일: `src/lib/auth.js` 상단에 추가**
-```javascript
-/**
- * @typedef {Object} SessionUser
- * @property {string} id
- * @property {string} email
- * @property {string} name
- * @property {string} image
- * @property {"USER" | "ADMIN" | "SYSTEM_ADMIN"} role
- * @property {"ACTIVE" | "SUSPENDED" | "DELETED"} status
- * @property {string} provider
- */
-
-/**
- * @typedef {Object} Session
- * @property {SessionUser} user
- */
-```
 
 **작업:**
-- [ ] JSDoc 주석 추가 (선택 사항)
-- [ ] IDE에서 자동완성 확인
+- [x] JSDoc 주석 추가
+- [x] IDE에서 자동완성 확인
 
-> **Note**: JavaScript 프로젝트이므로 .d.ts 파일은 필요하지 않습니다. JSDoc 주석으로 타입 힌트를 제공할 수 있습니다.
+> **Note**: src/lib/auth.js 파일에 JSDoc 타입 정의가 포함되어 생성되었습니다.
 
 ---
 
-### 1.4 Prisma 스키마 확인 ⚪
+### 1.4 Prisma 스키마 확인 🟢
 
 **현재 스키마는 이미 OAuth 준비가 되어 있음:**
 - ✅ `googleId` 필드 존재
@@ -89,39 +86,36 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 - ✅ `provider` enum 존재
 
 **작업:**
-- [ ] Prisma 스키마 검토
-- [ ] 필요시 마이그레이션
-- [ ] DB 연결 테스트
+- [x] Prisma 스키마 검토
+- [x] 필요시 마이그레이션 (필요 없음)
+- [x] DB 연결 테스트
 
 ---
 
-## Phase 2: 핵심 NextAuth 구현 (예상 4시간)
+## Phase 2: 핵심 NextAuth 구현 (예상 4시간) 🟢
 
-### 2.1 NextAuth 설정 파일 생성 ⚪
+### 2.1 NextAuth 설정 파일 생성 🟢
 
 **파일: `src/lib/auth.js` (신규)**
 
-상세 코드는 [nextauth.md](./nextauth.md#1-nextauth-설정-파일) 참조
-
 **주요 구현 사항:**
-- [ ] Credentials Provider
-  - [ ] 이메일/비밀번호 검증
-  - [ ] 사용자 조회
-  - [ ] 비밀번호 확인
-  - [ ] 계정 상태 확인
-- [ ] JWT Callback
-  - [ ] 초기 로그인 시 토큰에 정보 추가
-  - [ ] 세션 업데이트 처리
-- [ ] Session Callback
-  - [ ] 세션에 사용자 정보 추가
-- [ ] SignIn Callback
-  - [ ] OAuth 로그인 처리
-  - [ ] 계정 생성/업데이트
-  - [ ] lastLoginAt 업데이트
-- [ ] Redirect Callback
-  - [ ] 로그인 후 리다이렉트 처리
-- [ ] Events
-  - [ ] SignOut 이벤트 처리
+- [x] Credentials Provider
+  - [x] 이메일/비밀번호 검증
+  - [x] 사용자 조회
+  - [x] 비밀번호 확인
+  - [x] 계정 상태 확인
+- [x] JWT Callback
+  - [x] 초기 로그인 시 토큰에 정보 추가
+  - [x] 세션 업데이트 처리
+- [x] Session Callback
+  - [x] 세션에 사용자 정보 추가
+- [x] SignIn Callback
+  - [x] OAuth 로그인 처리 (스켈레톤)
+  - [x] lastLoginAt 업데이트
+- [x] Redirect Callback
+  - [x] 로그인 후 리다이렉트 처리
+- [x] Events
+  - [x] SignOut 이벤트 처리
 
 **테스트:**
 - [ ] Credentials 로그인 동작 확인
@@ -130,7 +124,7 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 
 ---
 
-### 2.2 API Route Handler 생성 ⚪
+### 2.2 API Route Handler 생성 🟢
 
 **파일: `src/app/api/auth/[...nextauth]/route.js` (수정)**
 
@@ -139,60 +133,35 @@ export { handlers as GET, handlers as POST } from "@/lib/auth"
 ```
 
 **작업:**
-- [ ] 기존 파일 수정
-- [ ] Export 확인
+- [x] 기존 파일 수정
+- [x] Export 확인
 - [ ] API 엔드포인트 테스트 (/api/auth/signin, /api/auth/signout 등)
 
 ---
 
-### 2.3 SessionProvider 컴포넌트 생성 ⚪
+### 2.3 SessionProvider 컴포넌트 생성 🟢
 
 **파일: `src/lib/session-provider.jsx` (신규)**
 
-```jsx
-"use client"
-import { SessionProvider } from "next-auth/react"
-
-export default function AuthSessionProvider({ children }) {
-  return <SessionProvider>{children}</SessionProvider>
-}
-```
-
 **작업:**
-- [ ] 파일 생성
-- [ ] "use client" 지시문 확인
+- [x] 파일 생성
+- [x] "use client" 지시문 확인
 
 ---
 
-### 2.4 Layout에 SessionProvider 추가 ⚪
+### 2.4 Layout에 SessionProvider 추가 🟢
 
-**파일: `src/app/layout.js` (수정)**
-
-```jsx
-import AuthSessionProvider from "@/lib/session-provider"
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="ko">
-      <body>
-        <AuthSessionProvider>
-          {children}
-        </AuthSessionProvider>
-      </body>
-    </html>
-  )
-}
-```
+**파일: `src/components/Providers.js` (수정)**
 
 **작업:**
-- [ ] SessionProvider 추가
-- [ ] 앱 전체에서 useSession 사용 가능 확인
+- [x] SessionProvider 추가
+- [x] 앱 전체에서 useSession 사용 가능 확인
 
 ---
 
-## Phase 3: 미들웨어 교체 (예상 2시간)
+## Phase 3: 미들웨어 교체 (예상 2시간) 🟢
 
-### 3.1 기존 미들웨어 백업 ⚪
+### 3.1 기존 미들웨어 백업 🟢
 
 ```bash
 # PowerShell
@@ -200,24 +169,22 @@ Copy-Item middleware.js middleware.js.backup
 ```
 
 **작업:**
-- [ ] 백업 파일 생성
+- [x] 백업 파일 생성
 - [ ] Git에 백업 커밋
 
 ---
 
-### 3.2 새로운 미들웨어 작성 ⚪
+### 3.2 새로운 미들웨어 작성 🟢
 
-**파일: `middleware.js` (신규/교체)**
-
-상세 코드는 [nextauth.md](./nextauth.md#3-미들웨어) 참조
+**파일: `middleware.js` (교체)**
 
 **주요 구현 사항:**
-- [ ] NextAuth의 `auth()` 함수 사용
-- [ ] 공개 경로 설정
-- [ ] 인증 확인
-- [ ] 계정 상태 확인 (ACTIVE만 허용)
-- [ ] 관리자 페이지 권한 확인
-- [ ] Callback URL 처리
+- [x] NextAuth의 `auth()` 함수 사용
+- [x] 공개 경로 설정
+- [x] 인증 확인
+- [x] 계정 상태 확인 (ACTIVE만 허용)
+- [x] 관리자 페이지 권한 확인
+- [x] Callback URL 처리
 
 **테스트:**
 - [ ] 로그인 없이 공개 페이지 접근 가능
@@ -228,19 +195,19 @@ Copy-Item middleware.js middleware.js.backup
 
 ---
 
-### 3.3 기존 JWT 미들웨어 제거 ⚪
+### 3.3 기존 JWT 미들웨어 제거 🟢
 
 **작업:**
-- [ ] `middleware.js` 삭제 (백업 있음)
-- [ ] `middleware.ts` 활성화
+- [x] 기존 `middleware.js` 삭제 및 교체
+- [x] 새로운 NextAuth 기반 미들웨어 활성화
 - [ ] 서버 재시작
 - [ ] 모든 경로 테스트
 
 ---
 
-## Phase 4: Auth Helpers 교체 (예상 2시간)
+## Phase 4: Auth Helpers 교체 (예상 2시간) 🟢
 
-### 4.1 기존 Auth Helpers 백업 ⚪
+### 4.1 기존 Auth Helpers 백업 🟢
 
 ```bash
 # PowerShell
@@ -248,28 +215,26 @@ Copy-Item src/lib/auth-helpers.js src/lib/auth-helpers.js.backup
 ```
 
 **작업:**
-- [ ] 백업 파일 생성
+- [x] 백업 파일 생성
 - [ ] Git에 백업 커밋
 
 ---
 
-### 4.2 새로운 Auth Helpers 작성 ⚪
+### 4.2 새로운 Auth Helpers 작성 🟢
 
 **파일: `src/lib/auth-helpers.js` (교체)**
 
-상세 코드는 [nextauth.md](./nextauth.md#4-auth-helpers-교체) 참조
-
 **주요 함수:**
-- [ ] `getSession()` - 서버 컴포넌트용
-- [ ] `requireAuth()` - API Route용 인증 확인
-- [ ] `requireAdmin()` - 관리자 권한 확인
-- [ ] `requireStudyMember()` - 스터디 멤버십 확인
-- [ ] `getCurrentUser()` - 상세 사용자 정보 조회
+- [x] `getSession()` - 서버 컴포넌트용
+- [x] `requireAuth()` - API Route용 인증 확인
+- [x] `requireAdmin()` - 관리자 권한 확인
+- [x] `requireStudyMember()` - 스터디 멤버십 확인
+- [x] `getCurrentUser()` - 상세 사용자 정보 조회
 
 **작업:**
-- [ ] 모든 함수 구현
-- [ ] NextAuth의 `auth()` 사용
-- [ ] 반환 타입 일치 확인
+- [x] 모든 함수 구현
+- [x] NextAuth의 `auth()` 사용
+- [x] 반환 타입 일치 확인
 
 ---
 
@@ -289,32 +254,36 @@ Get-ChildItem -Path "src/app/api" -Recurse -Filter "*.js" | Select-String -Patte
 
 ---
 
-## Phase 5: 기존 Auth API 제거 (예상 1시간)
+## Phase 5: 기존 Auth API 제거 (예상 1시간) 🟢
 
-### 5.1 제거할 파일 목록 ⚪
+### 5.1 제거할 파일 목록 🟢
 
 다음 파일들은 NextAuth가 대체하므로 제거:
 
-1. **`src/app/api/auth/login/route.js`** ❌
+1. **`src/app/api/auth/login/route.js`** ✅
    - NextAuth signIn()이 대체
+   - _legacy로 이동
 
-2. **`src/app/api/auth/logout/route.js`** ❌
+2. **`src/app/api/auth/logout/route.js`** ✅
    - NextAuth signOut()이 대체
+   - _legacy로 이동
 
-3. **`src/app/api/auth/refresh/route.js`** ❌
+3. **`src/app/api/auth/refresh/route.js`** ✅
    - NextAuth JWT 자동 갱신
+   - _legacy로 이동
 
-4. **`src/app/api/auth/me/route.js`** ❌
+4. **`src/app/api/auth/me/route.js`** ✅
    - useSession() 또는 getSession()이 대체
+   - _legacy로 이동
 
 **작업:**
-- [ ] 각 파일 백업 (Git 커밋)
-- [ ] 파일 삭제
-- [ ] 참조하는 코드 확인
+- [x] 각 파일 백업 (_legacy 폴더로 이동)
+- [x] API 라이브러리 업데이트 (src/lib/api/index.js)
+- [x] 참조하는 코드 확인 및 수정
 
 ---
 
-### 5.2 회원가입 API 수정 ⚪
+### 5.2 회원가입 API 수정 🟢
 
 **파일: `src/app/api/auth/signup/route.js` (수정)**
 
@@ -322,57 +291,37 @@ Get-ChildItem -Path "src/app/api" -Recurse -Filter "*.js" | Select-String -Patte
 - 회원가입만 처리 (자동 로그인 제거)
 - 클라이언트에서 회원가입 후 signIn() 호출
 
-상세 코드는 [nextauth.md](./nextauth.md#7-회원가입-api-수정) 참조
-
 **작업:**
-- [ ] 파일 수정
-- [ ] 자동 로그인 로직 제거
-- [ ] 토큰 생성/쿠키 설정 제거
-- [ ] 단순히 사용자 생성만 반환
+- [x] 파일 수정
+- [x] 자동 로그인 로직 제거
+- [x] 토큰 생성/쿠키 설정 제거
+- [x] 단순히 사용자 생성만 반환
 
 ---
 
-## Phase 6: 클라이언트 코드 수정 (예상 4시간)
+## Phase 6: 클라이언트 코드 수정 (예상 4시간) 🟢
 
-### 6.1 Custom Hook 생성 ⚪
+### 6.1 Custom Hook 생성 🟢
 
-**파일: `src/hooks/useAuth.js` (신규)**
-
-```javascript
-"use client"
-import { useSession } from "next-auth/react"
-
-export function useAuth() {
-  const { data: session, status } = useSession()
-  
-  return {
-    user: session?.user,
-    isLoading: status === "loading",
-    isAuthenticated: status === "authenticated",
-    isAdmin: session?.user?.role === "ADMIN" || session?.user?.role === "SYSTEM_ADMIN",
-  }
-}
-```
+**파일: `src/lib/hooks/useAuth.js` (신규)**
 
 **작업:**
-- [ ] 파일 생성
-- [ ] useSession 활용
-- [ ] 편의 속성 추가
+- [x] 파일 생성
+- [x] useSession 활용
+- [x] 편의 속성 추가 (isAdmin, isSystemAdmin 등)
 
 ---
 
-### 6.2 로그인 페이지 수정 ⚪
+### 6.2 로그인 페이지 수정 🟢
 
 **파일: `src/app/(auth)/sign-in/page.jsx` (수정)**
 
-상세 코드는 [nextauth.md](./nextauth.md#6-로그인회원가입-페이지-수정) 참조
-
 **주요 변경:**
-- [ ] `signIn("credentials", ...)` 사용
-- [ ] OAuth 버튼 추가 (Google, GitHub)
-- [ ] 에러 핸들링
-- [ ] Callback URL 처리
-- [ ] redirect: false 옵션
+- [x] `signIn("credentials", ...)` 사용
+- [x] OAuth 버튼 추가 (Google, GitHub) - 스켈레톤
+- [x] 에러 핸들링
+- [x] Callback URL 처리
+- [x] redirect: false 옵션
 
 **테스트:**
 - [ ] 로그인 성공 시 대시보드 이동
@@ -381,16 +330,14 @@ export function useAuth() {
 
 ---
 
-### 6.3 회원가입 페이지 수정 ⚪
+### 6.3 회원가입 페이지 수정 🟢
 
 **파일: `src/app/(auth)/sign-up/page.jsx` (수정)**
 
 **주요 변경:**
-- [ ] 회원가입 API 호출
-- [ ] 성공 후 자동으로 `signIn()` 호출
-- [ ] 대시보드로 리다이렉트
-
-상세 코드는 [nextauth.md](./nextauth.md#6-로그인회원가입-페이지-수정) 참조
+- [x] 회원가입 API 호출
+- [x] 성공 후 자동으로 `signIn()` 호출
+- [x] 대시보드로 리다이렉트
 
 **테스트:**
 - [ ] 회원가입 성공 시 자동 로그인
@@ -399,15 +346,13 @@ export function useAuth() {
 
 ---
 
-### 6.4 로그아웃 버튼 수정 ⚪
+### 6.4 로그아웃 버튼 수정 🟢
 
-**영향받는 컴포넌트 찾기:**
-```bash
-# PowerShell
-Get-ChildItem -Path "src" -Recurse -Filter "*.tsx","*.jsx" | Select-String -Pattern "/api/auth/logout"
-```
+**영향받는 컴포넌트:**
+- [x] `src/components/my-page/AccountActions.jsx`
+- [x] `src/lib/api/index.js`
 
-**수정 예시:**
+**변경 완료:**
 ```tsx
 // Before
 const handleLogout = async () => {
@@ -424,22 +369,21 @@ const handleLogout = () => {
 ```
 
 **작업:**
-- [ ] 모든 로그아웃 버튼 찾기
-- [ ] `signOut()` 사용으로 변경
-- [ ] callbackUrl 설정
+- [x] 모든 로그아웃 버튼 찾기
+- [x] `signOut()` 사용으로 변경
+- [x] callbackUrl 설정
 - [ ] 테스트
 
 ---
 
-### 6.5 사용자 정보 표시 수정 ⚪
+### 6.5 사용자 정보 표시 수정 🟢
 
-**영향받는 컴포넌트 찾기:**
-```bash
-# PowerShell
-Get-ChildItem -Path "src" -Recurse -Filter "*.tsx","*.jsx" | Select-String -Pattern "/api/auth/me"
-```
+**SocketContext 업데이트:**
+- [x] `src/contexts/SocketContext.js` - useSession() 통합
+- [x] 기존 `/api/auth/me` 호출 제거
+- [x] NextAuth 세션과 자동 동기화
 
-**수정 예시:**
+**변경 완료:**
 ```tsx
 // Before
 const [user, setUser] = useState(null)
@@ -455,10 +399,9 @@ const user = session?.user
 ```
 
 **작업:**
-- [ ] 모든 사용자 정보 fetch 찾기
-- [ ] `useSession()` 사용으로 변경
-- [ ] 서버 컴포넌트는 `getSession()` 사용
-- [ ] 테스트
+- [x] SocketContext 업데이트
+- [x] useSession()과 통합
+- [ ] 전체 애플리케이션 테스트
 
 ---
 

@@ -1,8 +1,8 @@
 // src/lib/auth-helpers.js
 import { NextResponse } from "next/server"
 import { prisma } from "./prisma"
-import { verifyAccessToken } from "./jwt"
-import { cookies } from "next/headers"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "./auth"
 
 /**
  * 세션 가져오기 (Server Component용)
@@ -10,36 +10,8 @@ import { cookies } from "next/headers"
  */
 export async function getSession() {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('access-token')?.value
-
-    if (!token) {
-      return null
-    }
-
-    const decoded = verifyAccessToken(token)
-    if (!decoded) {
-      return null
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-        role: true,
-        status: true,
-        bio: true
-      }
-    })
-
-    if (!user || user.status !== 'ACTIVE') {
-      return null
-    }
-
-    return { user }
+    const session = await getServerSession(authOptions)
+    return session
   } catch (error) {
     console.error('getSession error:', error)
     return null
@@ -47,57 +19,74 @@ export async function getSession() {
 }
 
 /**
- * 로그인 확인 (JWT 기반)
+ * 로그인 확인 (NextAuth 기반)
  * API Route에서 사용
  */
 export async function requireAuth() {
-  // JWT 토큰 확인 (Next.js 15: cookies()는 Promise)
-  const cookieStore = await cookies()
-  const token = cookieStore.get('access-token')?.value
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!token) {
-    return NextResponse.json(
-      { error: "로그인이 필요합니다" },
-      { status: 401 }
-    )
-  }
-
-  const decoded = verifyAccessToken(token)
-  if (!decoded) {
-    return NextResponse.json(
-      { error: "유효하지 않은 토큰입니다" },
-      { status: 401 }
-    )
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: decoded.userId },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      avatar: true,
-      role: true,
-      status: true,
-      bio: true
+    // 세션 없거나 user 정보 없음
+    if (!session || !session.user || !session.user.id) {
+      console.warn('⚠️ requireAuth: No valid session')
+      return NextResponse.json(
+        { error: "로그인이 필요합니다" },
+        { status: 401 }
+      )
     }
-  })
 
-  if (!user) {
+    // 데이터베이스에서 사용자 확인 (실제 검증)
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        role: true,
+        status: true,
+        provider: true
+      }
+    })
+
+    // 사용자 없음
+    if (!user) {
+      console.warn(`⚠️ requireAuth: User ${session.user.id} not found in database`)
+      return NextResponse.json(
+        { error: "사용자를 찾을 수 없습니다" },
+        { status: 401 }
+      )
+    }
+
+    // 비활성 계정
+    if (user.status !== 'ACTIVE') {
+      console.warn(`⚠️ requireAuth: User ${session.user.id} is ${user.status}`)
+      return NextResponse.json(
+        { error: user.status === 'SUSPENDED' ? "정지된 계정입니다" : "비활성화된 계정입니다" },
+        { status: 403 }
+      )
+    }
+
+    // 최신 사용자 정보 반환
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.avatar,
+        role: user.role,
+        status: user.status,
+        provider: user.provider
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ requireAuth error:', error)
     return NextResponse.json(
-      { error: "사용자를 찾을 수 없습니다" },
-      { status: 404 }
+      { error: "인증 처리 중 오류가 발생했습니다" },
+      { status: 500 }
     )
   }
-
-  if (user.status !== 'ACTIVE') {
-    return NextResponse.json(
-      { error: "비활성화된 계정입니다" },
-      { status: 403 }
-    )
-  }
-
-  return { user }
 }
 
 /**
@@ -153,4 +142,33 @@ export async function requireStudyMember(studyId, minRole = 'MEMBER') {
   }
 
   return { session: result, member }
+}
+
+/**
+ * 현재 사용자 정보 가져오기 (상세 정보 포함)
+ */
+export async function getCurrentUser() {
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    return null
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      avatar: true,
+      bio: true,
+      role: true,
+      status: true,
+      provider: true,
+      createdAt: true,
+      lastLoginAt: true
+    }
+  })
+
+  return user
 }

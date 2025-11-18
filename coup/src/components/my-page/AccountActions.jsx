@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import DeleteAccountModal from './DeleteAccountModal'
 import styles from './AccountActions.module.css'
 
@@ -15,17 +16,10 @@ export default function AccountActions() {
 
     try {
       setIsLoggingOut(true)
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
+      await signOut({
+        callbackUrl: '/',
+        redirect: true
       })
-
-      if (response.ok) {
-        router.push('/')
-        router.refresh()
-      } else {
-        throw new Error('로그아웃 실패')
-      }
     } catch (error) {
       console.error('로그아웃 실패:', error)
       alert('로그아웃에 실패했습니다')

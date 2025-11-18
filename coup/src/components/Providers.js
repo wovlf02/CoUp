@@ -3,6 +3,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SocketProvider } from '@/contexts/SocketContext'
+import AuthSessionProvider from '@/lib/session-provider'
 import { useState } from 'react'
 
 export function Providers({ children }) {
@@ -18,10 +19,12 @@ export function Providers({ children }) {
   }))
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SocketProvider>
-        {children}
-      </SocketProvider>
-    </QueryClientProvider>
+    <AuthSessionProvider>
+      <QueryClientProvider client={queryClient}>
+        <SocketProvider>
+          {children}
+        </SocketProvider>
+      </QueryClientProvider>
+    </AuthSessionProvider>
   )
 }

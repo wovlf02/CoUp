@@ -39,25 +39,48 @@ export async function initSocketServer(httpServer) {
       const userId = socket.handshake.auth.userId
       const token = socket.handshake.auth.token
 
+      log.info(`🔐 Socket auth attempt: userId=${userId}`)
+
+      // userId 없으면 연결 거부
       if (!userId) {
+        log.warn('❌ Socket connection rejected: No userId provided')
         return next(new Error('Authentication required'))
       }
 
       // 사용자 존재 확인
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, name: true, avatar: true, status: true }
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          status: true
+        }
       })
 
-      if (!user || user.status !== 'ACTIVE') {
-        return next(new Error('Invalid user'))
+      log.info(`🔍 User lookup: ${user ? `Found ${user.name} (${user.email}) - status: ${user.status}` : 'Not found'}`)
+
+      // 사용자 없으면 연결 거부
+      if (!user) {
+        log.warn(`❌ Socket connection rejected: User not found - ${userId}`)
+        return next(new Error('User not found'))
       }
 
+      // 비활성 상태면 연결 거부
+      if (user.status !== 'ACTIVE') {
+        log.warn(`❌ Socket connection rejected: User not active - ${userId} (status: ${user.status})`)
+        return next(new Error(`User status is ${user.status}`))
+      }
+
+      // 인증 성공
       socket.userId = userId
       socket.user = user
+      log.info(`✅ Socket authenticated: ${user.name} (${user.email})`)
       next()
     } catch (error) {
-      next(new Error('Authentication failed'))
+      log.error('❌ Socket authentication error:', error)
+      next(new Error('Authentication failed: ' + error.message))
     }
   })
 
