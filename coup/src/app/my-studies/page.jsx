@@ -119,6 +119,14 @@ export default function MyStudiesListPage() {
               {myStudies.map((study) => {
                 const badge = getRoleBadge(study.role);
 
+                // 빠른 액션 버튼 데이터
+                const quickActions = [
+                  { id: 'chat', label: '💬 채팅' },
+                  { id: 'notices', label: '📢 공지' },
+                  { id: 'files', label: '📁 파일' },
+                  { id: 'calendar', label: '📅 캘린더' }
+                ];
+
                 return (
                   <Link
                     key={study.id}
@@ -153,18 +161,15 @@ export default function MyStudiesListPage() {
 
                     {/* 빠른 액션 버튼 */}
                     <div className={styles.quickActions}>
-                      <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
-                        💬 채팅
-                      </button>
-                      <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
-                        📢 공지
-                      </button>
-                      <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
-                        📁 파일
-                      </button>
-                      <button className={styles.actionButton} onClick={(e) => e.preventDefault()}>
-                        📅 캘린더
-                      </button>
+                      {quickActions.map((action) => (
+                        <button
+                          key={action.id}
+                          className={styles.actionButton}
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
                     </div>
                   </Link>
                 );

@@ -6,6 +6,13 @@ import DashboardSkeleton from './DashboardSkeleton'
 import EmptyState from './EmptyState'
 import { useDashboard } from '@/lib/hooks/useApi'
 
+// 위젯 컴포넌트 import
+import StudyStatus from './widgets/StudyStatus'
+import OnlineMembers from './widgets/OnlineMembers'
+import QuickActions from './widgets/QuickActions'
+import UrgentTasks from './widgets/UrgentTasks'
+import PinnedNotice from './widgets/PinnedNotice'
+
 export default function DashboardClient({ user }) {
   // 실제 API Hook 사용
   const { data: dashboardData, isLoading } = useDashboard()
@@ -28,7 +35,7 @@ export default function DashboardClient({ user }) {
     )
   }
 
-  const { stats, myStudies, recentActivities, upcomingEvents } = dashboardData.data
+  const { stats, myStudies, recentActivities, upcomingEvents, widgetData } = dashboardData.data
 
   // 통계 카드 데이터
   const statsCards = [
@@ -57,6 +64,29 @@ export default function DashboardClient({ user }) {
       color: 'purple'
     }
   ]
+
+  // 위젯 데이터 준비 (API에서 아직 안 주면 임시 데이터)
+  const widgetStats = widgetData?.stats || {
+    attendanceRate: stats.attendanceRate || 0,
+    attendedCount: stats.attendedCount || 0,
+    totalAttendance: stats.totalAttendance || 0,
+    taskCompletionRate: stats.taskCompletionRate || 0,
+    completedTasks: stats.completedTasks || 0,
+    totalTasks: stats.totalTasks || stats.pendingTasks || 0,
+    streakDays: stats.streakDays || 0
+  }
+
+  const nextEvent = widgetData?.nextEvent || (upcomingEvents && upcomingEvents.length > 0 ? {
+    dday: Math.ceil((new Date(upcomingEvents[0].date) - new Date()) / (1000 * 60 * 60 * 24)),
+    date: new Date(upcomingEvents[0].date).toLocaleDateString('ko-KR', {
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+    title: upcomingEvents[0].title
+  } : null)
 
   return (
     <div className={styles.container}>
@@ -203,6 +233,29 @@ export default function DashboardClient({ user }) {
           </section>
         )}
       </div>
+
+      {/* 우측 사이드바 위젯 */}
+      <aside className={styles.sidebar}>
+        {/* 스터디 현황 */}
+        <StudyStatus stats={widgetStats} nextEvent={nextEvent} />
+
+        {/* 온라인 멤버 */}
+        <OnlineMembers
+          members={widgetData?.onlineMembers || []}
+          totalMembers={widgetData?.totalMembers || 0}
+        />
+
+        {/* 빠른 액션 */}
+        <QuickActions isAdmin={user.role === 'ADMIN' || user.role === 'SYSTEM_ADMIN'} />
+
+        {/* 고정 공지 */}
+        {widgetData?.pinnedNotice && (
+          <PinnedNotice notice={widgetData.pinnedNotice} />
+        )}
+
+        {/* 급한 할일 */}
+        <UrgentTasks tasks={widgetData?.urgentTasks || []} />
+      </aside>
     </div>
   )
 }
