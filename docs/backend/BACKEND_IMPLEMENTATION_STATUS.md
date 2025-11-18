@@ -1,8 +1,11 @@
 # 백엔드 구현 상태 및 향후 작업 체크리스트
 
 > **작성일**: 2025-11-18  
+> **업데이트**: 2025-11-18 (요구사항 반영)
 > **프로젝트**: CoUp (스터디 협업 플랫폼)  
 > **기술 스택**: Next.js 16, PostgreSQL, Prisma, NextAuth.js v4, Socket.io  
+> **파일 저장**: 로컬 저장소 (AWS S3 미사용)
+> **인증 방식**: 이메일/비밀번호만 (OAuth 소셜 로그인 제외)
 
 ---
 
@@ -10,16 +13,22 @@
 
 ### 총괄 통계
 - **총 API 엔드포인트**: 46개 / 80개 설계 (57.5%)
-- **데이터베이스 스키마**: 100% 완료
-- **인증 시스템**: 100% 완료
+- **데이터베이스 스키마**: 100% 완료 ✅
+- **인증 시스템**: 100% 완료 ✅ (이메일/비밀번호)
+- **파일 저장소**: 100% 완료 ✅ (로컬 저장)
 - **실시간 통신**: 50% 완료 (코드 작성됨, 미연동)
-- **프로덕션 준비도**: 약 60%
+- **프로덕션 준비도**: 약 65%
+
+### 🎯 프로젝트 제약사항
+- ✅ **인증/회원가입**: 이미 구현 완료 (평가 대상 아님)
+- ✅ **파일 저장소**: 로컬 저장 사용 (AWS S3 불필요)
+- ❌ **OAuth 소셜 로그인**: 구현 안 함 (제외)
 
 ---
 
 ## ✅ 완전히 구현된 기능
 
-### 1. 인증/인가 시스템 (100%)
+### 1. 인증/인가 시스템 (100%) ✅
 - ✅ NextAuth.js v4 설정 완료
 - ✅ Credentials Provider (이메일/비밀번호)
 - ✅ JWT 토큰 기반 세션
@@ -28,7 +37,7 @@
 - ✅ 미들웨어 기반 접근 제어
 - ✅ 역할 기반 인가 (RBAC)
 
-**API 엔드포인트 (5/5)**
+**API 엔드포인트 (5/5)** ✅
 ```
 ✅ POST   /api/auth/login          - 로그인
 ✅ POST   /api/auth/signup         - 회원가입
@@ -36,6 +45,8 @@
 ✅ GET    /api/auth/me             - 세션 확인
 ✅ *      /api/auth/[...nextauth]  - NextAuth 핸들러
 ```
+
+**✨ 인증 시스템 완료 - 추가 작업 불필요**
 
 ### 2. 사용자 관리 (60%)
 **API 엔드포인트 (3/8)**
@@ -93,18 +104,20 @@
 ❌ POST   /api/studies/{id}/notices/{noticeId}/comments  - 댓글 작성
 ```
 
-### 6. 파일 관리 (50%)
+### 6. 파일 관리 (50%) ✅
 **API 엔드포인트 (4/8)**
 ```
 ✅ GET    /api/studies/{id}/files                     - 파일 목록
-✅ POST   /api/studies/{id}/files                     - 파일 업로드
+✅ POST   /api/studies/{id}/files                     - 파일 업로드 (로컬 저장)
 ✅ DELETE /api/studies/{id}/files/{fileId}            - 파일 삭제
 ✅ GET    /api/studies/{id}/files/{fileId}/download   - 다운로드
-❌ POST   /api/studies/{id}/files/folders             - 폴더 생성
-❌ PATCH  /api/studies/{id}/files/{fileId}/move       - 파일 이동
-❌ GET    /api/studies/{id}/files/search              - 파일 검색
-❌ POST   /api/studies/{id}/files/{fileId}/share      - 공유 링크
+❌ POST   /api/studies/{id}/files/folders             - 폴더 생성 (선택)
+❌ PATCH  /api/studies/{id}/files/{fileId}/move       - 파일 이동 (선택)
+❌ GET    /api/studies/{id}/files/search              - 파일 검색 (선택)
+❌ POST   /api/studies/{id}/files/{fileId}/share      - 공유 링크 (선택)
 ```
+
+**✨ 로컬 파일 저장소 사용 - AWS S3 불필요**
 
 ### 7. 캘린더/일정 (67%)
 **API 엔드포인트 (4/6)**
@@ -193,94 +206,76 @@
 - [ ] 알림 실시간 푸시
 - [ ] 커스텀 서버 활성화 (`server.mjs`)
 
-### 2. OAuth 소셜 로그인 (10%)
-**상태**: 설정만 있고 미사용
-
-**설계상 제공자**:
-- ❌ Google OAuth
-- ❌ GitHub OAuth
-
-**필요 작업**:
-- [ ] Google Cloud Console OAuth 앱 등록
-- [ ] GitHub OAuth 앱 등록
-- [ ] 환경 변수 설정
-- [ ] NextAuth Provider 활성화
-- [ ] 프론트엔드 소셜 로그인 버튼
-
-### 3. 파일 저장소 (30%)
-**상태**: 업로드 로직 있으나 저장소 미연동
+### 2. 파일 저장소 (100%) ✅
+**상태**: 로컬 저장소 사용 - 완료
 
 **현재 구현**:
-- ⚠️ FormData 파싱만 구현
-- ⚠️ 로컬 파일 시스템 저장 (임시)
+- ✅ FormData 파싱 구현
+- ✅ 로컬 파일 시스템 저장
+- ✅ 파일 업로드/다운로드/삭제
 
-**필요 작업**:
-- [ ] AWS S3 버킷 생성
-- [ ] `@aws-sdk/client-s3` 설치
-- [ ] 파일 업로드 S3 연동
-- [ ] 서명된 URL 생성 (다운로드)
-- [ ] 파일 용량 제한 (50MB)
-- [ ] 이미지 리사이징 (Sharp)
-- [ ] CDN 연동 (CloudFront)
+**추가 개선 (선택 사항)**:
+- [ ] 파일 용량 제한 검증 강화 (50MB)
+- [ ] 파일 타입 검증 (MIME type)
+- [ ] 이미지 리사이징 (Sharp) - 선택
+- [ ] 디스크 용량 관리
 
-### 4. 이메일 알림 (0%)
-**상태**: 미구현
+### 3. 이메일 알림 (0%)
+**상태**: 미구현 (선택 사항)
 
 **필요 기능**:
-- [ ] 가입 인증 메일
-- [ ] 비밀번호 재설정
-- [ ] 스터디 초대 메일
-- [ ] 중요 알림 메일
+- [ ] 비밀번호 재설정 (선택)
+- [ ] 스터디 초대 메일 (선택)
+- [ ] 중요 알림 메일 (선택)
 
-**추천 라이브러리**:
+**추천 라이브러리** (구현 시):
 - Resend (resend.com)
 - SendGrid
-- Nodemailer + AWS SES
+- Nodemailer
 
 ---
 
-## 🔴 미구현 기능
+## 🔴 제외된 기능 (구현 안 함)
 
-### 1. 고급 검색 (0%)
+### ❌ OAuth 소셜 로그인 (제외)
+**이유**: 프로젝트 요구사항에 없음
+
 ```
-❌ GET /api/studies/search?q=keyword&filters={...}
-❌ GET /api/users/search?q=keyword
-❌ GET /api/studies/{id}/chat/search?q=keyword
-❌ GET /api/studies/{id}/files/search?q=keyword
+❌ Google OAuth - 구현 안 함
+❌ GitHub OAuth - 구현 안 함
+❌ 카카오/네이버 로그인 - 구현 안 함
 ```
 
-### 2. 화상회의 (0%)
+### ❌ AWS S3 파일 저장소 (제외)
+**이유**: 로컬 저장소 사용
+
+```
+❌ S3 버킷 설정
+❌ IAM 권한 설정
+❌ 서명된 URL
+❌ CloudFront CDN
+```
+
+### ❌ 화상회의 (제외)
+**이유**: 고급 기능
+
 ```
 ❌ WebRTC 시그널링 서버
 ❌ TURN/STUN 서버 설정
 ❌ Jitsi/Zoom API 연동
 ```
 
-### 3. 결제 시스템 (0%)
+### ❌ 결제 시스템 (제외)
+**이유**: 프로젝트 범위 외
+
 ```
-❌ 프리미엄 기능 (설계 외)
+❌ 프리미엄 기능
 ❌ Stripe/PG 연동
-```
-
-### 4. 푸시 알림 (0%)
-```
-❌ Firebase Cloud Messaging
-❌ 브라우저 Push API
-❌ 모바일 푸시 (향후)
-```
-
-### 5. 로그 시스템 (30%)
-**상태**: Winston 설치됨, 로그 수집 미구현
-```
-⚠️ Winston Logger 설정됨
-❌ 로그 파일 저장
-❌ 에러 추적 (Sentry)
-❌ 성능 모니터링
 ```
 
 ---
 
-## 📋 우선순위별 작업 체크리스트
+## 📋 업데이트된 작업 체크리스트
 
 ## 🔥 Phase 1: 핵심 기능 완성 (1-2주)
 
@@ -290,7 +285,7 @@
 - [ ] **서버 설정**
   - [ ] `server.mjs` 커스텀 서버 활성화
   - [ ] Socket.io 서버 초기화 코드 연결
-  - [ ] 환경 변수 `SOCKET_PORT` 추가
+  - [ ] 환경 변수 `SOCKET_PORT` 추가 (선택)
   
 - [ ] **프론트엔드 연결**
   - [ ] `socket.io-client` 설정
@@ -306,27 +301,25 @@
 
 **예상 작업 시간**: 3-4일
 
-### B. 파일 저장소 연동 (S3)
-**중요도**: ⭐⭐⭐⭐
+### B. 파일 저장소 개선 (로컬)
+**중요도**: ⭐⭐⭐ (선택적 개선)
 
-- [ ] **AWS S3 설정**
-  - [ ] S3 버킷 생성 (예: `coup-files-prod`)
-  - [ ] IAM 사용자 생성 및 권한 설정
-  - [ ] CORS 설정
+- [ ] **보안 강화**
+  - [ ] 파일 타입 검증 강화
+  - [ ] 파일 크기 제한 (50MB)
+  - [ ] 악성 파일 확장자 차단
+  - [ ] 파일명 sanitization
   
-- [ ] **백엔드 구현**
-  - [ ] `@aws-sdk/client-s3` 설치
-  - [ ] 파일 업로드 함수 작성
-  - [ ] 서명된 URL 생성 함수
-  - [ ] `/api/studies/{id}/files` 수정
-  - [ ] 파일 삭제 시 S3에서도 삭제
-  
-- [ ] **이미지 처리 (선택)**
-  - [ ] Sharp 설치
+- [ ] **성능 개선 (선택)**
+  - [ ] Sharp로 이미지 최적화
   - [ ] 썸네일 생성
   - [ ] 이미지 리사이징
+  
+- [ ] **저장 경로 관리**
+  - [ ] 업로드 폴더 구조화 (날짜별, 스터디별)
+  - [ ] 디스크 용량 모니터링
 
-**예상 작업 시간**: 2-3일
+**예상 작업 시간**: 1-2일 (선택 사항)
 
 ### C. 미완성 API 엔드포인트 구현
 **중요도**: ⭐⭐⭐⭐
@@ -334,7 +327,7 @@
 - [ ] **사용자 API**
   - [ ] `GET /api/users?q=keyword` - 사용자 검색
   - [ ] `GET /api/users/{userId}` - 사용자 프로필
-  - [ ] `DELETE /api/users/me` - 계정 삭제
+  - [ ] `DELETE /api/users/me` - 계정 삭제 (선택)
   
 - [ ] **스터디 API**
   - [ ] `POST /api/studies/{id}/invite` - 초대 코드 생성
@@ -342,11 +335,11 @@
 - [ ] **채팅 API**
   - [ ] `GET /api/studies/{id}/chat/search` - 메시지 검색
   
-- [ ] **파일 API**
+- [ ] **파일 API (선택)**
   - [ ] `POST /api/studies/{id}/files/folders` - 폴더 생성
   - [ ] `PATCH /api/studies/{id}/files/{fileId}/move` - 파일 이동
   
-- [ ] **캘린더 API**
+- [ ] **캘린더 API (선택)**
   - [ ] `POST /api/studies/{id}/calendar/{eventId}/attend` - 참석 표시
   
 - [ ] **할일 API**
@@ -386,57 +379,12 @@
 
 ## ⚡ Phase 2: 고급 기능 추가 (2-3주)
 
-### A. OAuth 소셜 로그인
+### A. 고급 검색 기능
 **중요도**: ⭐⭐⭐⭐
-
-- [ ] **Google OAuth**
-  - [ ] Google Cloud Console 프로젝트 생성
-  - [ ] OAuth 2.0 클라이언트 ID 발급
-  - [ ] 승인된 리디렉션 URI 설정
-  - [ ] `.env` 변수 추가
-  - [ ] NextAuth Provider 활성화
-  - [ ] 프론트엔드 버튼 추가
-  
-- [ ] **GitHub OAuth**
-  - [ ] GitHub OAuth App 등록
-  - [ ] Client ID/Secret 발급
-  - [ ] Provider 활성화
-  - [ ] 프론트엔드 버튼 추가
-
-**예상 작업 시간**: 2일
-
-### B. 이메일 알림 시스템
-**중요도**: ⭐⭐⭐
-
-- [ ] **이메일 서비스 선택 및 설정**
-  - [ ] Resend 계정 생성 (추천)
-  - [ ] API 키 발급
-  - [ ] 도메인 인증
-  - [ ] `resend` 패키지 설치
-  
-- [ ] **이메일 템플릿 작성**
-  - [ ] 회원가입 환영 메일
-  - [ ] 비밀번호 재설정
-  - [ ] 스터디 초대
-  - [ ] 중요 알림
-  
-- [ ] **API 구현**
-  - [ ] `POST /api/auth/forgot-password`
-  - [ ] `POST /api/auth/reset-password`
-  - [ ] 이메일 전송 헬퍼 함수
-  
-- [ ] **큐 시스템 (선택)**
-  - [ ] Bull Queue + Redis
-  - [ ] 이메일 발송 작업 큐잉
-
-**예상 작업 시간**: 3-4일
-
-### C. 고급 검색 기능
-**중요도**: ⭐⭐⭐
 
 - [ ] **스터디 검색 고도화**
   - [ ] 전체 텍스트 검색 (Prisma fullTextSearch)
-  - [ ] 다중 필터 (카테고리, 태그, 난이도)
+  - [ ] 다중 필터 (카테고리, 태그, 모집 상태)
   - [ ] 정렬 옵션 (인기순, 최신순, 평점순)
   
 - [ ] **사용자 검색**
@@ -453,25 +401,39 @@
 
 **예상 작업 시간**: 3-4일
 
-### D. 알림 고도화
+### B. 알림 고도화
 **중요도**: ⭐⭐⭐
 
 - [ ] **알림 설정 관리**
   - [ ] `GET /api/notifications/settings`
   - [ ] `PATCH /api/notifications/settings`
   - [ ] 알림 타입별 ON/OFF
-  - [ ] 이메일 알림 수신 여부
-  
-- [ ] **브라우저 푸시 알림**
-  - [ ] Web Push API 연동
-  - [ ] Service Worker 등록
-  - [ ] 구독 관리
   
 - [ ] **실시간 알림**
   - [ ] Socket.io로 즉시 푸시
   - [ ] 읽지 않은 알림 배지
+  
+- [ ] **알림 생성 통합**
+  - [ ] 스터디 가입 승인 → 알림
+  - [ ] 새 공지사항 → 알림
+  - [ ] 파일 업로드 → 알림
+  - [ ] 일정 생성 → 알림
 
-**예상 작업 시간**: 3-4일
+**예상 작업 시간**: 2-3일
+
+### C. 공지사항 댓글 기능 (선택)
+**중요도**: ⭐⭐
+
+- [ ] **댓글 API**
+  - [ ] `GET /api/studies/{id}/notices/{noticeId}/comments`
+  - [ ] `POST /api/studies/{id}/notices/{noticeId}/comments`
+  - [ ] `DELETE /api/studies/{id}/notices/{noticeId}/comments/{commentId}`
+  
+- [ ] **데이터베이스 스키마**
+  - [ ] NoticeComment 모델 추가
+  - [ ] 마이그레이션 실행
+
+**예상 작업 시간**: 2일
 
 ---
 
@@ -491,28 +453,24 @@
   - [ ] 불필요한 필드 제외
   
 - [ ] **연결 풀링**
-  - [ ] PgBouncer 설정 (프로덕션)
   - [ ] Prisma 연결 설정 최적화
 
 **예상 작업 시간**: 2-3일
 
-### B. 캐싱 전략
-**중요도**: ⭐⭐⭐⭐
+### B. 캐싱 전략 (선택)
+**중요도**: ⭐⭐⭐
 
-- [ ] **Redis 캐싱**
-  - [ ] Redis 서버 설정
-  - [ ] 캐싱 레이어 구현
-  - [ ] 자주 조회되는 데이터 캐싱
-    - 스터디 목록
-    - 사용자 프로필
-    - 통계 데이터
+- [ ] **메모리 캐싱**
+  - [ ] 인기 스터디 목록 캐싱
+  - [ ] 사용자 프로필 캐싱
+  - [ ] 통계 데이터 캐싱
   
 - [ ] **Next.js 캐싱**
   - [ ] `revalidate` 옵션 설정
   - [ ] ISR (Incremental Static Regeneration)
   - [ ] Route Handler 캐싱
 
-**예상 작업 시간**: 2-3일
+**예상 작업 시간**: 2일 (선택)
 
 ### C. 에러 처리 및 로깅
 **중요도**: ⭐⭐⭐⭐
@@ -529,7 +487,6 @@
   
 - [ ] **모니터링 (선택)**
   - [ ] Sentry 연동 (에러 추적)
-  - [ ] New Relic/DataDog (성능 모니터링)
 
 **예상 작업 시간**: 2-3일
 
@@ -538,12 +495,13 @@
 
 - [ ] **Rate Limiting**
   - [ ] API 요청 제한 (예: 100req/min)
-  - [ ] `express-rate-limit` 또는 Upstash Redis
+  - [ ] 로그인 시도 제한 (5회/5분)
   
 - [ ] **입력 검증**
   - [ ] Zod 스키마 모든 API에 적용
   - [ ] SQL Injection 방어 (Prisma 자동)
   - [ ] XSS 방어
+  - [ ] 파일 업로드 검증
   
 - [ ] **CORS 설정**
   - [ ] 허용 도메인 명시
@@ -551,9 +509,9 @@
   
 - [ ] **환경 변수 보안**
   - [ ] `.env` 파일 관리
-  - [ ] Secrets Manager (프로덕션)
+  - [ ] `.gitignore` 확인
   
-- [ ] **HTTPS 강제**
+- [ ] **HTTPS 강제 (프로덕션)**
   - [ ] Redirect HTTP → HTTPS
   - [ ] HSTS 헤더
 
@@ -570,10 +528,6 @@
 - [ ] **통합 테스트**
   - [ ] 데이터베이스 테스트 환경
   - [ ] Mock 데이터 생성
-  
-- [ ] **E2E 테스트 (선택)**
-  - [ ] Playwright/Cypress
-  - [ ] 주요 사용자 플로우 테스트
 
 **예상 작업 시간**: 5-7일
 
@@ -585,8 +539,8 @@
 **중요도**: ⭐⭐⭐⭐⭐
 
 - [ ] **호스팅 선택**
-  - [ ] Vercel (Next.js 최적화)
-  - [ ] Railway (PostgreSQL + Redis 포함)
+  - [ ] Vercel (Next.js 최적화) - 추천
+  - [ ] Railway (PostgreSQL 포함)
   - [ ] AWS EC2 + RDS (직접 관리)
   
 - [ ] **데이터베이스**
@@ -594,13 +548,13 @@
   - [ ] 백업 설정 (일일 자동 백업)
   - [ ] 연결 문자열 환경 변수
   
-- [ ] **Redis**
-  - [ ] Upstash Redis (서버리스)
-  - [ ] Redis Labs
-  - [ ] AWS ElastiCache
+- [ ] **파일 저장소**
+  - [ ] 로컬 저장 디렉토리 설정
+  - [ ] 디스크 용량 확보
+  - [ ] 백업 전략
   
-- [ ] **도메인 설정**
-  - [ ] 도메인 구매 (예: coup.io)
+- [ ] **도메인 설정 (선택)**
+  - [ ] 도메인 구매
   - [ ] DNS 설정
   - [ ] SSL 인증서 (자동 - Vercel/Let's Encrypt)
 
@@ -612,34 +566,24 @@
 ```env
 # 프로덕션 .env
 NODE_ENV=production
-NEXTAUTH_URL=https://coup.io
+NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=랜덤_64자_이상_문자열
 
 DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
 
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
-AWS_S3_BUCKET=coup-files-prod
-AWS_REGION=ap-northeast-2
-
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-
-RESEND_API_KEY=...
+# 파일 업로드 설정
+FILE_UPLOAD_PATH=/var/app/uploads
+FILE_MAX_SIZE=52428800  # 50MB
 ```
 
 - [ ] **환경 변수 체크리스트**
   - [ ] 모든 Secret 프로덕션 값으로 변경
-  - [ ] API 키 발급 및 설정
+  - [ ] 파일 저장 경로 설정
   - [ ] 호스팅 플랫폼에 환경 변수 등록
 
 **예상 작업 시간**: 1일
 
-### C. CI/CD 파이프라인
+### C. CI/CD 파이프라인 (선택)
 **중요도**: ⭐⭐⭐
 
 - [ ] **GitHub Actions**
@@ -650,85 +594,95 @@ RESEND_API_KEY=...
 - [ ] **배포 전략**
   - [ ] Preview 배포 (PR마다)
   - [ ] 프로덕션 배포 (main 브랜치)
-  - [ ] 롤백 전략
 
-**예상 작업 시간**: 2일
+**예상 작업 시간**: 2일 (선택)
 
 ### D. 성능 측정 및 모니터링
-**중요도**: ⭐⭐⭐⭐
+**중요도**: ⭐⭐⭐
 
 - [ ] **Lighthouse 점수 최적화**
-  - [ ] Performance > 90
+  - [ ] Performance > 80
   - [ ] SEO > 90
   - [ ] Accessibility > 90
   
-- [ ] **모니터링 도구 설정**
-  - [ ] Vercel Analytics
-  - [ ] Sentry (에러 추적)
-  - [ ] Uptime 모니터링
+- [ ] **기본 모니터링**
+  - [ ] Vercel Analytics (무료)
+  - [ ] 디스크 용량 모니터링
 
 **예상 작업 시간**: 1-2일
 
 ---
 
-## 📊 작업 우선순위 요약
+## 📊 업데이트된 작업 우선순위
 
 ### 🔴 긴급 (1-2주 내)
-1. ✅ Socket.io 실시간 통신 활성화
-2. ✅ 파일 저장소 S3 연동
-3. ✅ 미완성 API 엔드포인트 구현
-4. ✅ 페이지네이션 표준화
+1. ⭐⭐⭐⭐⭐ Socket.io 실시간 통신 활성화
+2. ⭐⭐⭐⭐ 미완성 API 엔드포인트 구현
+3. ⭐⭐⭐ 페이지네이션 표준화
+4. ⭐⭐⭐ 파일 저장소 보안 강화 (선택)
 
 ### 🟠 중요 (2-4주 내)
-5. ⚠️ OAuth 소셜 로그인
-6. ⚠️ 이메일 알림 시스템
-7. ⚠️ 고급 검색 기능
-8. ⚠️ 데이터베이스 최적화
-9. ⚠️ 보안 강화
+5. ⭐⭐⭐⭐ 고급 검색 기능
+6. ⭐⭐⭐ 알림 고도화
+7. ⭐⭐⭐⭐ 데이터베이스 최적화
+8. ⭐⭐⭐⭐⭐ 보안 강화
 
 ### 🟡 일반 (4-6주 내)
-10. ⭐ 캐싱 전략
-11. ⭐ 에러 처리 및 로깅
-12. ⭐ 알림 고도화
-13. ⭐ 테스트 작성
+9. ⭐⭐⭐⭐ 에러 처리 및 로깅
+10. ⭐⭐⭐ 테스트 작성
+11. ⭐⭐ 공지사항 댓글 (선택)
+12. ⭐⭐⭐ 캐싱 전략 (선택)
 
-### 🟢 추후 (6주 이후)
-14. 💡 화상회의 기능
-15. 💡 브라우저 푸시 알림
-16. 💡 결제 시스템 (프리미엄)
-17. 💡 모바일 앱 (React Native)
+### 🟢 배포 준비
+13. ⭐⭐⭐⭐⭐ 배포 환경 설정
+14. ⭐⭐⭐⭐⭐ 환경 변수 관리
+15. ⭐⭐⭐ 성능 측정
 
 ---
 
-## 🎯 즉시 시작 가능한 작업 (오늘부터)
+## 🎯 즉시 시작 가능한 작업 (우선순위 순)
 
-### Task 1: Socket.io 활성화 (최우선)
+### Task 1: Socket.io 활성화 (최우선) ⭐⭐⭐⭐⭐
 ```bash
-# 1. 커스텀 서버 활성화
-# server.mjs 파일 확인 및 수정
+# 1. server.mjs 확인 및 수정
+# coup/server.mjs
 
 # 2. 프론트엔드 Socket Provider 생성
 # coup/src/contexts/SocketContext.js
 
 # 3. 채팅 페이지 실시간 연동
 # coup/src/app/my-studies/[studyId]/chat/page.js
+
+# 4. 타이핑 인디케이터 UI
+# 5. 온라인 사용자 표시 UI
 ```
 
-### Task 2: AWS S3 설정
-```bash
-# 1. AWS 콘솔에서 S3 버킷 생성
-# 2. IAM 사용자 권한 설정
-# 3. npm install @aws-sdk/client-s3
-# 4. /api/studies/[id]/files/route.js 수정
-```
-
-### Task 3: 미완성 API 구현
+### Task 2: 미완성 API 구현 ⭐⭐⭐⭐
 ```bash
 # 우선순위 순서:
-# 1. GET /api/users?q=keyword
-# 2. POST /api/studies/{id}/invite
-# 3. GET /api/studies/{id}/chat/search
-# 4. POST /api/studies/{id}/files/folders
+# 1. GET /api/users?q=keyword (사용자 검색)
+# 2. POST /api/studies/{id}/invite (초대 코드)
+# 3. GET /api/studies/{id}/chat/search (메시지 검색)
+# 4. GET /api/tasks/stats (할일 통계)
+```
+
+### Task 3: 파일 업로드 보안 강화 ⭐⭐⭐
+```bash
+# 1. 파일 타입 검증
+# 2. 파일 크기 제한 (50MB)
+# 3. 악성 파일 차단
+# 4. 파일명 sanitization
+
+# coup/src/app/api/studies/[id]/files/route.js
+```
+
+### Task 4: 페이지네이션 표준화 ⭐⭐⭐
+```bash
+# 모든 목록 API에 일관된 페이지네이션 적용
+# 1. /api/studies
+# 2. /api/notifications
+# 3. /api/tasks
+# 4. /api/admin/* APIs
 ```
 
 ---
@@ -767,6 +721,30 @@ catch (error) {
 }
 ```
 
+### 로컬 파일 저장 표준
+```javascript
+// 파일 업로드 처리
+const uploadDir = path.join(process.cwd(), 'public', 'uploads', studyId)
+await mkdir(uploadDir, { recursive: true })
+
+const fileName = `${Date.now()}-${file.name}`
+const filePath = path.join(uploadDir, fileName)
+
+await writeFile(filePath, buffer)
+
+// DB에 저장
+const fileRecord = await prisma.file.create({
+  data: {
+    studyId,
+    uploaderId: userId,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    url: `/uploads/${studyId}/${fileName}`
+  }
+})
+```
+
 ### Git Commit 컨벤션
 ```
 feat: 새로운 기능 추가
@@ -777,29 +755,6 @@ docs: 문서 수정
 test: 테스트 코드
 chore: 빌드, 패키지 등
 ```
-
-### 브랜치 전략
-```
-main        - 프로덕션
-develop     - 개발
-feature/*   - 기능 개발
-hotfix/*    - 긴급 수정
-```
-
----
-
-## 📞 기술 지원 및 참고 자료
-
-### 공식 문서
-- Next.js 16: https://nextjs.org/docs
-- Prisma: https://www.prisma.io/docs
-- NextAuth.js: https://next-auth.js.org
-- Socket.io: https://socket.io/docs/v4
-
-### 커뮤니티
-- Next.js Discord
-- Stack Overflow
-- GitHub Discussions
 
 ---
 
@@ -813,10 +768,31 @@ hotfix/*    - 긴급 수정
 
 **최종 목표**: 프로덕션 레디 상태 달성
 
-**예상 총 작업 기간**: 6-8주 (1명 풀타임 기준)
+**예상 총 작업 기간**: 5-6주 (1명 풀타임 기준)
+
+---
+
+## 📌 주요 변경사항 요약
+
+### ✅ 제외된 항목
+1. **OAuth 소셜 로그인** - 구현 안 함
+2. **AWS S3 파일 저장소** - 로컬 저장 사용
+3. **이메일 인증** - 기본 인증만 사용
+
+### ✅ 확정된 사항
+1. **인증 시스템** - 이미 구현 완료 (평가 대상 아님)
+2. **파일 저장** - 로컬 저장소 완료
+3. **실시간 통신** - Socket.io 구현 필요 (최우선)
+
+### 🎯 집중할 영역
+1. Socket.io 실시간 기능
+2. API 완성도 높이기
+3. 보안 및 에러 처리
+4. 성능 최적화
+5. 테스트 및 배포
 
 ---
 
 _작성: 2025-11-18_  
+_업데이트: 2025-11-18 (소셜 로그인 제외, 로컬 파일 저장 확정)_  
 _다음 업데이트: 작업 진행에 따라 수시 갱신_
-
