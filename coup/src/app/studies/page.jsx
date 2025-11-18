@@ -8,12 +8,13 @@ import { useStudies } from '@/lib/hooks/useApi';
 
 // 카테고리 정의 (정적 데이터는 유지)
 const categories = [
-  { id: 'all', label: '전체', icon: '📚' },
-  { id: 'dev', label: '개발', icon: '💻' },
-  { id: 'design', label: '디자인', icon: '🎨' },
-  { id: 'language', label: '외국어', icon: '🌍' },
-  { id: 'exam', label: '자격증', icon: '📝' },
-  { id: 'hobby', label: '취미', icon: '🎸' },
+  { id: 'all', label: '전체', value: null, icon: '📚' },
+  { id: 'programming', label: '프로그래밍', value: '프로그래밍', icon: '💻' },
+  { id: 'language', label: '어학', value: '어학', icon: '🌍' },
+  { id: 'cert', label: '자격증', value: '자격증', icon: '📝' },
+  { id: 'hobby', label: '취미', value: '취미', icon: '🎸' },
+  { id: 'book', label: '독서', value: '독서', icon: '📖' },
+  { id: 'finance', label: '재테크', value: '재테크', icon: '💰' },
 ];
 
 // 스터디 생성 팁 (정적 데이터는 유지)
@@ -31,13 +32,22 @@ export default function StudiesExplorePage() {
   const itemsPerPage = 6;
 
   // 실제 API 호출
-  const { data, isLoading, error } = useStudies({
+  const queryParams = {
     page: currentPage,
     limit: itemsPerPage,
-    category: selectedCategory === '전체' ? undefined : selectedCategory,
-    search: searchKeyword || undefined,
-    isRecruiting: true,
-  });
+  };
+
+  // 카테고리가 '전체'가 아닌 경우만 추가
+  if (selectedCategory && selectedCategory !== '전체') {
+    queryParams.category = selectedCategory;
+  }
+
+  // 검색어가 있는 경우만 추가
+  if (searchKeyword && searchKeyword.trim()) {
+    queryParams.search = searchKeyword.trim();
+  }
+
+  const { data, isLoading, error } = useStudies(queryParams);
 
   const studies = data?.data || [];
   const pagination = data?.pagination || { total: 0, totalPages: 1 };

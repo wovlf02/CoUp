@@ -45,10 +45,22 @@ async function fetchAPI(endpoint, options = {}) {
 export const api = {
   // GET 요청
   get: (endpoint, params) => {
-    const queryString = params
-      ? '?' + new URLSearchParams(params).toString()
-      : ''
-    return fetchAPI(endpoint + queryString, { method: 'GET' })
+    if (params) {
+      // undefined, null, 빈 문자열 제거
+      const cleanParams = Object.entries(params).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          acc[key] = value
+        }
+        return acc
+      }, {})
+
+      const queryString =
+        Object.keys(cleanParams).length > 0
+          ? '?' + new URLSearchParams(cleanParams).toString()
+          : ''
+      return fetchAPI(endpoint + queryString, { method: 'GET' })
+    }
+    return fetchAPI(endpoint, { method: 'GET' })
   },
 
   // POST 요청
@@ -85,4 +97,3 @@ export const api = {
 }
 
 export { ApiError }
-

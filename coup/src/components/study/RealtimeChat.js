@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useChatSocket, useStudySocket } from '@/lib/hooks/useStudySocket'
-import { useSession } from 'next-auth/react'
+import { useSocket } from '@/contexts/SocketContext'
 
 export default function RealtimeChat({ studyId, initialMessages = [] }) {
-  const { data: session } = useSession()
+  const { user } = useSocket()
   const [messages, setMessages] = useState(initialMessages)
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -31,13 +31,13 @@ export default function RealtimeChat({ studyId, initialMessages = [] }) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
 
       // 자동 읽음 처리 (본인 메시지가 아닌 경우)
-      if (newMessage.userId !== session?.user?.id) {
+      if (newMessage.userId !== user?.id) {
         setTimeout(() => {
           markAsRead(newMessage.id)
         }, 500)
       }
     }
-  }, [newMessage, session?.user?.id, markAsRead])
+  }, [newMessage, user?.id, markAsRead])
 
   // 메시지 전송
   const handleSendMessage = (e) => {
@@ -99,7 +99,7 @@ export default function RealtimeChat({ studyId, initialMessages = [] }) {
       {/* 메시지 목록 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => {
-          const isMyMessage = message.userId === session?.user?.id
+          const isMyMessage = message.userId === user?.id
 
           return (
             <div
@@ -186,4 +186,3 @@ export default function RealtimeChat({ studyId, initialMessages = [] }) {
     </div>
   )
 }
-

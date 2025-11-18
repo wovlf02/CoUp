@@ -2,17 +2,41 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
-import { useSession } from 'next-auth/react'
 
 const SocketContext = createContext(null)
 
 export function SocketProvider({ children }) {
   const [socket, setSocket] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
-  const { data: session } = useSession()
+  const [user, setUser] = useState(null)
+
+  // 사용자 정보 확인
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          // 로그인하지 않은 경우 조용히 처리
+          setUser(null)
+        }
+      } catch (error) {
+        // 네트워크 오류 등은 조용히 처리
+        console.debug('User check failed:', error.message)
+        setUser(null)
+      }
+    }
+
+    checkUser()
+  }, [])
 
   useEffect(() => {
-    if (!session?.user?.id) {
+    // 로그인하지 않은 경우 소켓 연결 안 함
+    if (!user?.id) {
       if (socket) {
         socket.disconnect()
         setSocket(null)
@@ -21,11 +45,10 @@ export function SocketProvider({ children }) {
       return
     }
 
-    // Socket.io 연결
+    // Socket.io 연결 (로그인 후에만)
     const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000', {
       auth: {
-        userId: session.user.id,
-        token: session.user.token
+        userId: user.id
       },
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -57,11 +80,13 @@ export function SocketProvider({ children }) {
     return () => {
       socketInstance.disconnect()
     }
-  }, [session?.user?.id])
+  }, [user?.id])
 
   const value = {
     socket,
-    isConnected
+    isConnected,
+    user,
+    setUser // 로그인 후 사용자 정보 업데이트용
   }
 
   return (
@@ -78,4 +103,3 @@ export function useSocket() {
   }
   return context
 }
-

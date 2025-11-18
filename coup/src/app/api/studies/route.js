@@ -16,8 +16,12 @@ export async function GET(request) {
     const sortBy = searchParams.get('sortBy') || 'latest' // latest | popular | rating
 
     // where 조건 생성
-    let whereClause = {
-      isPublic: true
+    let whereClause = {}
+
+    // 기본적으로 공개 스터디만 표시하지만, 파라미터로 변경 가능
+    const isPublic = searchParams.get('isPublic')
+    if (isPublic !== 'false') {
+      whereClause.isPublic = true
     }
 
     if (category && category !== 'all') {
@@ -186,4 +190,3 @@ export async function POST(request) {
     )
   }
 }
-

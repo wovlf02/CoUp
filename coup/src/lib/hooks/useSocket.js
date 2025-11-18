@@ -3,24 +3,45 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { io } from 'socket.io-client'
-import { useSession } from 'next-auth/react'
 
 let socket = null
 
 export function useSocket() {
-  const { data: session } = useSession()
   const [isConnected, setIsConnected] = useState(false)
   const [transport, setTransport] = useState('N/A')
+  const [user, setUser] = useState(null)
+
+  // 사용자 정보 가져오기 (로그인된 경우만)
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          // 로그인되지 않은 경우 소켓 연결하지 않음
+          setUser(null)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error)
+        setUser(null)
+      }
+    }
+
+    fetchUser()
+  }, [])
 
   useEffect(() => {
-    if (!session?.user?.id) return
+    if (!user?.id) return
 
     // Socket.IO 초기화 (한 번만)
     if (!socket) {
       socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || '', {
         auth: {
-          userId: session.user.id,
-          token: session.user.id // 실제로는 JWT 토큰 사용
+          userId: user.id
         },
         transports: ['websocket', 'polling']
       })
@@ -46,7 +67,7 @@ export function useSocket() {
     return () => {
       // 컴포넌트 언마운트 시에는 소켓을 끊지 않음 (재사용)
     }
-  }, [session?.user?.id])
+  }, [user?.id])
 
   return {
     socket,
@@ -254,4 +275,3 @@ export function useVideoCall(roomId) {
 }
 
 export default useSocket
-

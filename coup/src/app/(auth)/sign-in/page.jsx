@@ -1,13 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from '@/styles/auth/sign-in.module.css'
+import { useSocket } from '@/contexts/SocketContext'
 
 export default function SignInPage() {
   const router = useRouter()
-  
+  const { user, setUser } = useSocket()
+
+  // 이미 로그인된 사용자는 대시보드로 리다이렉션
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard')
+    }
+  }, [user, router])
+
   // Form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -74,6 +83,9 @@ export default function SignInPage() {
       }
 
       if (data.success) {
+        // 소켓 컨텍스트에 사용자 정보 업데이트 (소켓 연결 트리거)
+        setUser(data.user)
+
         // 로그인 성공 - 대시보드로 이동
         router.push('/dashboard')
         router.refresh()

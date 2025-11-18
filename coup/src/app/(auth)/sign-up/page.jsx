@@ -1,13 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from '@/styles/auth/sign-up.module.css'
+import { useSocket } from '@/contexts/SocketContext'
 
 export default function SignUpPage() {
   const router = useRouter()
-  
+  const { user, setUser } = useSocket()
+
+  // 이미 로그인된 사용자는 대시보드로 리다이렉션
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard')
+    }
+  }, [user, router])
+
   // Form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -107,9 +116,15 @@ export default function SignUpPage() {
         throw new Error(data.error || '회원가입에 실패했습니다')
       }
 
-      // 회원가입 성공 → 로그인 페이지로 이동
-      alert('회원가입이 완료되었습니다! 로그인해주세요.')
-      router.push('/sign-in')
+      // 회원가입 성공 시 자동 로그인 (API에서 토큰 설정됨)
+      if (data.success && data.user) {
+        // 소켓 컨텍스트에 사용자 정보 업데이트 (소켓 연결 트리거)
+        setUser(data.user)
+
+        // 대시보드로 이동
+        router.push('/dashboard')
+        router.refresh()
+      }
 
     } catch (err) {
       console.error('회원가입 실패:', err)

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import DeleteAccountModal from './DeleteAccountModal'
 import styles from './AccountActions.module.css'
@@ -16,10 +15,17 @@ export default function AccountActions() {
 
     try {
       setIsLoggingOut(true)
-      await signOut({
-        redirect: true,
-        callbackUrl: '/',
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
       })
+
+      if (response.ok) {
+        router.push('/')
+        router.refresh()
+      } else {
+        throw new Error('로그아웃 실패')
+      }
     } catch (error) {
       console.error('로그아웃 실패:', error)
       alert('로그아웃에 실패했습니다')
@@ -35,6 +41,7 @@ export default function AccountActions() {
     try {
       const response = await fetch('/api/users/me', {
         method: 'DELETE',
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -45,7 +52,7 @@ export default function AccountActions() {
       setShowDeleteModal(false)
 
       // 로그아웃 후 홈으로 이동
-      await signOut({ redirect: true, callbackUrl: '/' })
+      await handleLogout()
     } catch (error) {
       console.error('계정 삭제 실패:', error)
       alert('계정 삭제에 실패했습니다. 다시 시도해주세요.')

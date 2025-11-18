@@ -1,6 +1,7 @@
 // src/app/api/auth/signup/route.js
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { signJWT } from "@/lib/jwt"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
@@ -47,18 +48,41 @@ export async function POST(request) {
         id: true,
         email: true,
         name: true,
+        avatar: true,
+        role: true,
+        status: true,
         createdAt: true,
       }
     })
 
-    return NextResponse.json(
+    // JWT 토큰 생성 (자동 로그인)
+    const token = signJWT({
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    })
+
+    // 응답 생성
+    const response = NextResponse.json(
       {
         success: true,
         message: "회원가입이 완료되었습니다",
-        user
+        user,
+        token
       },
       { status: 201 }
     )
+
+    // 쿠키에 토큰 설정 (자동 로그인)
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7일
+      path: '/'
+    })
+
+    return response
 
   } catch (error) {
     console.error('Signup error:', error)

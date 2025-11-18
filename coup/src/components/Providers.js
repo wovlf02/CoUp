@@ -1,7 +1,6 @@
 // src/components/Providers.js
 'use client'
 
-import { SessionProvider } from "next-auth/react"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SocketProvider } from '@/contexts/SocketContext'
 import { useState } from 'react'
@@ -20,11 +19,9 @@ export function Providers({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <SocketProvider>
-          {children}
-        </SocketProvider>
-      </SessionProvider>
+      <SocketProvider>
+        {children}
+      </SocketProvider>
     </QueryClientProvider>
   )
 }
