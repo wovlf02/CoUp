@@ -116,7 +116,7 @@ export default function MyStudiesListPage() {
         ) : (
           <>
             <div className={styles.studiesList}>
-              {myStudies.map((study) => {
+              {myStudies.map((study, index) => {
                 const badge = getRoleBadge(study.role);
 
                 // 빠른 액션 버튼 데이터
@@ -127,9 +127,12 @@ export default function MyStudiesListPage() {
                   { id: 'calendar', label: '📅 캘린더' }
                 ];
 
+                // 안전한 고유 key 생성
+                const uniqueKey = study.id || study.studyId || `study-${index}`;
+
                 return (
                   <Link
-                    key={study.id}
+                    key={uniqueKey}
                     href={`/my-studies/${study.study?.id || study.studyId}`}
                     className={`${styles.studyCard} ${study.newMessages > 0 ? styles.hasUnread : ''}`}
                   >
@@ -163,7 +166,7 @@ export default function MyStudiesListPage() {
                     <div className={styles.quickActions}>
                       {quickActions.map((action) => (
                         <button
-                          key={action.id}
+                          key={`${uniqueKey}-${action.id}`}
                           className={styles.actionButton}
                           onClick={(e) => e.preventDefault()}
                         >
