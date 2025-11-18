@@ -7,39 +7,72 @@ import NotificationStats from '@/components/notifications/NotificationStats'
 import NotificationTypeFilter from '@/components/notifications/NotificationTypeFilter'
 import NotificationSettings from '@/components/notifications/NotificationSettings'
 import NotificationEmpty from '@/components/notifications/NotificationEmpty'
-import { notifications, notificationStats, notificationSettings } from '@/mocks/notifications'
+import { useNotifications, useMarkAllNotificationsAsRead, useMarkNotificationAsRead } from '@/lib/hooks/useApi'
 import styles from './page.module.css'
 
 export default function NotificationsPage() {
   const [filter, setFilter] = useState('unread') // 'all', 'unread'
-  const [notificationList, setNotificationList] = useState(notifications)
+
+  // 실제 API 호출
+  const { data, isLoading } = useNotifications({ filter })
+  const markAllAsRead = useMarkAllNotificationsAsRead()
+  const markAsRead = useMarkNotificationAsRead()
+
+  const notifications = data?.data || []
+  const stats = data?.stats || { total: 0, unread: 0 }
 
   const filteredNotifications = useMemo(() => {
     if (filter === 'unread') {
-      return notificationList.filter(n => !n.isRead)
+      return notifications.filter(n => !n.isRead)
     }
-    return notificationList
-  }, [notificationList, filter])
-
-  const unreadCount = notificationList.filter(n => !n.isRead).length
+    return notifications
+  }, [notifications, filter])
 
   const handleMarkAllAsRead = async () => {
-    setNotificationList(prev => prev.map(n => ({ ...n, isRead: true })))
-    console.log('모든 알림 읽음 처리')
-    alert('모든 알림을 읽음 처리했습니다!')
+    try {
+      await markAllAsRead.mutateAsync()
+      alert('모든 알림을 읽음 처리했습니다!')
+    } catch (error) {
+      alert('알림 읽음 처리에 실패했습니다.')
+    }
   }
 
   const handleNotificationClick = async (notification) => {
     if (!notification.isRead) {
-      setNotificationList(prev => prev.map(n =>
-        n.id === notification.id ? { ...n, isRead: true } : n
-      ))
-      console.log('알림 읽음 처리:', notification.id)
+      try {
+        await markAsRead.mutateAsync(notification.id)
+      } catch (error) {
+        console.error('알림 읽음 처리 실패:', error)
+      }
     }
 
-    // Mock: 링크로 이동 (콘솔에만 출력)
-    console.log('이동:', notification.data)
+    // 알림 데이터에 따라 링크로 이동
+    if (notification.data?.studyId) {
+      window.location.href = `/my-studies/${notification.data.studyId}`
+    }
   }
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>알림을 불러오는 중...</div>
+      </div>
+    )
+  }
+
+  // 알림 타입별 통계 (클라이언트에서 계산)
+  const notificationStats = useMemo(() => {
+    const byType = {}
+    notifications.forEach(n => {
+      byType[n.type] = (byType[n.type] || 0) + 1
+    })
+    return {
+      total: stats.total,
+      unread: stats.unread,
+      byType
+    }
+  }, [notifications, stats])
 
   return (
     <div className={styles.container}>
@@ -57,7 +90,7 @@ export default function NotificationsPage() {
           filter={filter}
           onFilterChange={setFilter}
           onMarkAllAsRead={handleMarkAllAsRead}
-          unreadCount={unreadCount}
+          unreadCount={stats.unread}
         />
 
         {filteredNotifications.length === 0 ? (
@@ -78,7 +111,6 @@ export default function NotificationsPage() {
       <aside className={styles.sidebar}>
         <NotificationStats stats={notificationStats} />
         <NotificationTypeFilter stats={notificationStats} />
-        <NotificationSettings settings={notificationSettings} />
       </aside>
     </div>
   )

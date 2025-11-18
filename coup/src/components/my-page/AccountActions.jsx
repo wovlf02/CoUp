@@ -1,26 +1,55 @@
 'use client'
 
 import { useState } from 'react'
+import { signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import DeleteAccountModal from './DeleteAccountModal'
 import styles from './AccountActions.module.css'
 
 export default function AccountActions() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const router = useRouter()
 
-  const handleLogout = () => {
-    // Mock: 콘솔에만 출력
-    console.log('로그아웃 처리')
-    alert('로그아웃되었습니다 (Mock)')
+  const handleLogout = async () => {
+    if (!confirm('로그아웃 하시겠습니까?')) return
+
+    try {
+      setIsLoggingOut(true)
+      await signOut({
+        redirect: true,
+        callbackUrl: '/',
+      })
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+      alert('로그아웃에 실패했습니다')
+      setIsLoggingOut(false)
+    }
   }
 
   const handleDeleteAccount = () => {
     setShowDeleteModal(true)
   }
 
-  const handleConfirmDelete = () => {
-    console.log('계정 삭제 처리')
-    alert('계정이 삭제되었습니다 (Mock)')
-    setShowDeleteModal(false)
+  const handleConfirmDelete = async () => {
+    try {
+      const response = await fetch('/api/users/me', {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('계정 삭제 실패')
+      }
+
+      alert('계정이 삭제되었습니다')
+      setShowDeleteModal(false)
+
+      // 로그아웃 후 홈으로 이동
+      await signOut({ redirect: true, callbackUrl: '/' })
+    } catch (error) {
+      console.error('계정 삭제 실패:', error)
+      alert('계정 삭제에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   return (
@@ -39,9 +68,10 @@ export default function AccountActions() {
             </div>
             <button
               onClick={handleLogout}
+              disabled={isLoggingOut}
               className={`${styles.actionButton} ${styles.logoutButton}`}
             >
-              로그아웃
+              {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
             </button>
           </div>
 
@@ -72,4 +102,3 @@ export default function AccountActions() {
     </>
   )
 }
-

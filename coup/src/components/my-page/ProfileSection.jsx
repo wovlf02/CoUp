@@ -4,10 +4,12 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { formatDate } from '@/utils/time'
 import { getInitials } from '@/utils/format'
+import { useUpdateProfile } from '@/lib/hooks/useApi'
 import styles from './ProfileSection.module.css'
 
 export default function ProfileSection({ user, onUpdate }) {
   const [uploading, setUploading] = useState(false)
+  const updateProfile = useUpdateProfile()
 
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0]
@@ -26,16 +28,24 @@ export default function ProfileSection({ user, onUpdate }) {
 
     setUploading(true)
 
-    // Mock: 로컬 URL 생성
     try {
-      const imageUrl = URL.createObjectURL(file)
-      setTimeout(() => {
-        onUpdate({ imageUrl })
-        setUploading(false)
-        alert('프로필 이미지가 변경되었습니다!')
-      }, 1000)
+      // Base64로 인코딩하여 전송 (또는 별도 파일 업로드 API 사용)
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        try {
+          await updateProfile.mutateAsync({ avatar: reader.result })
+          alert('프로필 이미지가 변경되었습니다!')
+        } catch (error) {
+          console.error('이미지 업로드 실패:', error)
+          alert('이미지 업로드에 실패했습니다')
+        } finally {
+          setUploading(false)
+        }
+      }
+      reader.readAsDataURL(file)
     } catch (error) {
-      alert('이미지 업로드에 실패했습니다')
+      console.error('이미지 처리 실패:', error)
+      alert('이미지 처리에 실패했습니다')
       setUploading(false)
     }
   }
@@ -46,9 +56,9 @@ export default function ProfileSection({ user, onUpdate }) {
 
       <div className={styles.profileContent}>
         <div className={styles.profileImageWrapper}>
-          {user.imageUrl ? (
+          {user.avatar ? (
             <Image
-              src={user.imageUrl}
+              src={user.avatar}
               alt={user.name}
               width={128}
               height={128}
@@ -76,8 +86,7 @@ export default function ProfileSection({ user, onUpdate }) {
         </label>
 
         <p className={styles.profileInfo}>
-          {user.provider === 'GOOGLE' ? 'Google 계정으로 가입' : '이메일로 가입'} ·
-          가입일: {formatDate(user.createdAt)}
+          이메일로 가입 · 가입일: {formatDate(user.createdAt)}
         </p>
       </div>
     </section>

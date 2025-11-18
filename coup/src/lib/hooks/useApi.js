@@ -2,282 +2,547 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '@/lib/utils/apiClient'
+import {
+  authApi,
+  userApi,
+  dashboardApi,
+  studyApi,
+  chatApi,
+  noticeApi,
+  fileApi,
+  calendarApi,
+  taskApi,
+  notificationApi,
+  adminApi,
+} from '@/lib/api'
 
-// ============================================
-// Dashboard
-// ============================================
+// ==================== 사용자 ====================
+export function useMe() {
+  return useQuery({
+    queryKey: ['user', 'me'],
+    queryFn: () => userApi.getMe(),
+  })
+}
+
+export function useUserStats() {
+  return useQuery({
+    queryKey: ['user', 'stats'],
+    queryFn: () => userApi.getStats(),
+  })
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => userApi.updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['user', 'me'])
+    },
+  })
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (data) => userApi.changePassword(data),
+  })
+}
+
+export function useSearchUsers(query) {
+  return useQuery({
+    queryKey: ['users', 'search', query],
+    queryFn: () => userApi.search(query),
+    enabled: !!query.q,
+  })
+}
+
+export function useUser(userId) {
+  return useQuery({
+    queryKey: ['users', userId],
+    queryFn: () => userApi.getById(userId),
+    enabled: !!userId,
+  })
+}
+
+// ==================== 대시보드 ====================
 export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],
-    queryFn: () => api.get('/dashboard'),
+    queryFn: () => dashboardApi.getData(),
   })
 }
 
-// ============================================
-// Studies
-// ============================================
+export function useMyStudies(params = {}) {
+  return useQuery({
+    queryKey: ['my-studies', params],
+    queryFn: () => dashboardApi.getMyStudies(params),
+  })
+}
+
+// ==================== 스터디 ====================
 export function useStudies(params = {}) {
   return useQuery({
     queryKey: ['studies', params],
-    queryFn: () => api.get('/studies', params),
+    queryFn: () => studyApi.getList(params),
   })
 }
 
-export function useStudy(studyId) {
+export function useStudy(id) {
   return useQuery({
-    queryKey: ['study', studyId],
-    queryFn: () => api.get(`/studies/${studyId}`),
-    enabled: !!studyId,
+    queryKey: ['studies', id],
+    queryFn: () => studyApi.getById(id),
+    enabled: !!id,
   })
 }
 
 export function useCreateStudy() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (data) => api.post('/studies', data),
+    mutationFn: (data) => studyApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['studies'] })
-      queryClient.invalidateQueries({ queryKey: ['my-studies'] })
+      queryClient.invalidateQueries(['studies'])
+      queryClient.invalidateQueries(['my-studies'])
     },
   })
 }
 
-export function useJoinStudy(studyId) {
+export function useUpdateStudy() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (data) => api.post(`/studies/${studyId}/join`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['study', studyId] })
-      queryClient.invalidateQueries({ queryKey: ['my-studies'] })
+    mutationFn: ({ id, data }) => studyApi.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.id])
+      queryClient.invalidateQueries(['studies'])
     },
   })
 }
 
-// ============================================
-// My Studies
-// ============================================
-export function useMyStudies(params = {}) {
+export function useDeleteStudy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => studyApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['studies'])
+      queryClient.invalidateQueries(['my-studies'])
+    },
+  })
+}
+
+export function useJoinStudy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => studyApi.join(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.id])
+      queryClient.invalidateQueries(['my-studies'])
+    },
+  })
+}
+
+export function useLeaveStudy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => studyApi.leave(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['studies'])
+      queryClient.invalidateQueries(['my-studies'])
+    },
+  })
+}
+
+// ==================== 스터디 멤버 ====================
+export function useStudyMembers(studyId, params = {}) {
   return useQuery({
-    queryKey: ['my-studies', params],
-    queryFn: () => api.get('/my-studies', params),
+    queryKey: ['studies', studyId, 'members', params],
+    queryFn: () => studyApi.getMembers(studyId, params),
+    enabled: !!studyId,
   })
 }
 
-// ============================================
-// Notifications
-// ============================================
-export function useNotifications(params = {}) {
+export function useJoinRequests(studyId) {
   return useQuery({
-    queryKey: ['notifications', params],
-    queryFn: () => api.get('/notifications', params),
+    queryKey: ['studies', studyId, 'join-requests'],
+    queryFn: () => studyApi.getJoinRequests(studyId),
+    enabled: !!studyId,
   })
 }
 
-export function useMarkNotificationAsRead() {
+export function useApproveMember() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (notificationId) => api.post(`/notifications/${notificationId}/read`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    mutationFn: ({ studyId, userId }) => studyApi.approveMember(studyId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
     },
   })
 }
 
-export function useMarkAllNotificationsAsRead() {
+export function useRejectMember() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: () => api.post('/notifications/mark-all-read'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    mutationFn: ({ studyId, userId }) => studyApi.rejectMember(studyId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
     },
   })
 }
 
-// ============================================
-// Tasks
-// ============================================
+export function useKickMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, userId }) => studyApi.kickMember(studyId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+    },
+  })
+}
+
+export function useChangeMemberRole() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, userId, role }) => studyApi.changeMemberRole(studyId, userId, role),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+    },
+  })
+}
+
+// ==================== 채팅 ====================
+export function useMessages(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'messages', params],
+    queryFn: () => chatApi.getMessages(studyId, params),
+    enabled: !!studyId,
+  })
+}
+
+export function useSendMessage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, data }) => chatApi.sendMessage(studyId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'messages'])
+    },
+  })
+}
+
+export function useDeleteMessage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, messageId }) => chatApi.deleteMessage(studyId, messageId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'messages'])
+    },
+  })
+}
+
+export function useSearchMessages(studyId, params) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'messages', 'search', params],
+    queryFn: () => chatApi.search(studyId, params),
+    enabled: !!studyId && !!params.q,
+  })
+}
+
+// ==================== 공지사항 ====================
+export function useNotices(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'notices', params],
+    queryFn: () => noticeApi.getList(studyId, params),
+    enabled: !!studyId,
+  })
+}
+
+export function useNotice(studyId, noticeId) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'notices', noticeId],
+    queryFn: () => noticeApi.getById(studyId, noticeId),
+    enabled: !!studyId && !!noticeId,
+  })
+}
+
+export function useCreateNotice() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, data }) => noticeApi.create(studyId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
+    },
+  })
+}
+
+export function useUpdateNotice() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, noticeId, data }) => noticeApi.update(studyId, noticeId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'notices', variables.noticeId])
+    },
+  })
+}
+
+export function useDeleteNotice() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, noticeId }) => noticeApi.delete(studyId, noticeId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
+    },
+  })
+}
+
+export function useTogglePinNotice() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, noticeId }) => noticeApi.togglePin(studyId, noticeId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
+    },
+  })
+}
+
+// ==================== 파일 ====================
+export function useFiles(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'files', params],
+    queryFn: () => fileApi.getList(studyId, params),
+    enabled: !!studyId,
+  })
+}
+
+export function useUploadFile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, formData }) => fileApi.upload(studyId, formData),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'files'])
+    },
+  })
+}
+
+export function useDeleteFile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, fileId }) => fileApi.delete(studyId, fileId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'files'])
+    },
+  })
+}
+
+// ==================== 캘린더 ====================
+export function useEvents(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'calendar', params],
+    queryFn: () => calendarApi.getEvents(studyId, params),
+    enabled: !!studyId,
+  })
+}
+
+export function useCreateEvent() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, data }) => calendarApi.createEvent(studyId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'calendar'])
+    },
+  })
+}
+
+export function useUpdateEvent() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, eventId, data }) => calendarApi.updateEvent(studyId, eventId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'calendar'])
+    },
+  })
+}
+
+export function useDeleteEvent() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, eventId }) => calendarApi.deleteEvent(studyId, eventId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'calendar'])
+    },
+  })
+}
+
+// ==================== 할일 ====================
 export function useTasks(params = {}) {
   return useQuery({
     queryKey: ['tasks', params],
-    queryFn: () => api.get('/tasks', params),
+    queryFn: () => taskApi.getList(params),
+  })
+}
+
+export function useTask(id) {
+  return useQuery({
+    queryKey: ['tasks', id],
+    queryFn: () => taskApi.getById(id),
+    enabled: !!id,
   })
 }
 
 export function useCreateTask() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (data) => api.post('/tasks', data),
+    mutationFn: (data) => taskApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries(['tasks'])
     },
   })
 }
 
-export function useToggleTask() {
+export function useUpdateTask() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (taskId) => api.patch(`/tasks/${taskId}/toggle`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    mutationFn: ({ id, data }) => taskApi.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['tasks'])
+      queryClient.invalidateQueries(['tasks', variables.id])
     },
   })
 }
 
 export function useDeleteTask() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (taskId) => api.delete(`/tasks/${taskId}`),
+    mutationFn: (id) => taskApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries(['tasks'])
     },
   })
 }
 
-// ============================================
-// Notices
-// ============================================
-export function useNotices(studyId, params = {}) {
-  return useQuery({
-    queryKey: ['notices', studyId, params],
-    queryFn: () => api.get(`/studies/${studyId}/notices`, params),
-    enabled: !!studyId,
-  })
-}
-
-export function useCreateNotice(studyId) {
+export function useToggleTask() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (data) => api.post(`/studies/${studyId}/notices`, data),
+    mutationFn: (id) => taskApi.toggle(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notices', studyId] })
+      queryClient.invalidateQueries(['tasks'])
     },
   })
 }
 
-// ============================================
-// Calendar
-// ============================================
-export function useCalendar(studyId, params = {}) {
+export function useTaskStats() {
   return useQuery({
-    queryKey: ['calendar', studyId, params],
-    queryFn: () => api.get(`/studies/${studyId}/calendar`, params),
-    enabled: !!studyId,
+    queryKey: ['tasks', 'stats'],
+    queryFn: () => taskApi.getStats(),
   })
 }
 
-export function useCreateEvent(studyId) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (data) => api.post(`/studies/${studyId}/calendar`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['calendar', studyId] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-    },
-  })
-}
-
-// ============================================
-// Chat
-// ============================================
-export function useChat(studyId, params = {}) {
+// ==================== 알림 ====================
+export function useNotifications(params = {}) {
   return useQuery({
-    queryKey: ['chat', studyId, params],
-    queryFn: () => api.get(`/studies/${studyId}/chat`, params),
-    enabled: !!studyId,
-    refetchInterval: 5000, // 5초마다 폴링
+    queryKey: ['notifications', params],
+    queryFn: () => notificationApi.getList(params),
   })
 }
 
-export function useSendMessage(studyId) {
+export function useMarkNotificationAsRead() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (data) => api.post(`/studies/${studyId}/chat`, data),
+    mutationFn: (id) => notificationApi.markAsRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', studyId] })
+      queryClient.invalidateQueries(['notifications'])
     },
   })
 }
 
-// ============================================
-// Files
-// ============================================
-export function useFiles(studyId, params = {}) {
-  return useQuery({
-    queryKey: ['files', studyId, params],
-    queryFn: () => api.get(`/studies/${studyId}/files`, params),
-    enabled: !!studyId,
-  })
-}
-
-export function useUploadFile(studyId) {
+export function useMarkAllNotificationsAsRead() {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: (formData) => api.upload(`/studies/${studyId}/files`, formData),
+    mutationFn: () => notificationApi.markAllAsRead(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['files', studyId] })
+      queryClient.invalidateQueries(['notifications'])
     },
   })
 }
 
-// ============================================
-// User
-// ============================================
-export function useMe() {
-  return useQuery({
-    queryKey: ['me'],
-    queryFn: () => api.get('/users/me'),
-  })
-}
-
-export function useUpdateProfile() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (data) => api.patch('/users/me', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['me'] })
-    },
-  })
-}
-
-// ============================================
-// Admin
-// ============================================
+// ==================== 관리자 ====================
 export function useAdminStats() {
   return useQuery({
-    queryKey: ['admin-stats'],
-    queryFn: () => api.get('/admin/stats'),
+    queryKey: ['admin', 'stats'],
+    queryFn: () => adminApi.getStats(),
   })
 }
 
 export function useAdminUsers(params = {}) {
   return useQuery({
-    queryKey: ['admin-users', params],
-    queryFn: () => api.get('/admin/users', params),
+    queryKey: ['admin', 'users', params],
+    queryFn: () => adminApi.getUsers(params),
+  })
+}
+
+export function useAdminUser(id) {
+  return useQuery({
+    queryKey: ['admin', 'users', id],
+    queryFn: () => adminApi.getUser(id),
+    enabled: !!id,
+  })
+}
+
+export function useSuspendUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => adminApi.suspendUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin', 'users'])
+    },
+  })
+}
+
+export function useRestoreUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => adminApi.restoreUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin', 'users'])
+    },
   })
 }
 
 export function useAdminStudies(params = {}) {
   return useQuery({
-    queryKey: ['admin-studies', params],
-    queryFn: () => api.get('/admin/studies', params),
+    queryKey: ['admin', 'studies', params],
+    queryFn: () => adminApi.getStudies(params),
   })
 }
 
+export function useAdminDeleteStudy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => adminApi.deleteStudy(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin', 'studies'])
+    },
+  })
+}
+
+export function useAdminReports(params = {}) {
+  return useQuery({
+    queryKey: ['admin', 'reports', params],
+    queryFn: () => adminApi.getReports(params),
+  })
+}
+
+export function useAdminReport(id) {
+  return useQuery({
+    queryKey: ['admin', 'reports', id],
+    queryFn: () => adminApi.getReport(id),
+    enabled: !!id,
+  })
+}
+
+export function useProcessReport() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => adminApi.processReport(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin', 'reports'])
+    },
+  })
+}

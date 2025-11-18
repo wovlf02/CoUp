@@ -4,7 +4,24 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { mockStudies, categories, popularStudies, studyStats, studyTips } from '@/mocks/studies';
+import { useStudies } from '@/lib/hooks/useApi';
+
+// 카테고리 정의 (정적 데이터는 유지)
+const categories = [
+  { id: 'all', label: '전체', icon: '📚' },
+  { id: 'dev', label: '개발', icon: '💻' },
+  { id: 'design', label: '디자인', icon: '🎨' },
+  { id: 'language', label: '외국어', icon: '🌍' },
+  { id: 'exam', label: '자격증', icon: '📝' },
+  { id: 'hobby', label: '취미', icon: '🎸' },
+];
+
+// 스터디 생성 팁 (정적 데이터는 유지)
+const studyTips = [
+  { title: '명확한 목표', description: '구체적인 학습 목표를 설정하세요' },
+  { title: '규칙적인 일정', description: '정기적인 모임으로 습관을 만드세요' },
+  { title: '적극적인 소통', description: '활발한 소통으로 동기부여하세요' },
+];
 
 export default function StudiesExplorePage() {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -12,15 +29,51 @@ export default function StudiesExplorePage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const itemsPerPage = 6;
-  const totalPages = Math.ceil(mockStudies.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentStudies = mockStudies.slice(startIndex, endIndex);
+
+  // 실제 API 호출
+  const { data, isLoading, error } = useStudies({
+    page: currentPage,
+    limit: itemsPerPage,
+    category: selectedCategory === '전체' ? undefined : selectedCategory,
+    search: searchKeyword || undefined,
+    isRecruiting: true,
+  });
+
+  const studies = data?.data || [];
+  const pagination = data?.pagination || { total: 0, totalPages: 1 };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const handleSearch = () => {
+    setCurrentPage(1); // 검색 시 첫 페이지로
+  };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.mainContent}>
+          <div className={styles.loading}>스터디를 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.mainContent}>
+          <div className={styles.error}>
+            스터디를 불러오는데 실패했습니다. 다시 시도해주세요.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -47,9 +100,12 @@ export default function StudiesExplorePage() {
               placeholder="스터디 이름, 키워드로 검색..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               className={styles.searchInput}
             />
-            <button className={styles.searchButton}>🔍 검색</button>
+            <button className={styles.searchButton} onClick={handleSearch}>
+              🔍 검색
+            </button>
           </div>
 
           <div className={styles.categoryTabs}>
@@ -59,7 +115,10 @@ export default function StudiesExplorePage() {
                 className={`${styles.categoryTab} ${
                   selectedCategory === category.label ? styles.active : ''
                 }`}
-                onClick={() => setSelectedCategory(category.label)}
+                onClick={() => {
+                  setSelectedCategory(category.label);
+                  setCurrentPage(1);
+                }}
               >
                 {category.icon} {category.label}
               </button>
@@ -68,55 +127,61 @@ export default function StudiesExplorePage() {
         </div>
 
         {/* 스터디 카드 그리드 */}
-        <div className={styles.studiesGrid}>
-          {currentStudies.map((study) => (
-            <Link
-              key={study.id}
-              href={`/studies/${study.id}`}
-              className={styles.studyCard}
-            >
-              <div className={styles.cardHeader}>
-                <div className={styles.emoji}>{study.emoji}</div>
-                {study.isRecruiting && (
-                  <span className={styles.recruitingBadge}>모집중</span>
-                )}
-                {!study.isRecruiting && (
-                  <span className={styles.closedBadge}>모집완료</span>
-                )}
-              </div>
-
-              <h3 className={styles.studyName}>{study.name}</h3>
-              <p className={styles.studyDescription}>{study.description}</p>
-
-              <div className={styles.studyMeta}>
-                <span className={styles.category}>
-                  {study.category} · {study.subCategory}
-                </span>
-                <div className={styles.rating}>
-                  ⭐ {study.rating}
+        {studies.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>검색 결과가 없습니다.</p>
+          </div>
+        ) : (
+          <div className={styles.studiesGrid}>
+            {studies.map((study) => (
+              <Link
+                key={study.id}
+                href={`/studies/${study.id}`}
+                className={styles.studyCard}
+              >
+                <div className={styles.cardHeader}>
+                  <div className={styles.emoji}>{study.emoji}</div>
+                  {study.isRecruiting && (
+                    <span className={styles.recruitingBadge}>모집중</span>
+                  )}
+                  {!study.isRecruiting && (
+                    <span className={styles.closedBadge}>모집완료</span>
+                  )}
                 </div>
-              </div>
 
-              <div className={styles.tags}>
-                {study.tags.map((tag) => (
-                  <span key={tag} className={styles.tag}>
-                    #{tag}
+                <h3 className={styles.studyName}>{study.name}</h3>
+                <p className={styles.studyDescription}>{study.description}</p>
+
+                <div className={styles.studyMeta}>
+                  <span className={styles.category}>
+                    {study.category} {study.subCategory ? `· ${study.subCategory}` : ''}
                   </span>
-                ))}
-              </div>
+                  <div className={styles.rating}>
+                    ⭐ {study.rating || 0}
+                  </div>
+                </div>
 
-              <div className={styles.cardFooter}>
-                <span className={styles.members}>
-                  👥 {study.members.current}/{study.members.max}명
-                </span>
-                <span className={styles.owner}>👤 {study.owner}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+                <div className={styles.tags}>
+                  {study.tags?.map((tag) => (
+                    <span key={tag} className={styles.tag}>
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className={styles.cardFooter}>
+                  <span className={styles.members}>
+                    👥 {study.currentMembers || 0}/{study.maxMembers}명
+                  </span>
+                  <span className={styles.owner}>👤 {study.owner?.name || '알 수 없음'}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
+        {pagination.totalPages > 1 && (
           <div className={styles.pagination}>
             <button
               className={styles.paginationArrow}
@@ -126,7 +191,7 @@ export default function StudiesExplorePage() {
               ←
             </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 className={`${styles.paginationButton} ${
@@ -141,7 +206,7 @@ export default function StudiesExplorePage() {
             <button
               className={styles.paginationArrow}
               onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === pagination.totalPages}
             >
               →
             </button>
@@ -159,42 +224,19 @@ export default function StudiesExplorePage() {
               <button
                 key={category.id}
                 className={styles.categoryItem}
-                onClick={() => setSelectedCategory(category.label)}
+                onClick={() => {
+                  setSelectedCategory(category.label);
+                  setCurrentPage(1);
+                }}
               >
                 <span className={styles.categoryIcon}>{category.icon}</span>
                 <span className={styles.categoryLabel}>{category.label}</span>
-                <span className={styles.categoryCount}>(234개)</span>
               </button>
             ))}
           </div>
-          <Link href="/studies/categories" className={styles.widgetLink}>
-            전체 카테고리 보기 →
-          </Link>
         </div>
 
-        {/* 2. 지금 핫한 스터디 */}
-        <div className={styles.widget}>
-          <h3 className={styles.widgetTitle}>⭐ 지금 핫한 스터디</h3>
-          <div className={styles.widgetContent}>
-            {popularStudies.map((study) => (
-              <Link
-                key={study.id}
-                href={`/studies/${study.id}`}
-                className={styles.popularStudyItem}
-              >
-                <div className={styles.popularStudyName}>{study.name}</div>
-                <div className={styles.popularStudyMeta}>
-                  {study.members.current}/{study.members.max}명 · {study.category}
-                </div>
-              </Link>
-            ))}
-          </div>
-          <Link href="/studies/trending" className={styles.widgetLink}>
-            더 많은 추천 →
-          </Link>
-        </div>
-
-        {/* 3. 스터디 생성 팁 */}
+        {/* 2. 스터디 생성 팁 */}
         <div className={styles.widget}>
           <h3 className={styles.widgetTitle}>💡 성공적인 스터디 운영 팁</h3>
           <div className={styles.widgetContent}>
@@ -208,26 +250,15 @@ export default function StudiesExplorePage() {
               </div>
             ))}
           </div>
-          <Link href="/guides/study-creation" className={styles.widgetLink}>
-            스터디 만들기 가이드 →
-          </Link>
         </div>
 
-        {/* 4. 플랫폼 통계 */}
+        {/* 3. 플랫폼 통계 */}
         <div className={styles.widget}>
           <h3 className={styles.widgetTitle}>📊 CoUp 통계</h3>
           <div className={styles.widgetContent}>
             <div className={styles.statItem}>
-              <span className={styles.statLabel}>활성 스터디</span>
-              <span className={styles.statValue}>{studyStats.activeStudies.toLocaleString()}개</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statLabel}>전체 멤버</span>
-              <span className={styles.statValue}>{studyStats.totalMembers.toLocaleString()}명</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statLabel}>오늘 생성</span>
-              <span className={styles.statValue}>{studyStats.todayCreated}개</span>
+              <span className={styles.statLabel}>전체 스터디</span>
+              <span className={styles.statValue}>{pagination.total}개</span>
             </div>
           </div>
           <div className={styles.widgetFooter}>

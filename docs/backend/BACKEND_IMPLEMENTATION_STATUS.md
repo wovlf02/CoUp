@@ -282,24 +282,26 @@
 ### A. Socket.io 실시간 통신 활성화
 **중요도**: ⭐⭐⭐⭐⭐ (최우선)
 
-- [ ] **서버 설정**
-  - [ ] `server.mjs` 커스텀 서버 활성화
-  - [ ] Socket.io 서버 초기화 코드 연결
-  - [ ] 환경 변수 `SOCKET_PORT` 추가 (선택)
+- [x] **서버 설정**
+  - [x] `server.mjs` 커스텀 서버 활성화 ✅
+  - [x] Socket.io 서버 초기화 코드 연결 ✅
+  - [x] 환경 변수 `NEXT_PUBLIC_SOCKET_URL` 추가 ✅
   
-- [ ] **프론트엔드 연결**
-  - [ ] `socket.io-client` 설정
-  - [ ] Context Provider 생성 (`SocketProvider`)
-  - [ ] 채팅 페이지에 실시간 연동
-  - [ ] 온라인 상태 표시 UI
-  - [ ] 타이핑 인디케이터 UI
+- [x] **프론트엔드 연결**
+  - [x] `socket.io-client` 설정 ✅
+  - [x] Context Provider 생성 (`SocketProvider`) ✅
+  - [x] Hook 생성 (`useStudySocket`, `useChatSocket`) ✅
+  - [x] 채팅 컴포넌트 예제 (`RealtimeChat`) ✅
+  - [x] 온라인 상태 표시 UI ✅
+  - [x] 타이핑 인디케이터 UI ✅
 
 - [ ] **테스트**
   - [ ] 실시간 메시지 송수신
   - [ ] 여러 브라우저 동시 테스트
   - [ ] 재연결 로직 검증
 
-**예상 작업 시간**: 3-4일
+**✅ 완료 - 실제 채팅 페이지 통합만 남음**
+**예상 작업 시간**: 3-4일 → **완료됨**
 
 ### B. 파일 저장소 개선 (로컬)
 **중요도**: ⭐⭐⭐ (선택적 개선)

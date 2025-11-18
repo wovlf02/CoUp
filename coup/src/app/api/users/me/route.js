@@ -101,3 +101,30 @@ export async function PATCH(request) {
   }
 }
 
+export async function DELETE() {
+  const session = await requireAuth()
+  if (session instanceof NextResponse) return session
+
+  try {
+    // 계정 상태를 DELETED로 변경 (실제 삭제는 안함)
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        status: 'DELETED',
+        email: `deleted_${session.user.id}@deleted.com`, // 이메일 중복 방지
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: "계정이 삭제되었습니다"
+    })
+
+  } catch (error) {
+    console.error('Delete user error:', error)
+    return NextResponse.json(
+      { error: "계정 삭제 중 오류가 발생했습니다" },
+      { status: 500 }
+    )
+  }
+}

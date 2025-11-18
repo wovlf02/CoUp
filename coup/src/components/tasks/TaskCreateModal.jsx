@@ -1,15 +1,23 @@
+'use client'
+
 import { useState } from 'react'
+import { useMyStudies, useCreateTask } from '@/lib/hooks/useApi'
 import styles from './TaskCreateModal.module.css'
 
-export default function TaskCreateModal({ onClose, onCreate }) {
+export default function TaskCreateModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     studyId: '',
     dueDate: '',
+    priority: 'MEDIUM',
   })
 
-  const handleSubmit = (e) => {
+  const { data: studiesData } = useMyStudies({ limit: 50 })
+  const createTask = useCreateTask()
+  const studies = studiesData?.data || []
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!formData.title.trim()) {
@@ -27,26 +35,22 @@ export default function TaskCreateModal({ onClose, onCreate }) {
       return
     }
 
-    const newTask = {
-      id: Date.now(),
-      title: formData.title,
-      description: formData.description,
-      studyId: parseInt(formData.studyId),
-      studyName: formData.studyId === '1' ? '알고리즘 마스터 스터디' : '취업 준비 스터디',
-      studyEmoji: formData.studyId === '1' ? '💻' : '📝',
-      dueDate: formData.dueDate,
-      createdAt: new Date().toISOString(),
-      completed: false,
-      completedAt: null,
-      completedCount: 0,
-      totalCount: 1,
-      attachments: [],
-      comments: [],
-    }
+    try {
+      await createTask.mutateAsync({
+        title: formData.title,
+        description: formData.description || null,
+        studyId: formData.studyId,
+        dueDate: formData.dueDate,
+        priority: formData.priority,
+        status: 'TODO',
+      })
 
-    onCreate(newTask)
-    alert('할 일이 추가되었습니다!')
-    onClose()
+      alert('할 일이 추가되었습니다!')
+      onSuccess()
+    } catch (error) {
+      console.error('할일 생성 실패:', error)
+      alert('할 일 추가에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   return (
@@ -78,8 +82,25 @@ export default function TaskCreateModal({ onClose, onCreate }) {
               onChange={(e) => setFormData({ ...formData, studyId: e.target.value })}
             >
               <option value="">스터디 선택</option>
-              <option value="1">💻 알고리즘 마스터 스터디</option>
-              <option value="2">📝 취업 준비 스터디</option>
+              {studies.map(study => (
+                <option key={study.id} value={study.id}>
+                  {study.emoji} {study.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>우선순위 *</label>
+            <select
+              className={styles.select}
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+            >
+              <option value="LOW">낮음</option>
+              <option value="MEDIUM">보통</option>
+              <option value="HIGH">높음</option>
+              <option value="URGENT">긴급</option>
             </select>
           </div>
 
@@ -109,8 +130,12 @@ export default function TaskCreateModal({ onClose, onCreate }) {
             <button type="button" className={styles.cancelButton} onClick={onClose}>
               취소
             </button>
-            <button type="submit" className={styles.submitButton}>
-              추가
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={createTask.isPending}
+            >
+              {createTask.isPending ? '추가 중...' : '추가'}
             </button>
           </div>
         </form>
@@ -118,4 +143,3 @@ export default function TaskCreateModal({ onClose, onCreate }) {
     </div>
   )
 }
-

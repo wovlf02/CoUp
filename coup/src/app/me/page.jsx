@@ -6,14 +6,35 @@ import ProfileEditForm from '@/components/my-page/ProfileEditForm'
 import MyStudiesList from '@/components/my-page/MyStudiesList'
 import ActivityStats from '@/components/my-page/ActivityStats'
 import AccountActions from '@/components/my-page/AccountActions'
-import { currentUser, userStudies, userStats } from '@/mocks/user'
+import { useMe, useMyStudies, useUserStats } from '@/lib/hooks/useApi'
 import styles from './page.module.css'
 
 export default function MyPage() {
-  const [user, setUser] = useState(currentUser)
+  // 실제 API 호출
+  const { data: userData, isLoading: userLoading } = useMe()
+  const { data: studiesData, isLoading: studiesLoading } = useMyStudies({ limit: 10 })
+  const { data: statsData, isLoading: statsLoading } = useUserStats()
 
-  const handleUpdateUser = (updatedData) => {
-    setUser(prev => ({ ...prev, ...updatedData }))
+  const user = userData?.user || null
+  const userStudies = studiesData?.data || []
+  const userStats = statsData?.stats || null
+
+  // 로딩 상태
+  if (userLoading || studiesLoading || statsLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>프로필을 불러오는 중...</div>
+      </div>
+    )
+  }
+
+  // 사용자 없음
+  if (!user) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>사용자 정보를 불러올 수 없습니다.</div>
+      </div>
+    )
   }
 
   return (
@@ -30,14 +51,14 @@ export default function MyPage() {
       <div className={styles.contentGrid}>
         {/* 좌측 컬럼 */}
         <div className={styles.leftColumn}>
-          <ProfileSection user={user} onUpdate={handleUpdateUser} />
+          <ProfileSection user={user} />
           <MyStudiesList studies={userStudies} />
         </div>
 
         {/* 우측 컬럼 */}
         <div className={styles.rightColumn}>
-          <ProfileEditForm user={user} onUpdate={handleUpdateUser} />
-          <ActivityStats stats={userStats} />
+          <ProfileEditForm user={user} />
+          {userStats && <ActivityStats stats={userStats} />}
         </div>
       </div>
 

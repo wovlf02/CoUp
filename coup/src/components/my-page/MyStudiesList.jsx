@@ -45,10 +45,10 @@ export default function MyStudiesList({ studies }) {
                   {getRoleText(study.role)}
                 </span>
                 <span className={styles.memberCount}>
-                  👥 {study.memberCount}명
+                  👥 {study.members?.current || 0}명
                 </span>
                 <span className={styles.lastActivity}>
-                  마지막 활동: {getRelativeTime(study.lastActivityAt)}
+                  마지막 활동: {getRelativeTime(study.lastActivity)}
                 </span>
               </div>
 
@@ -65,4 +65,3 @@ export default function MyStudiesList({ studies }) {
     </section>
   )
 }
-

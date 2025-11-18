@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useUpdateProfile } from '@/lib/hooks/useApi'
 import styles from './ProfileEditForm.module.css'
 
 export default function ProfileEditForm({ user, onUpdate }) {
@@ -9,7 +10,7 @@ export default function ProfileEditForm({ user, onUpdate }) {
     bio: user.bio || ''
   })
   const [isEdited, setIsEdited] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const updateProfile = useUpdateProfile()
 
   useEffect(() => {
     setFormData({
@@ -38,15 +39,14 @@ export default function ProfileEditForm({ user, onUpdate }) {
       return
     }
 
-    setSaving(true)
-
-    // Mock API 호출 (1초 지연)
-    setTimeout(() => {
-      onUpdate(formData)
-      setSaving(false)
+    try {
+      await updateProfile.mutateAsync(formData)
       setIsEdited(false)
       alert('정보가 수정되었습니다!')
-    }, 1000)
+    } catch (error) {
+      console.error('프로필 업데이트 실패:', error)
+      alert('프로필 수정에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   const bioLength = formData.bio.length
@@ -94,13 +94,12 @@ export default function ProfileEditForm({ user, onUpdate }) {
           <button
             type="submit"
             className={styles.saveButton}
-            disabled={!isEdited || saving}
+            disabled={!isEdited || updateProfile.isPending}
           >
-            {saving ? '저장 중...' : '변경사항 저장'}
+            {updateProfile.isPending ? '저장 중...' : '변경사항 저장'}
           </button>
         </div>
       </form>
     </section>
   )
 }
-

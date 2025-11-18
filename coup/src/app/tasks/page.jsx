@@ -8,18 +8,26 @@ import TaskProgressWidget from '@/components/tasks/TaskProgressWidget'
 import TaskByStudyWidget from '@/components/tasks/TaskByStudyWidget'
 import TaskEmpty from '@/components/tasks/TaskEmpty'
 import TaskCreateModal from '@/components/tasks/TaskCreateModal'
-import { userTasks, taskStats } from '@/mocks/tasks'
+import { useTasks, useToggleTask, useDeleteTask, useTaskStats } from '@/lib/hooks/useApi'
 import { getUrgencyLevel } from '@/utils/time'
 import styles from './page.module.css'
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState(userTasks)
   const [filter, setFilter] = useState({
     studyId: null,
     status: 'all',
     sortBy: 'deadline',
   })
   const [showCreateModal, setShowCreateModal] = useState(false)
+
+  // 실제 API 호출
+  const { data: tasksData, isLoading } = useTasks(filter)
+  const { data: statsData } = useTaskStats()
+  const toggleTask = useToggleTask()
+  const deleteTask = useDeleteTask()
+
+  const tasks = tasksData?.data || []
+  const taskStats = statsData?.data || null
 
   const filteredTasks = useMemo(() => {
     let result = tasks
@@ -59,26 +67,35 @@ export default function TasksPage() {
   }, [filteredTasks])
 
   const handleToggleComplete = async (taskId) => {
-    setTasks(prev => prev.map(task =>
-      task.id === taskId
-        ? { ...task, completed: !task.completed, completedAt: new Date().toISOString() }
-        : task
-    ))
-    console.log('할 일 완료 토글:', taskId)
+    try {
+      await toggleTask.mutateAsync(taskId)
+    } catch (error) {
+      console.error('할일 토글 실패:', error)
+      alert('할 일 상태 변경에 실패했습니다.')
+    }
   }
 
-  const handleCreateTask = (newTask) => {
-    setTasks(prev => [...prev, newTask])
-  }
-
-  const handleDeleteTask = (taskId) => {
+  const handleDeleteTask = async (taskId) => {
     if (confirm('정말 이 할 일을 삭제하시겠습니까?')) {
-      setTasks(prev => prev.filter(task => task.id !== taskId))
-      alert('할 일이 삭제되었습니다')
+      try {
+        await deleteTask.mutateAsync(taskId)
+      } catch (error) {
+        console.error('할일 삭제 실패:', error)
+        alert('할 일 삭제에 실패했습니다.')
+      }
     }
   }
 
   const incompleteCount = tasks.filter(t => !t.completed).length
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>할 일을 불러오는 중...</div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
@@ -100,52 +117,57 @@ export default function TasksPage() {
 
         <TaskFilters
           filter={filter}
-          onFilterChange={setFilter}
-          incompleteCount={incompleteCount}
+          setFilter={setFilter}
+          taskCount={incompleteCount}
         />
 
-        {filteredTasks.length === 0 ? (
-          <TaskEmpty type="no-tasks" />
+        {tasks.length === 0 ? (
+          <TaskEmpty onCreateClick={() => setShowCreateModal(true)} />
         ) : (
-          <>
+          <div className={styles.taskGroups}>
             {groupedTasks.urgent.length > 0 && (
               <TaskGroup
-                title="🔴 긴급 (마감 24시간 이내)"
+                title="🔥 긴급"
                 tasks={groupedTasks.urgent}
-                onToggleComplete={handleToggleComplete}
-                onDeleteTask={handleDeleteTask}
+                color="urgent"
+                onToggle={handleToggleComplete}
+                onDelete={handleDeleteTask}
               />
             )}
+
             {groupedTasks.thisWeek.length > 0 && (
               <TaskGroup
-                title="⏱️ 이번 주 (7일 이내)"
+                title="📅 이번 주"
                 tasks={groupedTasks.thisWeek}
-                onToggleComplete={handleToggleComplete}
-                onDeleteTask={handleDeleteTask}
+                color="thisWeek"
+                onToggle={handleToggleComplete}
+                onDelete={handleDeleteTask}
               />
             )}
+
             {groupedTasks.later.length > 0 && (
               <TaskGroup
-                title="📋 나중에 (7일 이후)"
+                title="📝 나중에"
                 tasks={groupedTasks.later}
-                onToggleComplete={handleToggleComplete}
-                onDeleteTask={handleDeleteTask}
+                color="later"
+                onToggle={handleToggleComplete}
+                onDelete={handleDeleteTask}
               />
             )}
-          </>
+          </div>
         )}
       </div>
 
       <aside className={styles.sidebar}>
         <TodayTasksWidget tasks={tasks} />
-        <TaskProgressWidget stats={taskStats} />
-        <TaskByStudyWidget stats={taskStats} />
+        {taskStats && <TaskProgressWidget stats={taskStats} />}
+        <TaskByStudyWidget tasks={tasks} />
       </aside>
 
       {showCreateModal && (
         <TaskCreateModal
           onClose={() => setShowCreateModal(false)}
-          onCreate={handleCreateTask}
+          onSuccess={() => setShowCreateModal(false)}
         />
       )}
     </div>
