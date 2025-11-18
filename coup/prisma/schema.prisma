@@ -372,3 +372,25 @@ enum ReportStatus {
   RESOLVED
   REJECTED
 }
+
+// ============================================
+// 시스템 설정 (Setting)
+// ============================================
+model Setting {
+  id    String      @id @default(cuid())
+  key   String      @unique
+  value String      @db.Text
+  type  SettingType @default(STRING)
+
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@index([key])
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}

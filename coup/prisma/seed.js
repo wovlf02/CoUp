@@ -591,6 +591,33 @@ async function main() {
 
   console.log(`✅ Messages created: ${messages.length} messages`)
 
+  // ============================================
+  // 시스템 설정 생성
+  // ============================================
+  const settings = [
+    { key: 'service.status', value: 'OPERATIONAL', type: 'STRING' },
+    { key: 'service.signupEnabled', value: 'true', type: 'BOOLEAN' },
+    { key: 'service.studyCreationEnabled', value: 'true', type: 'BOOLEAN' },
+    { key: 'service.socialLoginEnabled', value: 'true', type: 'BOOLEAN' },
+    { key: 'service.publicBrowsingEnabled', value: 'true', type: 'BOOLEAN' },
+    { key: 'limits.maxStudiesPerUser', value: '10', type: 'NUMBER' },
+    { key: 'limits.maxMembersPerStudy', value: '50', type: 'NUMBER' },
+    { key: 'limits.maxFileSize', value: '50', type: 'NUMBER' },
+    { key: 'limits.maxStoragePerStudy', value: '1024', type: 'NUMBER' },
+    { key: 'limits.maxMessageLength', value: '2000', type: 'NUMBER' },
+    { key: 'limits.messageRateLimit', value: '{"count":10,"window":60}', type: 'JSON' },
+  ]
+
+  for (const setting of settings) {
+    await prisma.setting.upsert({
+      where: { key: setting.key },
+      update: {},
+      create: setting
+    })
+  }
+
+  console.log(`✅ Settings created: ${settings.length} system settings`)
+
   console.log('\n🎉 Comprehensive seed completed successfully!')
   console.log('\n📊 Summary:')
   console.log(`  - Users: 10 (9 regular + 1 admin)`)
@@ -601,6 +628,7 @@ async function main() {
   console.log(`  - Events: ${events.length} (다가오는 일정)`)
   console.log(`  - Notifications: ${notifications.length} (10 unread, 10 read)`)
   console.log(`  - Messages: ${messages.length}`)
+  console.log(`  - Settings: ${settings.length}`)
   console.log('\n✅ You can now login with:')
   console.log('  Email: kim@example.com')
   console.log('  Password: password123')

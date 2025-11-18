@@ -3,16 +3,26 @@
 import { useState } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import ReportDetailModal from '@/components/admin/ReportDetailModal'
-import { adminReports } from '@/mocks/admin'
+import { useAdminReports, useProcessReport } from '@/lib/hooks/useApi'
 import styles from '../users/page.module.css'
 
 export default function AdminReportsPage() {
-  const [reports, setReports] = useState(adminReports)
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [selectedReport, setSelectedReport] = useState(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+
+  // 실제 API 호출
+  const { data, isLoading, error } = useAdminReports({
+    status: statusFilter === 'all' ? undefined : statusFilter.toUpperCase(),
+    priority: priorityFilter === 'all' ? undefined : priorityFilter.toUpperCase(),
+    page: 1,
+    limit: 50
+  })
+
+  const processReport = useProcessReport()
+  const reports = data?.data || []
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -44,14 +54,9 @@ export default function AdminReportsPage() {
     return `${Math.floor(diffInHours / 24)}일 전`
   }
 
+  // 클라이언트 사이드 타입 필터링
   const filteredReports = reports.filter(report => {
-    if (statusFilter !== 'all' && report.status.toLowerCase() !== statusFilter) {
-      return false
-    }
     if (typeFilter !== 'all' && report.type !== typeFilter) {
-      return false
-    }
-    if (priorityFilter !== 'all' && report.priority !== priorityFilter) {
       return false
     }
     return true
@@ -62,12 +67,46 @@ export default function AdminReportsPage() {
     setIsReportModalOpen(true)
   }
 
-  const handleProcessReport = (data) => {
-    console.log('신고 처리:', data)
-    alert(`신고가 처리되었습니다.\\n액션: ${data.action}\\n메모: ${data.memo}`)
-    setIsReportModalOpen(false)
-    setSelectedReport(null)
-    // 실제로는 여기서 reports 상태를 업데이트해야 함
+  const handleProcessReport = async (data) => {
+    try {
+      await processReport.mutateAsync({ id: selectedReport.id, data })
+      alert(`신고가 처리되었습니다.\n액션: ${data.action}\n메모: ${data.memo}`)
+      setIsReportModalOpen(false)
+      setSelectedReport(null)
+    } catch (error) {
+      console.error('신고 처리 실패:', error)
+      alert('신고 처리에 실패했습니다.')
+    }
+  }
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="adminPageWrapper">
+          <div className="adminMainContent">
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              신고 목록을 불러오는 중...
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="adminPageWrapper">
+          <div className="adminMainContent">
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#EF4444' }}>
+              신고 목록을 불러오는데 실패했습니다. 다시 시도해주세요.
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -119,10 +158,10 @@ export default function AdminReportsPage() {
                   onChange={(e) => setPriorityFilter(e.target.value)}
                 >
                   <option value="all">모든 우선순위</option>
-                  <option value="URGENT">긴급</option>
-                  <option value="HIGH">높음</option>
-                  <option value="MEDIUM">중간</option>
-                  <option value="LOW">낮음</option>
+                  <option value="urgent">긴급</option>
+                  <option value="high">높음</option>
+                  <option value="medium">중간</option>
+                  <option value="low">낮음</option>
                 </select>
               </div>
             </div>
@@ -171,24 +210,26 @@ export default function AdminReportsPage() {
                           {report.type === 'SPAM' && '스팸'}
                           {report.type === 'HARASSMENT' && '욕설'}
                           {report.type === 'INAPPROPRIATE' && '부적절'}
+                          {report.type === 'COPYRIGHT' && '저작권'}
                         </span>
                       </td>
                       <td>
                         <div>
                           <div style={{ fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                            {report.targetName}
+                            {report.targetName || '대상 없음'}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
                             {report.targetType === 'STUDY' && '📚 스터디'}
                             {report.targetType === 'USER' && '👤 사용자'}
+                            {report.targetType === 'MESSAGE' && '💬 메시지'}
                           </div>
                         </div>
                       </td>
                       <td>
                         <div>
-                          <div style={{ fontWeight: '500' }}>{report.reporter.name}</div>
+                          <div style={{ fontWeight: '500' }}>{report.reporter?.name || '알 수 없음'}</div>
                           <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                            신뢰도: {report.reporter.trustScore}%
+                            {report.reporter?.email || ''}
                           </div>
                         </div>
                       </td>
@@ -219,6 +260,7 @@ export default function AdminReportsPage() {
                           {report.status === 'PENDING' && '미처리'}
                           {report.status === 'IN_PROGRESS' && '처리중'}
                           {report.status === 'RESOLVED' && '완료'}
+                          {report.status === 'REJECTED' && '기각'}
                         </span>
                       </td>
                       <td>
@@ -231,6 +273,13 @@ export default function AdminReportsPage() {
                 </tbody>
               </table>
 
+              {/* Empty State */}
+              {filteredReports.length === 0 && (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#6B7280' }}>
+                  신고 내역이 없습니다.
+                </div>
+              )}
+
               {/* Pagination */}
               <div className={styles.pagination}>
                 <div style={{ fontSize: '0.875rem', color: '#6B7280' }}>
@@ -242,7 +291,7 @@ export default function AdminReportsPage() {
                   <button className={styles.pageButton} disabled>→</button>
                 </div>
                 <select className={styles.filterSelect}>
-                  <option>10개씩</option>
+                  <option>50개씩</option>
                 </select>
               </div>
             </div>
@@ -300,33 +349,17 @@ export default function AdminReportsPage() {
                   {reports.filter(r => r.type === 'HARASSMENT').length}건
                 </span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>🟡 부적절</span>
                 <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
                   {reports.filter(r => r.type === 'INAPPROPRIATE').length}건
                 </span>
               </div>
-            </div>
-          </div>
-
-          <div className="widget">
-            <div className="widgetTitle">⏱️ 처리 시간</div>
-            <div className="widgetContent">
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '4px' }}>
-                  평균 처리 시간
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
-                  3시간
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.875rem' }}>
-                <span style={{ color: '#6B7280' }}>최장</span>
-                <span style={{ fontWeight: '600' }}>2일</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
-                <span style={{ color: '#6B7280' }}>최단</span>
-                <span style={{ fontWeight: '600' }}>10분</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>📜 저작권</span>
+                <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                  {reports.filter(r => r.type === 'COPYRIGHT').length}건
+                </span>
               </div>
             </div>
           </div>
@@ -337,14 +370,16 @@ export default function AdminReportsPage() {
               <button
                 className={styles.bulkButton}
                 style={{ width: '100%', marginBottom: '8px' }}
+                onClick={() => setPriorityFilter('urgent')}
               >
                 긴급 신고만
               </button>
               <button
                 className={styles.bulkButton}
                 style={{ width: '100%', marginBottom: '8px' }}
+                onClick={() => setStatusFilter('pending')}
               >
-                일괄 처리
+                미처리만 보기
               </button>
               <button
                 className={styles.bulkButton}

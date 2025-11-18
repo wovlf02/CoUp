@@ -546,3 +546,21 @@ export function useProcessReport() {
     },
   })
 }
+
+// ==================== 시스템 설정 ====================
+export function useAdminSettings() {
+  return useQuery({
+    queryKey: ['admin', 'settings'],
+    queryFn: () => adminApi.getSettings(),
+  })
+}
+
+export function useUpdateSetting() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ key, value }) => adminApi.updateSetting(key, value),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin', 'settings'])
+    },
+  })
+}

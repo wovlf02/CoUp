@@ -120,4 +120,8 @@ export const adminApi = {
   getReports: (params) => api.get('/api/admin/reports', params),
   getReport: (id) => api.get(`/api/admin/reports/${id}`),
   processReport: (id, data) => api.post(`/api/admin/reports/${id}/process`, data),
+
+  // 시스템 설정
+  getSettings: () => api.get('/api/admin/settings'),
+  updateSetting: (key, value) => api.patch('/api/admin/settings', { key, value }),
 }
