@@ -1,270 +1,321 @@
 // 내 스터디 화상회의 페이지
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import styles from './page.module.css';
 import { useStudy } from '@/lib/hooks/useApi';
+import { useVideoCall } from '@/lib/hooks/useVideoCall';
+import VideoTile from '@/components/video-call/VideoTile';
+import ControlBar from '@/components/video-call/ControlBar';
+import styles from './page.module.css';
 
 export default function MyStudyVideoCallPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
-  const [isCallActive, setIsCallActive] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const roomId = `study-${studyId}-main`;
+  
+  const [isInCall, setIsInCall] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatMessages, setChatMessages] = useState([]);
 
-  // 실제 API Hooks
+  // API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
-
   const study = studyData?.data;
-  const participants = []; // TODO: 화상회의 참여자 실시간 데이터 (WebRTC/Socket.io)
-  const callHistory = []; // TODO: 통화 기록 API 구현
 
-  const tabs = [
-    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
-    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
-    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
-    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
-    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
-    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
+  // 화상통화 훅
+  const {
+    localStream,
+    remoteStreams,
+    participants,
+    isMuted,
+    isVideoOff,
+    isSharingScreen,
+    error,
+    joinRoom,
+    leaveRoom,
+    toggleMute,
+    toggleVideo,
+    shareScreen,
+    stopScreenShare,
+  } = useVideoCall(studyId, roomId);
 
-  const handleStartCall = () => {
-    // TODO: WebRTC 화상회의 시작 로직
-    setIsCallActive(true);
+  // 통화 시간 카운터
+  useEffect(() => {
+    if (!isInCall) return;
+
+    const timer = setInterval(() => {
+      setCallDuration(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isInCall]);
+
+  // 통화 시간 포맷팅
+  const formatDuration = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const handleEndCall = () => {
-    if (confirm('정말 통화를 종료하시겠습니까?')) {
-      setIsCallActive(false);
+  // 그리드 레이아웃 계산
+  const getGridLayout = () => {
+    const totalCount = participants.length + 1; // +1 for local
+    if (totalCount <= 1) return styles.grid1;
+    if (totalCount <= 4) return styles.grid2x2;
+    if (totalCount <= 9) return styles.grid3x3;
+    return styles.grid4x3;
+  };
+
+  const handleJoinCall = async () => {
+    try {
+      await joinRoom(true, true);
+      setIsInCall(true);
+      setCallDuration(0);
+    } catch (err) {
+      alert(error || '화상회의 입장에 실패했습니다.');
     }
   };
 
+  const handleLeaveCall = () => {
+    if (confirm('정말 통화를 종료하시겠습니까?')) {
+      leaveRoom();
+      setIsInCall(false);
+      setCallDuration(0);
+      router.push(`/my-studies/${studyId}`);
+    }
+  };
+
+  const handleShareScreen = () => {
+    if (isSharingScreen) {
+      stopScreenShare();
+    } else {
+      shareScreen().catch(err => {
+        alert('화면 공유에 실패했습니다.');
+      });
+    }
+  };
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      user: '나',
+      message: chatMessage,
+      time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setChatMessages([...chatMessages, newMessage]);
+    setChatMessage('');
+  };
+
   if (studyLoading) {
-    return <div className={styles.container}>로딩 중...</div>;
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>로딩 중...</div>
+      </div>
+    );
   }
 
   if (!study) {
-    return <div className={styles.container}>스터디를 찾을 수 없습니다.</div>;
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>스터디를 찾을 수 없습니다.</div>
+      </div>
+    );
   }
 
-  return (
-    <div className={styles.container}>
-      {/* 헤더 */}
-      <div className={styles.header}>
-        <button onClick={() => router.push('/my-studies')} className={styles.backButton}>
-          ← 내 스터디 목록
-        </button>
-
-        <div className={styles.studyHeader}>
-          <div className={styles.studyInfo}>
-            <span className={styles.emoji}>{study.emoji}</span>
-            <div>
-              <h1 className={styles.studyName}>{study.name}</h1>
-            </div>
-          </div>
+  // 통화 중이 아닐 때 - 대기실
+  if (!isInCall) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <button onClick={() => router.push(`/my-studies/${studyId}`)} className={styles.backButton}>
+            ← 돌아가기
+          </button>
+          <h1 className={styles.title}>📹 화상 스터디</h1>
         </div>
-      </div>
 
-      {/* 탭 네비게이션 */}
-      <div className={styles.tabs}>
-        {tabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={tab.href}
-            className={`${styles.tab} ${tab.label === '화상' ? styles.active : ''}`}
-          >
-            <span className={styles.tabIcon}>{tab.icon}</span>
-            <span className={styles.tabLabel}>{tab.label}</span>
-          </Link>
-        ))}
-      </div>
-
-      {/* 메인 콘텐츠 */}
-      {!isCallActive ? (
-        // 통화 시작 전
-        <div className={styles.mainContent}>
-          <div className={styles.videoSection}>
-            <div className={styles.videoHeader}>
-              <h2 className={styles.videoTitle}>📹 화상 스터디</h2>
-            </div>
-
-            <div className={styles.preCallScreen}>
-              <div className={styles.preCallCard}>
-                <div className={styles.preCallIcon}>🎥</div>
-                <h3 className={styles.preCallTitle}>화상 스터디 시작하기</h3>
-                <p className={styles.preCallDesc}>
-                  스터디원들과 실시간으로 얼굴을 보며 함께 공부할 수 있습니다.
-                </p>
-
-                <div className={styles.preCallFeatures}>
-                  <div className={styles.featureItem}>
-                    <span className={styles.featureIcon}>👥</span>
-                    <span>최대 12명 동시 참여</span>
+        <div className={styles.waitingRoom}>
+          <div className={styles.waitingCard}>
+            <div className={styles.previewSection}>
+              <h3>카메라 미리보기</h3>
+              <div className={styles.preview}>
+                {localStream ? (
+                  <VideoTile stream={localStream} user={study.currentUser} isLocal={true} />
+                ) : (
+                  <div className={styles.previewPlaceholder}>
+                    <div className={styles.icon}>📹</div>
+                    <p>카메라 대기 중...</p>
                   </div>
-                  <div className={styles.featureItem}>
-                    <span className={styles.featureIcon}>🖥️</span>
-                    <span>화면 공유 가능</span>
-                  </div>
-                  <div className={styles.featureItem}>
-                    <span className={styles.featureIcon}>💬</span>
-                    <span>실시간 채팅</span>
-                  </div>
-                  <div className={styles.featureItem}>
-                    <span className={styles.featureIcon}>🎤</span>
-                    <span>음성/영상 조절</span>
-                  </div>
-                </div>
-
-                <button className={styles.startCallButton} onClick={handleStartCall}>
-                  🚀 화상 스터디 시작하기
-                </button>
-
-                <div className={styles.deviceCheck}>
-                  <p className={styles.deviceCheckTitle}>사용 전 확인사항:</p>
-                  <label className={styles.checkboxLabel}>
-                    <input type="checkbox" defaultChecked />
-                    <span>카메라 권한 허용</span>
-                  </label>
-                  <label className={styles.checkboxLabel}>
-                    <input type="checkbox" defaultChecked />
-                    <span>마이크 권한 허용</span>
-                  </label>
-                </div>
-
-                <div style={{ marginTop: '2rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px' }}>
-                  <p style={{ color: '#92400e', fontSize: '14px' }}>
-                    💡 <strong>참고:</strong> 화상회의 기능은 WebRTC를 사용하여 구현됩니다.
-                    현재는 UI만 구현되어 있으며, 실제 화상통화 기능은 별도 구현이 필요합니다.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 우측 위젯 */}
-          <aside className={styles.sidebar}>
-            <div className={styles.widget}>
-              <h3 className={styles.widgetTitle}>📊 스터디 정보</h3>
-              <div className={styles.widgetContent}>
-                <div className={styles.statRow}>
-                  <span>멤버:</span>
-                  <span className={styles.statValue}>{study.memberCount || 0}명</span>
-                </div>
-                <div className={styles.statRow}>
-                  <span>카테고리:</span>
-                  <span>{study.category}</span>
-                </div>
+                )}
               </div>
             </div>
 
-            <div className={styles.widget}>
-              <h3 className={styles.widgetTitle}>⚙️ 설정</h3>
-              <div className={styles.widgetContent}>
-                <div className={styles.settingItem}>
-                  <span>화질:</span>
-                  <select className={styles.settingSelect}>
-                    <option>자동</option>
-                    <option>고화질</option>
-                    <option>저화질</option>
-                  </select>
+            <div className={styles.infoSection}>
+              <h2>{study.emoji} {study.name}</h2>
+              <p className={styles.description}>화상 스터디에 참여하시겠습니까?</p>
+              
+              {error && (
+                <div className={styles.errorMessage}>
+                  ⚠️ {error}
                 </div>
-                <div className={styles.settingItem}>
-                  <span>배경 효과:</span>
-                  <label className={styles.checkboxLabel}>
-                    <input type="checkbox" />
-                    <span>배경 흐리기</span>
-                  </label>
-                </div>
-              </div>
-            </div>
+              )}
 
-            <div className={styles.widget}>
-              <h3 className={styles.widgetTitle}>💡 사용 팁</h3>
-              <div className={styles.widgetContent}>
-                <p className={styles.tipText}>• 조용한 장소에서 사용하세요</p>
-                <p className={styles.tipText}>• 헤드셋 사용을 권장합니다</p>
-                <p className={styles.tipText}>• 안정적인 인터넷 연결 필요</p>
-                <p className={styles.tipText}>• 화면 공유로 자료 공유 가능</p>
-              </div>
-            </div>
-          </aside>
-        </div>
-      ) : (
-        // 통화 중
-        <div className={styles.callScreen}>
-          <div className={styles.callHeader}>
-            <h3 className={styles.callTitle}>
-              {study.emoji} {study.name}
-            </h3>
-            <div className={styles.callTime}>⏱️ 00:00:00</div>
-            <button className={styles.endCallButton} onClick={handleEndCall}>
-              ❌ 나가기
-            </button>
-          </div>
-
-          <div className={styles.videoGrid}>
-            <div className={styles.videoCard}>
-              <div className={styles.videoPlaceholder}>
-                <div className={styles.videoOff}>
-                  <div className={styles.avatarPlaceholder}>나</div>
-                  <p style={{ marginTop: '1rem', color: '#64748b' }}>
-                    화상회의 기능은 WebRTC로 구현 예정입니다.
-                  </p>
-                </div>
-              </div>
               <div className={styles.participantInfo}>
-                <span className={styles.participantName}>나</span>
+                <span>현재 참여자:</span>
+                <strong>{participants.length}명</strong>
               </div>
+
+              <button 
+                onClick={handleJoinCall}
+                className={styles.joinButton}
+                disabled={!!error}
+              >
+                🎥 참여하기
+              </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          <div className={styles.controlBar}>
-            <button
-              className={`${styles.controlButton} ${isMuted ? styles.active : ''}`}
-              onClick={() => setIsMuted(!isMuted)}
-            >
-              {isMuted ? '🔇' : '🎤'}
-              <span>{isMuted ? '음소거 해제' : '음소거'}</span>
-            </button>
+  // 통화 중 - Zoom 스타일 레이아웃
+  return (
+    <div className={styles.fullscreenContainer}>
+      {/* 헤더 */}
+      <div className={styles.callHeader}>
+        <div className={styles.callInfo}>
+          <span className={styles.studyName}>{study.emoji} {study.name}</span>
+          <span className={styles.participantCount}>👥 {participants.length + 1}명</span>
+          <span className={styles.duration}>⏱️ {formatDuration(callDuration)}</span>
+        </div>
+      </div>
 
-            <button
-              className={`${styles.controlButton} ${isVideoOff ? styles.active : ''}`}
-              onClick={() => setIsVideoOff(!isVideoOff)}
-            >
-              📹
-              <span>{isVideoOff ? '비디오 켜기' : '비디오 끄기'}</span>
-            </button>
+      {/* 메인 레이아웃 (좌측: 참여자, 중앙: 비디오, 우측: 채팅) */}
+      <div className={styles.mainLayout}>
+        {/* 좌측 사이드바 - 참여자 목록 */}
+        <aside className={styles.participantsSidebar}>
+          <div className={styles.sidebarHeader}>
+            <h3>👥 참여자</h3>
+            <span className={styles.count}>{participants.length + 1}</span>
+          </div>
+          
+          <div className={styles.participantsList}>
+            {/* 내 정보 */}
+            <div className={styles.participantItem}>
+              <div className={styles.participantAvatar}>나</div>
+              <div className={styles.participantInfo}>
+                <span className={styles.participantName}>나 (호스트)</span>
+                <div className={styles.participantStatus}>
+                  <span>{isMuted ? '🔇' : '🎤'}</span>
+                  <span>{isVideoOff ? '📹❌' : '📹'}</span>
+                </div>
+              </div>
+            </div>
 
-            <button
-              className={`${styles.controlButton} ${isScreenSharing ? styles.active : ''}`}
-              onClick={() => setIsScreenSharing(!isScreenSharing)}
-            >
-              🖥️
-              <span>{isScreenSharing ? '공유 중지' : '화면 공유'}</span>
-            </button>
+            {/* 다른 참여자들 */}
+            {participants.map((participant) => (
+              <div key={participant.socketId} className={styles.participantItem}>
+                <div className={styles.participantAvatar}>
+                  {participant.user?.name?.charAt(0) || 'U'}
+                </div>
+                <div className={styles.participantInfo}>
+                  <span className={styles.participantName}>{participant.user?.name || '참여자'}</span>
+                  <div className={styles.participantStatus}>
+                    <span>🎤</span>
+                    <span>📹</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </aside>
 
-            <button className={styles.controlButton}>
-              💬
-              <span>채팅</span>
-            </button>
+        {/* 중앙 - 비디오 그리드 */}
+        <div className={styles.videoSection}>
+          <div className={`${styles.videoGrid} ${getGridLayout()}`}>
+            {/* 로컬 비디오 */}
+            {localStream && (
+              <VideoTile
+                stream={localStream}
+                user={{ name: '나', ...study.currentUser }}
+                isLocal={true}
+                isMuted={isMuted}
+                isVideoOff={isVideoOff}
+              />
+            )}
 
-            <button className={styles.controlButton}>
-              👥
-              <span>참여자 ({participants.length})</span>
-            </button>
-
-            <button className={styles.controlButton}>
-              ⚙️
-              <span>설정</span>
-            </button>
+            {/* 원격 비디오들 */}
+            {participants.map((participant) => {
+              const stream = remoteStreams.get(participant.socketId);
+              return (
+                <VideoTile
+                  key={participant.socketId}
+                  stream={stream}
+                  user={participant.user}
+                  isLocal={false}
+                />
+              );
+            })}
           </div>
         </div>
-      )}
+
+        {/* 우측 사이드바 - 채팅 */}
+        <aside className={styles.chatSidebar}>
+          <div className={styles.sidebarHeader}>
+            <h3>💬 채팅</h3>
+          </div>
+          
+          <div className={styles.chatMessages}>
+            {chatMessages.length === 0 ? (
+              <div className={styles.emptyChatMessage}>
+                채팅을 시작해보세요! 👋
+              </div>
+            ) : (
+              chatMessages.map((msg) => (
+                <div key={msg.id} className={styles.chatMessage}>
+                  <div className={styles.chatMessageHeader}>
+                    <span className={styles.chatUser}>{msg.user}</span>
+                    <span className={styles.chatTime}>{msg.time}</span>
+                  </div>
+                  <p className={styles.chatMessageText}>{msg.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <form onSubmit={handleSendMessage} className={styles.chatInput}>
+            <input
+              type="text"
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              placeholder="메시지를 입력하세요..."
+              className={styles.chatInputField}
+            />
+            <button type="submit" className={styles.chatSendButton}>
+              전송
+            </button>
+          </form>
+        </aside>
+      </div>
+
+      {/* 하단 컨트롤 바 */}
+      <ControlBar
+        isMuted={isMuted}
+        isVideoOff={isVideoOff}
+        isSharingScreen={isSharingScreen}
+        onToggleMute={toggleMute}
+        onToggleVideo={toggleVideo}
+        onShareScreen={handleShareScreen}
+        onLeave={handleLeaveCall}
+        onSettings={() => alert('설정 기능은 준비 중입니다.')}
+        callDuration={formatDuration(callDuration)}
+      />
     </div>
   );
 }

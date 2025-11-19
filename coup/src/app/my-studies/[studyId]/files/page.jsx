@@ -79,6 +79,8 @@ export default function MyStudyFilesPage({ params }) {
   };
 
   const handleFileUpload = async (fileList) => {
+    if (!fileList || fileList.length === 0) return;
+
     for (const file of fileList) {
       try {
         const formData = new FormData();
@@ -88,11 +90,18 @@ export default function MyStudyFilesPage({ params }) {
           studyId,
           formData
         });
+
+        console.log(`파일 업로드 성공: ${file.name}`);
       } catch (error) {
+        console.error(`파일 업로드 실패 (${file.name}):`, error);
         alert(`파일 업로드 실패 (${file.name}): ${error.message}`);
       }
     }
-    await refetch();
+
+    // 파일 업로드 완료 후 목록 새로고침
+    setTimeout(() => {
+      refetch();
+    }, 500);
   };
 
   const handleFileSelect = (fileId) => {

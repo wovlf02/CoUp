@@ -1,0 +1,92 @@
+/* 컨트롤 바 스타일 */
+.controlBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  z-index: 100;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leftSection,
+.rightSection {
+  flex: 1;
+}
+
+.centerSection {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.duration {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.controlButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controlButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.controlButton.active {
+  background: #ef4444;
+}
+
+.controlButton.active:hover {
+  background: #dc2626;
+}
+
+.leaveButton {
+  background: #ef4444;
+  margin-left: auto;
+}
+
+.leaveButton:hover {
+  background: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .controlBar {
+    padding: 0 16px;
+    height: 70px;
+  }
+
+  .controlButton {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .centerSection {
+    gap: 8px;
+  }
+
+  .leftSection {
+    display: none;
+  }
+}
+

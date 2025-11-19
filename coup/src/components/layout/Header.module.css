@@ -10,8 +10,7 @@
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* 양쪽 끝 배치 */
-  gap: 1.5rem;
+  gap: 2rem;
   padding: 0 2rem;
   z-index: 30;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -41,8 +40,9 @@
 /* Search Form */
 .searchForm {
   position: relative;
-  flex: 1;
-  max-width: 500px;
+  flex: 0 1 400px; /* flex-grow: 0, flex-shrink: 1, basis: 400px */
+  max-width: 400px;
+  min-width: 250px;
 }
 
 .searchInput {
@@ -90,7 +90,8 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-left: auto; /* 우측 끝으로 배치 */
+  margin-left: auto; /* 오른쪽 끝으로 밀어냄 */
+  flex-shrink: 0; /* 줄어들지 않도록 */
 }
 
 .notificationWrapper,
