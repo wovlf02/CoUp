@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStudy, useNotices, useDeleteNotice, useTogglePinNotice } from '@/lib/hooks/useApi';
 import NoticeCreateEditModal from '@/components/studies/NoticeCreateEditModal';
+import { getStudyHeaderStyle } from '@/utils/studyColors';
 import styles from './page.module.css';
 
 export default function MyStudyNoticesPage({ params }) {
@@ -97,7 +98,7 @@ export default function MyStudyNoticesPage({ params }) {
           ← 내 스터디 목록
         </button>
 
-        <div className={styles.studyHeader}>
+        <div className={styles.studyHeader} style={getStudyHeaderStyle(studyId)}>
           <div className={styles.studyInfo}>
             <span className={styles.emoji}>{study.emoji}</span>
             <div>

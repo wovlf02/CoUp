@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { useStudy, useFiles, useUploadFile, useDeleteFile } from '@/lib/hooks/useApi';
+import { getStudyHeaderStyle } from '@/utils/studyColors';
 
 export default function MyStudyFilesPage({ params }) {
   const router = useRouter();
@@ -157,7 +158,7 @@ export default function MyStudyFilesPage({ params }) {
           ← 내 스터디 목록
         </button>
 
-        <div className={styles.studyHeader}>
+        <div className={styles.studyHeader} style={getStudyHeaderStyle(studyId)}>
           <div className={styles.studyInfo}>
             <span className={styles.emoji}>{study.emoji}</span>
             <div>

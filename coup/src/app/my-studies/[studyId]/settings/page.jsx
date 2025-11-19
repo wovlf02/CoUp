@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { useStudy, useUpdateStudy, useDeleteStudy, useStudyMembers, useChangeMemberRole, useKickMember, useLeaveStudy } from '@/lib/hooks/useApi';
+import { getStudyHeaderStyle } from '@/utils/studyColors';
 
 const STUDY_CATEGORIES = [
   { main: '개발', sub: ['알고리즘/코테', '웹개발', '앱개발', 'AI/ML', '데이터과학'] },
@@ -195,7 +196,7 @@ export default function MyStudySettingsPage({ params }) {
           ← 내 스터디 목록
         </button>
 
-        <div className={styles.studyHeader}>
+        <div className={styles.studyHeader} style={getStudyHeaderStyle(studyId)}>
           <div className={styles.studyInfo}>
             <span className={styles.emoji}>{study.emoji}</span>
             <div>

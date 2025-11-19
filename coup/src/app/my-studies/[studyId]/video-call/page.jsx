@@ -8,6 +8,7 @@ import { useStudy } from '@/lib/hooks/useApi';
 import { useVideoCall } from '@/lib/hooks/useVideoCall';
 import VideoTile from '@/components/video-call/VideoTile';
 import ControlBar from '@/components/video-call/ControlBar';
+import { getStudyHeaderStyle } from '@/utils/studyColors';
 import styles from './page.module.css';
 
 export default function MyStudyVideoCallPage({ params }) {
@@ -151,7 +152,7 @@ export default function MyStudyVideoCallPage({ params }) {
             ← 내 스터디 목록
           </button>
 
-          <div className={styles.studyHeader}>
+          <div className={styles.studyHeader} style={getStudyHeaderStyle(studyId)}>
             <div className={styles.studyInfo}>
               <span className={styles.emoji}>{study.emoji}</span>
               <div>
@@ -260,7 +261,7 @@ export default function MyStudyVideoCallPage({ params }) {
       {/* 헤더 */}
       <div className={styles.callHeader}>
         <div className={styles.callInfo}>
-          <span className={styles.studyName}>{study.emoji} {study.name}</span>
+          <span className={styles.callStudyName}>{study.emoji} {study.name}</span>
           <span className={styles.participantCount}>👥 {participants.length + 1}명</span>
           <span className={styles.duration}>⏱️ {formatDuration(callDuration)}</span>
         </div>

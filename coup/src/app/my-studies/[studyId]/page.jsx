@@ -5,6 +5,7 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStudy } from '@/lib/hooks/useApi';
+import { getStudyHeaderStyle } from '@/utils/studyColors';
 import styles from './page.module.css';
 
 export default function MyStudyDashboardPage({ params }) {
@@ -69,7 +70,7 @@ export default function MyStudyDashboardPage({ params }) {
           ← 내 스터디 목록
         </button>
 
-        <div className={styles.studyHeader}>
+        <div className={styles.studyHeader} style={getStudyHeaderStyle(studyId)}>
           <div className={styles.studyInfo}>
             <span className={styles.emoji}>{study.emoji}</span>
             <div>

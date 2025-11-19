@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 import { useStudy, useMessages, useSendMessage, useDeleteMessage } from '@/lib/hooks/useApi';
+import { getStudyHeaderStyle } from '@/utils/studyColors';
 
 export default function MyStudyChatPage({ params }) {
   const router = useRouter();
@@ -93,7 +94,7 @@ export default function MyStudyChatPage({ params }) {
           ← 내 스터디 목록
         </button>
 
-        <div className={styles.studyHeader}>
+        <div className={styles.studyHeader} style={getStudyHeaderStyle(studyId)}>
           <div className={styles.studyInfo}>
             <span className={styles.emoji}>{study.emoji}</span>
             <div>
