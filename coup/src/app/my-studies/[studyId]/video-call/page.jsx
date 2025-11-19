@@ -368,6 +368,8 @@ export default function MyStudyVideoCallPage({ params }) {
                 user={currentUser}
                 isMuted={isMuted}
                 isVideoOff={isVideoOff}
+                onToggleMute={toggleMute}
+                onToggleVideo={toggleVideo}
               />
             )}
 

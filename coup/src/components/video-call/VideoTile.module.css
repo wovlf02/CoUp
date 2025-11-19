@@ -1,23 +1,26 @@
-/* 비디오 타일 스타일 */
+/* 비디오 타일 스타일 - 고정 크기 */
 .videoTile {
   position: relative;
   width: 100%;
-  height: 100%;
-  background: #1a1a1a;
+  aspect-ratio: 4/3; /* 고정 비율 */
+  max-width: 400px; /* 최대 너비 제한 */
+  background: #F8F9FA;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.8);
 }
 
 .videoTile:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .videoTile.speaking {
   border: 3px solid #10b981;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
 
 .video {
@@ -32,7 +35,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #C7B8EA 0%, #B8D4F1 100%);
 }
 
 .avatar {
@@ -64,16 +67,15 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-.overlay {
+/* 상단 오버레이: 이름 */
+.topOverlay {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   padding: 12px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+  z-index: 2;
 }
 
 .name {
@@ -83,18 +85,81 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.indicators {
+/* 하단 컨트롤 버튼 */
+.controls {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
 }
 
-.mutedIcon,
-.videoOffIcon {
-  font-size: 16px;
+.controlsVisible {
+  opacity: 1;
+}
+
+.videoTile:hover .controls {
+  opacity: 1;
+}
+
+.controlButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a1a1a;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.controlButton:hover {
+  background: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.controlButtonActive {
+  background: #ef4444;
+  color: white;
+}
+
+.controlButtonActive:hover {
+  background: #dc2626;
+}
+
+/* 상태 배지 (우측 상단) */
+.statusBadges {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  font-size: 14px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 @media (max-width: 768px) {
+  .videoTile {
+    max-width: 100%;
+  }
+
   .avatar {
     width: 80px;
     height: 80px;
@@ -108,8 +173,15 @@
     font-size: 12px;
   }
 
-  .indicators {
-    font-size: 14px;
+  .controlButton {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .statusBadge {
+    font-size: 12px;
+    padding: 3px 6px;
   }
 }
 

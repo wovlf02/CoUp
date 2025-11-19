@@ -228,22 +228,87 @@ export function useVideoCall(studyId, roomId) {
   }, [socket, roomId, isMuted]);
 
   // 비디오 토글
-  const toggleVideo = useCallback(() => {
-    if (localStreamRef.current) {
-      const videoTrack = localStreamRef.current.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        const newVideoOffState = !videoTrack.enabled;
-        setIsVideoOff(newVideoOffState);
+  const toggleVideo = useCallback(async () => {
+    console.log('[useVideoCall] toggleVideo called, current isVideoOff:', isVideoOff);
+
+    if (!localStreamRef.current) {
+      console.error('[useVideoCall] No local stream');
+      return isVideoOff;
+    }
+
+    const videoTrack = localStreamRef.current.getVideoTracks()[0];
+
+    // 비디오 트랙이 없는 경우 - 새로운 비디오 트랙 생성
+    if (!videoTrack) {
+      try {
+        console.log('[useVideoCall] No video track found, creating new one...');
+        const newVideoStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 }
+          }
+        });
+
+        const newVideoTrack = newVideoStream.getVideoTracks()[0];
+
+        // 새 비디오 트랙 추가
+        localStreamRef.current.addTrack(newVideoTrack);
+
+        // 모든 Peer에게 새 트랙 전송
+        peersRef.current.forEach(peer => {
+          const sender = peer.getSenders().find(s => s.track?.kind === 'video');
+          if (sender) {
+            sender.replaceTrack(newVideoTrack);
+          } else {
+            peer.addTrack(newVideoTrack, localStreamRef.current);
+          }
+        });
+
+        // React 리렌더링을 위해 새로운 MediaStream 객체 생성
+        const newStream = new MediaStream([
+          ...localStreamRef.current.getAudioTracks(),
+          newVideoTrack
+        ]);
+        localStreamRef.current = newStream;
+        setLocalStream(newStream);
+        setIsVideoOff(false);
 
         if (socket) {
-          socket.emit('video:toggle-video', { roomId, isVideoOff: newVideoOffState });
+          socket.emit('video:toggle-video', { roomId, isVideoOff: false });
         }
 
-        return newVideoOffState;
+        console.log('[useVideoCall] ✅ Video track created and enabled successfully');
+        return false;
+      } catch (err) {
+        console.error('[useVideoCall] ❌ Failed to enable video:', err);
+        setError('카메라를 켤 수 없습니다. 권한을 확인해주세요.');
+        return isVideoOff;
       }
     }
-    return isVideoOff;
+
+    // 비디오 트랙이 있는 경우 - enabled 상태 토글
+    const newEnabled = !videoTrack.enabled;
+    videoTrack.enabled = newEnabled;
+    const newVideoOffState = !newEnabled;
+
+    console.log('[useVideoCall] Video track toggled:', {
+      enabled: newEnabled,
+      isVideoOff: newVideoOffState
+    });
+
+    // React 리렌더링을 위해 새로운 MediaStream 객체 생성
+    const newStream = new MediaStream(localStreamRef.current.getTracks());
+    localStreamRef.current = newStream;
+    setLocalStream(newStream);
+    setIsVideoOff(newVideoOffState);
+
+    if (socket) {
+      socket.emit('video:toggle-video', { roomId, isVideoOff: newVideoOffState });
+    }
+
+    console.log('[useVideoCall] ✅ Video track', newEnabled ? 'enabled' : 'disabled');
+    return newVideoOffState;
   }, [socket, roomId, isVideoOff]);
 
   // 화면 공유 중지

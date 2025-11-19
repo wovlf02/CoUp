@@ -5,13 +5,14 @@
   left: clamp(200px, 12vw, 280px); /* Sidebar 너비만큼 오른쪽에서 시작 */
   right: 0;
   height: 80px;
-  background: rgb(0, 0, 0); /* 완전 불투명 */
+  background: linear-gradient(135deg, #E8E4F3 0%, #F0E8F5 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
   z-index: 100;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(200, 190, 220, 0.3);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* 태블릿 */
@@ -45,51 +46,57 @@
 }
 
 .duration {
-  color: white;
+  color: #5B4E7C;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .controlButton {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  border: 2px solid rgba(139, 122, 175, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  color: #5B4E7C;
   font-size: 24px;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .controlButton:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 1);
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .controlButton.active {
-  background: #ef4444;
+  background: #F8B4D9;
+  color: #8B4A7C;
+  border-color: #E89DC4;
 }
 
 .controlButton.active:hover {
-  background: #dc2626;
+  background: #F5A0CB;
 }
 
 .leaveButton {
-  background: #ef4444;
+  background: #F8B4D9;
+  color: #8B4A7C;
   border-radius: 8px;
   width: auto;
   height: 48px;
   padding: 0 20px;
   font-size: 14px;
   font-weight: 600;
+  border: 2px solid #E89DC4;
 }
 
 .leaveButton:hover {
-  background: #dc2626;
+  background: #F5A0CB;
 }
 
 @media (max-width: 768px) {
