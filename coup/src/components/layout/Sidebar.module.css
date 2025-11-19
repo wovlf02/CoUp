@@ -32,8 +32,11 @@
 
 /* Logo */
 .logo {
-  padding: 1rem 1.5rem;
+  height: 64px;
+  padding: 0 1.5rem;
   border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
 }
 
 .logo a {
@@ -127,9 +130,6 @@
     width: clamp(160px, 15vw, 200px);
   }
 
-  .logo {
-    padding: 0.875rem 1rem;
-  }
 
   .logoText {
     font-size: 1.125rem;
