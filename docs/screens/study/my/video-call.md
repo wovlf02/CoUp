@@ -5,7 +5,8 @@
 > **목적**: 실시간 화상 스터디 및 화면 공유  
 > **접근 권한**: MEMBER+ (PENDING 불가)  
 > **렌더링**: CSR (WebRTC)  
-> **기술 스택**: WebRTC + Socket.io
+> **기술 스택**: WebRTC + Socket.io  
+> **아키텍처**: 분리형 (Next.js Standalone + 독립 시그널링 서버)
 
 ---
 
@@ -734,18 +735,119 @@ export default function VideoCallPage({ params }: { params: { studyId: string } 
 
 ---
 
-### 3. 서버 구현 (Socket.io)
+### 3. 서버 구현 (통합형 - Next.js Custom Server)
+
+**아키텍처**: Next.js 16 Custom Server + Socket.io 통합
 
 ```typescript
-// server/video-call.ts
-io.on('connection', (socket) => {
+// coup/server.mjs (Custom Server)
+import { createServer } from 'http';
+import { parse } from 'url';
+import next from 'next';
+import { initSocketServer } from './src/lib/socket/server.js';
+
+const dev = process.env.NODE_ENV !== 'production';
+const hostname = 'localhost';
+const port = parseInt(process.env.PORT || '3000', 10);
+
+const app = next({ dev, hostname, port });
+const handle = app.getRequestHandler();
+
+app.prepare().then(async () => {
+  const httpServer = createServer(async (req, res) => {
+    try {
+      const parsedUrl = parse(req.url, true);
+      await handle(req, res, parsedUrl);
+    } catch (err) {
+      console.error('Error occurred handling', req.url, err);
+      res.statusCode = 500;
+      res.end('internal server error');
+    }
+  });
+
+  // Socket.IO 초기화 (통합형)
+  await initSocketServer(httpServer);
+
+  httpServer.listen(port, () => {
+    console.log(`> Ready on http://${hostname}:${port}`);
+    console.log(`> Socket.IO integrated`);
+  });
+});
+```
+
+```typescript
+// coup/src/lib/socket/server.js (Socket.io 핸들러)
+import { Server } from 'socket.io';
+import { prisma } from '../prisma.js';
+
+let io = null;
+
+export async function initSocketServer(httpServer) {
+  if (io) return io;
+
+  io = new Server(httpServer, {
+    cors: {
+      origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      credentials: true
+    },
+    transports: ['websocket', 'polling']
+  });
+
+  // 인증 미들웨어
+  io.use(async (socket, next) => {
+    try {
+      const userId = socket.handshake.auth.userId;
+      
+      if (!userId) {
+        return next(new Error('Authentication required'));
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, email: true, avatar: true, status: true }
+      });
+
+      if (!user || user.status !== 'ACTIVE') {
+        return next(new Error('User not found or inactive'));
+      }
+
+      socket.userId = userId;
+      socket.user = user;
+      next();
+    } catch (error) {
+      next(new Error('Authentication failed'));
+    }
+  });
+
+  // 연결 이벤트
+  io.on('connection', (socket) => {
+    console.log(`User connected: ${socket.userId}`);
+    
+    // 화상회의 이벤트 핸들러
+    handleVideoCallEvents(socket, io);
+    
+    socket.on('disconnect', () => {
+      console.log(`User disconnected: ${socket.userId}`);
+    });
+  });
+
+  return io;
+}
+
+// 화상회의 이벤트 핸들러
+function handleVideoCallEvents(socket, io) {
   // 방 입장
-  socket.on('join-video-room', async ({ studyId, roomId, userId }) => {
+  socket.on('video:join-room', async ({ studyId, roomId }) => {
     // 권한 확인
-    const membership = await checkMembership(studyId, userId)
-    if (!membership || membership.role === 'PENDING') {
-      socket.emit('error', { message: 'Access denied' })
-      return
+    const membership = await prisma.studyMember.findUnique({
+      where: {
+        studyId_userId: { studyId, userId: socket.userId }
+      }
+    });
+    
+    if (!membership || membership.status !== 'ACTIVE') {
+      socket.emit('error', { message: '접근 권한이 없습니다.' });
+      return;
     }
     
     // 방 참여
@@ -756,58 +858,99 @@ io.on('connection', (socket) => {
       userId,
       userName: membership.user.name,
       userImage: membership.user.imageUrl
-    })
+    
+    // 방 참여
+    socket.join(`video:${roomId}`);
+    
+    // 기존 참여자들에게 알림
+    socket.to(`video:${roomId}`).emit('video:user-joined', {
+      socketId: socket.id,
+      userId: socket.userId,
+      user: socket.user
+    });
     
     // 현재 참여자 목록 전송
-    const participants = await getVideoRoomParticipants(studyId, roomId)
-    socket.emit('room-state', { participants })
-  })
+    const participants = getVideoRoomParticipants(roomId);
+    socket.emit('video:room-state', { participants });
+  });
   
   // Offer 전달
-  socket.on('offer', ({ to, offer }) => {
-    socket.to(to).emit('offer', {
+  socket.on('video:offer', ({ to, offer }) => {
+    io.to(to).emit('video:offer', {
       from: socket.id,
       offer
-    })
-  })
+    });
+  });
   
   // Answer 전달
-  socket.on('answer', ({ to, answer }) => {
-    socket.to(to).emit('answer', {
+  socket.on('video:answer', ({ to, answer }) => {
+    io.to(to).emit('video:answer', {
       from: socket.id,
       answer
-    })
-  })
+    });
+  });
   
   // ICE candidate 전달
-  socket.on('ice-candidate', ({ to, candidate }) => {
-    socket.to(to).emit('ice-candidate', {
+  socket.on('video:ice-candidate', ({ to, candidate }) => {
+    io.to(to).emit('video:ice-candidate', {
       from: socket.id,
       candidate
-    })
-  })
+    });
+  });
   
   // 방 나가기
-  socket.on('leave-video-room', ({ studyId, roomId }) => {
-    socket.to(`video-${studyId}-${roomId}`).emit('user-left', {
-      userId: socket.id
-    })
-    socket.leave(`video-${studyId}-${roomId}`)
-  })
+  socket.on('video:leave-room', ({ roomId }) => {
+    socket.to(`video:${roomId}`).emit('video:user-left', {
+      socketId: socket.id,
+      userId: socket.userId
+    });
+    socket.leave(`video:${roomId}`);
+  });
   
-  // 연결 종료
+  // 연결 종료 (비정상 종료)
   socket.on('disconnect', () => {
-    // 모든 방에서 나가기 처리
-    socket.rooms.forEach(room => {
-      if (room.startsWith('video-')) {
-        socket.to(room).emit('user-left', {
-          userId: socket.id
-        })
-      }
-    })
-  })
-})
+    // 모든 비디오 룸에서 퇴장 알림
+    const rooms = Array.from(socket.rooms).filter(room => room.startsWith('video:'));
+    rooms.forEach(room => {
+      socket.to(room).emit('video:user-left', {
+        socketId: socket.id,
+        userId: socket.userId
+      });
+    });
+  });
+}
+
+// 헬퍼 함수
+function getVideoRoomParticipants(roomId) {
+  const room = io.sockets.adapter.rooms.get(`video:${roomId}`);
+  if (!room) return [];
+  
+  const participants = [];
+  for (const socketId of room) {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket && socket.user) {
+      participants.push({
+        socketId,
+        userId: socket.userId,
+        user: socket.user
+      });
+    }
+  }
+  return participants;
+}
 ```
+
+**통합형 아키텍처의 장점**:
+- ✅ **단순한 배포**: 서버 1대로 시작 가능
+- ✅ **낮은 초기 비용**: 인프라 복잡도 최소화
+- ✅ **빠른 개발**: 코드베이스 통합, 로컬 개발 간편
+- ✅ **낮은 지연시간**: 동일 프로세스 내 처리
+
+**확장성 고려사항**:
+- 동시 접속 200명까지 문제없음
+- 그 이상 시 Redis Adapter 추가 가능
+- 필요 시 분리형 아키텍처로 마이그레이션 가능
+- 자세한 내용: `/docs/video-call/08-signaling-server-architecture.md`
 
 ---
 
@@ -1023,6 +1166,50 @@ socket.on('join-video-room', async ({ studyId, roomId, userId }) => {
 
 ---
 
+## 🏗️ 아키텍처 참고
+
+### 통합형 vs 분리형
+
+**현재 선택: 통합형** (Next.js 16 Custom Server + Socket.io)
+
+**선택 이유**:
+- MVP 단계에 최적
+- 빠른 개발 및 배포
+- 단순한 인프라 관리
+- 동시 접속 200명까지 무리 없이 처리
+
+**향후 고려사항**:
+- 동시 접속 200+ 지속 시 분리형 검토
+- 확장성 필요 시 Redis Adapter 추가
+- 상세 분석: `/docs/video-call/08-signaling-server-architecture.md`
+
+**모니터링 지표**:
+- 동시 접속 수
+- WebSocket 연결 수
+- CPU/메모리 사용률
+- API 응답 시간
+- 화상회의 품질 (RTT, packet loss)
+
+---
+
+## 📚 관련 문서
+
+### 구현 가이드
+- `/docs/video-call/README.md` - 전체 개요
+- `/docs/video-call/01-design-analysis.md` - 설계 분석
+- `/docs/video-call/02-current-status.md` - 현재 구현 상태
+- `/docs/video-call/03-implementation-plan.md` - 구현 계획
+- `/docs/video-call/05-webrtc-guide.md` - WebRTC 상세 가이드
+- `/docs/video-call/06-test-plan.md` - 테스트 계획
+- `/docs/video-call/07-todo-list.md` - 작업 체크리스트
+- `/docs/video-call/08-signaling-server-architecture.md` - 아키텍처 분석
+
+### API 문서
+- `/docs/video-call/04-api-specification.md` - REST API 명세
+
+---
+
 **이전 화면**: `12_study-settings.md` (스터디 설정)  
 **다음 화면**: 없음 (마지막 기능)
 
+**Last Updated**: 2025-11-19 - 분리형 아키텍처로 확정
