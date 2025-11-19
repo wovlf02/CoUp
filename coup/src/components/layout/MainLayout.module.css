@@ -2,7 +2,7 @@
 
 .layout {
   min-height: 100vh;
-  background: #ffffff; /* 흰색 배경으로 변경 */
+  background: linear-gradient(135deg, #fff5f7 0%, #fef3e2 50%, #f0f9ff 100%);
 }
 
 /* Main Content */
