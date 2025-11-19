@@ -108,11 +108,20 @@ export default function MyStudyVideoCallPage({ params }) {
 
   // 채팅 이벤트 리스너
   useEffect(() => {
-    if (!socket || !isInCall) return;
+    if (!socket || !isInCall || !currentUser) return;
 
     // 화상 통화 중 채팅 메시지 수신
     socket.on('chat:video-message-received', (message) => {
-      setChatMessages((prev) => [...prev, message]);
+      console.log('[VideoCall] Received chat message:', message);
+
+      // 자신이 보낸 메시지는 이미 화면에 표시했으므로 무시
+      if (message.userId === currentUser.id && message.socketId === socket.id) {
+        return;
+      }
+
+      // 다른 사람이 보낸 메시지만 추가
+      setChatMessages((prev) => [...prev, { ...message, isMe: false }]);
+
       // 자동 스크롤
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
@@ -120,7 +129,7 @@ export default function MyStudyVideoCallPage({ params }) {
     return () => {
       socket.off('chat:video-message-received');
     };
-  }, [socket, isInCall]);
+  }, [socket, isInCall, currentUser]);
 
   // 통화 시간 카운터
   useEffect(() => {
@@ -141,13 +150,15 @@ export default function MyStudyVideoCallPage({ params }) {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // 그리드 레이아웃 계산
+  // 그리드 레이아웃 계산 (참여자 수에 따라 유동적으로)
   const getGridLayout = () => {
     const totalCount = participants.length + (localStream ? 1 : 0);
-    if (totalCount <= 1) return styles.grid1;
-    if (totalCount <= 4) return styles.grid2x2;
-    if (totalCount <= 9) return styles.grid3x3;
-    return styles.grid4x3;
+    if (totalCount === 1) return styles.grid1;
+    if (totalCount === 2) return styles.grid2x2;
+    if (totalCount <= 4) return styles.grid3x3; // 3~4명: 2x2
+    if (totalCount <= 6) return styles.grid4x3; // 5~6명: 3x2
+    if (totalCount <= 9) return styles.grid3x3Large; // 7~9명: 3x3
+    return styles.gridLarge; // 10명 이상: 4xN (스크롤)
   };
 
   const handleJoinCall = async () => {
@@ -196,14 +207,32 @@ export default function MyStudyVideoCallPage({ params }) {
   // 채팅 메시지 전송
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!chatMessage.trim() || !socket) return;
+    if (!chatMessage.trim() || !socket || !currentUser) return;
 
+    const newMessage = {
+      id: `msg_${Date.now()}_${socket.id}`,
+      roomId,
+      userId: currentUser.id,
+      user: currentUser,
+      message: chatMessage.trim(),
+      timestamp: new Date(),
+      socketId: socket.id,
+      isMe: true // 자신이 보낸 메시지 표시
+    };
+
+    // 즉시 화면에 표시
+    setChatMessages((prev) => [...prev, newMessage]);
+
+    // 서버로 전송
     socket.emit('chat:video-message', {
       roomId,
       message: chatMessage.trim()
     });
 
     setChatMessage('');
+
+    // 자동 스크롤
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   };
 
   if (studyLoading) {
@@ -369,18 +398,33 @@ export default function MyStudyVideoCallPage({ params }) {
             {chatMessages.length === 0 ? (
               <div className={styles.chatEmpty}>채팅을 시작해보세요!</div>
             ) : (
-              chatMessages.map((msg) => (
-                <div key={msg.id} className={styles.chatMessage}>
-                  <div className={styles.chatMessageHeader}>
-                    <strong>{msg.user?.name || 'Unknown'}</strong>
-                    <span className={styles.chatMessageTime}>
+              chatMessages.map((msg, index) => (
+                <div
+                  key={msg.id || index}
+                  className={msg.isMe ? styles.chatMessageMe : styles.chatMessage}
+                >
+                  {!msg.isMe && (
+                    <div className={styles.chatMessageHeader}>
+                      <strong>{msg.user?.name || 'Unknown'}</strong>
+                      <span className={styles.chatMessageTime}>
+                        {new Date(msg.timestamp).toLocaleTimeString('ko-KR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  <div className={styles.chatMessageContent}>
+                    {msg.message}
+                  </div>
+                  {msg.isMe && (
+                    <div className={styles.chatMessageTime} style={{ textAlign: 'right', marginTop: '4px' }}>
                       {new Date(msg.timestamp).toLocaleTimeString('ko-KR', {
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
-                    </span>
-                  </div>
-                  <div className={styles.chatMessageContent}>{msg.message}</div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
