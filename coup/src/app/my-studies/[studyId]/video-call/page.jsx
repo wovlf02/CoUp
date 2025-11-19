@@ -3,6 +3,7 @@
 
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useStudy } from '@/lib/hooks/useApi';
 import { useVideoCall } from '@/lib/hooks/useVideoCall';
 import VideoTile from '@/components/video-call/VideoTile';
@@ -13,7 +14,19 @@ export default function MyStudyVideoCallPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
   const roomId = `study-${studyId}-main`;
-  
+
+  // 탭 메뉴
+  const tabs = [
+    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
+    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
+    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
+    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
+    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
+    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
+    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
+    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
+  ];
+
   const [isInCall, setIsInCall] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
@@ -91,7 +104,7 @@ export default function MyStudyVideoCallPage({ params }) {
     if (isSharingScreen) {
       stopScreenShare();
     } else {
-      shareScreen().catch(err => {
+      shareScreen().catch(() => {
         alert('화면 공유에 실패했습니다.');
       });
     }
@@ -132,53 +145,110 @@ export default function MyStudyVideoCallPage({ params }) {
   if (!isInCall) {
     return (
       <div className={styles.container}>
+        {/* 헤더 */}
         <div className={styles.header}>
-          <button onClick={() => router.push(`/my-studies/${studyId}`)} className={styles.backButton}>
-            ← 돌아가기
+          <button onClick={() => router.push('/my-studies')} className={styles.backButton}>
+            ← 내 스터디 목록
           </button>
-          <h1 className={styles.title}>📹 화상 스터디</h1>
+
+          <div className={styles.studyHeader}>
+            <div className={styles.studyInfo}>
+              <span className={styles.emoji}>{study.emoji}</span>
+              <div>
+                <h1 className={styles.studyName}>{study.name}</h1>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className={styles.waitingRoom}>
-          <div className={styles.waitingCard}>
-            <div className={styles.previewSection}>
-              <h3>카메라 미리보기</h3>
-              <div className={styles.preview}>
-                {localStream ? (
-                  <VideoTile stream={localStream} user={study.currentUser} isLocal={true} />
-                ) : (
-                  <div className={styles.previewPlaceholder}>
-                    <div className={styles.icon}>📹</div>
-                    <p>카메라 대기 중...</p>
+        {/* 탭 네비게이션 */}
+        <div className={styles.tabs}>
+          {tabs.map((tab) => (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              className={`${styles.tab} ${tab.label === '화상' ? styles.active : ''}`}
+            >
+              <span className={styles.tabIcon}>{tab.icon}</span>
+              <span className={styles.tabLabel}>{tab.label}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* 메인 콘텐츠 */}
+        <div className={styles.mainContent}>
+          {/* 화상 통화 영역 */}
+          <div className={styles.videoCallSection}>
+            <div className={styles.waitingCard}>
+              <div className={styles.previewSection}>
+                <h3>카메라 미리보기</h3>
+                <div className={styles.preview}>
+                  {localStream ? (
+                    <VideoTile stream={localStream} user={study.currentUser} isLocal={true} />
+                  ) : (
+                    <div className={styles.previewPlaceholder}>
+                      <div className={styles.icon}>📹</div>
+                      <p>카메라 대기 중...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.infoSection}>
+                <h2>화상 스터디</h2>
+                <p className={styles.description}>화상 스터디에 참여하시겠습니까?</p>
+
+                {error && (
+                  <div className={styles.errorMessage}>
+                    ⚠️ {error}
                   </div>
+                )}
+
+                <div className={styles.participantInfo}>
+                  <span>현재 참여자:</span>
+                  <strong>{participants.length}명</strong>
+                </div>
+
+                <button
+                  onClick={handleJoinCall}
+                  className={styles.joinButton}
+                  disabled={!!error}
+                >
+                  🎥 참여하기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 우측 사이드바 */}
+          <aside className={styles.sidebar}>
+            <div className={styles.sidebarCard}>
+              <h3 className={styles.sidebarTitle}>👥 참여자 ({participants.length}명)</h3>
+              <div className={styles.participantsList}>
+                {participants.length === 0 ? (
+                  <p className={styles.emptyMessage}>현재 참여 중인 멤버가 없습니다.</p>
+                ) : (
+                  participants.map((participant) => (
+                    <div key={participant.socketId} className={styles.participantItem}>
+                      <div className={styles.participantAvatar}>
+                        {participant.user?.name?.charAt(0) || 'U'}
+                      </div>
+                      <span className={styles.participantName}>{participant.user?.name || '참여자'}</span>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
 
-            <div className={styles.infoSection}>
-              <h2>{study.emoji} {study.name}</h2>
-              <p className={styles.description}>화상 스터디에 참여하시겠습니까?</p>
-              
-              {error && (
-                <div className={styles.errorMessage}>
-                  ⚠️ {error}
-                </div>
-              )}
-
-              <div className={styles.participantInfo}>
-                <span>현재 참여자:</span>
-                <strong>{participants.length}명</strong>
+            <div className={styles.sidebarCard}>
+              <h3 className={styles.sidebarTitle}>ℹ️ 안내</h3>
+              <div className={styles.infoText}>
+                <p>• 화상 스터디는 최대 12명까지 참여할 수 있습니다.</p>
+                <p>• 원활한 통화를 위해 안정적인 인터넷 연결을 권장합니다.</p>
+                <p>• 마이크와 카메라 권한을 허용해주세요.</p>
               </div>
-
-              <button 
-                onClick={handleJoinCall}
-                className={styles.joinButton}
-                disabled={!!error}
-              >
-                🎥 참여하기
-              </button>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     );
