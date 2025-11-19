@@ -2,7 +2,7 @@
 .controlBar {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: clamp(200px, 12vw, 280px); /* 사이드바 너비만큼 왼쪽에서 시작 */
   right: 0;
   height: 80px;
   background: rgba(0, 0, 0, 0.9);
@@ -18,6 +18,11 @@
 .leftSection,
 .rightSection {
   flex: 1;
+  display: flex;
+}
+
+.rightSection {
+  justify-content: flex-end;
 }
 
 .centerSection {
@@ -62,7 +67,6 @@
 
 .leaveButton {
   background: #ef4444;
-  margin-left: auto;
   border-radius: 8px;
   width: auto;
   height: 48px;
@@ -77,6 +81,7 @@
 
 @media (max-width: 768px) {
   .controlBar {
+    left: 0; /* 모바일에서는 전체 너비 사용 */
     padding: 0 16px;
     height: 70px;
   }
