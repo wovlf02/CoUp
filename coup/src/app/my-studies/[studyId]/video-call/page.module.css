@@ -5,7 +5,7 @@
   top: 64px; /* Header 높이만큼 아래에서 시작 */
   left: clamp(200px, 12vw, 280px); /* Sidebar 너비만큼 오른쪽에서 시작 */
   right: 0;
-  bottom: 0;
+  bottom: 80px; /* 컨트롤 바 높이만큼 위에서 끝남 */
   background: var(--gray-50);
   display: flex;
   flex-direction: column;
@@ -185,7 +185,7 @@
   display: flex;
   gap: 0;
   overflow: hidden;
-  height: calc(100% - 80px); /* 컨테이너 높이에서 컨트롤바(80px) 제외 */
+  height: 100%; /* container가 이미 컨트롤바를 제외하고 있음 */
   min-height: 0;
 }
 

@@ -55,7 +55,7 @@ const shouldShowLayout = !noLayoutPaths.some(...)
   top: 64px; /* Header 높이만큼 아래에서 시작 */
   left: clamp(200px, 12vw, 280px); /* Sidebar 너비만큼 오른쪽 */
   right: 0;
-  bottom: 0;
+  bottom: 80px; /* 컨트롤 바 높이만큼 위에서 끝남 ← 핵심! */
   background: var(--gray-50);
   display: flex;
   flex-direction: column;
@@ -79,7 +79,7 @@ const shouldShowLayout = !noLayoutPaths.some(...)
 }
 ```
 
-**결과**: 네비게이션 바와 헤더 제외한 영역만 사용 ✅
+**결과**: 네비게이션 바와 헤더 제외한 영역만 사용, **컨트롤 바 영역도 제외** ✅
 
 ---
 
@@ -118,7 +118,7 @@ return (
   display: flex;
   gap: 0;
   overflow: hidden;
-  height: calc(100% - 80px); /* 컨트롤바 80px 제외 */
+  height: 100%; /* container가 이미 컨트롤바를 제외하고 있음 */
   min-height: 0;
 }
 ```
@@ -200,13 +200,13 @@ return (
 
 ### MainLayout 활용
 ```css
-/* 네비게이션 바와 헤더 영역 제외 */
+/* 네비게이션 바, 헤더, 컨트롤 바 영역 모두 제외 */
 .container {
   position: fixed;
   top: 64px; /* Header */
   left: clamp(200px, 12vw, 280px); /* Sidebar */
   right: 0;
-  bottom: 0;
+  bottom: 80px; /* ControlBar - 핵심! */
 }
 ```
 
