@@ -33,33 +33,39 @@ export default function MyStudiesList({ studies }) {
         </div>
       ) : (
         <div className={styles.studyList}>
-          {studies.map((study) => (
-            <div key={study.id} className={styles.studyItem}>
-              <div className={styles.studyHeader}>
-                <span className={styles.studyEmoji}>{study.emoji}</span>
-                <h3 className={styles.studyName}>{study.name}</h3>
-              </div>
+          {studies.map((item) => {
+            // study 객체 추출 (API 응답 구조에 맞춰)
+            const study = item.study || item
+            const role = item.role || study.role
 
-              <div className={styles.studyMeta}>
-                <span className={`${styles.roleBadge} ${getRoleBadgeClass(study.role)}`}>
-                  {getRoleText(study.role)}
-                </span>
-                <span className={styles.memberCount}>
-                  👥 {study.members?.current || 0}명
-                </span>
-                <span className={styles.lastActivity}>
-                  마지막 활동: {getRelativeTime(study.lastActivity)}
-                </span>
-              </div>
+            return (
+              <div key={study.id} className={styles.studyItem}>
+                <div className={styles.studyHeader}>
+                  <span className={styles.studyEmoji}>{study.emoji}</span>
+                  <h3 className={styles.studyName}>{study.name}</h3>
+                </div>
 
-              <Link
-                href={`/my-studies/${study.id}`}
-                className={styles.goToButton}
-              >
-                이동하기 →
-              </Link>
-            </div>
-          ))}
+                <div className={styles.studyMeta}>
+                  <span className={`${styles.roleBadge} ${getRoleBadgeClass(role)}`}>
+                    {getRoleText(role)}
+                  </span>
+                  <span className={styles.memberCount}>
+                    👥 {study.currentMembers || study.members?.current || 0}명
+                  </span>
+                  <span className={styles.lastActivity}>
+                    마지막 활동: {getRelativeTime(study.lastActivity || item.joinedAt)}
+                  </span>
+                </div>
+
+                <Link
+                  href={`/my-studies/${study.id}`}
+                  className={styles.goToButton}
+                >
+                  이동하기 →
+                </Link>
+              </div>
+            )
+          })}
         </div>
       )}
     </section>

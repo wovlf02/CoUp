@@ -13,9 +13,12 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
     priority: 'MEDIUM',
   })
 
-  const { data: studiesData } = useMyStudies({ limit: 50 })
+  const { data: studiesData } = useMyStudies({ limit: 50, filter: 'active' })
   const createTask = useCreateTask()
-  const studies = studiesData?.data || []
+
+  // API 응답에서 study 객체만 추출
+  const studies = studiesData?.data?.map(item => item.study).filter(study => study) || []
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()

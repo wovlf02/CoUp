@@ -3,7 +3,7 @@
 .header {
   position: fixed;
   top: 0;
-  left: 240px; /* Sidebar 너비만큼 */
+  left: clamp(200px, 12vw, 280px); /* Sidebar 너비와 동일하게 유동적으로 */
   right: 0;
   height: 64px;
   background: linear-gradient(135deg, #f0e6ff 0%, #e6f0ff 100%);
@@ -385,7 +385,7 @@
 /* Tablet */
 @media (max-width: 1279px) {
   .header {
-    left: 200px;
+    left: clamp(160px, 15vw, 200px); /* 태블릿 사이드바 너비와 동일하게 */
     height: 64px;
     padding: 0 1.5rem;
   }

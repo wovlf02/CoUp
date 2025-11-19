@@ -4,8 +4,9 @@ import { useMyStudies } from '@/lib/hooks/useApi'
 import styles from './TaskFilters.module.css'
 
 export default function TaskFilters({ filter, setFilter, taskCount }) {
-  const { data: studiesData } = useMyStudies({ limit: 50 })
-  const studies = studiesData?.data || []
+  const { data: studiesData } = useMyStudies({ limit: 50, filter: 'active' })
+  // API 응답에서 study 객체만 추출
+  const studies = studiesData?.data?.map(item => item.study).filter(study => study) || []
 
   const incompleteCount = taskCount || 0
 

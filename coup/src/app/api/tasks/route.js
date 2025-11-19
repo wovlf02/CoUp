@@ -10,8 +10,9 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const studyId = searchParams.get('studyId')
-    const status = searchParams.get('status') // TODO | IN_PROGRESS | REVIEW | DONE
+    const status = searchParams.get('status') // TODO | IN_PROGRESS | REVIEW | DONE | all
     const completed = searchParams.get('completed') // 'true' | 'false'
+    const sortBy = searchParams.get('sortBy') || 'deadline' // deadline | priority | createdAt
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
     const skip = (page - 1) * limit
@@ -24,12 +25,29 @@ export async function GET(request) {
       whereClause.studyId = studyId
     }
 
-    if (status) {
+    // status가 'all'이 아닌 경우만 필터 추가 (TODO, IN_PROGRESS, REVIEW, DONE만 유효)
+    if (status && status !== 'all') {
       whereClause.status = status
     }
 
     if (completed !== null && completed !== undefined) {
       whereClause.completed = completed === 'true'
+    }
+
+    // 정렬 순서 설정
+    let orderBy = [
+      { completed: 'asc' }, // 미완료가 먼저
+    ]
+
+    if (sortBy === 'deadline') {
+      orderBy.push({ dueDate: 'asc' }, { createdAt: 'desc' })
+    } else if (sortBy === 'priority') {
+      orderBy.push({ priority: 'desc' }, { dueDate: 'asc' })
+    } else if (sortBy === 'createdAt') {
+      orderBy.push({ createdAt: 'desc' })
+    } else {
+      // 기본값
+      orderBy.push({ dueDate: 'asc' }, { createdAt: 'desc' })
     }
 
     const total = await prisma.task.count({ where: whereClause })
@@ -38,11 +56,7 @@ export async function GET(request) {
       where: whereClause,
       skip,
       take: limit,
-      orderBy: [
-        { completed: 'asc' },
-        { dueDate: 'asc' },
-        { createdAt: 'desc' }
-      ],
+      orderBy,
       include: {
         study: {
           select: {

@@ -29,8 +29,14 @@ export async function GET(request) {
       whereClause.status = 'ACTIVE'
     } else if (filter === 'pending') {
       whereClause.status = 'PENDING'
+    } else if (filter === 'active') {
+      // ACTIVE 상태의 모든 스터디
+      whereClause.status = 'ACTIVE'
     } else if (filter === 'all') {
       whereClause.status = { in: ['ACTIVE', 'PENDING'] }
+    } else {
+      // 기본값: ACTIVE 상태만
+      whereClause.status = 'ACTIVE'
     }
 
     // 총 개수 조회
