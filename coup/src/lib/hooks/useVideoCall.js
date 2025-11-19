@@ -141,22 +141,41 @@ export function useVideoCall(studyId, roomId) {
 
   // 방 입장
   const joinRoom = useCallback(async (videoEnabled = true, audioEnabled = true) => {
-    if (!socket || !isConnected) {
-      setError('소켓 연결이 필요합니다.');
-      return;
+    console.log('[useVideoCall] joinRoom called', {
+      socket: !!socket,
+      isConnected,
+      actuallyConnected: socket?.connected
+    });
+
+    if (!socket) {
+      const errorMsg = '소켓이 초기화되지 않았습니다. 페이지를 새로고침해주세요.';
+      console.error('[useVideoCall]', errorMsg);
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // React 상태 대신 실제 소켓 연결 상태 확인
+    if (!socket.connected) {
+      const errorMsg = '시그널링 서버에 연결되지 않았습니다. 잠시 후 다시 시도해주세요.';
+      console.error('[useVideoCall]', errorMsg, '(socket.connected:', socket.connected, ')');
+      setError(errorMsg);
+      throw new Error(errorMsg);
     }
 
     try {
+      console.log('[useVideoCall] ✅ Socket connected, initializing local stream...');
       // 로컬 스트림 초기화
       await initLocalStream(videoEnabled, audioEnabled);
 
+      console.log('[useVideoCall] Emitting video:join-room', { studyId, roomId });
       // 방 입장 요청
       socket.emit('video:join-room', { studyId, roomId });
     } catch (err) {
-      console.error('Failed to join room:', err);
-      setError('방 입장에 실패했습니다.');
+      console.error('[useVideoCall] Failed to join room:', err);
+      setError(err.message || '방 입장에 실패했습니다.');
+      throw err;
     }
-  }, [socket, isConnected, studyId, roomId, initLocalStream]);
+  }, [socket, studyId, roomId, initLocalStream]);
 
   // 방 나가기
   const leaveRoom = useCallback(() => {

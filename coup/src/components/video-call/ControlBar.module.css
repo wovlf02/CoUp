@@ -2,17 +2,30 @@
 .controlBar {
   position: fixed;
   bottom: 0;
-  left: clamp(200px, 12vw, 280px); /* 사이드바 너비만큼 왼쪽에서 시작 */
+  left: clamp(200px, 12vw, 280px); /* Sidebar 너비만큼 오른쪽에서 시작 */
   right: 0;
   height: 80px;
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(10px);
+  background: rgb(0, 0, 0); /* 완전 불투명 */
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
   z-index: 100;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 태블릿 */
+@media (max-width: 1279px) {
+  .controlBar {
+    left: clamp(160px, 15vw, 200px);
+  }
+}
+
+/* 모바일 */
+@media (max-width: 767px) {
+  .controlBar {
+    left: 0;
+  }
 }
 
 .leftSection,

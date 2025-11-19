@@ -42,16 +42,6 @@ export default function MyStudyVideoCallPage({ params }) {
   // Socket
   const { socket, isConnected } = useSocket();
 
-  // 소켓 상태 디버깅
-  useEffect(() => {
-    console.log('[VideoCall Page] Socket state changed:', {
-      socket: !!socket,
-      isConnected,
-      socketId: socket?.id,
-      actuallyConnected: socket?.connected
-    });
-  }, [socket, isConnected]);
-
   // 화상통화 훅
   const {
     localStream,
@@ -114,26 +104,13 @@ export default function MyStudyVideoCallPage({ params }) {
   };
 
   const handleJoinCall = async () => {
-    // 실제 소켓 연결 상태 확인 (React 상태가 아닌)
-    if (!socket || !socket.connected) {
-      console.warn('[VideoCall] Socket not ready:', {
-        socket: !!socket,
-        isConnected,
-        actuallyConnected: socket?.connected
-      });
-      alert('시그널링 서버에 연결 중입니다. 잠시 후 다시 시도해주세요.');
-      return;
-    }
-
     try {
-      console.log('[VideoCall] ✅ Attempting to join room...');
       await joinRoom(true, true);
       setIsInCall(true);
       setCallDuration(0);
       setChatMessages([]); // 채팅 초기화
     } catch (err) {
-      console.error('[VideoCall] Join failed:', err);
-      alert(err.message || error || '화상회의 입장에 실패했습니다.');
+      alert(error || '화상회의 입장에 실패했습니다.');
     }
   };
 
@@ -214,29 +191,8 @@ export default function MyStudyVideoCallPage({ params }) {
             <div className={styles.preview}>
               <h2>화상 스터디</h2>
               <p>참여하시겠습니까?</p>
-
-              {/* 소켓 연결 상태 표시 - 실제 연결 상태 기준 */}
-              {!socket?.connected ? (
-                <div className={styles.connectionStatus}>
-                  🔄 시그널링 서버 연결 중...
-                  <div style={{ fontSize: '0.75rem', marginTop: '8px', opacity: 0.8 }}>
-                    Socket: {socket ? '생성됨' : '미생성'} |
-                    Connected: {socket?.connected ? 'Yes' : 'No'}
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.connectionStatus} style={{ background: 'var(--green-50)', color: 'var(--green-700)' }}>
-                  ✅ 연결됨 (Socket ID: {socket?.id?.substring(0, 8)}...)
-                </div>
-              )}
-
-              <button
-                onClick={handleJoinCall}
-                className={styles.joinButton}
-                disabled={!socket?.connected}
-                style={{ opacity: socket?.connected ? 1 : 0.5 }}
-              >
-                🎥 {socket?.connected ? '참여하기' : '연결 대기 중...'}
+              <button onClick={handleJoinCall} className={styles.joinButton}>
+                🎥 참여하기
               </button>
             </div>
           </div>
@@ -248,6 +204,22 @@ export default function MyStudyVideoCallPage({ params }) {
   // 화상 통화 메인 화면 (3단 레이아웃)
   return (
     <div className={styles.container}>
+      {/* 상단 헤더 */}
+      <header className={styles.videoHeader}>
+        <div className={styles.videoHeaderLeft}>
+          <span className={styles.emoji}>{study.emoji || '📚'}</span>
+          <h1 className={styles.videoTitle}>{study.name}</h1>
+        </div>
+        <div className={styles.videoHeaderCenter}>
+          <span className={styles.participantCount}>👥 {participants.length + 1}명</span>
+          <span className={styles.timer}>⏱️ {formatDuration(callDuration)}</span>
+        </div>
+        <div className={styles.videoHeaderRight}>
+          <button onClick={handleLeaveCall} className={styles.leaveButton}>
+            ← 나가기
+          </button>
+        </div>
+      </header>
 
       {/* 메인 컨텐츠 영역 (3단 레이아웃) */}
       <div className={styles.mainContent}>
@@ -369,7 +341,6 @@ export default function MyStudyVideoCallPage({ params }) {
         isMuted={isMuted}
         isVideoOff={isVideoOff}
         isSharingScreen={isSharingScreen}
-        callDuration={formatDuration(callDuration)}
         onToggleMute={toggleMute}
         onToggleVideo={toggleVideo}
         onShareScreen={handleShareScreen}
@@ -386,3 +357,4 @@ export default function MyStudyVideoCallPage({ params }) {
     </div>
   );
 }
+

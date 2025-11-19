@@ -7,7 +7,10 @@ import { io } from 'socket.io-client'
 let socket = null
 
 export function useSocket() {
-  const [isConnected, setIsConnected] = useState(false)
+  const [isConnected, setIsConnected] = useState(() => {
+    // 초기 상태를 소켓의 실제 연결 상태로 설정
+    return socket ? socket.connected : false;
+  });
   const [transport, setTransport] = useState('N/A')
   const [user, setUser] = useState(null)
 
@@ -17,57 +20,98 @@ export function useSocket() {
       try {
         const response = await fetch('/api/auth/me', {
           credentials: 'include'
-        })
+        });
+
         if (response.ok) {
-          const data = await response.json()
-          setUser(data.user)
+          const data = await response.json();
+          console.log('[Socket] User fetched:', data.user?.name, data.user?.id);
+          setUser(data.user);
         } else {
-          // 로그인되지 않은 경우 소켓 연결하지 않음
-          setUser(null)
+          // 로그인되지 않은 경우 (401) 또는 기타 에러
+          if (response.status === 401) {
+            console.log('[Socket] User not authenticated (401)');
+          } else {
+            console.warn('[Socket] Failed to fetch user:', response.status);
+          }
+          setUser(null);
         }
       } catch (error) {
-        console.error('Failed to fetch user:', error)
-        setUser(null)
+        console.error('[Socket] Error fetching user:', error);
+        setUser(null);
       }
     }
 
-    fetchUser()
+    fetchUser();
   }, [])
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id) {
+      console.log('[Socket] No user ID, skipping socket initialization');
+      return;
+    }
+
+    console.log('[Socket] useEffect triggered, socket exists:', !!socket, 'connected:', socket?.connected);
 
     // Socket.IO 초기화 (한 번만)
     if (!socket) {
-      socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || '', {
+      // 분리형 아키텍처: 시그널링 서버로 연결
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000';
+      console.log('[Socket] Creating new socket connection to:', socketUrl, 'userId:', user.id);
+
+      socket = io(socketUrl, {
         auth: {
           userId: user.id
         },
-        transports: ['websocket', 'polling']
-      })
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5
+      });
 
       socket.on('connect', () => {
-        setIsConnected(true)
-        setTransport(socket.io.engine.transport.name)
+        console.log('[Socket] ✅ Connected! Socket ID:', socket.id);
+        setIsConnected(true);
+        setTransport(socket.io.engine.transport.name);
 
         socket.io.engine.on('upgrade', (transport) => {
-          setTransport(transport.name)
-        })
-      })
+          console.log('[Socket] Transport upgraded to:', transport.name);
+          setTransport(transport.name);
+        });
+      });
 
-      socket.on('disconnect', () => {
-        setIsConnected(false)
-      })
+      socket.on('disconnect', (reason) => {
+        console.log('[Socket] ❌ Disconnected:', reason);
+        setIsConnected(false);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('[Socket] Connection error:', error.message);
+        setIsConnected(false);
+      });
 
       socket.on('error', (error) => {
-        console.error('Socket error:', error)
-      })
+        console.error('[Socket] Socket error:', error);
+      });
+    } else {
+      // 소켓이 이미 초기화된 경우 - 즉시 상태 동기화
+      console.log('[Socket] Socket already exists, syncing state. Connected:', socket.connected);
+
+      // 즉시 상태 업데이트
+      setIsConnected(socket.connected);
+
+      if (socket.connected) {
+        console.log('[Socket] ✅ Already connected! Socket ID:', socket.id);
+        setTransport(socket.io.engine.transport.name);
+      } else {
+        console.log('[Socket] Socket exists but not connected, attempting reconnection...');
+        socket.connect();
+      }
     }
 
     return () => {
       // 컴포넌트 언마운트 시에는 소켓을 끊지 않음 (재사용)
-    }
-  }, [user?.id])
+    };
+  }, [user?.id]);
 
   return {
     socket,

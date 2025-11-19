@@ -1,31 +1,10 @@
 /* 화상 통화 페이지 스타일 (3단 레이아웃) */
 
 .container {
-  position: fixed; /* fixed로 네비게이션/헤더 제외한 영역만 사용 */
-  top: 64px; /* Header 높이만큼 아래에서 시작 */
-  left: clamp(200px, 12vw, 280px); /* Sidebar 너비만큼 오른쪽에서 시작 */
-  right: 0;
-  bottom: 0;
+  min-height: 100vh;
   background: var(--gray-50);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  z-index: 1;
-}
-
-/* 태블릿 */
-@media (max-width: 1279px) {
-  .container {
-    left: clamp(160px, 15vw, 200px);
-  }
-}
-
-/* 모바일 */
-@media (max-width: 767px) {
-  .container {
-    top: 56px; /* 모바일 헤더 높이 */
-    left: 0;
-  }
 }
 
 /* ===== 대기실 화면 ===== */
@@ -139,21 +118,6 @@
   margin-bottom: 32px;
 }
 
-.connectionStatus {
-  padding: 12px 24px;
-  background: var(--blue-50);
-  color: var(--blue-700);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  margin-bottom: 20px;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
 .joinButton {
   padding: 16px 48px;
   background: var(--primary-600);
@@ -166,18 +130,59 @@
   transition: all 0.2s;
 }
 
-.joinButton:hover:not(:disabled) {
+.joinButton:hover {
   background: var(--primary-700);
   transform: translateY(-2px);
 }
 
-.joinButton:disabled {
-  cursor: not-allowed;
-}
-
 /* ===== 화상 통화 메인 화면 (3단 레이아웃) ===== */
 
-/* 상단 헤더 - 제거됨, MainLayout의 Header 사용 */
+/* 상단 헤더 */
+.videoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.videoHeaderLeft,
+.videoHeaderCenter,
+.videoHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.videoTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--gray-900);
+}
+
+.participantCount,
+.timer {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.leaveButton {
+  padding: 8px 16px;
+  background: var(--red-50);
+  color: var(--red-600);
+  border: 1px solid var(--red-200);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.leaveButton:hover {
+  background: var(--red-100);
+}
 
 /* 메인 컨텐츠 (3단 레이아웃) */
 .mainContent {
@@ -185,8 +190,6 @@
   display: flex;
   gap: 0;
   overflow: hidden;
-  height: calc(100% - 80px); /* 컨테이너 높이에서 컨트롤바(80px) 제외 */
-  min-height: 0;
 }
 
 /* 좌측 사이드바: 참여자 목록 */
@@ -283,9 +286,6 @@
 
 .grid1 {
   grid-template-columns: 1fr;
-  max-width: 800px; /* 1명일 때 최대 너비 제한 */
-  max-height: 600px; /* 1명일 때 최대 높이 제한 */
-  margin: auto; /* 중앙 정렬 */
 }
 
 .grid2x2 {
@@ -466,3 +466,4 @@
     grid-template-columns: 1fr;
   }
 }
+
