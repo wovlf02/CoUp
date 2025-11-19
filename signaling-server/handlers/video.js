@@ -7,12 +7,14 @@ const videoRooms = new Map();
  * 화상 통화 이벤트 핸들러
  */
 export function handleVideoEvents(socket, io) {
+  logger.info(`[Video] Registering video events for ${socket.user?.name} (${socket.id})`);
 
   /**
    * 화상 통화 방 입장
    */
   socket.on('video:join-room', async ({ studyId, roomId }) => {
     try {
+      logger.info(`[Video] ✅ RECEIVED video:join-room event from ${socket.user?.name} - studyId: ${studyId}, roomId: ${roomId}`);
       logger.info(`[Video] ${socket.user.name} joining room ${roomId}`);
 
       // 스터디 멤버십 확인 (개발 모드에서는 선택적)
@@ -50,6 +52,9 @@ export function handleVideoEvents(socket, io) {
       }
 
       const roomParticipants = videoRooms.get(roomId);
+
+      logger.info(`[Video] Setting participant info - socketId: ${socket.id}, userId: ${socket.userId}, user:`, socket.user);
+
       roomParticipants.set(socket.id, {
         socketId: socket.id,
         userId: socket.userId,
@@ -64,16 +69,18 @@ export function handleVideoEvents(socket, io) {
       const participants = Array.from(roomParticipants.values())
         .filter(p => p.socketId !== socket.id);
 
+      logger.info(`[Video] Sending room state to ${socket.user?.name}, participants:`, participants.map(p => ({ socketId: p.socketId, user: p.user })));
       socket.emit('video:room-state', { participants });
 
       // 다른 참여자들에게 알림
+      logger.info(`[Video] Broadcasting user-joined - socketId: ${socket.id}, user:`, socket.user);
       socket.to(`video:${roomId}`).emit('video:user-joined', {
         socketId: socket.id,
         userId: socket.userId,
         user: socket.user
       });
 
-      logger.info(`[Video] ${socket.user.name} joined ${roomId}, total participants: ${roomParticipants.size}`);
+      logger.info(`[Video] ${socket.user?.name} joined ${roomId}, total participants: ${roomParticipants.size}`);
     } catch (error) {
       logger.error(`[Video] Error joining room:`, error);
       socket.emit('error', { message: '방 입장에 실패했습니다.' });

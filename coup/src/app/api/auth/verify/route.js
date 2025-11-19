@@ -8,8 +8,10 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request) {
   try {
     const { userId } = await request.json();
+    console.log('[API /auth/verify] Request received, userId:', userId);
 
     if (!userId) {
+      console.log('[API /auth/verify] No userId provided');
       return NextResponse.json(
         { error: 'userId is required' },
         { status: 400 }
@@ -28,6 +30,8 @@ export async function POST(request) {
       }
     });
 
+    console.log('[API /auth/verify] User found:', user ? `${user.name} (${user.id})` : 'null');
+
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -36,18 +40,20 @@ export async function POST(request) {
     }
 
     if (user.status !== 'ACTIVE') {
+      console.log('[API /auth/verify] User not active:', user.status);
       return NextResponse.json(
         { error: 'User is not active' },
         { status: 403 }
       );
     }
 
+    console.log('[API /auth/verify] Success, returning user:', user.name);
     return NextResponse.json({
       success: true,
       user
     });
   } catch (error) {
-    console.error('Auth verify error:', error);
+    console.error('[API /auth/verify] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -319,16 +319,19 @@ export function useVideoCall(studyId, roomId) {
 
     // 기존 참여자 목록 수신
     socket.on('video:room-state', ({ participants: existingParticipants }) => {
+      console.log('[useVideoCall] Received room state:', existingParticipants);
       setParticipants(existingParticipants);
 
       // 기존 참여자들과 Peer Connection 생성 (내가 initiator)
       existingParticipants.forEach(participant => {
+        console.log('[useVideoCall] Creating peer for participant:', participant);
         createPeerConnection(participant.socketId, true);
       });
     });
 
     // 새 참여자 입장
     socket.on('video:user-joined', ({ socketId, userId, user }) => {
+      console.log('[useVideoCall] New user joined:', { socketId, userId, user });
       setParticipants(prev => [...prev, { socketId, userId, user }]);
       // Peer Connection 생성 (상대방이 initiator, 나는 answer 보낼 준비)
       createPeerConnection(socketId, false);

@@ -2,11 +2,12 @@
 'use client';
 
 import { use, useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { useStudy } from '@/lib/hooks/useApi';
-import { useVideoCall } from '@/lib/hooks/useVideoCall';
 import { useSocket } from '@/lib/hooks/useSocket';
+import { useVideoCall } from '@/lib/hooks/useVideoCall';
 import VideoTile from '@/components/video-call/VideoTile';
 import ControlBar from '@/components/video-call/ControlBar';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
@@ -35,22 +36,58 @@ export default function MyStudyVideoCallPage({ params }) {
   const [chatMessages, setChatMessages] = useState([]);
   const chatEndRef = useRef(null);
 
+  // Session - 현재 로그인한 사용자 정보
+  const { data: session } = useSession();
+  const currentUser = session?.user;
+
+  // 사용자 정보 디버깅
+  useEffect(() => {
+    console.log('[VideoCall] Current user:', currentUser);
+  }, [currentUser]);
+
   // API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
   const study = studyData?.data;
 
   // Socket
   const { socket, isConnected } = useSocket();
+  const [socketConnected, setSocketConnected] = useState(false);
+
+  // 실시간 소켓 연결 상태 확인
+  useEffect(() => {
+    if (!socket) return;
+
+    const checkConnection = () => {
+      setSocketConnected(socket.connected);
+    };
+
+    // 초기 확인
+    checkConnection();
+
+    // 주기적으로 확인 (100ms)
+    const interval = setInterval(checkConnection, 100);
+
+    // 소켓 이벤트 리스너
+    socket.on('connect', checkConnection);
+    socket.on('disconnect', checkConnection);
+
+    return () => {
+      clearInterval(interval);
+      socket.off('connect', checkConnection);
+      socket.off('disconnect', checkConnection);
+    };
+  }, [socket]);
 
   // 소켓 상태 디버깅
   useEffect(() => {
     console.log('[VideoCall Page] Socket state changed:', {
       socket: !!socket,
       isConnected,
+      socketConnected,
       socketId: socket?.id,
       actuallyConnected: socket?.connected
     });
-  }, [socket, isConnected]);
+  }, [socket, isConnected, socketConnected]);
 
   // 화상통화 훅
   const {
@@ -216,12 +253,12 @@ export default function MyStudyVideoCallPage({ params }) {
               <p>참여하시겠습니까?</p>
 
               {/* 소켓 연결 상태 표시 - 실제 연결 상태 기준 */}
-              {!socket?.connected ? (
+              {!socketConnected ? (
                 <div className={styles.connectionStatus}>
                   🔄 시그널링 서버 연결 중...
                   <div style={{ fontSize: '0.75rem', marginTop: '8px', opacity: 0.8 }}>
                     Socket: {socket ? '생성됨' : '미생성'} |
-                    Connected: {socket?.connected ? 'Yes' : 'No'}
+                    Connected: {socketConnected ? 'Yes' : 'No'}
                   </div>
                 </div>
               ) : (
@@ -233,10 +270,10 @@ export default function MyStudyVideoCallPage({ params }) {
               <button
                 onClick={handleJoinCall}
                 className={styles.joinButton}
-                disabled={!socket?.connected}
-                style={{ opacity: socket?.connected ? 1 : 0.5 }}
+                disabled={!socketConnected}
+                style={{ opacity: socketConnected ? 1 : 0.5 }}
               >
-                🎥 {socket?.connected ? '참여하기' : '연결 대기 중...'}
+                🎥 {socketConnected ? '참여하기' : '연결 대기 중...'}
               </button>
             </div>
           </div>
@@ -260,11 +297,11 @@ export default function MyStudyVideoCallPage({ params }) {
             {/* 나 */}
             <div className={styles.participant}>
               <div className={styles.participantAvatar}>
-                {study.currentMember?.user?.name?.charAt(0) || '?'}
+                {currentUser?.name?.charAt(0) || '?'}
               </div>
               <div className={styles.participantInfo}>
                 <div className={styles.participantName}>
-                  👑 {study.currentMember?.user?.name || '나'} (나)
+                  👑 {currentUser?.name || '나'} (나)
                 </div>
                 <div className={styles.participantStatus}>
                   {!isMuted && '🎤'} {!isVideoOff && '📹'}
@@ -299,7 +336,7 @@ export default function MyStudyVideoCallPage({ params }) {
               <VideoTile
                 stream={localStream}
                 isLocal={true}
-                user={study.currentMember?.user}
+                user={currentUser}
                 isMuted={isMuted}
                 isVideoOff={isVideoOff}
               />
