@@ -63,6 +63,12 @@
 .leaveButton {
   background: #ef4444;
   margin-left: auto;
+  border-radius: 8px;
+  width: auto;
+  height: 48px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .leaveButton:hover {
@@ -79,6 +85,13 @@
     width: 48px;
     height: 48px;
     font-size: 20px;
+  }
+
+  .leaveButton {
+    width: auto;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
   }
 
   .centerSection {

@@ -60,7 +60,7 @@ export default function ControlBar({
           onClick={onLeave}
           title="나가기"
         >
-          ❌
+          ← 나가기
         </button>
       </div>
     </div>

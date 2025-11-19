@@ -255,124 +255,48 @@ export default function MyStudyVideoCallPage({ params }) {
     );
   }
 
-  // 통화 중 - Zoom 스타일 레이아웃
+  // 통화 중 - 전체 화면 모드 (네비게이션 바는 유지)
   return (
     <div className={styles.fullscreenContainer}>
-      {/* 헤더 */}
+      {/* 상단 헤더 - 스터디 정보 & 나가기 버튼 */}
       <div className={styles.callHeader}>
         <div className={styles.callInfo}>
           <span className={styles.callStudyName}>{study.emoji} {study.name}</span>
           <span className={styles.participantCount}>👥 {participants.length + 1}명</span>
           <span className={styles.duration}>⏱️ {formatDuration(callDuration)}</span>
         </div>
+        <button onClick={handleLeaveCall} className={styles.exitButton}>
+          ← 나가기
+        </button>
       </div>
 
-      {/* 메인 레이아웃 (좌측: 참여자, 중앙: 비디오, 우측: 채팅) */}
-      <div className={styles.mainLayout}>
-        {/* 좌측 사이드바 - 참여자 목록 */}
-        <aside className={styles.participantsSidebar}>
-          <div className={styles.sidebarHeader}>
-            <h3>👥 참여자</h3>
-            <span className={styles.count}>{participants.length + 1}</span>
-          </div>
-          
-          <div className={styles.participantsList}>
-            {/* 내 정보 */}
-            <div className={styles.participantItem}>
-              <div className={styles.participantAvatar}>나</div>
-              <div className={styles.participantInfo}>
-                <span className={styles.participantName}>나 (호스트)</span>
-                <div className={styles.participantStatus}>
-                  <span>{isMuted ? '🔇' : '🎤'}</span>
-                  <span>{isVideoOff ? '📹❌' : '📹'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 다른 참여자들 */}
-            {participants.map((participant) => (
-              <div key={participant.socketId} className={styles.participantItem}>
-                <div className={styles.participantAvatar}>
-                  {participant.user?.name?.charAt(0) || 'U'}
-                </div>
-                <div className={styles.participantInfo}>
-                  <span className={styles.participantName}>{participant.user?.name || '참여자'}</span>
-                  <div className={styles.participantStatus}>
-                    <span>🎤</span>
-                    <span>📹</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        {/* 중앙 - 비디오 그리드 */}
-        <div className={styles.videoSection}>
-          <div className={`${styles.videoGrid} ${getGridLayout()}`}>
-            {/* 로컬 비디오 */}
-            {localStream && (
-              <VideoTile
-                stream={localStream}
-                user={{ name: '나', ...study.currentUser }}
-                isLocal={true}
-                isMuted={isMuted}
-                isVideoOff={isVideoOff}
-              />
-            )}
-
-            {/* 원격 비디오들 */}
-            {participants.map((participant) => {
-              const stream = remoteStreams.get(participant.socketId);
-              return (
-                <VideoTile
-                  key={participant.socketId}
-                  stream={stream}
-                  user={participant.user}
-                  isLocal={false}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 우측 사이드바 - 채팅 */}
-        <aside className={styles.chatSidebar}>
-          <div className={styles.sidebarHeader}>
-            <h3>💬 채팅</h3>
-          </div>
-          
-          <div className={styles.chatMessages}>
-            {chatMessages.length === 0 ? (
-              <div className={styles.emptyChatMessage}>
-                채팅을 시작해보세요! 👋
-              </div>
-            ) : (
-              chatMessages.map((msg) => (
-                <div key={msg.id} className={styles.chatMessage}>
-                  <div className={styles.chatMessageHeader}>
-                    <span className={styles.chatUser}>{msg.user}</span>
-                    <span className={styles.chatTime}>{msg.time}</span>
-                  </div>
-                  <p className={styles.chatMessageText}>{msg.message}</p>
-                </div>
-              ))
-            )}
-          </div>
-
-          <form onSubmit={handleSendMessage} className={styles.chatInput}>
-            <input
-              type="text"
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              placeholder="메시지를 입력하세요..."
-              className={styles.chatInputField}
+      {/* 비디오 그리드 - 전체 영역 사용 */}
+      <div className={styles.videoGridContainer}>
+        <div className={`${styles.videoGrid} ${getGridLayout()}`}>
+          {/* 로컬 비디오 */}
+          {localStream && (
+            <VideoTile
+              stream={localStream}
+              user={{ name: '나', ...study.currentUser }}
+              isLocal={true}
+              isMuted={isMuted}
+              isVideoOff={isVideoOff}
             />
-            <button type="submit" className={styles.chatSendButton}>
-              전송
-            </button>
-          </form>
-        </aside>
+          )}
+
+          {/* 원격 비디오들 */}
+          {participants.map((participant) => {
+            const stream = remoteStreams.get(participant.socketId);
+            return (
+              <VideoTile
+                key={participant.socketId}
+                stream={stream}
+                user={participant.user}
+                isLocal={false}
+              />
+            );
+          })}
+        </div>
       </div>
 
       {/* 하단 컨트롤 바 */}
