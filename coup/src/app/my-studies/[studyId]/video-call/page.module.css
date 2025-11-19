@@ -191,7 +191,9 @@
 
 /* 좌측 사이드바: 참여자 목록 */
 .leftSidebar {
-  width: 240px;
+  width: 20%;
+  min-width: 200px;
+  max-width: 280px;
   background: linear-gradient(180deg, #F5F0FF 0%, #FAF5FF 100%);
   border-right: 1px solid rgba(200, 190, 220, 0.3);
   display: flex;
@@ -350,7 +352,9 @@
 
 /* 우측 사이드바: 채팅 */
 .rightSidebar {
-  width: 300px;
+  width: 25%;
+  min-width: 320px;
+  max-width: 420px;
   background: linear-gradient(180deg, #F0F5FF 0%, #FFF5F8 100%);
   border-left: 1px solid rgba(200, 190, 220, 0.3);
   display: flex;
@@ -375,37 +379,94 @@
 
 .chatMessage {
   display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  max-width: 80%;
+  gap: 8px;
+  max-width: 85%;
+  margin-bottom: 12px;
 }
 
 .chatMessageMe {
   display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  max-width: 80%;
+  justify-content: flex-end;
+  max-width: 85%;
   align-self: flex-end;
+  margin-bottom: 12px;
 }
 
-.chatMessageHeader {
+/* 프로필 사진 */
+.messageAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C7B8EA 0%, #B8D4F1 100%);
+  color: #5B4E7C;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 4px;
-  gap: 8px;
-  width: 100%;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.chatMessageHeader strong {
-  font-size: 0.875rem;
+/* 메시지 내용 래퍼 (다른 사용자) */
+.messageContentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 닉네임 */
+.messageUsername {
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #5B4E7C;
+  padding-left: 2px;
+}
+
+/* 메시지와 시간을 한 줄에 (다른 사용자) */
+.messageWithTime {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+/* 내 메시지와 시간을 한 줄에 */
+.myMessageWithTime {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+/* 시간 스타일 (메시지 우측 - 다른 사용자) */
+.messageTimeRight {
+  font-size: 0.6875rem;
+  color: #8B7AA0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+/* 시간 스타일 (메시지 좌측 - 내 메시지) */
+.messageTimeLeft {
+  font-size: 0.6875rem;
+  color: #8B7AA0;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+/* 기존 헤더 스타일 제거 */
+.chatMessageHeader {
+  display: none;
 }
 
 .chatMessageTime {
-  font-size: 0.75rem;
-  color: #8B7AA0;
+  display: none;
 }
 
 .chatMessageContent {
@@ -413,22 +474,211 @@
   color: #5B4E7C;
   line-height: 1.5;
   word-wrap: break-word;
-  background: rgba(232, 228, 243, 0.4);
   padding: 10px 12px;
   border-radius: 12px;
   width: fit-content;
-  border: 1px solid rgba(200, 190, 220, 0.2);
+  max-width: 100%;
 }
 
+/* 다른 사용자 메시지 박스 */
+.chatMessage .chatMessageContent {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(200, 190, 220, 0.3);
+  border-radius: 0 12px 12px 12px;
+}
+
+/* 내 메시지 박스 */
 .chatMessageMe .chatMessageContent {
   background: linear-gradient(135deg, #C7B8EA 0%, #E8B8D9 100%);
-  color: #5B4E7C;
-  border-radius: 12px 12px 2px 12px;
+  color: white;
+  border-radius: 12px 0 12px 12px;
   border: 1px solid rgba(199, 184, 234, 0.3);
 }
 
-.chatMessage .chatMessageContent {
-  border-radius: 12px 12px 12px 2px;
+
+/* 파일 메시지 */
+.chatFileMessage {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(200, 190, 220, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatMessage .chatFileMessage {
+  border-radius: 0 12px 12px 12px;
+}
+
+.chatMessageMe .chatFileMessage {
+  border-radius: 12px 0 12px 12px;
+}
+
+.filePreview {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(232, 228, 243, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.fileImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.fileIconLarge {
+  font-size: 4rem;
+  padding: 30px;
+}
+
+.fileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fileName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #5B4E7C;
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fileSize {
+  font-size: 0.75rem;
+  color: #8B7AA0;
+}
+
+.fileDownloadButton {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #C7B8EA 0%, #E8B8D9 100%);
+  color: #5B4E7C;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.fileDownloadButton:hover {
+  background: linear-gradient(135deg, #B8A8DA 0%, #D8A8C9 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 채팅 입력 래퍼 */
+.chatInputWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 파일 미리보기 바 */
+.filePreviewBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(199, 184, 234, 0.15);
+  border-top: 1px solid rgba(200, 190, 220, 0.3);
+  border-bottom: 1px solid rgba(200, 190, 220, 0.3);
+}
+
+.filePreviewInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.filePreviewIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.filePreviewText {
+  flex: 1;
+  min-width: 0;
+}
+
+.filePreviewName {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #5B4E7C;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filePreviewSize {
+  font-size: 0.75rem;
+  color: #8B7AA0;
+  margin-top: 2px;
+}
+
+.filePreviewActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.fileSendButton {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #C7B8EA 0%, #E8B8D9 100%);
+  color: #5B4E7C;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.fileSendButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B8A8DA 0%, #D8A8C9 100%);
+  transform: translateY(-1px);
+}
+
+.fileSendButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fileCancelButton {
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fileCancelButton:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.fileCancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .chatInput {
@@ -437,6 +687,26 @@
   background: rgba(232, 228, 243, 0.2);
   display: flex;
   gap: 8px;
+  align-items: center;
+}
+
+.fileAttachButton {
+  padding: 10px;
+  background: rgba(199, 184, 234, 0.2);
+  border: 1px solid rgba(199, 184, 234, 0.3);
+  border-radius: 8px;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fileAttachButton:hover {
+  background: rgba(199, 184, 234, 0.3);
+  transform: scale(1.05);
 }
 
 .chatInputField {
@@ -456,6 +726,11 @@
   box-shadow: 0 0 0 3px rgba(199, 184, 234, 0.1);
 }
 
+.chatInputField:disabled {
+  background: rgba(232, 228, 243, 0.3);
+  cursor: not-allowed;
+}
+
 .chatInputField::placeholder {
   color: #B8A8CE;
 }
@@ -473,7 +748,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
-.chatSendButton:hover {
+.chatSendButton:hover:not(:disabled) {
   background: linear-gradient(135deg, #B8A8DA 0%, #D8A8C9 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);

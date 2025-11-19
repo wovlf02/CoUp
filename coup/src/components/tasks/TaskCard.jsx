@@ -1,10 +1,8 @@
-import { getTimeLeft } from '@/utils/time'
-import { calculatePercentage } from '@/utils/format'
+import { getTimeLeft, formatDateTimeKST } from '@/utils/time'
 import styles from './TaskCard.module.css'
 
 export default function TaskCard({ task, onToggleComplete, onDeleteTask }) {
   const timeLeft = getTimeLeft(task.dueDate)
-  const completionRate = calculatePercentage(task.completedCount, task.totalCount)
 
   const getDeadlineClass = () => {
     if (timeLeft.expired) return styles.deadlineExpired
@@ -22,13 +20,28 @@ export default function TaskCard({ task, onToggleComplete, onDeleteTask }) {
   return (
     <div className={getCardClass()}>
       <div className={styles.taskHeader}>
-        <div
-          className={`${styles.checkbox} ${task.completed ? styles.checked : ''}`}
-          onClick={() => onToggleComplete(task.id)}
-        >
-          {task.completed && '✓'}
+        <div className={styles.leftSection}>
+          <div
+            className={`${styles.checkbox} ${task.completed ? styles.checked : ''}`}
+            onClick={() => onToggleComplete(task.id)}
+          >
+            {task.completed && '✓'}
+          </div>
+          <div className={styles.titleSection}>
+            <h3 className={styles.taskTitle}>{task.title}</h3>
+            {task.dueDate && (
+              <div className={`${styles.deadlineInfo} ${getDeadlineClass()}`}>
+                <div className={styles.deadlineText}>
+                  📅 {formatDateTimeKST(task.dueDate)}
+                </div>
+                <div className={styles.timeLeftBadge}>
+                  {timeLeft.text}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <h3 className={styles.taskTitle}>{task.title}</h3>
+
         <button
           className={styles.deleteButton}
           onClick={(e) => {
@@ -42,18 +55,21 @@ export default function TaskCard({ task, onToggleComplete, onDeleteTask }) {
       </div>
 
       <div className={styles.taskMeta}>
-        <div className={styles.studyInfo}>
-          <span>{task.studyEmoji}</span>
-          <span>{task.studyName}</span>
-        </div>
+        {task.study && (
+          <div className={styles.studyInfo}>
+            <span>{task.study.emoji || '📚'}</span>
+            <span>{task.study.name}</span>
+          </div>
+        )}
 
-        <div className={`${styles.deadline} ${getDeadlineClass()}`}>
-          ⏰ {timeLeft.text}
-        </div>
-
-        <div className={styles.progress}>
-          👥 {task.completedCount}/{task.totalCount}명 완료 ({completionRate}%)
-        </div>
+        {task.priority && (
+          <div className={styles.priorityBadge}>
+            {task.priority === 'URGENT' && '🔥 긴급'}
+            {task.priority === 'HIGH' && '⚠️ 높음'}
+            {task.priority === 'MEDIUM' && '📌 보통'}
+            {task.priority === 'LOW' && '📎 낮음'}
+          </div>
+        )}
       </div>
 
       {task.description && (

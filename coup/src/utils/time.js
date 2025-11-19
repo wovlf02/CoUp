@@ -37,11 +37,37 @@ export const formatDateTime = (dateString) => {
 }
 
 /**
- * 마감일까지 남은 시간 계산
+ * 한국 시간대(KST)로 날짜 + 시간 포맷팅
+ * @param {string|Date} dateString - 날짜 문자열 또는 Date 객체
+ * @returns {string} 포맷된 날짜 시간 (예: 2024년 11월 20일 18:30)
+ */
+export const formatDateTimeKST = (dateString) => {
+  if (!dateString) return ''
+
+  const date = new Date(dateString)
+
+  // 한국 시간대로 변환
+  const kstDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+
+  const year = kstDate.getFullYear()
+  const month = kstDate.getMonth() + 1
+  const day = kstDate.getDate()
+  const hours = kstDate.getHours().toString().padStart(2, '0')
+  const minutes = kstDate.getMinutes().toString().padStart(2, '0')
+
+  return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`
+}
+
+/**
+ * 마감일까지 남은 시간 계산 (한국 시간대 기준)
  */
 export const getTimeLeft = (dueDate) => {
-  const now = new Date()
-  const due = new Date(dueDate)
+  if (!dueDate) return { text: '마감일 없음', urgent: false, expired: false }
+
+  // 현재 시간을 한국 시간대로 변환
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+  const due = new Date(new Date(dueDate).toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+
   const diffMs = due - now
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffHours / 24)
@@ -51,7 +77,8 @@ export const getTimeLeft = (dueDate) => {
   }
 
   if (diffHours < 1) {
-    return { text: '1시간 미만', urgent: true, expired: false }
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    return { text: `${diffMins}분 남음`, urgent: true, expired: false }
   }
 
   if (diffHours < 24) {

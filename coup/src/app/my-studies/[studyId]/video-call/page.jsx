@@ -34,7 +34,10 @@ export default function MyStudyVideoCallPage({ params }) {
   const [callDuration, setCallDuration] = useState(0);
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const chatEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Session - 현재 로그인한 사용자 정보
   const { data: session } = useSession();
@@ -126,8 +129,25 @@ export default function MyStudyVideoCallPage({ params }) {
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
 
+    // 파일 메시지 수신
+    socket.on('chat:video-file-received', (fileMessage) => {
+      console.log('[VideoCall] Received file message:', fileMessage);
+
+      // 자신이 보낸 파일은 무시
+      if (fileMessage.userId === currentUser.id && fileMessage.socketId === socket.id) {
+        return;
+      }
+
+      // 다른 사람이 보낸 파일 추가
+      setChatMessages((prev) => [...prev, { ...fileMessage, isMe: false, type: 'file' }]);
+
+      // 자동 스크롤
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    });
+
     return () => {
       socket.off('chat:video-message-received');
+      socket.off('chat:video-file-received');
     };
   }, [socket, isInCall, currentUser]);
 
@@ -148,6 +168,46 @@ export default function MyStudyVideoCallPage({ params }) {
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // 파일 크기 포맷팅
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  // 파일 아이콘 가져오기
+  const getFileIcon = (fileName) => {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const iconMap = {
+      // 이미지
+      jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️', svg: '🖼️',
+      // 문서
+      pdf: '📄', doc: '📝', docx: '📝', txt: '📝',
+      // 스프레드시트
+      xls: '📊', xlsx: '📊', csv: '📊',
+      // 프레젠테이션
+      ppt: '📊', pptx: '📊',
+      // 압축
+      zip: '📦', rar: '📦', '7z': '📦',
+      // 코드
+      js: '💻', jsx: '💻', ts: '💻', tsx: '💻', py: '💻', java: '💻',
+      html: '💻', css: '💻', json: '💻',
+      // 비디오
+      mp4: '🎬', avi: '🎬', mov: '🎬', wmv: '🎬',
+      // 오디오
+      mp3: '🎵', wav: '🎵', flac: '🎵',
+    };
+    return iconMap[ext] || '📎';
+  };
+
+  // 이미지 파일인지 확인
+  const isImageFile = (fileName) => {
+    const ext = fileName.split('.').pop().toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
   };
 
   // 그리드 레이아웃 계산 (참여자 수에 따라 유동적으로)
@@ -233,6 +293,107 @@ export default function MyStudyVideoCallPage({ params }) {
 
     // 자동 스크롤
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+  };
+
+  // 파일 선택
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 파일 크기 제한 (50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      alert('파일 크기는 50MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  // 파일 전송
+  const handleSendFile = async () => {
+    if (!selectedFile || !socket || !currentUser) return;
+
+    setIsUploading(true);
+
+    try {
+      // FormData로 파일 준비
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('studyId', studyId);
+
+      // 파일 업로드 API 호출
+      const response = await fetch(`/api/studies/${studyId}/files/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('파일 업로드 실패');
+      }
+
+      const result = await response.json();
+
+      // 파일 메시지 생성
+      const fileMessage = {
+        id: `msg_${Date.now()}_${socket.id}`,
+        roomId,
+        userId: currentUser.id,
+        user: currentUser,
+        type: 'file',
+        file: {
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.type,
+          url: result.data.url,
+          id: result.data.id,
+        },
+        timestamp: new Date(),
+        socketId: socket.id,
+        isMe: true
+      };
+
+      // 즉시 화면에 표시
+      setChatMessages((prev) => [...prev, fileMessage]);
+
+      // 서버로 전송
+      socket.emit('chat:video-file', {
+        roomId,
+        file: fileMessage.file
+      });
+
+      // 초기화
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      // 자동 스크롤
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
+    } catch (error) {
+      console.error('File upload error:', error);
+      alert('파일 전송에 실패했습니다.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // 파일 선택 취소
+  const handleCancelFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 파일 다운로드
+  const handleDownloadFile = (file) => {
+    const a = document.createElement('a');
+    a.href = file.url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   if (studyLoading) {
@@ -405,26 +566,124 @@ export default function MyStudyVideoCallPage({ params }) {
                   key={msg.id || index}
                   className={msg.isMe ? styles.chatMessageMe : styles.chatMessage}
                 >
+                  {/* 다른 사용자 메시지 */}
                   {!msg.isMe && (
-                    <div className={styles.chatMessageHeader}>
-                      <strong>{msg.user?.name || 'Unknown'}</strong>
-                      <span className={styles.chatMessageTime}>
+                    <>
+                      {/* 프로필 사진 */}
+                      <div className={styles.messageAvatar}>
+                        {msg.user?.name?.charAt(0) || '?'}
+                      </div>
+
+                      <div className={styles.messageContentWrapper}>
+                        {/* 닉네임 */}
+                        <div className={styles.messageUsername}>
+                          {msg.user?.name || 'Unknown'}
+                        </div>
+
+                        {/* 메시지와 시간을 한 줄에 */}
+                        <div className={styles.messageWithTime}>
+                          {/* 텍스트 메시지 */}
+                          {!msg.type || msg.type === 'text' ? (
+                            <div className={styles.chatMessageContent}>
+                              {msg.message}
+                            </div>
+                          ) : null}
+
+                          {/* 파일 메시지 */}
+                          {msg.type === 'file' && msg.file && (
+                            <div className={styles.chatFileMessage}>
+                              <div className={styles.filePreview}>
+                                {isImageFile(msg.file.name) ? (
+                                  <img
+                                    src={msg.file.url}
+                                    alt={msg.file.name}
+                                    className={styles.fileImage}
+                                  />
+                                ) : (
+                                  <div className={styles.fileIconLarge}>
+                                    {getFileIcon(msg.file.name)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className={styles.fileInfo}>
+                                <div className={styles.fileName}>
+                                  {getFileIcon(msg.file.name)} {msg.file.name}
+                                </div>
+                                <div className={styles.fileSize}>
+                                  {formatFileSize(msg.file.size)}
+                                </div>
+                                <button
+                                  onClick={() => handleDownloadFile(msg.file)}
+                                  className={styles.fileDownloadButton}
+                                >
+                                  ⬇️ 다운로드
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 시간 (메시지 박스 우측, 하단 정렬) */}
+                          <span className={styles.messageTimeRight}>
+                            {new Date(msg.timestamp).toLocaleTimeString('ko-KR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* 내 메시지 */}
+                  {msg.isMe && (
+                    <div className={styles.myMessageWithTime}>
+                      {/* 시간 (메시지 박스 좌측, 하단 정렬) */}
+                      <span className={styles.messageTimeLeft}>
                         {new Date(msg.timestamp).toLocaleTimeString('ko-KR', {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
                       </span>
-                    </div>
-                  )}
-                  <div className={styles.chatMessageContent}>
-                    {msg.message}
-                  </div>
-                  {msg.isMe && (
-                    <div className={styles.chatMessageTime} style={{ textAlign: 'right', marginTop: '4px' }}>
-                      {new Date(msg.timestamp).toLocaleTimeString('ko-KR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+
+                      {/* 텍스트 메시지 */}
+                      {!msg.type || msg.type === 'text' ? (
+                        <div className={styles.chatMessageContent}>
+                          {msg.message}
+                        </div>
+                      ) : null}
+
+                      {/* 파일 메시지 */}
+                      {msg.type === 'file' && msg.file && (
+                        <div className={styles.chatFileMessage}>
+                          <div className={styles.filePreview}>
+                            {isImageFile(msg.file.name) ? (
+                              <img
+                                src={msg.file.url}
+                                alt={msg.file.name}
+                                className={styles.fileImage}
+                              />
+                            ) : (
+                              <div className={styles.fileIconLarge}>
+                                {getFileIcon(msg.file.name)}
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.fileInfo}>
+                            <div className={styles.fileName}>
+                              {getFileIcon(msg.file.name)} {msg.file.name}
+                            </div>
+                            <div className={styles.fileSize}>
+                              {formatFileSize(msg.file.size)}
+                            </div>
+                            <button
+                              onClick={() => handleDownloadFile(msg.file)}
+                              className={styles.fileDownloadButton}
+                            >
+                              ⬇️ 다운로드
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -432,18 +691,75 @@ export default function MyStudyVideoCallPage({ params }) {
             )}
             <div ref={chatEndRef} />
           </div>
-          <form onSubmit={handleSendMessage} className={styles.chatInput}>
-            <input
-              type="text"
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              placeholder="메시지를 입력하세요..."
-              className={styles.chatInputField}
-            />
-            <button type="submit" className={styles.chatSendButton}>
-              전송
-            </button>
-          </form>
+          <div className={styles.chatInputWrapper}>
+            {/* 파일 선택 미리보기 */}
+            {selectedFile && (
+              <div className={styles.filePreviewBar}>
+                <div className={styles.filePreviewInfo}>
+                  <span className={styles.filePreviewIcon}>
+                    {getFileIcon(selectedFile.name)}
+                  </span>
+                  <div className={styles.filePreviewText}>
+                    <div className={styles.filePreviewName}>{selectedFile.name}</div>
+                    <div className={styles.filePreviewSize}>
+                      {formatFileSize(selectedFile.size)}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.filePreviewActions}>
+                  <button
+                    type="button"
+                    onClick={handleSendFile}
+                    disabled={isUploading}
+                    className={styles.fileSendButton}
+                  >
+                    {isUploading ? '전송 중...' : '📤 전송'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelFile}
+                    disabled={isUploading}
+                    className={styles.fileCancelButton}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 채팅 입력 */}
+            <form onSubmit={handleSendMessage} className={styles.chatInput}>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className={styles.fileAttachButton}
+                title="파일 첨부"
+              >
+                📎
+              </button>
+              <input
+                type="text"
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                placeholder="메시지를 입력하세요..."
+                className={styles.chatInputField}
+                disabled={!!selectedFile}
+              />
+              <button
+                type="submit"
+                className={styles.chatSendButton}
+                disabled={!!selectedFile}
+              >
+                전송
+              </button>
+            </form>
+          </div>
         </aside>
       </div>
 
