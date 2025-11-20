@@ -1,6 +1,7 @@
 import "./globals.css";
 import ConditionalLayout from '@/components/layout/ConditionalLayout'
 import { Providers } from '@/components/Providers'
+import ScrollToTop from '@/components/ScrollToTop'
 
 export const metadata = {
   title: "CoUp - 함께, 더 높이",
@@ -13,6 +14,7 @@ export default function RootLayout({ children }) {
     <html lang="ko" data-scroll-behavior="smooth">
       <body>
         <Providers>
+          <ScrollToTop />
           <ConditionalLayout>
             {children}
           </ConditionalLayout>
