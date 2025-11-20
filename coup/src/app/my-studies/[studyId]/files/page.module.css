@@ -50,7 +50,36 @@
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--gray-900);
+  margin: 0 0 4px 0;
+}
+
+.studyMeta {
+  font-size: 0.875rem;
+  color: var(--gray-600);
   margin: 0;
+}
+
+.roleBadge {
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.roleBadge.owner {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.roleBadge.admin {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.roleBadge.member {
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 /* 탭 - 동일 */

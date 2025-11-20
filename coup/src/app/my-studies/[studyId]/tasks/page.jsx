@@ -107,8 +107,14 @@ export default function MyStudyTasksPage({ params }) {
             <span className={styles.emoji}>{study.emoji}</span>
             <div>
               <h1 className={styles.studyName}>{study.name}</h1>
+              <p className={styles.studyMeta}>
+                👥 {study.currentMembers}/{study.maxMembers}명
+              </p>
             </div>
           </div>
+          <span className={`${styles.roleBadge} ${styles[study.myRole?.toLowerCase() || 'member']}`}>
+            {study.myRole === 'OWNER' ? '👑' : study.myRole === 'ADMIN' ? '⭐' : '👤'} {study.myRole || 'MEMBER'}
+          </span>
         </div>
       </div>
 

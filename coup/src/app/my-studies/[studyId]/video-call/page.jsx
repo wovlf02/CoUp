@@ -409,63 +409,67 @@ export default function MyStudyVideoCallPage({ params }) {
   // 대기실 화면 (참여 전)
   if (!isInCall) {
     return (
-      <div className={styles.container}>
+      <div className={styles.waitingContainer}>
         {/* 헤더 */}
-        <header className={styles.header} style={{ background: headerStyle.gradient }}>
-          <div className={styles.headerTop}>
-            <Link href="/my-studies" className={styles.backButton}>
-              ← 내 스터디 목록
+        <div className={styles.waitingHeader}>
+          <button onClick={() => router.push('/my-studies')} className={styles.waitingBackButton}>
+            ← 내 스터디 목록
+          </button>
+
+          <div className={styles.waitingStudyHeader} style={getStudyHeaderStyle(studyId)}>
+            <div className={styles.waitingStudyInfo}>
+              <span className={styles.waitingEmoji}>{study.emoji}</span>
+              <div>
+                <h1 className={styles.waitingStudyName}>{study.name}</h1>
+                <p className={styles.waitingStudyMeta}>
+                  👥 {study.currentMembers}/{study.maxMembers}명
+                </p>
+              </div>
+            </div>
+            <span className={`${styles.waitingRoleBadge} ${styles[study.myRole?.toLowerCase() || 'member']}`}>
+              {study.myRole === 'OWNER' ? '👑' : study.myRole === 'ADMIN' ? '⭐' : '👤'} {study.myRole || 'MEMBER'}
+            </span>
+          </div>
+        </div>
+
+        {/* 탭 네비게이션 */}
+        <div className={styles.waitingTabs}>
+          {tabs.map((tab) => (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              className={`${styles.waitingTab} ${tab.label === '화상' ? styles.waitingTabActive : ''}`}
+            >
+              <span className={styles.waitingTabIcon}>{tab.icon}</span>
+              <span className={styles.waitingTabLabel}>{tab.label}</span>
             </Link>
-          </div>
-          <div className={styles.headerContent}>
-            <span className={styles.emoji}>{study.emoji || '📚'}</span>
-            <h1 className={styles.title}>{study.name}</h1>
-          </div>
-          <nav className={styles.tabs}>
-            {tabs.map((tab) => (
-              <Link
-                key={tab.label}
-                href={tab.href}
-                className={tab.label === '화상' ? styles.tabActive : styles.tab}
-              >
-                <span className={styles.tabIcon}>{tab.icon}</span>
-                {tab.label}
-              </Link>
-            ))}
-          </nav>
-        </header>
+          ))}
+        </div>
 
-        {/* 대기실 */}
-        <div className={styles.waiting}>
-          <div className={styles.waitingContent}>
-            <div className={styles.preview}>
-              <h2>화상 스터디</h2>
-              <p>참여하시겠습니까?</p>
+        {/* 메인 콘텐츠 - 대기실 */}
+        <div className={styles.waitingMainContent}>
+          <div className={styles.waitingCard}>
+            <div className={styles.waitingCardIcon}>🎥</div>
+            <h2 className={styles.waitingCardTitle}>화상 스터디</h2>
+            <p className={styles.waitingCardDescription}>
+              화상 통화에 참여하시겠습니까?
+            </p>
 
-              {/* 소켓 연결 상태 표시 - 실제 연결 상태 기준 */}
-              {!socketConnected ? (
-                <div className={styles.connectionStatus}>
-                  🔄 시그널링 서버 연결 중...
-                  <div style={{ fontSize: '0.75rem', marginTop: '8px', opacity: 0.8 }}>
-                    Socket: {socket ? '생성됨' : '미생성'} |
-                    Connected: {socketConnected ? 'Yes' : 'No'}
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.connectionStatus} style={{ background: 'var(--green-50)', color: 'var(--green-700)' }}>
-                  ✅ 연결됨 (Socket ID: {socket?.id?.substring(0, 8)}...)
-                </div>
-              )}
-
+            {/* 소켓 연결 전: 로딩 스피너 */}
+            {!socketConnected ? (
+              <div className={styles.loadingSpinner}>
+                <div className={styles.spinner}></div>
+                <p className={styles.loadingText}>연결 준비 중...</p>
+              </div>
+            ) : (
+              /* 소켓 연결 후: 참여하기 버튼 */
               <button
                 onClick={handleJoinCall}
-                className={styles.joinButton}
-                disabled={!socketConnected}
-                style={{ opacity: socketConnected ? 1 : 0.5 }}
+                className={styles.waitingJoinButton}
               >
-                🎥 {socketConnected ? '참여하기' : '연결 대기 중...'}
+                🎥 참여하기
               </button>
-            </div>
+            )}
           </div>
         </div>
       </div>
