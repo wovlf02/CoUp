@@ -319,16 +319,16 @@ export default function MyStudyVideoCallPage({ params }) {
       // FormData로 파일 준비
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('studyId', studyId);
 
-      // 파일 업로드 API 호출
-      const response = await fetch(`/api/studies/${studyId}/files/upload`, {
+      // 파일 업로드 API 호출 (올바른 경로)
+      const response = await fetch(`/api/studies/${studyId}/files`, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('파일 업로드 실패');
+        const errorData = await response.json();
+        throw new Error(errorData.error || '파일 업로드 실패');
       }
 
       const result = await response.json();
@@ -372,7 +372,7 @@ export default function MyStudyVideoCallPage({ params }) {
 
     } catch (error) {
       console.error('File upload error:', error);
-      alert('파일 전송에 실패했습니다.');
+      alert(`파일 전송에 실패했습니다: ${error.message}`);
     } finally {
       setIsUploading(false);
     }

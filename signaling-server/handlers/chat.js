@@ -68,6 +68,32 @@ export function handleChatEvents(socket, io) {
   });
 
   /**
+   * 화상 통화 중 파일 전송 (비디오 룸 전용)
+   */
+  socket.on('chat:video-file', ({ roomId, file }) => {
+    try {
+      logger.info(`[Chat] ${socket.user.name} sent file in video chat: ${file.name}`);
+
+      const fileMessage = {
+        id: `vfile_${Date.now()}_${socket.id}`,
+        roomId,
+        userId: socket.userId,
+        user: socket.user,
+        type: 'file',
+        file,
+        timestamp: new Date(),
+        socketId: socket.id
+      };
+
+      // 화상 통화 참여자들에게만 전송
+      io.to(`video:${roomId}`).emit('chat:video-file-received', fileMessage);
+
+    } catch (error) {
+      logger.error(`[Chat] Error sending video file:`, error);
+    }
+  });
+
+  /**
    * 타이핑 상태 알림
    */
   socket.on('chat:typing', ({ studyId, isTyping }) => {
