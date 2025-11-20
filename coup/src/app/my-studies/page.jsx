@@ -12,21 +12,41 @@ export default function MyStudiesListPage() {
 
   const itemsPerPage = 5;
 
-  // 실제 API 호출
+  // 실제 API 호출 - 전체 데이터를 가져옴
   const { data, isLoading, error } = useMyStudies({
     page: currentPage,
     limit: itemsPerPage,
-    status: activeTab === '전체' ? undefined : activeTab,
   });
 
-  const myStudies = data?.data || [];
+  const allStudies = data?.data || [];
   const pagination = data?.pagination || { total: 0, totalPages: 1 };
 
+  // 클라이언트 측 필터링
+  const getFilteredStudies = () => {
+    switch (activeTab) {
+      case '참여중':
+        // MEMBER만 (OWNER, ADMIN 제외)
+        return allStudies.filter(s => s.role === 'MEMBER');
+      case '관리중':
+        // OWNER 또는 ADMIN
+        return allStudies.filter(s => ['OWNER', 'ADMIN'].includes(s.role));
+      case '대기중':
+        // PENDING (승인 대기 중)
+        return allStudies.filter(s => s.role === 'PENDING');
+      case '전체':
+      default:
+        return allStudies;
+    }
+  };
+
+  const myStudies = getFilteredStudies();
+
+  // 탭별 카운트 계산
   const tabs = [
-    { label: '전체', count: pagination.total || 0 },
-    { label: '참여중', count: myStudies.filter(s => ['MEMBER', 'ADMIN', 'OWNER'].includes(s.role)).length },
-    { label: '관리중', count: myStudies.filter(s => ['ADMIN', 'OWNER'].includes(s.role)).length },
-    { label: '대기중', count: myStudies.filter(s => s.role === 'PENDING').length },
+    { label: '전체', count: allStudies.length },
+    { label: '참여중', count: allStudies.filter(s => s.role === 'MEMBER').length },
+    { label: '관리중', count: allStudies.filter(s => ['OWNER', 'ADMIN'].includes(s.role)).length },
+    { label: '대기중', count: allStudies.filter(s => s.role === 'PENDING').length },
   ];
 
   const getRoleBadge = (role) => {
@@ -225,12 +245,18 @@ export default function MyStudiesListPage() {
               <div className={styles.summaryLabel}>참여 스터디</div>
               <div className={styles.summaryGrid}>
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryValue}>{pagination.total}개</span>
+                  <span className={styles.summaryValue}>{allStudies.length}개</span>
                   <span className={styles.summaryDesc}>전체</span>
                 </div>
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryValue}>
-                    {myStudies.filter(s => ['ADMIN', 'OWNER'].includes(s.role)).length}개
+                    {allStudies.filter(s => s.role === 'MEMBER').length}개
+                  </span>
+                  <span className={styles.summaryDesc}>참여중</span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryValue}>
+                    {allStudies.filter(s => ['ADMIN', 'OWNER'].includes(s.role)).length}개
                   </span>
                   <span className={styles.summaryDesc}>관리중</span>
                 </div>
