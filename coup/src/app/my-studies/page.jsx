@@ -12,14 +12,12 @@ export default function MyStudiesListPage() {
 
   const itemsPerPage = 5;
 
-  // 실제 API 호출 - 전체 데이터를 가져옴
+  // 실제 API 호출 - 충분히 많은 데이터를 가져옴
   const { data, isLoading, error } = useMyStudies({
-    page: currentPage,
-    limit: itemsPerPage,
+    limit: 1000, // 충분히 큰 값으로 전체 데이터 가져오기
   });
 
   const allStudies = data?.data || [];
-  const pagination = data?.pagination || { total: 0, totalPages: 1 };
 
   // 클라이언트 측 필터링
   const getFilteredStudies = () => {
@@ -39,7 +37,13 @@ export default function MyStudiesListPage() {
     }
   };
 
-  const myStudies = getFilteredStudies();
+  const filteredStudies = getFilteredStudies();
+
+  // 클라이언트 측 페이지네이션
+  const totalPages = Math.ceil(filteredStudies.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const myStudies = filteredStudies.slice(startIndex, endIndex);
 
   // 탭별 카운트 계산
   const tabs = [
@@ -200,7 +204,7 @@ export default function MyStudiesListPage() {
             </div>
 
             {/* 페이지네이션 */}
-            {pagination.totalPages > 1 && (
+            {totalPages > 1 && (
               <div className={styles.pagination}>
                 <button
                   className={styles.paginationArrow}
@@ -210,7 +214,7 @@ export default function MyStudiesListPage() {
                   ←
                 </button>
 
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     className={`${styles.paginationButton} ${
@@ -225,7 +229,7 @@ export default function MyStudiesListPage() {
                 <button
                   className={styles.paginationArrow}
                   onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === pagination.totalPages}
+                  disabled={currentPage === totalPages}
                 >
                   →
                 </button>

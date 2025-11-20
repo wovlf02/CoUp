@@ -29,7 +29,7 @@ export default function StudiesExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
 
   // 실제 API 호출
   const queryParams = {
