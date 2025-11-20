@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import ProfileSection from '@/components/my-page/ProfileSection'
 import ProfileEditForm from '@/components/my-page/ProfileEditForm'
 import MyStudiesList from '@/components/my-page/MyStudiesList'
@@ -48,22 +47,11 @@ export default function MyPage() {
         </div>
       </header>
 
-      <div className={styles.contentGrid}>
-        {/* 좌측 컬럼 */}
-        <div className={styles.leftColumn}>
-          <ProfileSection user={user} />
-          <MyStudiesList studies={userStudies} />
-        </div>
-
-        {/* 우측 컬럼 */}
-        <div className={styles.rightColumn}>
-          <ProfileEditForm user={user} />
-          {userStats && <ActivityStats stats={userStats} />}
-        </div>
-      </div>
-
-      {/* 하단 전체 너비 */}
-      <div className={styles.fullWidthSection}>
+      <div className={styles.content}>
+        <ProfileSection user={user} />
+        <ProfileEditForm user={user} />
+        {userStats && <ActivityStats stats={userStats} />}
+        <MyStudiesList studies={userStudies} />
         <AccountActions />
       </div>
     </div>
