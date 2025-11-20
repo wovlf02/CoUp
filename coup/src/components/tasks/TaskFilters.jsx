@@ -3,7 +3,7 @@
 import { useMyStudies } from '@/lib/hooks/useApi'
 import styles from './TaskFilters.module.css'
 
-export default function TaskFilters({ filter, setFilter, taskCount }) {
+export default function TaskFilters({ filter, setFilter, taskCount, viewMode, setViewMode }) {
   const { data: studiesData } = useMyStudies({ limit: 50, filter: 'active' })
   // API 응답에서 study 객체만 추출
   const studies = studiesData?.data?.map(item => item.study).filter(study => study) || []
@@ -52,6 +52,24 @@ export default function TaskFilters({ filter, setFilter, taskCount }) {
           <option value="created">최신순</option>
           <option value="study">스터디별</option>
         </select>
+
+        {/* 뷰 모드 토글 버튼 */}
+        <div className={styles.viewToggle}>
+          <button
+            className={`${styles.viewButton} ${viewMode === 'list' ? styles.active : ''}`}
+            onClick={() => setViewMode('list')}
+            title="리스트 보기"
+          >
+            📋
+          </button>
+          <button
+            className={`${styles.viewButton} ${viewMode === 'calendar' ? styles.active : ''}`}
+            onClick={() => setViewMode('calendar')}
+            title="달력 보기"
+          >
+            📅
+          </button>
+        </div>
       </div>
 
       <div className={`${styles.progressBadge} ${getBadgeClass()}`}>

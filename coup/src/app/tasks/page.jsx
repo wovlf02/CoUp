@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import TaskFilters from '@/components/tasks/TaskFilters'
 import TaskGroup from '@/components/tasks/TaskGroup'
+import TaskCalendarView from '@/components/tasks/TaskCalendarView'
 import TodayTasksWidget from '@/components/tasks/TodayTasksWidget'
 import TaskProgressWidget from '@/components/tasks/TaskProgressWidget'
 import TaskByStudyWidget from '@/components/tasks/TaskByStudyWidget'
@@ -18,6 +19,7 @@ export default function TasksPage() {
     status: 'all',
     sortBy: 'deadline',
   })
+  const [viewMode, setViewMode] = useState('list') // 'list' or 'calendar'
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   // 실제 API 호출
@@ -119,10 +121,18 @@ export default function TasksPage() {
           filter={filter}
           setFilter={setFilter}
           taskCount={incompleteCount}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
         />
 
         {tasks.length === 0 ? (
           <TaskEmpty onCreateClick={() => setShowCreateModal(true)} />
+        ) : viewMode === 'calendar' ? (
+          <TaskCalendarView
+            tasks={filteredTasks}
+            onToggle={handleToggleComplete}
+            onDelete={handleDeleteTask}
+          />
         ) : (
           <div className={styles.taskGroups}>
             {groupedTasks.urgent.length > 0 && (
