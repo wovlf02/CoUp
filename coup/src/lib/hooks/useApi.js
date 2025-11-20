@@ -200,9 +200,30 @@ export function useKickMember() {
 export function useChangeMemberRole() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, userId, role }) => studyApi.changeMemberRole(studyId, userId, role),
+    mutationFn: ({ studyId, memberId, role }) => studyApi.changeMemberRole(studyId, memberId, role),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+    },
+  })
+}
+
+export function useApproveJoinRequest() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, requestId }) => studyApi.approveJoinRequest(studyId, requestId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
+    },
+  })
+}
+
+export function useRejectJoinRequest() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, requestId, reason }) => studyApi.rejectJoinRequest(studyId, requestId, reason),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
     },
   })
 }

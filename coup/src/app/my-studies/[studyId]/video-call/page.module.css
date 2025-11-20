@@ -28,9 +28,8 @@
   }
 }
 
-/* ===== 대기실 화면 ===== */
+/* ===== 대기실 화면 (공지 탭과 동일) ===== */
 
-/* 새로운 대기실 스타일 (다른 탭과 일관성) */
 .waitingContainer {
   max-width: 1600px;
   margin: 0 auto;
@@ -38,106 +37,94 @@
 }
 
 /* 헤더 */
-.waitingHeader {
-  margin-bottom: 24px;
+.header {
+  margin-bottom: 12px;
 }
 
-.waitingBackButton {
+.backButton {
   padding: 8px 16px;
-  background: white;
-  border: 1px solid var(--gray-300);
+  background: var(--gray-100);
+  border: none;
   border-radius: 8px;
   color: var(--gray-700);
   font-size: 0.875rem;
   cursor: pointer;
+  margin-bottom: 12px;
   transition: all 0.2s;
-  text-decoration: none;
-  display: inline-block;
-  margin-bottom: 16px;
 }
 
-.waitingBackButton:hover {
-  background: var(--gray-50);
-  border-color: var(--gray-400);
+.backButton:hover {
+  background: var(--gray-200);
 }
 
-.waitingStudyHeader {
-  padding: 20px 24px;
-  border-radius: 12px;
+.studyHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px 20px;
   border: 1px solid;
-  transition: all 0.3s ease;
+  border-radius: 12px;
 }
 
-.waitingStudyHeader:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.waitingStudyInfo {
+.studyInfo {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.waitingEmoji {
+.emoji {
   font-size: 3rem;
-  line-height: 1;
 }
 
-.waitingStudyName {
+.studyName {
   font-size: 1.75rem;
   font-weight: 700;
-  margin: 0 0 8px 0;
   color: var(--gray-900);
+  margin: 0 0 4px 0;
 }
 
-.waitingStudyMeta {
+.studyMeta {
   font-size: 0.875rem;
-  margin: 0;
   color: var(--gray-600);
+  margin: 0;
 }
 
-.waitingRoleBadge {
+.roleBadge {
   padding: 6px 16px;
   border-radius: 16px;
   font-size: 0.875rem;
   font-weight: 700;
-  white-space: nowrap;
   text-transform: uppercase;
 }
 
-.waitingRoleBadge.owner {
+.roleBadge.owner {
   background: #fee2e2;
   color: #dc2626;
 }
 
-.waitingRoleBadge.admin {
+.roleBadge.admin {
   background: #ede9fe;
   color: #7c3aed;
 }
 
-.waitingRoleBadge.member {
+.roleBadge.member {
   background: #f3f4f6;
   color: #6b7280;
 }
 
 /* 탭 네비게이션 */
-.waitingTabs {
+.tabs {
   display: flex;
   gap: 8px;
   padding: 12px;
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   overflow-x: auto;
 }
 
-.waitingTab {
+.tab {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -153,33 +140,22 @@
   white-space: nowrap;
 }
 
-.waitingTab:hover {
+.tab:hover {
   background: var(--gray-100);
   color: var(--gray-900);
 }
 
-.waitingTabActive {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: none;
+.tab.active {
   background: var(--primary-600);
   color: white;
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: 8px;
-  text-decoration: none;
-  white-space: nowrap;
 }
 
-.waitingTabIcon {
+.tabIcon {
   font-size: 1.125rem;
 }
 
-.waitingTabLabel {
+.tabLabel {
   font-size: 0.875rem;
-  font-weight: inherit;
 }
 
 /* 메인 콘텐츠 */
@@ -255,16 +231,6 @@
   margin: 0;
 }
 
-.connectionStatusSuccess {
-  padding: 12px 24px;
-  background: var(--green-50);
-  color: var(--green-700);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  margin-bottom: 24px;
-  border: 1px solid var(--green-200);
-}
-
 .waitingJoinButton {
   padding: 16px 48px;
   background: var(--primary-600);
@@ -310,174 +276,14 @@
     font-size: 1rem;
   }
 
-  .waitingStudyHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .waitingRoleBadge {
-    align-self: flex-start;
-  }
-
-  .waitingTabs {
+  .tabs {
     overflow-x: auto;
   }
 }
 
-/* 기존 대기실 스타일 (하위 호환성) */
-.header {
-  padding: 20px;
-  color: white;
-}
-
-.headerTop {
-  margin-bottom: 16px;
-}
-
-.backButton {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.backButton:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.headerContent {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.emoji {
-  font-size: 3rem;
-}
-
-.title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-}
-
-.tab,
-.tabActive {
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.tabActive {
-  background: rgba(255, 255, 255, 0.3);
-  font-weight: 600;
-}
-
-.tab:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.tabIcon {
-  font-size: 1rem;
-}
-
-.waiting {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
-
-.waitingContent {
-  text-align: center;
-}
-
-.preview {
-  background: white;
-  padding: 60px 80px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.preview h2 {
-  font-size: 2rem;
-  margin-bottom: 16px;
-  color: var(--gray-900);
-}
-
-.preview p {
-  font-size: 1.125rem;
-  color: var(--gray-600);
-  margin-bottom: 32px;
-}
-
-.connectionStatus {
-  padding: 12px 24px;
-  background: var(--blue-50);
-  color: var(--blue-700);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  margin-bottom: 20px;
-  animation: pulse 2s infinite;
-  border: 1px solid var(--blue-200);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.joinButton {
-  padding: 16px 48px;
-  background: var(--primary-600);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.joinButton:hover:not(:disabled) {
-  background: var(--primary-700);
-  transform: translateY(-2px);
-}
-
-.joinButton:disabled {
-  cursor: not-allowed;
-}
-
 /* ===== 화상 통화 메인 화면 (3단 레이아웃) ===== */
 
-/* 상단 헤더 - 제거됨, MainLayout의 Header 사용 */
-
-/* 메인 컨텐츠 (3단 레이아웃) */
+/* 메인 콘텐츠 (3단 레이아웃) */
 .mainContent {
   flex: 1;
   display: flex;
@@ -1149,17 +955,6 @@
 }
 
 @media (max-width: 768px) {
-  .videoHeader {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .videoHeaderCenter {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .videoArea {
     padding: 12px;
   }

@@ -5,7 +5,7 @@ import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { useStudy, useUpdateStudy, useDeleteStudy, useStudyMembers, useChangeMemberRole, useKickMember, useLeaveStudy } from '@/lib/hooks/useApi';
+import { useStudy, useUpdateStudy, useDeleteStudy, useLeaveStudy } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 
 const STUDY_CATEGORIES = [
@@ -23,15 +23,11 @@ export default function MyStudySettingsPage({ params }) {
 
   // 실제 API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
-  const { data: membersData, refetch: refetchMembers } = useStudyMembers(studyId);
   const updateStudyMutation = useUpdateStudy();
   const deleteStudyMutation = useDeleteStudy();
-  const changeMemberRoleMutation = useChangeMemberRole();
-  const kickMemberMutation = useKickMember();
   const leaveStudyMutation = useLeaveStudy();
 
   const study = studyData?.data;
-  const members = membersData?.members || [];
 
   const [formData, setFormData] = useState({
     name: '',
@@ -69,6 +65,7 @@ export default function MyStudySettingsPage({ params }) {
     { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
+    { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥' },
     { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
   ];
 
@@ -214,16 +211,18 @@ export default function MyStudySettingsPage({ params }) {
 
       {/* 탭 네비게이션 */}
       <div className={styles.tabs}>
-        {tabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={tab.href}
-            className={`${styles.tab} ${tab.label === '설정' ? styles.active : ''}`}
-          >
-            <span className={styles.tabIcon}>{tab.icon}</span>
-            <span className={styles.tabLabel}>{tab.label}</span>
-          </Link>
-        ))}
+        {tabs
+          .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.myRole))
+          .map((tab) => (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              className={`${styles.tab} ${tab.label === '설정' ? styles.active : ''}`}
+            >
+              <span className={styles.tabIcon}>{tab.icon}</span>
+              <span className={styles.tabLabel}>{tab.label}</span>
+            </Link>
+          ))}
       </div>
 
       {/* 메인 콘텐츠 */}
@@ -244,27 +243,11 @@ export default function MyStudySettingsPage({ params }) {
               기본 정보
             </button>
             <button
-              className={`${styles.settingsTab} ${activeTab === 'members' ? styles.active : ''}`}
-              onClick={() => setActiveTab('members')}
+              className={`${styles.settingsTab} ${activeTab === 'danger' ? styles.active : ''}`}
+              onClick={() => setActiveTab('danger')}
             >
-              멤버 관리
+              위험 구역
             </button>
-            {isAdmin && (
-              <button
-                className={`${styles.settingsTab} ${activeTab === 'privacy' ? styles.active : ''}`}
-                onClick={() => setActiveTab('privacy')}
-              >
-                공개 설정
-              </button>
-            )}
-            {isOwner && (
-              <button
-                className={`${styles.settingsTab} ${activeTab === 'danger' ? styles.active : ''}`}
-                onClick={() => setActiveTab('danger')}
-              >
-                위험 구역
-              </button>
-            )}
           </div>
 
           {/* 기본 정보 */}
@@ -354,76 +337,6 @@ export default function MyStudySettingsPage({ params }) {
                   </div>
                 </div>
 
-                <div className={styles.formActions}>
-                  <button className={styles.cancelButton} onClick={() => router.back()}>
-                    취소
-                  </button>
-                  <button
-                    className={styles.saveButton}
-                    onClick={handleSave}
-                    disabled={updateStudyMutation.isPending}
-                  >
-                    {updateStudyMutation.isPending ? '저장 중...' : '변경사항 저장'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 멤버 관리 */}
-          {activeTab === 'members' && (
-            <div className={styles.settingsContent}>
-              <div className={styles.settingsCard}>
-                <h3 className={styles.cardTitle}>👥 멤버 관리</h3>
-
-                <div className={styles.membersList}>
-                  {members.map((member) => (
-                    <div key={member.id} className={styles.memberItem}>
-                      <div className={styles.memberInfo}>
-                        <div className={styles.memberAvatar}>{member.user?.name?.[0] || 'U'}</div>
-                        <div className={styles.memberDetails}>
-                          <div className={styles.memberName}>{member.user?.name || '알 수 없음'}</div>
-                          <div className={styles.memberMeta}>
-                            가입: {new Date(member.joinedAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className={styles.memberActions}>
-                        {isAdmin && member.role !== 'OWNER' ? (
-                          <>
-                            <select
-                              value={member.role}
-                              className={styles.roleSelect}
-                              onChange={(e) => handleRoleChange(member.id, member.userId, e.target.value)}
-                            >
-                              <option value="MEMBER">MEMBER</option>
-                              <option value="ADMIN">ADMIN</option>
-                              {isOwner && <option value="OWNER">OWNER</option>}
-                            </select>
-                            <button
-                              className={styles.kickButton}
-                              onClick={() => handleKickMember(member.userId, member.user?.name)}
-                            >
-                              강퇴
-                            </button>
-                          </>
-                        ) : (
-                          <span className={styles.roleLabel}>{member.role}</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 공개 설정 */}
-          {activeTab === 'privacy' && isAdmin && (
-            <div className={styles.settingsContent}>
-              <div className={styles.settingsCard}>
-                <h3 className={styles.cardTitle}>🔒 공개 설정</h3>
-
                 <div className={styles.formGroup}>
                   <label className={styles.label}>공개 여부</label>
                   <div className={styles.radioGroup}>
@@ -482,6 +395,9 @@ export default function MyStudySettingsPage({ params }) {
                 </div>
 
                 <div className={styles.formActions}>
+                  <button className={styles.cancelButton} onClick={() => router.back()}>
+                    취소
+                  </button>
                   <button
                     className={styles.saveButton}
                     onClick={handleSave}
@@ -568,23 +484,23 @@ export default function MyStudySettingsPage({ params }) {
           </div>
 
           <div className={styles.widget}>
-            <h3 className={styles.widgetTitle}>📊 통계</h3>
+            <h3 className={styles.widgetTitle}>📊 스터디 정보</h3>
             <div className={styles.widgetContent}>
               <div className={styles.statRow}>
                 <span>총 멤버:</span>
-                <span className={styles.statValue}>{members.length}명</span>
+                <span className={styles.statValue}>{study.currentMembers}명</span>
               </div>
               <div className={styles.statRow}>
-                <span>OWNER:</span>
-                <span>{members.filter(m => m.role === 'OWNER').length}명</span>
+                <span>최대 인원:</span>
+                <span>{study.maxMembers}명</span>
               </div>
               <div className={styles.statRow}>
-                <span>ADMIN:</span>
-                <span>{members.filter(m => m.role === 'ADMIN').length}명</span>
+                <span>공개 여부:</span>
+                <span>{study.isPublic ? '공개' : '비공개'}</span>
               </div>
               <div className={styles.statRow}>
-                <span>MEMBER:</span>
-                <span>{members.filter(m => m.role === 'MEMBER').length}명</span>
+                <span>모집 상태:</span>
+                <span>{study.isRecruiting ? '모집 중' : '모집 마감'}</span>
               </div>
             </div>
           </div>

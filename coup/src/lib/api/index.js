@@ -40,10 +40,12 @@ export const studyApi = {
   // 멤버 관리
   getMembers: (id, params) => api.get(`/api/studies/${id}/members`, params),
   getJoinRequests: (id) => api.get(`/api/studies/${id}/join-requests`),
+  approveJoinRequest: (studyId, requestId) => api.post(`/api/studies/${studyId}/join-requests/${requestId}/approve`),
+  rejectJoinRequest: (studyId, requestId, reason) => api.post(`/api/studies/${studyId}/join-requests/${requestId}/reject`, { reason }),
   approveMember: (id, userId) => api.post(`/api/studies/${id}/members/${userId}/approve`),
   rejectMember: (id, userId) => api.post(`/api/studies/${id}/members/${userId}/reject`),
-  kickMember: (id, userId) => api.delete(`/api/studies/${id}/members/${userId}`),
-  changeMemberRole: (id, userId, role) => api.patch(`/api/studies/${id}/members/${userId}/role`, { role }),
+  kickMember: (studyId, memberId, reason) => api.delete(`/api/studies/${studyId}/members/${memberId}`, { reason }),
+  changeMemberRole: (studyId, memberId, role) => api.patch(`/api/studies/${studyId}/members/${memberId}/role`, { role }),
 
   // 초대
   createInvite: (id) => api.post(`/api/studies/${id}/invite`),

@@ -34,12 +34,13 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      data: requests.map(req => ({
+      requests: requests.map(req => ({
         id: req.id,
+        userId: req.userId,
         user: req.user,
-        introduction: req.introduction,
-        motivation: req.motivation,
-        level: req.level,
+        message: req.introduction || req.motivation || '',
+        status: 'PENDING',
+        createdAt: req.joinedAt,
         joinedAt: req.joinedAt
       }))
     })

@@ -52,7 +52,8 @@ export default function MyStudyNoticesPage({ params }) {
     { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
+    { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥', adminOnly: true },
+    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️', adminOnly: true },
   ];
 
   const pinnedNotices = notices.filter(n => n.isPinned);
@@ -116,16 +117,18 @@ export default function MyStudyNoticesPage({ params }) {
 
       {/* 탭 네비게이션 */}
       <div className={styles.tabs}>
-        {tabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={tab.href}
-            className={`${styles.tab} ${tab.label === '공지' ? styles.active : ''}`}
-          >
-            <span className={styles.tabIcon}>{tab.icon}</span>
-            <span className={styles.tabLabel}>{tab.label}</span>
-          </Link>
-        ))}
+        {tabs
+          .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.myRole))
+          .map((tab) => (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              className={`${styles.tab} ${tab.label === '공지' ? styles.active : ''}`}
+            >
+              <span className={styles.tabIcon}>{tab.icon}</span>
+              <span className={styles.tabLabel}>{tab.label}</span>
+            </Link>
+          ))}
       </div>
 
       {/* 메인 콘텐츠 */}

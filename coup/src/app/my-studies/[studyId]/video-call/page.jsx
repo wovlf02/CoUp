@@ -27,7 +27,8 @@ export default function MyStudyVideoCallPage({ params }) {
     { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
+    { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥', adminOnly: true },
+    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️', adminOnly: true },
   ];
 
   const [isInCall, setIsInCall] = useState(false);
@@ -411,39 +412,41 @@ export default function MyStudyVideoCallPage({ params }) {
     return (
       <div className={styles.waitingContainer}>
         {/* 헤더 */}
-        <div className={styles.waitingHeader}>
-          <button onClick={() => router.push('/my-studies')} className={styles.waitingBackButton}>
+        <div className={styles.header}>
+          <button onClick={() => router.push('/my-studies')} className={styles.backButton}>
             ← 내 스터디 목록
           </button>
 
-          <div className={styles.waitingStudyHeader} style={getStudyHeaderStyle(studyId)}>
-            <div className={styles.waitingStudyInfo}>
-              <span className={styles.waitingEmoji}>{study.emoji}</span>
+          <div className={styles.studyHeader} style={getStudyHeaderStyle(studyId)}>
+            <div className={styles.studyInfo}>
+              <span className={styles.emoji}>{study.emoji}</span>
               <div>
-                <h1 className={styles.waitingStudyName}>{study.name}</h1>
-                <p className={styles.waitingStudyMeta}>
+                <h1 className={styles.studyName}>{study.name}</h1>
+                <p className={styles.studyMeta}>
                   👥 {study.currentMembers}/{study.maxMembers}명
                 </p>
               </div>
             </div>
-            <span className={`${styles.waitingRoleBadge} ${styles[study.myRole?.toLowerCase() || 'member']}`}>
+            <span className={`${styles.roleBadge} ${styles[study.myRole?.toLowerCase() || 'member']}`}>
               {study.myRole === 'OWNER' ? '👑' : study.myRole === 'ADMIN' ? '⭐' : '👤'} {study.myRole || 'MEMBER'}
             </span>
           </div>
         </div>
 
         {/* 탭 네비게이션 */}
-        <div className={styles.waitingTabs}>
-          {tabs.map((tab) => (
-            <Link
-              key={tab.label}
-              href={tab.href}
-              className={`${styles.waitingTab} ${tab.label === '화상' ? styles.waitingTabActive : ''}`}
-            >
-              <span className={styles.waitingTabIcon}>{tab.icon}</span>
-              <span className={styles.waitingTabLabel}>{tab.label}</span>
-            </Link>
-          ))}
+        <div className={styles.tabs}>
+          {tabs
+            .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.myRole))
+            .map((tab) => (
+              <Link
+                key={tab.label}
+                href={tab.href}
+                className={`${styles.tab} ${tab.label === '화상' ? styles.active : ''}`}
+              >
+                <span className={styles.tabIcon}>{tab.icon}</span>
+                <span className={styles.tabLabel}>{tab.label}</span>
+              </Link>
+            ))}
         </div>
 
         {/* 메인 콘텐츠 - 대기실 */}

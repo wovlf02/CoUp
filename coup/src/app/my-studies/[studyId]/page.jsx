@@ -43,6 +43,7 @@ export default function MyStudyDashboardPage({ params }) {
     { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
+    { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥', adminOnly: true },
     { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️', adminOnly: true },
   ];
 
