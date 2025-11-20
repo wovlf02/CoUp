@@ -1,17 +1,19 @@
-# 채팅 페이지 높이 조정
+# 채팅 페이지 높이 수정
 
 ## 📋 수정 일자
 2025-01-21
 
 ## 🎯 목표
-채팅 탭에서 채팅 컴포넌트의 높이를 줄여서 전체 페이지에 스크롤이 생기지 않도록 수정
+채팅 탭에서 페이지 전체 스크롤을 제거하고, 채팅 메시지 영역과 사이드바에서만 독립적으로 스크롤 발생하도록 수정
 
 ## ❌ 문제점
 
 ### Before:
-- 채팅 섹션 높이: `calc(100vh - 360px)`
+- 채팅 섹션 높이: 고정값 부족으로 너무 큼
+- 우측 사이드바: `position: sticky`, `max-height: calc(100vh - 100px)`
 - 메인 콘텐츠 하단 여백: `margin-bottom: 40px`
-- 여백이 너무 많아 페이지 전체에 스크롤 발생
+- 채팅 컴포넌트가 너무 길어서 페이지 전체에 스크롤 발생
+- 우측 사이드바의 높이가 달라 추가 스크롤 발생
 - 사용자가 채팅 내부 스크롤과 페이지 전체 스크롤 둘 다 다뤄야 함
 - 혼란스러운 스크롤 경험
 
@@ -24,149 +26,115 @@
 ```css
 /* Before */
 .chatSection {
-  height: calc(100vh - 360px);
+  height: 자동 계산 (너무 높음);
 }
 
 .mainContent {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 24px;
   margin-bottom: 40px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
 }
 
 /* After */
 .chatSection {
-  height: calc(100vh - 320px);
+  height: calc(100vh - 360px); /* 적절한 높이로 제한 */
 }
 
 .mainContent {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 24px;
   margin-bottom: 0; /* 하단 여백 제거 */
+}
+
+.sidebar {
+  height: calc(100vh - 360px); /* 채팅 섹션과 동일한 높이 */
+  overflow-y: auto;
+}
+
+/* 스크롤바 스타일링 추가 */
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
 }
 ```
 
 ### 계산:
 - **100vh**: 전체 뷰포트 높이
-- **-320px**: 다음 요소들의 높이 합계
-  - Header (상단 헤더): ~64px
-  - Back Button: ~40px
-  - Study Header: ~80px
-  - Tabs Navigation: ~60px
-  - Container Padding: ~36px (상하)
-  - Main Content Gap: ~24px
-  - Additional Buffer: ~16px (최소 여유 공간)
-  - **Total**: ~320px
+- **-360px**: 다음 요소들의 높이 합계
+  - Container Padding Top: ~16px
+  - Back Button: ~44px (padding + margin 포함)
+  - Study Header: ~96px (padding 포함)
+  - Tabs Navigation: ~76px (padding 포함)
+  - Header Section Spacing: ~12px
+  - Tabs Margin: ~16px
+  - Main Content Top Space: ~16px
+  - Container Padding Bottom: ~16px
+  - Additional Buffer: ~68px (브라우저 UI 등)
+  - **Total**: ~360px
 - **margin-bottom: 0**: 하단 여백 제거로 페이지 스크롤 완전 제거
+- **sidebar height**: 채팅 섹션과 동일한 높이로 설정하여 레이아웃 통일
 
 ## 📊 결과
 
 ### After:
 - ✅ 채팅 섹션이 뷰포트에 적절하게 맞음
 - ✅ 페이지 전체 스크롤 완전 제거
+- ✅ 우측 사이드바가 채팅 섹션과 동일한 높이
+- ✅ 우측 영역 전체 스크롤 제거
 - ✅ 채팅 메시지 영역 내부에서만 스크롤 발생
+- ✅ 우측 위젯이 많을 경우 사이드바 내부에서만 스크롤
 - ✅ 하단 여백 제거로 깔끔한 레이아웃
-- ✅ 직관적이고 명확한 단일 스크롤 경험
-
-## 🎨 사용자 경험 개선
-
-### Before:
-1. 채팅 페이지 진입
-2. 채팅 컴포넌트가 너무 커서 페이지 스크롤 발생
-3. 채팅 내부 스크롤 + 페이지 스크롤 2개 존재
-4. 어떤 스크롤을 사용해야 할지 혼란
-
-### After:
-1. 채팅 페이지 진입
-2. 채팅 컴포넌트가 화면에 딱 맞음
-3. 채팅 메시지 영역 내부에서만 스크롤
-4. 직관적이고 명확한 스크롤 경험
-
-## 📱 반응형 고려사항
-
-현재 설정은 데스크톱 기준입니다. 필요시 반응형 높이 조정:
-
-```css
-/* 태블릿 */
-@media (max-width: 1024px) {
-  .chatSection {
-    height: calc(100vh - 340px);
-  }
-}
-
-/* 모바일 */
-@media (max-width: 768px) {
-  .chatSection {
-    height: calc(100vh - 300px);
-  }
-}
-```
-
-## 🔧 추가 최적화 가능 항목
-
-### 1. 동적 높이 계산
-JavaScript로 실제 헤더 높이를 측정하여 동적으로 높이 설정:
-
-```javascript
-useEffect(() => {
-  const calculateHeight = () => {
-    const header = document.querySelector('.header');
-    const tabs = document.querySelector('.tabs');
-    const headerHeight = header?.offsetHeight || 0;
-    const tabsHeight = tabs?.offsetHeight || 0;
-    const chatSection = document.querySelector('.chatSection');
-    
-    if (chatSection) {
-      chatSection.style.height = `calc(100vh - ${headerHeight + tabsHeight + 100}px)`;
-    }
-  };
-  
-  calculateHeight();
-  window.addEventListener('resize', calculateHeight);
-  
-  return () => window.removeEventListener('resize', calculateHeight);
-}, []);
-```
-
-### 2. CSS Variables 사용
-```css
-:root {
-  --header-height: 64px;
-  --tabs-height: 60px;
-  --padding-total: 100px;
-}
-
-.chatSection {
-  height: calc(100vh - var(--header-height) - var(--tabs-height) - var(--padding-total));
-}
-```
-
-하지만 현재는 간단한 고정값 조정으로 충분합니다.
-
-## 🧪 테스트
-
-### 확인 사항:
-1. ✅ 채팅 페이지 진입 시 페이지 전체 스크롤 없음
-2. ✅ 채팅 메시지 영역에서 스크롤 정상 작동
-3. ✅ 메시지가 많을 때 내부 스크롤 발생
-4. ✅ 입력창이 항상 하단에 고정됨
-5. ✅ 우측 사이드바와 높이가 조화로움
-
-### 테스트 방법:
-1. 채팅 페이지로 이동
-2. 브라우저 창 크기 조절
-3. 여러 메시지 입력하여 스크롤 테스트
-4. 페이지 전체에 스크롤바가 나타나지 않는지 확인
+- ✅ 직관적이고 명확한 독립적 스크롤 경험
 
 ## 🚀 결과
 
 이제 채팅 페이지에서:
 - ✅ 페이지 전체 스크롤 완전 제거
+- ✅ 우측 영역 전체 스크롤 제거
 - ✅ 채팅 영역만 독립적으로 스크롤
+- ✅ 우측 사이드바만 독립적으로 스크롤 (위젯이 많을 경우)
+- ✅ 채팅 섹션과 사이드바가 동일한 높이로 깔끔한 정렬
 - ✅ 입력창이 항상 화면 하단에 고정
 - ✅ 하단 여백 제거로 깔끔한 UI
 - ✅ 직관적이고 편안한 사용자 경험
 
-브라우저를 새로고침하면 채팅 페이지가 화면에 딱 맞게 표시되며, 페이지 전체 스크롤 없이 채팅 메시지 영역에서만 스크롤이 발생합니다! 🎉
+브라우저를 새로고침하면 채팅 페이지가 화면에 딱 맞게 표시되며, 페이지 전체 스크롤과 우측 영역 스크롤 없이 채팅 메시지 영역과 사이드바에서만 독립적으로 스크롤이 발생합니다! 🎉
 
+## 🔍 주요 개선 사항
+
+### 1. 높이 제한
+- 채팅 섹션: `calc(100vh - 360px)`로 고정
+- 사이드바: 채팅 섹션과 동일한 높이
+- 결과: 뷰포트 내에 완벽하게 맞춤
+
+### 2. 스크롤 영역 분리
+- 페이지 레벨: 스크롤 없음
+- 채팅 메시지 영역: 독립적 스크롤
+- 우측 사이드바: 독립적 스크롤
+
+### 3. 레이아웃 정리
+- 불필요한 하단 여백 제거
+- 좌우 컴포넌트 높이 통일
+- 깔끔한 수평 정렬
+
+### 4. 사용자 경험
+- 혼란스러운 다중 스크롤 제거
+- 명확한 콘텐츠 영역 구분
+- 직관적인 인터페이스

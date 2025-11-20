@@ -3,12 +3,12 @@
 .container {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 16px 20px 0;
 }
 
 /* 헤더 */
 .header {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .backButton {
@@ -19,7 +19,7 @@
   color: var(--gray-700);
   font-size: 0.875rem;
   cursor: pointer;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   transition: all 0.2s;
 }
 
@@ -90,7 +90,7 @@
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   overflow-x: auto;
 }
 
@@ -132,7 +132,7 @@
 .chatSection {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 320px);
+  height: calc(100vh - 420px);
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
@@ -497,11 +497,26 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  position: sticky;
-  top: 80px;
-  height: fit-content;
-  max-height: calc(100vh - 100px);
+  height: calc(100vh - 420px);
   overflow-y: auto;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
 }
 
 .widget {
