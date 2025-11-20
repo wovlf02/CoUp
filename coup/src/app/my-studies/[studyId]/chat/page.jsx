@@ -7,6 +7,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import { useStudy, useMessages, useSendMessage, useDeleteMessage } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
+import StudyTabs from '@/components/study/StudyTabs';
 
 export default function MyStudyChatPage({ params }) {
   const router = useRouter();
@@ -25,16 +26,6 @@ export default function MyStudyChatPage({ params }) {
   const messages = messagesData?.messages || [];
   const onlineMembers = []; // TODO: Socket.io로 실시간 온라인 멤버 구현
 
-  const tabs = [
-    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
-    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
-    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
-    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
-    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
-    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -111,18 +102,7 @@ export default function MyStudyChatPage({ params }) {
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className={styles.tabs}>
-        {tabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={tab.href}
-            className={`${styles.tab} ${tab.label === '채팅' ? styles.active : ''}`}
-          >
-            <span className={styles.tabIcon}>{tab.icon}</span>
-            <span className={styles.tabLabel}>{tab.label}</span>
-          </Link>
-        ))}
-      </div>
+      <StudyTabs studyId={studyId} activeTab="채팅" userRole={study.myRole} />
 
       {/* 메인 콘텐츠 */}
       <div className={styles.mainContent}>

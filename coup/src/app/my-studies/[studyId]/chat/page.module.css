@@ -125,14 +125,14 @@
   display: grid;
   grid-template-columns: 1fr 350px;
   gap: 24px;
-  margin-bottom: 40px;
+  margin-bottom: 0;
 }
 
 /* 채팅 섹션 */
 .chatSection {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 400px);
+  height: calc(100vh - 320px);
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;

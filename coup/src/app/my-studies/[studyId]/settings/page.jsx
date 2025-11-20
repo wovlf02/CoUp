@@ -7,6 +7,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import { useStudy, useUpdateStudy, useDeleteStudy, useLeaveStudy } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
+import StudyTabs from '@/components/study/StudyTabs';
 
 const STUDY_CATEGORIES = [
   { main: '개발', sub: ['알고리즘/코테', '웹개발', '앱개발', 'AI/ML', '데이터과학'] },
@@ -57,17 +58,6 @@ export default function MyStudySettingsPage({ params }) {
     }
   }, [study]);
 
-  const tabs = [
-    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
-    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
-    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
-    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
-    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
-    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
 
   // 유효성 검사
   const validateForm = () => {
@@ -210,20 +200,7 @@ export default function MyStudySettingsPage({ params }) {
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className={styles.tabs}>
-        {tabs
-          .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.myRole))
-          .map((tab) => (
-            <Link
-              key={tab.label}
-              href={tab.href}
-              className={`${styles.tab} ${tab.label === '설정' ? styles.active : ''}`}
-            >
-              <span className={styles.tabIcon}>{tab.icon}</span>
-              <span className={styles.tabLabel}>{tab.label}</span>
-            </Link>
-          ))}
-      </div>
+      <StudyTabs studyId={studyId} activeTab="설정" userRole={study.myRole} />
 
       {/* 메인 콘텐츠 */}
       <div className={styles.mainContent}>

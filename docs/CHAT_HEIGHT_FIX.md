@@ -9,63 +9,65 @@
 ## ❌ 문제점
 
 ### Before:
-- 채팅 섹션 높이: `calc(100vh - 280px)`
-- 헤더, 탭 네비게이션, 여백을 고려하지 못해 페이지 전체에 스크롤 발생
+- 채팅 섹션 높이: `calc(100vh - 360px)`
+- 메인 콘텐츠 하단 여백: `margin-bottom: 40px`
+- 여백이 너무 많아 페이지 전체에 스크롤 발생
 - 사용자가 채팅 내부 스크롤과 페이지 전체 스크롤 둘 다 다뤄야 함
 - 혼란스러운 스크롤 경험
 
 ## ✅ 해결 방법
 
 ### 수정된 파일:
-**파일**: `src/app/my-studies/[studyId]/chat/page.module.css`
+**파일**: `coup/src/app/my-studies/[studyId]/chat/page.module.css`
 
 ### 변경사항:
 ```css
 /* Before */
 .chatSection {
-  height: calc(100vh - 280px);
+  height: calc(100vh - 360px);
 }
 
 .mainContent {
   display: grid;
   grid-template-columns: 1fr 350px;
   gap: 24px;
+  margin-bottom: 40px;
 }
 
 /* After */
 .chatSection {
-  height: calc(100vh - 400px);
+  height: calc(100vh - 320px);
 }
 
 .mainContent {
   display: grid;
   grid-template-columns: 1fr 350px;
   gap: 24px;
-  margin-bottom: 40px; /* 하단 여백 추가 */
+  margin-bottom: 0; /* 하단 여백 제거 */
 }
 ```
 
 ### 계산:
 - **100vh**: 전체 뷰포트 높이
-- **-400px**: 다음 요소들의 높이 합계
+- **-320px**: 다음 요소들의 높이 합계
   - Header (상단 헤더): ~64px
   - Back Button: ~40px
   - Study Header: ~80px
   - Tabs Navigation: ~60px
   - Container Padding: ~36px (상하)
   - Main Content Gap: ~24px
-  - Bottom Margin: ~40px (하단 여백)
-  - Additional Buffer: ~56px (추가 여유 공간)
-  - **Total**: ~400px
+  - Additional Buffer: ~16px (최소 여유 공간)
+  - **Total**: ~320px
+- **margin-bottom: 0**: 하단 여백 제거로 페이지 스크롤 완전 제거
 
 ## 📊 결과
 
 ### After:
 - ✅ 채팅 섹션이 뷰포트에 적절하게 맞음
-- ✅ 페이지 전체 스크롤 제거
+- ✅ 페이지 전체 스크롤 완전 제거
 - ✅ 채팅 메시지 영역 내부에서만 스크롤 발생
-- ✅ 하단에 40px 여백 확보로 깔끔한 마무리
-- ✅ 깔끔한 단일 스크롤 경험
+- ✅ 하단 여백 제거로 깔끔한 레이아웃
+- ✅ 직관적이고 명확한 단일 스크롤 경험
 
 ## 🎨 사용자 경험 개선
 
@@ -160,11 +162,11 @@ useEffect(() => {
 ## 🚀 결과
 
 이제 채팅 페이지에서:
-- ✅ 페이지 전체 스크롤 제거
+- ✅ 페이지 전체 스크롤 완전 제거
 - ✅ 채팅 영역만 독립적으로 스크롤
 - ✅ 입력창이 항상 화면 하단에 고정
-- ✅ 하단에 적절한 여백(40px) 확보
-- ✅ 깔끔하고 직관적인 UI
+- ✅ 하단 여백 제거로 깔끔한 UI
+- ✅ 직관적이고 편안한 사용자 경험
 
-브라우저를 새로고침하면 채팅 페이지가 화면에 딱 맞게 표시되며, 하단에 여유 공간이 있어 더욱 편안한 UI를 제공합니다! 🎉
+브라우저를 새로고침하면 채팅 페이지가 화면에 딱 맞게 표시되며, 페이지 전체 스크롤 없이 채팅 메시지 영역에서만 스크롤이 발생합니다! 🎉
 
