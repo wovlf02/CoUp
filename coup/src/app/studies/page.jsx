@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { useStudies } from '@/lib/hooks/useApi';
+import { useStudies, useMyStudies } from '@/lib/hooks/useApi';
 
 // 카테고리 정의 (정적 데이터는 유지)
 const categories = [
@@ -49,7 +49,12 @@ export default function StudiesExplorePage() {
 
   const { data, isLoading, error } = useStudies(queryParams);
 
-  const studies = data?.data || [];
+  // 내 스터디 목록 가져오기 (필터링용)
+  const { data: myStudiesData } = useMyStudies({ limit: 100 }); // 전체 가져오기
+  const myStudyIds = (myStudiesData?.data || []).map(s => s.study?.id || s.studyId);
+
+  // 내 스터디를 제외한 목록
+  const studies = (data?.data || []).filter(study => !myStudyIds.includes(study.id));
   const pagination = data?.pagination || { total: 0, totalPages: 1 };
 
   const handlePageChange = (page) => {
