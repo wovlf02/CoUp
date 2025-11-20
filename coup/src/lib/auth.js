@@ -1,5 +1,4 @@
 // src/lib/auth.js
-import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
@@ -86,7 +85,20 @@ export const authConfig = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7일
+    maxAge: 24 * 60 * 60, // 1일 (브라우저를 닫으면 로그아웃)
+    updateAge: 0, // 세션 갱신 비활성화
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: undefined, // 브라우저 세션 쿠키 (브라우저 닫으면 삭제)
+      },
+    },
   },
   pages: {
     signIn: "/sign-in",
