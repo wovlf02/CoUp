@@ -12,6 +12,7 @@ import {
   fileApi,
   calendarApi,
   taskApi,
+  studyTaskApi,
   notificationApi,
   adminApi,
 } from '@/lib/api'
@@ -444,6 +445,45 @@ export function useToggleTask() {
     mutationFn: (id) => taskApi.toggle(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks'])
+    },
+  })
+}
+
+// ==================== 스터디 할일 ====================
+export function useStudyTasks(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'tasks', params],
+    queryFn: () => studyTaskApi.getList(studyId, params),
+    enabled: !!studyId,
+  })
+}
+
+export function useCreateStudyTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, data }) => studyTaskApi.create(studyId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'tasks'])
+    },
+  })
+}
+
+export function useUpdateStudyTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, taskId, data }) => studyTaskApi.update(studyId, taskId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'tasks'])
+    },
+  })
+}
+
+export function useDeleteStudyTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, taskId }) => studyTaskApi.delete(studyId, taskId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'tasks'])
     },
   })
 }

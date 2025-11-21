@@ -6,8 +6,10 @@ import { prisma } from "@/lib/prisma"
 export async function PATCH(request, { params }) {
   const { id: studyId, eventId } = await params
 
-  const result = await requireStudyMember(studyId, 'ADMIN')
+  const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result
+
+  const { session, member } = result
 
   try {
     const body = await request.json()
@@ -20,6 +22,14 @@ export async function PATCH(request, { params }) {
       return NextResponse.json(
         { error: "일정을 찾을 수 없습니다" },
         { status: 404 }
+      )
+    }
+
+    // 작성자 본인이거나 ADMIN/OWNER만 수정 가능
+    if (event.createdById !== session.user.id && !['OWNER', 'ADMIN'].includes(member.role)) {
+      return NextResponse.json(
+        { error: "일정을 수정할 권한이 없습니다" },
+        { status: 403 }
       )
     }
 
@@ -53,8 +63,10 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   const { id: studyId, eventId } = await params
 
-  const result = await requireStudyMember(studyId, 'ADMIN')
+  const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result
+
+  const { session, member } = result
 
   try {
     const event = await prisma.event.findUnique({
@@ -65,6 +77,14 @@ export async function DELETE(request, { params }) {
       return NextResponse.json(
         { error: "일정을 찾을 수 없습니다" },
         { status: 404 }
+      )
+    }
+
+    // 작성자 본인이거나 ADMIN/OWNER만 삭제 가능
+    if (event.createdById !== session.user.id && !['OWNER', 'ADMIN'].includes(member.role)) {
+      return NextResponse.json(
+        { error: "일정을 삭제할 권한이 없습니다" },
+        { status: 403 }
       )
     }
 

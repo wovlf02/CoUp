@@ -59,7 +59,7 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   const { id: studyId } = await params
 
-  const result = await requireStudyMember(studyId, 'ADMIN')
+  const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result
 
   const { session } = result

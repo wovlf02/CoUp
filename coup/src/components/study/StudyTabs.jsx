@@ -10,7 +10,7 @@ export default function StudyTabs({ studyId, activeTab, userRole }) {
     { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
     { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
     { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
+    { label: '일정', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
     { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥', adminOnly: true },

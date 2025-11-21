@@ -3,10 +3,10 @@
 
 import { use, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import styles from './page.module.css';
 import { useStudy, useFiles, useUploadFile, useDeleteFile } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
+import StudyTabs from '@/components/study/StudyTabs';
 
 export default function MyStudyFilesPage({ params }) {
   const router = useRouter();
@@ -26,16 +26,6 @@ export default function MyStudyFilesPage({ params }) {
   const files = filesData?.data || [];
   const folders = []; // TODO: 폴더 기능 구현
 
-  const tabs = [
-    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
-    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
-    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
-    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
-    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
-    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
 
   const getFileIcon = (type) => {
     if (!type) return '📄';
@@ -175,18 +165,7 @@ export default function MyStudyFilesPage({ params }) {
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className={styles.tabs}>
-        {tabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={tab.href}
-            className={`${styles.tab} ${tab.label === '파일' ? styles.active : ''}`}
-          >
-            <span className={styles.tabIcon}>{tab.icon}</span>
-            <span className={styles.tabLabel}>{tab.label}</span>
-          </Link>
-        ))}
-      </div>
+      <StudyTabs studyId={studyId} activeTab="파일" userRole={study.myRole} />
 
       {/* 메인 콘텐츠 */}
       <div className={styles.mainContent}>

@@ -1,40 +1,119 @@
-// 내 스터디 캘린더 페이지
+// 내 스터디 일정 페이지
 'use client';
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import styles from './page.module.css';
-import { useStudy, useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from '@/lib/hooks/useApi';
+import { useStudy, useEvents, useCreateEvent, useDeleteEvent } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
+import StudyTabs from '@/components/study/StudyTabs';
 
 export default function MyStudyCalendarPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
+  const [viewType, setViewType] = useState('calendar'); // 'calendar' or 'list'
   const [viewMode, setViewMode] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showModal, setShowModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    startTime: '09:00',
+    endTime: '10:00',
+    location: '',
+    color: '#6366F1'
+  });
+
+  // 현재 사용자 세션
+  const { data: session } = useSession();
+  const currentUser = session?.user;
 
   // 실제 API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
   const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
   const { data: eventsData, isLoading: eventsLoading } = useEvents(studyId, { month });
   const createEventMutation = useCreateEvent();
-  const updateEventMutation = useUpdateEvent();
   const deleteEventMutation = useDeleteEvent();
 
   const study = studyData?.data;
-  const events = eventsData?.events || [];
+  const events = eventsData?.data || [];
 
-  const tabs = [
-    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
-    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
-    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
-    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
-    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
-    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
+  // 일정 삭제 권한 확인 (작성자 본인 또는 ADMIN/OWNER)
+  const canDeleteEvent = (event) => {
+    if (!currentUser || !study) return false;
+    return event.createdById === currentUser.id || ['OWNER', 'ADMIN'].includes(study.myRole);
+  };
+
+  const handleOpenModal = () => {
+    setFormData({
+      title: '',
+      date: new Date().toISOString().split('T')[0],
+      startTime: '09:00',
+      endTime: '10:00',
+      location: '',
+      color: '#6366F1'
+    });
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleOpenDetailModal = (event) => {
+    setSelectedEvent(event);
+    setShowDetailModal(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedEvent(null);
+  };
+
+  const handleEditFromDetail = () => {
+    if (selectedEvent) {
+      setFormData({
+        title: selectedEvent.title,
+        date: new Date(selectedEvent.date).toISOString().split('T')[0],
+        startTime: selectedEvent.startTime,
+        endTime: selectedEvent.endTime,
+        location: selectedEvent.location || '',
+        color: selectedEvent.color || '#6366F1'
+      });
+      setShowDetailModal(false);
+      setShowModal(true);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.title.trim()) {
+      alert('일정 제목을 입력해주세요.');
+      return;
+    }
+
+    try {
+      await createEventMutation.mutateAsync({
+        studyId,
+        data: formData
+      });
+      setShowModal(false);
+      alert('일정이 추가되었습니다.');
+    } catch (error) {
+      alert('일정 추가 실패: ' + error.message);
+    }
+  };
+
+
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -104,6 +183,27 @@ export default function MyStudyCalendarPage({ params }) {
     }
   };
 
+  const formatDateForDisplay = (dateString) => {
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekday = weekdays[date.getDay()];
+    return `${month}월 ${day}일 (${weekday})`;
+  };
+
+  const groupEventsByDate = () => {
+    const grouped = {};
+    events.forEach(event => {
+      const dateKey = new Date(event.date).toISOString().split('T')[0];
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(event);
+    });
+    return Object.entries(grouped).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+  };
+
   if (studyLoading) {
     return <div className={styles.container}>로딩 중...</div>;
   }
@@ -137,140 +237,182 @@ export default function MyStudyCalendarPage({ params }) {
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className={styles.tabs}>
-        {tabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={tab.href}
-            className={`${styles.tab} ${tab.label === '캘린더' ? styles.active : ''}`}
-          >
-            <span className={styles.tabIcon}>{tab.icon}</span>
-            <span className={styles.tabLabel}>{tab.label}</span>
-          </Link>
-        ))}
-      </div>
+      <StudyTabs studyId={studyId} activeTab="일정" userRole={study.myRole} />
 
       {/* 메인 콘텐츠 */}
       <div className={styles.mainContent}>
-        {/* 캘린더 섹션 */}
+        {/* 일정 섹션 */}
         <div className={styles.calendarSection}>
           {/* 헤더 */}
           <div className={styles.calendarHeader}>
-            <h2 className={styles.calendarTitle}>📅 캘린더</h2>
-            <button className={styles.addButton}>+ 일정 추가</button>
-          </div>
-
-          {/* 뷰 모드 & 네비게이션 */}
-          <div className={styles.controlSection}>
-            <div className={styles.viewModes}>
-              <button
-                className={`${styles.viewMode} ${viewMode === 'month' ? styles.active : ''}`}
-                onClick={() => setViewMode('month')}
-              >
-                월
-              </button>
-              <button
-                className={`${styles.viewMode} ${viewMode === 'week' ? styles.active : ''}`}
-                onClick={() => setViewMode('week')}
-              >
-                주
-              </button>
-              <button
-                className={`${styles.viewMode} ${viewMode === 'day' ? styles.active : ''}`}
-                onClick={() => setViewMode('day')}
-              >
-                일
+            <h2 className={styles.calendarTitle}>📅 일정</h2>
+            <div className={styles.headerActions}>
+              <div className={styles.viewTypeToggle}>
+                <button
+                  className={`${styles.viewTypeBtn} ${viewType === 'calendar' ? styles.active : ''}`}
+                  onClick={() => setViewType('calendar')}
+                >
+                  📅 캘린더
+                </button>
+                <button
+                  className={`${styles.viewTypeBtn} ${viewType === 'list' ? styles.active : ''}`}
+                  onClick={() => setViewType('list')}
+                >
+                  📋 리스트
+                </button>
+              </div>
+              <button className={styles.addButton} onClick={handleOpenModal}>
+                + 일정 추가
               </button>
             </div>
-
-            <div className={styles.monthNavigation}>
-              <button className={styles.navButton} onClick={goToPreviousMonth}>
-                ◀
-              </button>
-              <span className={styles.currentMonth}>{formatMonth(currentDate)}</span>
-              <button className={styles.navButton} onClick={goToNextMonth}>
-                ▶
-              </button>
-            </div>
-
-            <button className={styles.filterButton}>필터 ▼</button>
           </div>
 
-          {/* 월 뷰 캘린더 */}
-          <div className={styles.monthView}>
-            <div className={styles.weekdayHeader}>
-              {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-                <div key={day} className={styles.weekday}>
-                  {day}
+          {/* 뷰 모드 & 네비게이션 (캘린더 뷰에만 표시) */}
+          {viewType === 'calendar' && (
+            <div className={styles.controlSection}>
+              <div className={styles.viewModes}>
+                <button
+                  className={`${styles.viewMode} ${viewMode === 'month' ? styles.active : ''}`}
+                  onClick={() => setViewMode('month')}
+                >
+                  월
+                </button>
+                <button
+                  className={`${styles.viewMode} ${viewMode === 'week' ? styles.active : ''}`}
+                  onClick={() => setViewMode('week')}
+                >
+                  주
+                </button>
+                <button
+                  className={`${styles.viewMode} ${viewMode === 'day' ? styles.active : ''}`}
+                  onClick={() => setViewMode('day')}
+                >
+                  일
+                </button>
+              </div>
+
+              <div className={styles.monthNavigation}>
+                <button className={styles.navButton} onClick={goToPreviousMonth}>
+                  ◀
+                </button>
+                <span className={styles.currentMonth}>{formatMonth(currentDate)}</span>
+                <button className={styles.navButton} onClick={goToNextMonth}>
+                  ▶
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 캘린더 뷰 */}
+          {viewType === 'calendar' && (
+            <div className={styles.monthView}>
+              <div className={styles.weekdayHeader}>
+                {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
+                  <div key={day} className={styles.weekday}>
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {eventsLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>일정 로딩 중...</div>
+              ) : (
+                <div className={styles.daysGrid}>
+                  {getDaysInMonth(currentDate).map((day, index) => {
+                    const dayEvents = day ? getEventsForDay(day) : [];
+                    return (
+                      <div
+                        key={index}
+                        className={`${styles.dayCell} ${!day ? styles.emptyDay : ''} ${
+                          isToday(day) ? styles.today : ''
+                        }`}
+                      >
+                        {day && (
+                          <>
+                            <div className={styles.dayNumber}>{day}</div>
+                            <div className={styles.dayEvents}>
+                              {dayEvents.slice(0, 2).map((event) => (
+                                <div
+                                  key={event.id}
+                                  className={styles.eventBadge}
+                                  style={{ backgroundColor: event.color || '#6366F1' }}
+                                  title={`${event.startTime} ${event.title}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenDetailModal(event);
+                                  }}
+                                >
+                                  {event.title.length > 8 ? event.title.substring(0, 8) + '...' : event.title}
+                                </div>
+                              ))}
+                              {dayEvents.length > 2 && (
+                                <div className={styles.eventMore}>+{dayEvents.length - 2}개</div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
+          )}
 
-            {eventsLoading ? (
-              <div style={{ textAlign: 'center', padding: '2rem' }}>일정 로딩 중...</div>
-            ) : (
-              <div className={styles.daysGrid}>
-                {getDaysInMonth(currentDate).map((day, index) => {
-                  const dayEvents = day ? getEventsForDay(day) : [];
-                  return (
-                    <div
-                      key={index}
-                      className={`${styles.dayCell} ${!day ? styles.emptyDay : ''} ${
-                        isToday(day) ? styles.today : ''
-                      }`}
-                    >
-                      {day && (
-                        <>
-                          <div className={styles.dayNumber}>{day}</div>
-                          <div className={styles.dayEvents}>
-                            {dayEvents.slice(0, 3).map((event) => (
-                              <div
-                                key={event.id}
-                                className={styles.eventDot}
-                                style={{ backgroundColor: event.color || '#6366F1' }}
-                                title={event.title}
+          {/* 리스트 뷰 */}
+          {viewType === 'list' && (
+            <div className={styles.listView}>
+              {eventsLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>일정 로딩 중...</div>
+              ) : events.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                  등록된 일정이 없습니다. 일정을 추가해보세요! 📅
+                </div>
+              ) : (
+                <div className={styles.eventsList}>
+                  {groupEventsByDate().map(([date, dateEvents]) => (
+                    <div key={date} className={styles.dateGroup}>
+                      <h3 className={styles.dateGroupTitle}>
+                        {formatDateForDisplay(date)}
+                      </h3>
+                      {dateEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className={styles.eventItem}
+                          style={{ borderLeftColor: event.color || '#6366F1' }}
+                          onClick={() => handleOpenDetailModal(event)}
+                        >
+                          <div className={styles.eventItemHeader}>
+                            <div className={styles.eventItemTime}>
+                              {event.startTime} - {event.endTime}
+                            </div>
+                            {canDeleteEvent(event) && (
+                              <button
+                                className={styles.eventDeleteBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteEvent(event.id);
+                                }}
                               >
-                                📌
-                              </div>
-                            ))}
-                            {dayEvents.length > 3 && (
-                              <div className={styles.eventMore}>+{dayEvents.length - 3}</div>
+                                삭제
+                              </button>
                             )}
                           </div>
-                        </>
-                      )}
+                          <h4 className={styles.eventItemTitle}>{event.title}</h4>
+                          {event.location && (
+                            <div className={styles.eventItemLocation}>
+                              📍 {event.location}
+                            </div>
+                          )}
+                          <div className={styles.eventItemCreator}>
+                            작성자: {event.createdBy?.name || '알 수 없음'}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* 오늘 일정 */}
-          {todayEvents.length > 0 && (
-            <div className={styles.selectedDayEvents}>
-              <h3 className={styles.selectedDayTitle}>
-                오늘 일정 ({new Date().toLocaleDateString('ko-KR')})
-              </h3>
-              {todayEvents.map((event) => (
-                <div key={event.id} className={styles.eventCard}>
-                  <div className={styles.eventCardHeader}>
-                    <div className={styles.eventTime}>
-                      {event.startTime}-{event.endTime}
-                    </div>
-                    <h4 className={styles.eventTitle}>{event.title}</h4>
-                  </div>
-                  {event.location && (
-                    <div className={styles.eventLocation}>📍 {event.location}</div>
-                  )}
-                  <button
-                    className={styles.eventDeleteBtn}
-                    onClick={() => handleDeleteEvent(event.id)}
-                  >
-                    삭제
-                  </button>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
@@ -323,6 +465,213 @@ export default function MyStudyCalendarPage({ params }) {
           </div>
         </aside>
       </div>
+
+      {/* 일정 추가 모달 */}
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={handleCloseModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>📅 일정 추가</h2>
+              <button className={styles.modalClose} onClick={handleCloseModal}>
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className={styles.modalForm}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  일정 제목 <span className={styles.required}>*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                  placeholder="예: 팀 미팅"
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  날짜 <span className={styles.required}>*</span>
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                  required
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    시작 시간 <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="time"
+                    name="startTime"
+                    value={formData.startTime}
+                    onChange={handleInputChange}
+                    className={styles.formInput}
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>
+                    종료 시간 <span className={styles.required}>*</span>
+                  </label>
+                  <input
+                    type="time"
+                    name="endTime"
+                    value={formData.endTime}
+                    onChange={handleInputChange}
+                    className={styles.formInput}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>장소</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  className={styles.formInput}
+                  placeholder="예: 회의실 A"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>색상</label>
+                <div className={styles.colorPicker}>
+                  {['#6366F1', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16'].map(
+                    (color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`${styles.colorOption} ${
+                          formData.color === color ? styles.selected : ''
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setFormData(prev => ({ ...prev, color }))}
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  onClick={handleCloseModal}
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={createEventMutation.isPending}
+                >
+                  {createEventMutation.isPending ? '추가 중...' : '일정 추가'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 일정 상세보기 모달 */}
+      {showDetailModal && selectedEvent && (
+        <div className={styles.modalOverlay} onClick={handleCloseDetailModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>📅 일정 상세</h2>
+              <button className={styles.modalClose} onClick={handleCloseDetailModal}>
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.detailContent}>
+              <div className={styles.detailSection}>
+                <div className={styles.detailLabel}>일정 제목</div>
+                <div className={styles.detailValue}>{selectedEvent.title}</div>
+              </div>
+
+              <div className={styles.detailSection}>
+                <div className={styles.detailLabel}>날짜</div>
+                <div className={styles.detailValue}>
+                  {formatDateForDisplay(selectedEvent.date)}
+                </div>
+              </div>
+
+              <div className={styles.detailSection}>
+                <div className={styles.detailLabel}>시간</div>
+                <div className={styles.detailValue}>
+                  {selectedEvent.startTime} - {selectedEvent.endTime}
+                </div>
+              </div>
+
+              {selectedEvent.location && (
+                <div className={styles.detailSection}>
+                  <div className={styles.detailLabel}>장소</div>
+                  <div className={styles.detailValue}>📍 {selectedEvent.location}</div>
+                </div>
+              )}
+
+              <div className={styles.detailSection}>
+                <div className={styles.detailLabel}>작성자</div>
+                <div className={styles.detailValue}>
+                  {selectedEvent.createdBy?.name || '알 수 없음'}
+                </div>
+              </div>
+
+              <div className={styles.detailSection}>
+                <div className={styles.detailLabel}>색상</div>
+                <div className={styles.detailColorBox} style={{ backgroundColor: selectedEvent.color || '#6366F1' }}>
+                  {selectedEvent.color || '#6366F1'}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.detailActions}>
+              {canDeleteEvent(selectedEvent) && (
+                <>
+                  <button
+                    className={styles.detailEditButton}
+                    onClick={handleEditFromDetail}
+                  >
+                    ✏️ 수정
+                  </button>
+                  <button
+                    className={styles.detailDeleteButton}
+                    onClick={() => {
+                      handleCloseDetailModal();
+                      handleDeleteEvent(selectedEvent.id);
+                    }}
+                  >
+                    🗑️ 삭제
+                  </button>
+                </>
+              )}
+              <button
+                className={styles.detailCloseButton}
+                onClick={handleCloseDetailModal}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

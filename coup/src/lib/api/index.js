@@ -98,6 +98,14 @@ export const taskApi = {
   getStats: () => api.get('/api/tasks/stats'),
 }
 
+// ==================== 스터디 할일 API ====================
+export const studyTaskApi = {
+  getList: (studyId, params) => api.get(`/api/studies/${studyId}/tasks`, params),
+  create: (studyId, data) => api.post(`/api/studies/${studyId}/tasks`, data),
+  update: (studyId, taskId, data) => api.patch(`/api/studies/${studyId}/tasks/${taskId}`, data),
+  delete: (studyId, taskId) => api.delete(`/api/studies/${studyId}/tasks/${taskId}`),
+}
+
 // ==================== 알림 API ====================
 export const notificationApi = {
   getList: (params) => api.get('/api/notifications', params),
