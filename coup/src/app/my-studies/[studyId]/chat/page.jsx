@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { useStudy, useMessages, useSendMessage, useDeleteMessage } from '@/lib/hooks/useApi';
+import { useStudy, useStudyMembers, useMessages, useSendMessage, useDeleteMessage } from '@/lib/hooks/useApi';
 import { useSocket } from '@/lib/hooks/useSocket';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import StudyTabs from '@/components/study/StudyTabs';
@@ -20,6 +20,8 @@ export default function MyStudyChatPage({ params }) {
   const [typingUsers, setTypingUsers] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
 
   // Session - 현재 로그인한 사용자
   const { data: session } = useSession();
@@ -30,11 +32,14 @@ export default function MyStudyChatPage({ params }) {
 
   // 실제 API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
+  const { data: membersData } = useStudyMembers(studyId);
   const { data: messagesData, isLoading: messagesLoading, refetch: refetchMessages } = useMessages(studyId);
   const sendMessageMutation = useSendMessage();
   const deleteMessageMutation = useDeleteMessage();
 
   const study = studyData?.data;
+  const activeMembers = (membersData?.data || []).filter(m => m.status === 'ACTIVE');
+  const totalMemberCount = activeMembers.length;
   const [realtimeMessages, setRealtimeMessages] = useState([]);
 
   // API에서 받은 메시지의 user 필드를 sender로 매핑
@@ -55,6 +60,15 @@ export default function MyStudyChatPage({ params }) {
   useEffect(() => {
     scrollToBottom();
   }, [allMessages]);
+
+  // 컨텍스트 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!contextMenu) return;
+
+    const handleClick = () => setContextMenu(null);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [contextMenu]);
 
   // Socket.io 스터디 채팅방 입장
   useEffect(() => {
@@ -344,6 +358,103 @@ export default function MyStudyChatPage({ params }) {
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
 
+  // 읽지 않은 사람 수 계산
+  const getUnreadCount = (message) => {
+    if (!message.readers || !totalMemberCount) return 0;
+    const readCount = message.readers.length;
+    const unreadCount = totalMemberCount - readCount;
+    return unreadCount > 0 ? unreadCount : 0;
+  };
+
+  // 컨텍스트 메뉴 열기
+  const handleContextMenu = (e, message) => {
+    e.preventDefault();
+
+    // 내 메시지만 컨텍스트 메뉴 표시
+    if (message.sender?.id !== currentUser?.id) return;
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      message
+    });
+  };
+
+  // 컨텍스트 메뉴 닫기
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  // 메시지 수정 시작
+  const handleEditMessage = () => {
+    if (!contextMenu) return;
+
+    setEditingMessage(contextMenu.message);
+    setContent(contextMenu.message.content);
+    setContextMenu(null);
+  };
+
+  // 메시지 수정 취소
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+    setContent('');
+  };
+
+  // 메시지 수정 완료
+  const handleUpdateMessage = async (e) => {
+    e.preventDefault();
+    if (!content.trim() || !editingMessage) return;
+
+    try {
+      const response = await fetch(`/api/studies/${studyId}/chat/${editingMessage.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content.trim() })
+      });
+
+      if (!response.ok) throw new Error('메시지 수정 실패');
+
+      const result = await response.json();
+
+      // Socket으로 수정 알림
+      if (socket) {
+        socket.emit('study:message:update', {
+          studyId,
+          message: result.data
+        });
+      }
+
+      // 메시지 목록 새로고침
+      refetchMessages();
+
+      setEditingMessage(null);
+      setContent('');
+      alert('메시지가 수정되었습니다.');
+    } catch (error) {
+      alert('메시지 수정 실패: ' + error.message);
+    }
+  };
+
+  // 메시지 삭제
+  const handleDeleteMessageFromContext = async () => {
+    if (!contextMenu) return;
+
+    if (!confirm('메시지를 삭제하시겠습니까?')) {
+      setContextMenu(null);
+      return;
+    }
+
+    try {
+      await deleteMessageMutation.mutateAsync({
+        studyId,
+        messageId: contextMenu.message.id
+      });
+      setContextMenu(null);
+    } catch (error) {
+      alert('메시지 삭제 실패: ' + error.message);
+    }
+  };
+
   if (studyLoading) {
     return <div className={styles.container}>로딩 중...</div>;
   }
@@ -410,6 +521,7 @@ export default function MyStudyChatPage({ params }) {
                   <div
                     key={message.id}
                     className={`${styles.message} ${message.sender?.id === currentUser?.id ? styles.mine : ''}`}
+                    onContextMenu={(e) => handleContextMenu(e, message)}
                   >
                     {/* 상대방 메시지: 프로필 사진 */}
                     {message.sender?.id !== currentUser?.id && (
@@ -449,20 +561,15 @@ export default function MyStudyChatPage({ params }) {
                           )}
                         </div>
 
-                        {/* 시간 + 삭제 버튼 (내 메시지만) */}
-                        <div className={styles.timestamp}>
-                          {message.sender?.id === currentUser?.id && (
-                            <span className={styles.readReceipt}>✓</span>
+                        {/* 읽음 수 + 시간 */}
+                        <div className={styles.messageInfo}>
+                          {/* 읽지 않은 사람 수 표시 */}
+                          {message.sender?.id === currentUser?.id && getUnreadCount(message) > 0 && (
+                            <span className={styles.unreadCount}>{getUnreadCount(message)}</span>
                           )}
-                          {formatTime(message.createdAt)}
-                          {message.sender?.id === currentUser?.id && (
-                            <button
-                              onClick={() => handleDeleteMessage(message.id)}
-                              className={styles.deleteBtn}
-                            >
-                              삭제
-                            </button>
-                          )}
+                          <span className={styles.timestamp}>
+                            {formatTime(message.createdAt)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -488,6 +595,20 @@ export default function MyStudyChatPage({ params }) {
 
           {/* 입력 영역 */}
           <div className={styles.inputWrapper}>
+            {/* 수정 모드 표시 */}
+            {editingMessage && (
+              <div className={styles.editModeBar}>
+                <span className={styles.editModeText}>✏️ 메시지 수정 중</span>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className={styles.editCancelButton}
+                >
+                  취소
+                </button>
+              </div>
+            )}
+
             {/* 파일 선택 미리보기 */}
             {selectedFile && (
               <div className={styles.filePreview}>
@@ -519,7 +640,7 @@ export default function MyStudyChatPage({ params }) {
               </div>
             )}
 
-            <form onSubmit={handleSend} className={styles.inputArea}>
+            <form onSubmit={editingMessage ? handleUpdateMessage : handleSend} className={styles.inputArea}>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -543,7 +664,11 @@ export default function MyStudyChatPage({ params }) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    handleSend(e);
+                    if (editingMessage) {
+                      handleUpdateMessage(e);
+                    } else {
+                      handleSend(e);
+                    }
                   }
                 }}
                 placeholder="메시지를 입력하세요..."
@@ -556,7 +681,7 @@ export default function MyStudyChatPage({ params }) {
                 className={styles.sendButton}
                 disabled={!content.trim() || sendMessageMutation.isPending || selectedFile !== null}
               >
-                {sendMessageMutation.isPending ? '전송 중...' : '전송'}
+                {sendMessageMutation.isPending ? '전송 중...' : editingMessage ? '수정' : '전송'}
               </button>
             </form>
           </div>
@@ -616,6 +741,22 @@ export default function MyStudyChatPage({ params }) {
           </div>
         </aside>
       </div>
+
+      {/* 컨텍스트 메뉴 */}
+      {contextMenu && (
+        <div
+          className={styles.contextMenu}
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button className={styles.contextMenuItem} onClick={handleEditMessage}>
+            ✏️ 수정
+          </button>
+          <button className={styles.contextMenuItem} onClick={handleDeleteMessageFromContext}>
+            🗑️ 삭제
+          </button>
+        </div>
+      )}
     </div>
   );
 }

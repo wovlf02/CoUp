@@ -352,6 +352,24 @@
   padding-bottom: 2px;
 }
 
+/* 메시지 정보 (읽음 수 + 시간) */
+.messageInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  align-self: flex-end;
+  padding-bottom: 2px;
+}
+
+/* 읽지 않은 사람 수 */
+.unreadCount {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--primary-600);
+}
+
 .readReceipt {
   font-size: 0.75rem;
   color: var(--primary-600);
@@ -362,20 +380,9 @@
   color: var(--primary-400);
 }
 
-/* 삭제 버튼 */
+/* 삭제 버튼 - 숨김 */
 .deleteBtn {
-  font-size: 0.6875rem;
-  color: var(--error-600);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0 4px;
-  transition: color 0.2s;
-}
-
-.deleteBtn:hover {
-  color: var(--error-700);
-  text-decoration: underline;
+  display: none;
 }
 
 /* 파일 첨부 */
@@ -890,5 +897,71 @@
   .tab {
     flex-shrink: 0;
   }
+}
+
+/* 컨텍스트 메뉴 */
+.contextMenu {
+  position: fixed;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.contextMenuItem {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.875rem;
+  color: var(--gray-900);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.contextMenuItem:hover {
+  background: var(--gray-100);
+}
+
+.contextMenuItem:active {
+  background: var(--gray-200);
+}
+
+/* 수정 모드 바 */
+.editModeBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: 8px 8px 0 0;
+}
+
+.editModeText {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-700);
+}
+
+.editCancelButton {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid var(--primary-300);
+  border-radius: 6px;
+  color: var(--primary-700);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editCancelButton:hover {
+  background: var(--primary-100);
 }
 
