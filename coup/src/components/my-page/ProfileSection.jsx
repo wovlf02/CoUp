@@ -7,9 +7,44 @@ import { getInitials } from '@/utils/format'
 import { useUpdateProfile } from '@/lib/hooks/useApi'
 import styles from './ProfileSection.module.css'
 
-export default function ProfileSection({ user, onUpdate }) {
-  const [uploading, setUploading] = useState(false)
-  const updateProfile = useUpdateProfile()
+export default function ProfileSection({ user }) {
+  const [uploading, setUploading] = useState(false);
+  const [isAttending, setIsAttending] = useState(false);
+  const updateProfile = useUpdateProfile();
+
+  // 출석하기
+  const handleAttendance = async () => {
+    if (isAttending) return;
+
+    if (!confirm('오늘 참여 중인 모든 스터디에 출석하시겠습니까?')) {
+      return;
+    }
+
+    setIsAttending(true);
+
+    try {
+      const response = await fetch('/api/attendance/check-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || '출석 실패');
+      }
+
+      const data = await response.json();
+      alert(`출석 완료! ${data.attendedStudies}개 스터디에 출석되었습니다.`);
+
+      // 페이지 새로고침하여 최신 정보 반영
+      window.location.reload();
+    } catch (error) {
+      console.error('Attendance error:', error);
+      alert(error.message);
+    } finally {
+      setIsAttending(false);
+    }
+  };
 
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0]
@@ -52,7 +87,16 @@ export default function ProfileSection({ user, onUpdate }) {
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionHeader}>1. 프로필</h2>
+      <div className={styles.sectionHeaderWrapper}>
+        <h2 className={styles.sectionHeader}>1. 프로필</h2>
+        <button
+          onClick={handleAttendance}
+          disabled={isAttending}
+          className={styles.attendanceButton}
+        >
+          {isAttending ? '출석 중...' : '✅ 출석하기'}
+        </button>
+      </div>
 
       <div className={styles.profileContent}>
         <div className={styles.profileImageWrapper}>

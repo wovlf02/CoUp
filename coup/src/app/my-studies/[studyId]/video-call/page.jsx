@@ -269,7 +269,8 @@ export default function MyStudyVideoCallPage({ params }) {
       }
 
       shareScreen().catch((err) => {
-        if (err.name !== 'NotAllowedError') {
+        // 사용자가 취소한 경우(NotAllowedError, AbortError)는 alert 표시 안 함
+        if (err.name !== 'NotAllowedError' && err.name !== 'AbortError') {
           alert('화면 공유에 실패했습니다.');
         }
       });

@@ -439,11 +439,17 @@ export function useVideoCall(studyId, roomId) {
       return screenStream;
     } catch (err) {
       console.error('Failed to share screen:', err);
-      if (err.name === 'NotAllowedError') {
+
+      // 사용자가 취소 버튼을 눌렀을 때는 에러 메시지를 표시하지 않음
+      if (err.name === 'NotAllowedError' && err.message.includes('Permission denied')) {
         setError('화면 공유 권한이 거부되었습니다.');
+      } else if (err.name === 'NotAllowedError' || err.name === 'AbortError') {
+        // 사용자가 취소한 경우 - 에러 메시지 표시 안 함
+        console.log('[useVideoCall] 사용자가 화면 공유를 취소했습니다.');
       } else {
         setError('화면 공유에 실패했습니다.');
       }
+
       throw err;
     }
   }, [socket, roomId, stopScreenShare, someoneSharingScreen, isSharingScreen]);

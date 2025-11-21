@@ -21,16 +21,46 @@
 /* 확대된 비디오 타일 */
 .videoTile.expanded {
   position: fixed !important;
+  /* 비디오 영역과 동일한 위치 */
   top: 64px !important;
   left: calc(clamp(200px, 12vw, 280px) + 20%) !important;
-  right: calc(25% + 20px) !important;
-  bottom: 100px !important;
+  right: 25% !important;
+  bottom: 80px !important;
   width: auto !important;
   max-width: none !important;
   height: auto !important;
   aspect-ratio: unset !important;
   z-index: 50 !important;
-  border-radius: 0;
+  border-radius: 0 !important;
+  transform: none !important;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.3) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 확대된 비디오 내부의 video 요소를 완전히 채움 */
+.videoTile.expanded .video,
+.videoTile.expanded .avatarContainer {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+
+/* 태블릿에서 확대된 비디오 */
+@media (max-width: 1279px) {
+  .videoTile.expanded {
+    left: calc(clamp(160px, 15vw, 200px) + 20%) !important;
+  }
+}
+
+/* 모바일에서는 전체 화면 */
+@media (max-width: 1024px) {
+  .videoTile.expanded {
+    left: 0 !important;
+    right: 0 !important;
+    top: 56px !important;
+    bottom: 70px !important;
+  }
 }
 
 /* 음성 인식 시 녹색 테두리 */
