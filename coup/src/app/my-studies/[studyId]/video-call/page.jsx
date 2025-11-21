@@ -10,6 +10,7 @@ import { useSocket } from '@/lib/hooks/useSocket';
 import { useVideoCall } from '@/lib/hooks/useVideoCall';
 import VideoTile from '@/components/video-call/VideoTile';
 import ControlBar from '@/components/video-call/ControlBar';
+import SettingsModal from '@/components/video-call/SettingsModal';
 import StudyTabs from '@/components/study/StudyTabs';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import styles from './page.module.css';
@@ -26,6 +27,17 @@ export default function MyStudyVideoCallPage({ params }) {
   const [chatMessages, setChatMessages] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [expandedVideoSocketId, setExpandedVideoSocketId] = useState(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState({
+    audioInputDevice: 'default',
+    videoInputDevice: 'default',
+    audioOutputDevice: 'default',
+    videoQuality: 'high',
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true
+  });
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -90,6 +102,8 @@ export default function MyStudyVideoCallPage({ params }) {
     isMuted,
     isVideoOff,
     isSharingScreen,
+    someoneSharingScreen,
+    speakingUsers,
     error,
     joinRoom,
     leaveRoom,
@@ -248,10 +262,35 @@ export default function MyStudyVideoCallPage({ params }) {
     if (isSharingScreen) {
       stopScreenShare();
     } else {
-      shareScreen().catch(() => {
-        alert('화면 공유에 실패했습니다.');
+      // 다른 사람이 화면 공유 중인지 확인
+      if (someoneSharingScreen) {
+        alert('다른 참여자가 이미 화면을 공유하고 있습니다.');
+        return;
+      }
+
+      shareScreen().catch((err) => {
+        if (err.name !== 'NotAllowedError') {
+          alert('화면 공유에 실패했습니다.');
+        }
       });
     }
+  };
+
+  // 설정 저장
+  const handleSaveSettings = (newSettings) => {
+    setSettings(newSettings);
+    // 실제로 디바이스를 변경하려면 미디어 스트림을 다시 가져와야 함
+    console.log('새로운 설정:', newSettings);
+  };
+
+  // 비디오 확대
+  const handleExpandVideo = (socketId) => {
+    setExpandedVideoSocketId(socketId);
+  };
+
+  // 비디오 축소
+  const handleCollapseVideo = () => {
+    setExpandedVideoSocketId(null);
   };
 
   // 채팅 메시지 전송
@@ -512,14 +551,20 @@ export default function MyStudyVideoCallPage({ params }) {
                 user={currentUser}
                 isMuted={isMuted}
                 isVideoOff={isVideoOff}
+                isSpeaking={false}
+                isExpanded={expandedVideoSocketId === 'local'}
                 onToggleMute={toggleMute}
                 onToggleVideo={toggleVideo}
+                onExpand={() => handleExpandVideo('local')}
+                onCollapse={handleCollapseVideo}
               />
             )}
 
             {/* 원격 비디오 */}
             {participants.map((participant) => {
               const stream = remoteStreams.get(participant.socketId);
+              const isSpeaking = speakingUsers.has(participant.socketId);
+
               return (
                 <VideoTile
                   key={participant.socketId}
@@ -528,7 +573,11 @@ export default function MyStudyVideoCallPage({ params }) {
                   user={participant.user}
                   isMuted={participant.isMuted}
                   isVideoOff={participant.isVideoOff}
+                  isSpeaking={isSpeaking}
                   isSharingScreen={participant.isSharingScreen}
+                  isExpanded={expandedVideoSocketId === participant.socketId}
+                  onExpand={() => handleExpandVideo(participant.socketId)}
+                  onCollapse={handleCollapseVideo}
                 />
               );
             })}
@@ -755,8 +804,16 @@ export default function MyStudyVideoCallPage({ params }) {
         onToggleMute={toggleMute}
         onToggleVideo={toggleVideo}
         onShareScreen={handleShareScreen}
-        onSettings={() => alert('설정 기능은 추후 구현 예정입니다.')}
+        onSettings={() => setIsSettingsOpen(true)}
         onLeave={handleLeaveCall}
+      />
+
+      {/* 설정 모달 */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        currentSettings={settings}
+        onSave={handleSaveSettings}
       />
 
       {/* 에러 표시 */}

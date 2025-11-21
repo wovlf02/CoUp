@@ -12,11 +12,16 @@ export function useVideoCall(studyId, roomId) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
+  const [someoneSharingScreen, setSomeoneSharingScreen] = useState(false);
+  const [speakingUsers, setSpeakingUsers] = useState(new Set());
   const [error, setError] = useState(null);
 
   const peersRef = useRef(new Map());
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const speakingTimeoutRef = useRef(null);
 
   // ICE 서버 설정 (useRef로 변경)
   const iceServersRef = useRef({
@@ -26,6 +31,54 @@ export function useVideoCall(studyId, roomId) {
       { urls: 'stun:stun2.l.google.com:19302' },
     ]
   });
+
+  // 음성 감지 설정
+  const setupAudioDetection = useCallback((stream) => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.8;
+      microphone.connect(analyser);
+
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+
+      // 주기적으로 음량 체크
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const checkAudioLevel = () => {
+        if (!analyserRef.current || !socket) return;
+
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+        // 음량이 일정 수준 이상이면 말하는 중으로 간주
+        const isSpeaking = average > 20 && !isMuted;
+
+        if (isSpeaking) {
+          socket.emit('video:speaking', { roomId, speaking: true });
+
+          // 타임아웃 초기화
+          if (speakingTimeoutRef.current) {
+            clearTimeout(speakingTimeoutRef.current);
+          }
+
+          // 1초 후 자동으로 speaking false 전송
+          speakingTimeoutRef.current = setTimeout(() => {
+            socket.emit('video:speaking', { roomId, speaking: false });
+          }, 1000);
+        }
+
+        requestAnimationFrame(checkAudioLevel);
+      };
+
+      checkAudioLevel();
+    } catch (err) {
+      console.error('Failed to setup audio detection:', err);
+    }
+  }, [socket, roomId, isMuted]);
 
   // 로컬 미디어 스트림 초기화
   const initLocalStream = useCallback(async (videoEnabled = true, audioEnabled = true) => {
@@ -48,13 +101,18 @@ export function useVideoCall(studyId, roomId) {
       setIsVideoOff(!videoEnabled);
       setIsMuted(!audioEnabled);
 
+      // 음성 감지 설정
+      if (audioEnabled) {
+        setupAudioDetection(stream);
+      }
+
       return stream;
     } catch (err) {
       console.error('Failed to get local stream:', err);
       setError('카메라/마이크 권한이 필요합니다.');
       throw err;
     }
-  }, []);
+  }, [setupAudioDetection]);
 
   // Peer 정리
   const cleanupPeer = useCallback((socketId) => {
@@ -317,6 +375,7 @@ export function useVideoCall(studyId, roomId) {
       screenStreamRef.current.getTracks().forEach(track => track.stop());
       screenStreamRef.current = null;
       setIsSharingScreen(false);
+      setSomeoneSharingScreen(false);
 
       // 원래 비디오 트랙으로 복구
       if (localStreamRef.current) {
@@ -340,6 +399,12 @@ export function useVideoCall(studyId, roomId) {
 
   // 화면 공유
   const shareScreen = useCallback(async () => {
+    // 이미 다른 사람이 화면 공유 중이면 차단
+    if (someoneSharingScreen && !isSharingScreen) {
+      setError('다른 참여자가 이미 화면을 공유하고 있습니다.');
+      return Promise.reject(new Error('다른 참여자가 이미 화면을 공유하고 있습니다.'));
+    }
+
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
@@ -351,6 +416,7 @@ export function useVideoCall(studyId, roomId) {
       const screenTrack = screenStream.getVideoTracks()[0];
       screenStreamRef.current = screenStream;
       setIsSharingScreen(true);
+      setSomeoneSharingScreen(true);
 
       // 모든 Peer의 비디오 트랙을 화면 공유로 교체
       peersRef.current.forEach(peer => {
@@ -373,10 +439,14 @@ export function useVideoCall(studyId, roomId) {
       return screenStream;
     } catch (err) {
       console.error('Failed to share screen:', err);
-      setError('화면 공유에 실패했습니다.');
+      if (err.name === 'NotAllowedError') {
+        setError('화면 공유 권한이 거부되었습니다.');
+      } else {
+        setError('화면 공유에 실패했습니다.');
+      }
       throw err;
     }
-  }, [socket, roomId, stopScreenShare]);
+  }, [socket, roomId, stopScreenShare, someoneSharingScreen, isSharingScreen]);
 
   // Socket 이벤트 리스너
   useEffect(() => {
@@ -453,6 +523,35 @@ export function useVideoCall(studyId, roomId) {
       setParticipants(prev => prev.filter(p => p.socketId !== socketId));
     });
 
+    // 화면 공유 시작 알림
+    socket.on('video:screen-share-started', ({ socketId }) => {
+      setSomeoneSharingScreen(true);
+      setParticipants(prev => prev.map(p =>
+        p.socketId === socketId ? { ...p, isSharingScreen: true } : p
+      ));
+    });
+
+    // 화면 공유 종료 알림
+    socket.on('video:screen-share-stopped', ({ socketId }) => {
+      setSomeoneSharingScreen(false);
+      setParticipants(prev => prev.map(p =>
+        p.socketId === socketId ? { ...p, isSharingScreen: false } : p
+      ));
+    });
+
+    // 음성 감지 이벤트
+    socket.on('video:user-speaking', ({ socketId, speaking }) => {
+      setSpeakingUsers(prev => {
+        const newSet = new Set(prev);
+        if (speaking) {
+          newSet.add(socketId);
+        } else {
+          newSet.delete(socketId);
+        }
+        return newSet;
+      });
+    });
+
     // 에러 처리
     socket.on('error', (data) => {
       setError(data.message);
@@ -465,6 +564,9 @@ export function useVideoCall(studyId, roomId) {
       socket.off('video:answer');
       socket.off('video:ice-candidate');
       socket.off('video:user-left');
+      socket.off('video:screen-share-started');
+      socket.off('video:screen-share-stopped');
+      socket.off('video:user-speaking');
       socket.off('error');
     };
   }, [socket, createPeerConnection, cleanupPeer]);
@@ -474,6 +576,16 @@ export function useVideoCall(studyId, roomId) {
     const peers = peersRef.current;
 
     return () => {
+      // 오디오 컨텍스트 정리
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+
+      if (speakingTimeoutRef.current) {
+        clearTimeout(speakingTimeoutRef.current);
+      }
+
       // 로컬 스트림 정리
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach(track => track.stop());
@@ -506,6 +618,8 @@ export function useVideoCall(studyId, roomId) {
     isMuted,
     isVideoOff,
     isSharingScreen,
+    someoneSharingScreen,
+    speakingUsers,
     error,
     joinRoom,
     leaveRoom,

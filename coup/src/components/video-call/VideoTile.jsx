@@ -11,12 +11,16 @@ export default function VideoTile({
   isMuted = false,
   isVideoOff = false,
   isSpeaking = false,
+  isExpanded = false,
   onToggleMute,
   onToggleVideo,
+  onExpand,
+  onCollapse,
   onDoubleClick
 }) {
   const videoRef = useRef(null);
   const [showControls, setShowControls] = useState(false);
+  const [showExpandButton, setShowExpandButton] = useState(false);
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -26,9 +30,15 @@ export default function VideoTile({
 
   return (
     <div
-      className={`${styles.videoTile} ${isSpeaking ? styles.speaking : ''}`}
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
+      className={`${styles.videoTile} ${isSpeaking ? styles.speaking : ''} ${isExpanded ? styles.expanded : ''}`}
+      onMouseEnter={() => {
+        setShowControls(true);
+        setShowExpandButton(true);
+      }}
+      onMouseLeave={() => {
+        setShowControls(false);
+        setShowExpandButton(false);
+      }}
       onDoubleClick={onDoubleClick}
     >
       {/* 비디오 또는 아바타 */}
@@ -36,6 +46,7 @@ export default function VideoTile({
         <div className={styles.avatarContainer}>
           <div className={styles.avatar}>
             {user?.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={user.avatar} alt={user.name} />
             ) : (
               <div className={styles.avatarPlaceholder}>
@@ -54,13 +65,41 @@ export default function VideoTile({
         />
       )}
 
-      {/* 상단 오버레이: 이름 */}
+      {/* 상단 오버레이: 이름 및 전체보기 버튼 */}
       <div className={styles.topOverlay}>
         <div className={styles.name}>
           {user?.name || 'Unknown'}
           {isLocal && ' (나)'}
         </div>
+
+        {/* 전체보기 버튼 (확대되지 않은 상태에서만, 마우스 오버 시) */}
+        {!isExpanded && showExpandButton && onExpand && (
+          <button
+            className={styles.expandButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              onExpand();
+            }}
+            title="전체보기"
+          >
+            ⛶
+          </button>
+        )}
       </div>
+
+      {/* 작게보기 버튼 (확대된 상태에서만, 우측 하단) */}
+      {isExpanded && onCollapse && (
+        <button
+          className={styles.collapseButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            onCollapse();
+          }}
+          title="작게보기"
+        >
+          ⛶
+        </button>
+      )}
 
       {/* 하단 오버레이: 컨트롤 버튼 */}
       {isLocal && (
