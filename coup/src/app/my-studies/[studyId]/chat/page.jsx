@@ -36,7 +36,15 @@ export default function MyStudyChatPage({ params }) {
 
   const study = studyData?.data;
   const [realtimeMessages, setRealtimeMessages] = useState([]);
-  const allMessages = [...(messagesData?.data || []), ...realtimeMessages];
+
+  // API에서 받은 메시지의 user 필드를 sender로 매핑
+  const apiMessages = (messagesData?.data || []).map(msg => ({
+    ...msg,
+    sender: msg.user || msg.sender, // user 필드를 sender로 통일
+    senderId: msg.userId || msg.senderId
+  }));
+
+  const allMessages = [...apiMessages, ...realtimeMessages];
   const onlineMembers = []; // TODO: Socket.io로 실시간 온라인 멤버 구현
 
 
@@ -69,16 +77,17 @@ export default function MyStudyChatPage({ params }) {
       console.log('[Chat] New message received:', message);
 
       // 자신이 보낸 메시지는 무시 (이미 낙관적 업데이트로 표시됨)
-      const messageSenderId = message.senderId || message.sender?.id;
+      const messageSenderId = message.senderId || message.userId || message.sender?.id;
       if (messageSenderId === currentUser.id) return;
 
-      // 실시간 메시지에 추가
+      // 실시간 메시지에 추가 - user를 sender로 매핑
       setRealtimeMessages(prev => [...prev, {
         ...message,
         sender: message.sender || message.user || {
-          id: message.senderId,
+          id: message.senderId || message.userId,
           name: '알 수 없음'
         },
+        senderId: message.senderId || message.userId,
         isMine: false,
         createdAt: message.createdAt || new Date().toISOString()
       }]);
@@ -138,12 +147,13 @@ export default function MyStudyChatPage({ params }) {
         data: { content: content.trim() }
       });
 
-      // Socket.io로 실시간 전송 (sender 정보 포함)
+      // Socket.io로 실시간 전송 (user를 sender로 변환하여 전송)
       socket.emit('study:message', {
         studyId,
         message: {
           ...result.data,
-          sender: result.data.user || result.data.sender || currentUser
+          sender: result.data.user || result.data.sender || currentUser,
+          senderId: result.data.userId || result.data.senderId || currentUser.id
         }
       });
 
@@ -260,7 +270,11 @@ export default function MyStudyChatPage({ params }) {
       console.log('[Chat] Step 3: Emitting socket message');
       const socketPayload = {
         studyId,
-        message: messageResult.data
+        message: {
+          ...messageResult.data,
+          sender: messageResult.data.user || messageResult.data.sender || currentUser,
+          senderId: messageResult.data.userId || messageResult.data.senderId || currentUser.id
+        }
       };
       console.log('[Chat] Socket payload:', socketPayload);
       socket.emit('study:message', socketPayload);
@@ -270,6 +284,7 @@ export default function MyStudyChatPage({ params }) {
       const localMessage = {
         ...messageResult.data,
         sender: messageResult.data.user || currentUser,
+        senderId: messageResult.data.userId || currentUser.id,
         isMine: true,
         createdAt: messageResult.data.createdAt || new Date().toISOString()
       };
