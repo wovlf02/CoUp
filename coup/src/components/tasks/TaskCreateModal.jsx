@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMyStudies, useCreateTask } from '@/lib/hooks/useApi'
 import styles from './TaskCreateModal.module.css'
 
@@ -11,13 +11,55 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
     studyId: '',
     dueDate: '',
     priority: 'MEDIUM',
+    assigneeIds: [], // 담당자 ID 배열
   })
+  const [studyMembers, setStudyMembers] = useState([])
+  const [loadingMembers, setLoadingMembers] = useState(false)
 
   const { data: studiesData } = useMyStudies({ limit: 50, filter: 'active' })
   const createTask = useCreateTask()
 
   // API 응답에서 study 객체만 추출
   const studies = studiesData?.data?.map(item => item.study).filter(study => study) || []
+
+  // 스터디 선택 시 멤버 목록 가져오기
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!formData.studyId) {
+        setStudyMembers([])
+        return
+      }
+
+      setLoadingMembers(true)
+      try {
+        const response = await fetch(`/api/studies/${formData.studyId}/members`)
+        const data = await response.json()
+
+        if (data.success) {
+          setStudyMembers(data.data || [])
+        } else {
+          setStudyMembers([])
+        }
+      } catch (error) {
+        console.error('멤버 목록 로드 실패:', error)
+        setStudyMembers([])
+      } finally {
+        setLoadingMembers(false)
+      }
+    }
+
+    fetchMembers()
+  }, [formData.studyId])
+
+  // 담당자 선택 토글
+  const toggleAssignee = (userId) => {
+    setFormData(prev => ({
+      ...prev,
+      assigneeIds: prev.assigneeIds.includes(userId)
+        ? prev.assigneeIds.filter(id => id !== userId)
+        : [...prev.assigneeIds, userId]
+    }))
+  }
 
 
   const handleSubmit = async (e) => {
@@ -46,6 +88,7 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
         dueDate: formData.dueDate,
         priority: formData.priority,
         status: 'TODO',
+        assigneeIds: formData.assigneeIds, // 담당자 ID 배열 추가
       })
 
       alert('할 일이 추가되었습니다!')
@@ -82,7 +125,9 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
             <select
               className={styles.select}
               value={formData.studyId}
-              onChange={(e) => setFormData({ ...formData, studyId: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, studyId: e.target.value, assigneeIds: [] })
+              }}
             >
               <option value="">스터디 선택</option>
               {studies.map(study => (
@@ -92,6 +137,55 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
               ))}
             </select>
           </div>
+
+          {/* 담당자 선택 */}
+          {formData.studyId && (
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                담당자 (선택) - {formData.assigneeIds.length}명 선택됨
+              </label>
+              {loadingMembers ? (
+                <div className={styles.memberLoading}>멤버 목록을 불러오는 중...</div>
+              ) : studyMembers.length === 0 ? (
+                <div className={styles.memberEmpty}>멤버가 없습니다</div>
+              ) : (
+                <div className={styles.memberList}>
+                  {studyMembers.map(member => (
+                    <label
+                      key={member.userId}
+                      className={`${styles.memberItem} ${
+                        formData.assigneeIds.includes(member.userId) ? styles.memberSelected : ''
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.assigneeIds.includes(member.userId)}
+                        onChange={() => toggleAssignee(member.userId)}
+                        className={styles.memberCheckbox}
+                      />
+                      <div className={styles.memberInfo}>
+                        {member.user?.avatar && (
+                          <img
+                            src={member.user.avatar}
+                            alt={member.user.name}
+                            className={styles.memberAvatar}
+                          />
+                        )}
+                        <div className={styles.memberDetails}>
+                          <span className={styles.memberName}>{member.user?.name || '이름 없음'}</span>
+                          <span className={styles.memberRole}>
+                            {member.role === 'OWNER' && '👑 방장'}
+                            {member.role === 'ADMIN' && '⭐ 관리자'}
+                            {member.role === 'MEMBER' && '👤 멤버'}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className={styles.formGroup}>
             <label className={styles.label}>우선순위 *</label>

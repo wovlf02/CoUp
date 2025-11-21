@@ -8,7 +8,8 @@ import { z } from "zod"
 const signupSchema = z.object({
   email: z.string().email("올바른 이메일 형식이 아닙니다"),
   password: z.string().min(8, "비밀번호는 최소 8자 이상이어야 합니다"),
-  name: z.string().min(2, "이름은 최소 2자 이상이어야 합니다").optional(),
+  name: z.string().min(2, "이름은 최소 2자 이상이어야 합니다"),
+  avatar: z.string().url().optional().nullable(),
 })
 
 export async function POST(request) {
@@ -38,7 +39,8 @@ export async function POST(request) {
       data: {
         email: validatedData.email,
         password: hashedPassword,
-        name: validatedData.name || validatedData.email.split('@')[0],
+        name: validatedData.name,
+        avatar: validatedData.avatar,
         provider: 'CREDENTIALS',
         role: 'USER',
         status: 'ACTIVE',

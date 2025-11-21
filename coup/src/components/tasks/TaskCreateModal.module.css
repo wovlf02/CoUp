@@ -147,6 +147,95 @@
   background: var(--primary-600);
 }
 
+/* 담당자 선택 */
+.memberLoading,
+.memberEmpty {
+  padding: 16px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.875rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+.memberItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.memberItem:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.03) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.memberItem.memberSelected {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.08) 100%);
+  border-color: #3B82F6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.memberCheckbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #3B82F6;
+  flex-shrink: 0;
+}
+
+.memberInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.memberAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.memberDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.memberName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.memberRole {
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .modal {
@@ -166,6 +255,11 @@
   .cancelButton,
   .submitButton {
     width: 100%;
+  }
+
+  .memberAvatar {
+    width: 32px;
+    height: 32px;
   }
 }
 

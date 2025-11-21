@@ -9,6 +9,7 @@ import AccessibilitySettings from './components/AccessibilitySettings';
 import DataSettings from './components/DataSettings';
 import PrivacySettings from './components/PrivacySettings';
 import AdvancedSettings from './components/AdvancedSettings';
+import Toast from './components/Toast';
 import styles from './page.module.css';
 
 // 기본 설정
@@ -61,6 +62,7 @@ export default function SystemSettingsPage() {
   const [activeTab, setActiveTab] = useState('language');
   const [settings, setSettings] = useState(defaultSettings);
   const [hasChanges, setHasChanges] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // 설정 로드
   useEffect(() => {
@@ -82,18 +84,96 @@ export default function SystemSettingsPage() {
   const handleSave = () => {
     localStorage.setItem('systemSettings', JSON.stringify(settings));
     setHasChanges(false);
-    alert('설정이 저장되었습니다.');
 
-    // 테마 적용
-    if (settings.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    // 실제 설정 적용
+    applySettings(settings);
+
+    // 토스트 표시
+    setToast({ message: '설정이 성공적으로 저장되었습니다! 🎉', type: 'success' });
+  };
+
+  // 설정 실제 적용
+  const applySettings = (settingsToApply) => {
+    const root = document.documentElement;
+
+    // 1. 테마 적용
+    if (settingsToApply.theme === 'dark') {
+      root.classList.add('dark');
+      root.style.colorScheme = 'dark';
+    } else if (settingsToApply.theme === 'light') {
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
+    } else if (settingsToApply.theme === 'system') {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isDark) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      } else {
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+      }
+    } else if (settingsToApply.theme === 'auto') {
+      const hour = new Date().getHours();
+      const isDark = hour < 6 || hour >= 18;
+      if (isDark) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      } else {
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+      }
     }
 
-    // 폰트 크기 적용
-    document.documentElement.style.fontSize = `${settings.fontSize}%`;
+    // 2. 폰트 크기 적용
+    root.style.fontSize = `${settingsToApply.fontSize}%`;
+
+    // 3. 애니메이션 설정
+    if (settingsToApply.reduceAnimations) {
+      root.style.setProperty('--animation-duration', '0.01s');
+    } else {
+      root.style.setProperty('--animation-duration', '0.3s');
+    }
+
+    // 4. 접근성 설정
+    if (settingsToApply.accessibility) {
+      // 고대비 모드
+      if (settingsToApply.accessibility.highContrast) {
+        root.classList.add('high-contrast');
+      } else {
+        root.classList.remove('high-contrast');
+      }
+
+      // 애니메이션 줄이기
+      if (settingsToApply.accessibility.reduceMotion) {
+        root.style.setProperty('--animation-duration', '0.01s');
+      }
+
+      // 포커스 표시기
+      if (settingsToApply.accessibility.focusIndicator) {
+        root.style.setProperty('--focus-ring-width', '4px');
+        root.style.setProperty('--focus-ring-color', 'rgba(59, 130, 246, 0.6)');
+      } else {
+        root.style.setProperty('--focus-ring-width', '2px');
+        root.style.setProperty('--focus-ring-color', 'rgba(59, 130, 246, 0.3)');
+      }
+    }
+
+    // 5. 배경 설정
+    if (settingsToApply.background === 'solid') {
+      root.style.setProperty('--bg-pattern', 'none');
+    } else if (settingsToApply.background === 'gradient') {
+      root.style.setProperty('--bg-pattern', 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)');
+    } else if (settingsToApply.background === 'pattern') {
+      root.style.setProperty('--bg-pattern', 'repeating-linear-gradient(45deg, #f8fafc 0px, #f8fafc 10px, #f1f5f9 10px, #f1f5f9 20px)');
+    }
   };
+
+  // 페이지 로드 시 저장된 설정 적용
+  useEffect(() => {
+    if (settings) {
+      applySettings(settings);
+    }
+  }, [settings]);
 
   // 설정 업데이트
   const updateSettings = (newSettings) => {
@@ -107,7 +187,8 @@ export default function SystemSettingsPage() {
       setSettings(defaultSettings);
       localStorage.removeItem('systemSettings');
       setHasChanges(false);
-      alert('설정이 초기화되었습니다.');
+      applySettings(defaultSettings);
+      setToast({ message: '설정이 초기화되었습니다.', type: 'info' });
     }
   };
 
@@ -177,6 +258,15 @@ export default function SystemSettingsPage() {
 
   return (
     <div className={styles.container}>
+      {/* 토스트 알림 */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* 헤더 */}
       <div className={styles.header}>
         <button onClick={() => router.back()} className={styles.backButton}>

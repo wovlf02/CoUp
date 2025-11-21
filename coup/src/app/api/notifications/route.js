@@ -1,69 +1,53 @@
-// src/app/api/notifications/route.js
-import { NextResponse } from "next/server"
-import { requireAuth } from "@/lib/auth-helpers"
-import { prisma } from "@/lib/prisma"
+// 알림 목록 조회 API
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request) {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
-
   try {
-    const { searchParams } = new URL(request.url)
-    const filter = searchParams.get('filter') || 'all' // all | unread | read
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const skip = (page - 1) * limit
+    const session = await getServerSession(authOptions);
 
-    const userId = session.user.id
-
-    // 필터 조건
-    let whereClause = { userId }
-    
-    if (filter === 'unread') {
-      whereClause.isRead = false
-    } else if (filter === 'read') {
-      whereClause.isRead = true
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다' },
+        { status: 401 }
+      );
     }
 
-    // 총 개수
-    const total = await prisma.notification.count({ where: whereClause })
-    
-    // 읽지 않은 알림 수
-    const unreadCount = await prisma.notification.count({
-      where: { userId, isRead: false }
-    })
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const read = searchParams.get('read');
 
-    // 알림 목록
+    const where = {
+      userId: session.user.id,
+    };
+
+    if (read === 'true') {
+      where.read = true;
+    } else if (read === 'false') {
+      where.read = false;
+    }
+
     const notifications = await prisma.notification.findMany({
-      where: whereClause,
-      skip,
-      take: limit,
+      where,
       orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        createdAt: 'desc',
+      },
+      take: limit,
+    });
 
     return NextResponse.json({
       success: true,
       data: notifications,
-      stats: {
-        total,
-        unread: unreadCount
-      },
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    })
+    });
 
   } catch (error) {
-    console.error('Notifications error:', error)
+    console.error('알림 조회 오류:', error);
     return NextResponse.json(
-      { error: "알림을 가져오는 중 오류가 발생했습니다" },
+      { error: '알림 조회 중 오류가 발생했습니다' },
       { status: 500 }
-    )
+    );
   }
 }
 

@@ -72,18 +72,37 @@ export default function AppearanceSettings({ settings, onUpdate }) {
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>폰트 크기</h3>
-        <input
-          type="range"
-          min="80"
-          max="150"
-          value={fontSize}
-          onChange={(e) => handleFontSizeChange(parseInt(e.target.value))}
-          className={styles.slider}
-        />
-        <div className={styles.sliderValue}>{fontSize}%</div>
-        <p style={{ fontSize: `${fontSize / 100}em`, marginTop: '12px', color: 'var(--gray-600)' }}>
-          미리보기 텍스트
-        </p>
+        <div className={styles.fontSizeControl}>
+          <input
+            type="range"
+            min="80"
+            max="150"
+            value={fontSize}
+            onChange={(e) => handleFontSizeChange(parseInt(e.target.value))}
+            className={styles.slider}
+          />
+          <div className={styles.fontSizeInputWrapper}>
+            <input
+              type="number"
+              min="80"
+              max="150"
+              value={fontSize}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (value >= 80 && value <= 150) {
+                  handleFontSizeChange(value);
+                }
+              }}
+              className={styles.fontSizeInput}
+            />
+            <span className={styles.fontSizeUnit}>%</span>
+          </div>
+        </div>
+        <div className={styles.previewBox}>
+          <p style={{ fontSize: `${fontSize / 100}em`, margin: 0 }}>
+            미리보기: 가나다라마바사 ABCDEFG 12345
+          </p>
+        </div>
       </div>
 
       <div className={styles.section}>

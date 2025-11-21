@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useStudy } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import StudyTabs from '@/components/study/StudyTabs';
+import { formatDateTimeKST } from '@/utils/time';
 import styles from './page.module.css';
 
 export default function MyStudyDashboardPage({ params }) {
@@ -16,6 +17,13 @@ export default function MyStudyDashboardPage({ params }) {
   // 실제 API 호출
   const { data: studyData, isLoading } = useStudy(studyId);
   const study = studyData?.data;
+
+  // 추가 데이터는 향후 API 구현 시 활성화
+  // 현재는 빈 배열로 처리하여 오류 방지
+  const recentNotices = [];
+  const recentFiles = [];
+  const upcomingEvents = [];
+  const urgentTasks = [];
 
   // 로딩 상태
   if (isLoading) {
@@ -35,22 +43,16 @@ export default function MyStudyDashboardPage({ params }) {
     );
   }
 
-
-  // Mock 데이터 (임시 - 추후 실제 API로 교체)
+  // 이번 주 활동 요약 계산
   const weeklyActivity = {
-    attendance: 85,
-    attendanceCount: '6/7',
-    taskCompletion: 70,
-    taskCount: '7/10',
-    messages: 42,
-    notices: 3,
-    files: 5,
+    attendance: study.weeklyStats?.attendanceRate || 0,
+    attendanceCount: study.weeklyStats?.attendanceCount || '0/0',
+    taskCompletion: study.weeklyStats?.taskCompletionRate || 0,
+    taskCount: study.weeklyStats?.taskCount || '0/0',
+    messages: study.weeklyStats?.messageCount || 0,
+    notices: study.weeklyStats?.noticeCount || 0,
+    files: study.weeklyStats?.fileCount || 0,
   };
-
-  const recentNotices = [];
-  const recentFiles = [];
-  const upcomingEvents = [];
-  const urgentTasks = [];
 
   return (
     <div className={styles.container}>
@@ -159,7 +161,7 @@ export default function MyStudyDashboardPage({ params }) {
                       <div className={styles.itemContent}>
                         <span className={styles.itemTitle}>{notice.title}</span>
                         <span className={styles.itemMeta}>
-                          {notice.author} · {notice.time}
+                          {notice.author?.name || '작성자'} · {formatDateTimeKST(notice.createdAt)}
                         </span>
                       </div>
                     </div>
@@ -185,7 +187,7 @@ export default function MyStudyDashboardPage({ params }) {
                       <div className={styles.itemContent}>
                         <span className={styles.itemTitle}>{file.name}</span>
                         <span className={styles.itemMeta}>
-                          {file.uploader} · {file.size}
+                          {file.uploader?.name || '업로더'} · {file.size ? `${(file.size / 1024).toFixed(1)}KB` : ''}
                         </span>
                       </div>
                     </div>
@@ -210,9 +212,9 @@ export default function MyStudyDashboardPage({ params }) {
                     <div key={event.id} className={styles.listItem}>
                       <div className={styles.itemContent}>
                         <span className={styles.itemTitle}>{event.title}</span>
-                        <span className={styles.itemMeta}>{event.date}</span>
+                        <span className={styles.itemMeta}>{formatDateTimeKST(event.startDate)}</span>
                       </div>
-                      <span className={styles.ddayBadge}>{event.dday}</span>
+                      {event.dday && <span className={styles.ddayBadge}>{event.dday}</span>}
                     </div>
                   ))
                 )}
@@ -235,9 +237,9 @@ export default function MyStudyDashboardPage({ params }) {
                     <div key={task.id} className={styles.listItem}>
                       <div className={styles.itemContent}>
                         <span className={styles.itemTitle}>{task.title}</span>
-                        <span className={styles.itemMeta}>{task.date}</span>
+                        <span className={styles.itemMeta}>{formatDateTimeKST(task.dueDate)}</span>
                       </div>
-                      <span className={styles.urgentBadge}>{task.dday}</span>
+                      <span className={styles.urgentBadge}>🔥 긴급</span>
                     </div>
                   ))
                 )}

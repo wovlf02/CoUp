@@ -167,23 +167,32 @@
 }
 
 .deleteButton {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
+  padding: 6px 14px;
+  border: 2px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
   cursor: pointer;
-  border-radius: 6px;
-  font-size: 1.2rem;
-  transition: all 0.2s;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
 }
 
 .deleteButton:hover {
-  background: #FEE2E2;
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.deleteButton:active {
+  transform: translateY(0);
 }
 
 .completed .taskTitle {

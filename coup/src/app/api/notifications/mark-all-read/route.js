@@ -1,38 +1,42 @@
-// src/app/api/notifications/mark-all-read/route.js
-import { NextResponse } from "next/server"
-import { requireAuth } from "@/lib/auth-helpers"
-import { prisma } from "@/lib/prisma"
+// 모든 알림 읽음 처리 API
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-export async function POST() {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
-
+export async function POST(request) {
   try {
-    const userId = session.user.id
+    const session = await getServerSession(authOptions);
 
-    // 모든 알림 읽음 처리
-    const result = await prisma.notification.updateMany({
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다' },
+        { status: 401 }
+      );
+    }
+
+    // 모든 읽지 않은 알림을 읽음 처리
+    await prisma.notification.updateMany({
       where: {
-        userId,
-        isRead: false
+        userId: session.user.id,
+        read: false,
       },
       data: {
-        isRead: true
-      }
-    })
+        read: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      message: `${result.count}개의 알림을 읽음 처리했습니다`,
-      count: result.count
-    })
+      message: '모든 알림이 읽음 처리되었습니다',
+    });
 
   } catch (error) {
-    console.error('Mark all notifications as read error:', error)
+    console.error('알림 전체 읽음 처리 오류:', error);
     return NextResponse.json(
-      { error: "알림 읽음 처리 중 오류가 발생했습니다" },
+      { error: '알림 읽음 처리 중 오류가 발생했습니다' },
       { status: 500 }
-    )
+    );
   }
 }
 

@@ -1,7 +1,7 @@
 import { getTimeLeft, formatDateTimeKST } from '@/utils/time'
 import styles from './TaskCard.module.css'
 
-export default function TaskCard({ task, onToggleComplete, onDeleteTask }) {
+export default function TaskCard({ task, onToggleComplete, onDeleteTask, onCardClick }) {
   const timeLeft = getTimeLeft(task.dueDate)
 
   const getDeadlineClass = () => {
@@ -18,12 +18,15 @@ export default function TaskCard({ task, onToggleComplete, onDeleteTask }) {
   }
 
   return (
-    <div className={getCardClass()}>
+    <div className={getCardClass()} onClick={() => onCardClick && onCardClick(task)}>
       <div className={styles.taskHeader}>
         <div className={styles.leftSection}>
           <div
             className={`${styles.checkbox} ${task.completed ? styles.checked : ''}`}
-            onClick={() => onToggleComplete(task.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleComplete(task.id);
+            }}
           >
             {task.completed && '✓'}
           </div>
@@ -50,7 +53,7 @@ export default function TaskCard({ task, onToggleComplete, onDeleteTask }) {
           }}
           title="삭제"
         >
-          🗑️
+          삭제
         </button>
       </div>
 

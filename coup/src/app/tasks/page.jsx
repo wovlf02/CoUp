@@ -9,6 +9,7 @@ import TaskProgressWidget from '@/components/tasks/TaskProgressWidget'
 import TaskByStudyWidget from '@/components/tasks/TaskByStudyWidget'
 import TaskEmpty from '@/components/tasks/TaskEmpty'
 import TaskCreateModal from '@/components/tasks/TaskCreateModal'
+import TaskDetailModal from '@/components/tasks/TaskDetailModal'
 import { useTasks, useToggleTask, useDeleteTask, useTaskStats } from '@/lib/hooks/useApi'
 import { getUrgencyLevel } from '@/utils/time'
 import styles from './page.module.css'
@@ -21,6 +22,7 @@ export default function TasksPage() {
   })
   const [viewMode, setViewMode] = useState('list') // 'list' or 'calendar'
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedTask, setSelectedTask] = useState(null)
 
   // 실제 API 호출
   const { data: tasksData, isLoading } = useTasks(filter)
@@ -140,8 +142,9 @@ export default function TasksPage() {
                 title="🔥 긴급"
                 tasks={groupedTasks.urgent}
                 color="urgent"
-                onToggle={handleToggleComplete}
-                onDelete={handleDeleteTask}
+                onToggleComplete={handleToggleComplete}
+                onDeleteTask={handleDeleteTask}
+                onCardClick={setSelectedTask}
               />
             )}
 
@@ -149,19 +152,19 @@ export default function TasksPage() {
               <TaskGroup
                 title="📅 이번 주"
                 tasks={groupedTasks.thisWeek}
-                color="thisWeek"
-                onToggle={handleToggleComplete}
-                onDelete={handleDeleteTask}
+                onToggleComplete={handleToggleComplete}
+                onDeleteTask={handleDeleteTask}
+                onCardClick={setSelectedTask}
               />
             )}
 
             {groupedTasks.later.length > 0 && (
               <TaskGroup
-                title="📝 나중에"
+                title="📋 나중에"
                 tasks={groupedTasks.later}
-                color="later"
-                onToggle={handleToggleComplete}
-                onDelete={handleDeleteTask}
+                onToggleComplete={handleToggleComplete}
+                onDeleteTask={handleDeleteTask}
+                onCardClick={setSelectedTask}
               />
             )}
           </div>
@@ -178,6 +181,15 @@ export default function TasksPage() {
         <TaskCreateModal
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => setShowCreateModal(false)}
+        />
+      )}
+
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onToggleComplete={handleToggleComplete}
+          onDelete={handleDeleteTask}
         />
       )}
     </div>

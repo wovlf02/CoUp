@@ -20,9 +20,12 @@ export default function SignUpPage() {
   }, [status, router, callbackUrl])
 
   // Form state
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [avatar, setAvatar] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
@@ -31,6 +34,7 @@ export default function SignUpPage() {
   const [error, setError] = useState(null)
   const [formErrors, setFormErrors] = useState({})
   const [passwordStrength, setPasswordStrength] = useState(null) // 'weak' | 'medium' | 'strong'
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // Validation
   const validateEmail = (email) => {
@@ -61,9 +65,40 @@ export default function SignUpPage() {
     }
   }
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      setFormErrors({ ...formErrors, avatar: '이미지 파일만 업로드 가능합니다' })
+      return
+    }
+
+    // 파일 크기 검증 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setFormErrors({ ...formErrors, avatar: '파일 크기는 5MB 이하여야 합니다' })
+      return
+    }
+
+    setAvatar(file)
+    setFormErrors({ ...formErrors, avatar: null })
+
+    // 미리보기 생성
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const validateForm = () => {
     const errors = {}
     
+    if (!name || name.trim().length < 2) {
+      errors.name = '이름은 2자 이상이어야 합니다'
+    }
+
     if (!email) {
       errors.email = '이메일을 입력해주세요'
     } else if (!validateEmail(email)) {
@@ -105,11 +140,37 @@ export default function SignUpPage() {
       setLoading(true)
       setError(null)
 
+      let avatarUrl = null
+
+      // 프로필 사진 업로드 (선택사항)
+      if (avatar) {
+        setUploadingAvatar(true)
+        const formData = new FormData()
+        formData.append('file', avatar)
+        formData.append('type', 'avatar')
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (uploadResponse.ok) {
+          const uploadData = await uploadResponse.json()
+          avatarUrl = uploadData.url
+        }
+        setUploadingAvatar(false)
+      }
+
       // 회원가입 API 호출
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          avatar: avatarUrl
+        }),
       })
 
       const data = await response.json()
@@ -151,10 +212,12 @@ export default function SignUpPage() {
   }
 
   const isFormValid = 
-    email && 
+    name &&
+    email &&
     password && 
     confirmPassword &&
-    validateEmail(email) && 
+    name.trim().length >= 2 &&
+    validateEmail(email) &&
     password.length >= 8 && 
     password === confirmPassword
 
@@ -198,9 +261,64 @@ export default function SignUpPage() {
 
         {/* 이메일/비밀번호 회원가입 폼 */}
         <form className={styles.form} onSubmit={handleCredentialsSignup}>
+          {/* 프로필 사진 */}
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>
+              프로필 사진 (선택)
+            </label>
+            <div className={styles.avatarUploadContainer}>
+              <div className={styles.avatarPreview}>
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="프로필 미리보기" className={styles.avatarImage} />
+                ) : (
+                  <div className={styles.avatarPlaceholder}>
+                    <span>📷</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.avatarUploadInfo}>
+                <input
+                  type="file"
+                  id="avatar"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  disabled={loading}
+                  className={styles.fileInput}
+                />
+                <label htmlFor="avatar" className={styles.fileInputLabel}>
+                  사진 선택
+                </label>
+                <p className={styles.fileInputHint}>JPG, PNG (최대 5MB)</p>
+              </div>
+            </div>
+            {formErrors.avatar && (
+              <div className={styles.formError}>{formErrors.avatar}</div>
+            )}
+          </div>
+
+          {/* 이름 */}
+          <div className={styles.formGroup}>
+            <label htmlFor="name" className={styles.formLabel}>
+              이름 *
+            </label>
+            <input
+              id="name"
+              type="text"
+              className={`${styles.formInput} ${formErrors.name ? styles.error : ''}`}
+              placeholder="홍길동"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={loading}
+            />
+            {formErrors.name && (
+              <div className={styles.formError}>{formErrors.name}</div>
+            )}
+          </div>
+
+          {/* 이메일 */}
           <div className={styles.formGroup}>
             <label htmlFor="email" className={styles.formLabel}>
-              이메일
+              이메일 *
             </label>
             <input
               id="email"

@@ -1,119 +1,201 @@
-'use client'
+// 알림 메인 페이지
+'use client';
 
-import { useState, useMemo } from 'react'
-import NotificationCard from '@/components/notifications/NotificationCard'
-import NotificationFilters from '@/components/notifications/NotificationFilters'
-import NotificationStats from '@/components/notifications/NotificationStats'
-import NotificationTypeFilter from '@/components/notifications/NotificationTypeFilter'
-import NotificationEmpty from '@/components/notifications/NotificationEmpty'
-import { useNotifications, useMarkAllNotificationsAsRead, useMarkNotificationAsRead } from '@/lib/hooks/useApi'
-import styles from './page.module.css'
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { formatDateTimeKST } from '@/utils/time';
+import styles from './page.module.css';
 
 export default function NotificationsPage() {
-  const [filter, setFilter] = useState('unread') // 'all', 'unread'
+  const { data: session } = useSession();
+  const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState('all'); // all, unread, read
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 실제 API 호출
-  const { data, isLoading } = useNotifications({ filter })
-  const markAllAsRead = useMarkAllNotificationsAsRead()
-  const markAsRead = useMarkNotificationAsRead()
-
-  const notifications = data?.data || []
-  const stats = data?.stats || { total: 0, unread: 0 }
-
-  const filteredNotifications = useMemo(() => {
-    if (filter === 'unread') {
-      return notifications.filter(n => !n.isRead)
+  useEffect(() => {
+    if (session?.user) {
+      fetchNotifications();
     }
-    return notifications
-  }, [notifications, filter])
+  }, [session, filter]);
 
-  // 알림 타입별 통계 (클라이언트에서 계산)
-  const notificationTypeStats = useMemo(() => {
-    const byType = {}
-    notifications.forEach(n => {
-      byType[n.type] = (byType[n.type] || 0) + 1
-    })
-    return {
-      total: stats.total,
-      unread: stats.unread,
-      byType
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filter === 'unread') params.append('read', 'false');
+      if (filter === 'read') params.append('read', 'true');
+
+      const response = await fetch(`/api/notifications?${params.toString()}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setNotifications(data.data);
+      }
+    } catch (error) {
+      console.error('알림 로드 실패:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [notifications, stats])
+  };
 
-  const handleMarkAllAsRead = async () => {
-    if (!confirm('모든 알림을 읽음 처리하시겠습니까?')) return
+  const handleMarkAsRead = async (id) => {
+    try {
+      const response = await fetch(`/api/notifications/${id}/read`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setNotifications(notifications.map(n =>
+          n.id === id ? { ...n, read: true } : n
+        ));
+      }
+    } catch (error) {
+      console.error('알림 읽음 처리 실패:', error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const response = await fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setNotifications(notifications.map(n => ({ ...n, read: true })));
+      }
+    } catch (error) {
+      console.error('전체 읽음 처리 실패:', error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('이 알림을 삭제하시겠습니까?')) return;
 
     try {
-      await markAllAsRead.mutateAsync()
-      alert('모든 알림을 읽음 처리했습니다!')
-    } catch (error) {
-      console.error('알림 읽음 처리 실패:', error)
-      alert('알림 읽음 처리에 실패했습니다.')
-    }
-  }
+      const response = await fetch(`/api/notifications/${id}`, {
+        method: 'DELETE',
+      });
 
-  const handleNotificationClick = async (notification) => {
-    if (!notification.isRead) {
-      try {
-        await markAsRead.mutateAsync(notification.id)
-      } catch (error) {
-        console.error('알림 읽음 처리 실패:', error)
+      if (response.ok) {
+        setNotifications(notifications.filter(n => n.id !== id));
       }
+    } catch (error) {
+      console.error('알림 삭제 실패:', error);
     }
+  };
 
-    // 알림 데이터에 따라 링크로 이동
-    if (notification.studyId) {
-      window.location.href = `/my-studies/${notification.studyId}`
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'ANNOUNCEMENT': return '📢';
+      case 'INVITATION': return '💌';
+      case 'TASK': return '✅';
+      case 'COMMENT': return '💬';
+      case 'SYSTEM': return 'ℹ️';
+      case 'MENTION': return '🔔';
+      default: return '📌';
     }
-  }
+  };
 
-  // 로딩 상태
-  if (isLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>알림을 불러오는 중...</div>
-      </div>
-    )
-  }
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className={styles.container}>
-      <div className={styles.mainContent}>
-        <header className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1 className={styles.title}>🔔 알림</h1>
-            <p className={styles.subtitle}>
-              모든 스터디의 새로운 소식을 확인하세요
-            </p>
-          </div>
-        </header>
-
-        <NotificationFilters
-          filter={filter}
-          onFilterChange={setFilter}
-          onMarkAllAsRead={handleMarkAllAsRead}
-          unreadCount={stats.unread}
-        />
-
-        {filteredNotifications.length === 0 ? (
-          <NotificationEmpty filter={filter} />
-        ) : (
-          <div className={styles.notificationList}>
-            {filteredNotifications.map(notification => (
-              <NotificationCard
-                key={notification.id}
-                notification={notification}
-                onClick={() => handleNotificationClick(notification)}
-              />
-            ))}
-          </div>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>🔔 알림</h1>
+          <p className={styles.subtitle}>
+            읽지 않은 알림 {unreadCount}개
+          </p>
+        </div>
+        {unreadCount > 0 && (
+          <button onClick={handleMarkAllRead} className={styles.markAllButton}>
+            모두 읽음으로 표시
+          </button>
         )}
       </div>
 
-      <aside className={styles.sidebar}>
-        <NotificationStats notifications={notifications} />
-        <NotificationTypeFilter stats={notificationTypeStats} />
-      </aside>
+      <div className={styles.filters}>
+        <button
+          className={`${styles.filterButton} ${filter === 'all' ? styles.active : ''}`}
+          onClick={() => setFilter('all')}
+        >
+          전체
+        </button>
+        <button
+          className={`${styles.filterButton} ${filter === 'unread' ? styles.active : ''}`}
+          onClick={() => setFilter('unread')}
+        >
+          읽지 않음
+        </button>
+        <button
+          className={`${styles.filterButton} ${filter === 'read' ? styles.active : ''}`}
+          onClick={() => setFilter('read')}
+        >
+          읽음
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className={styles.loading}>알림을 불러오는 중...</div>
+      ) : notifications.length === 0 ? (
+        <div className={styles.empty}>
+          <div className={styles.emptyIcon}>🔔</div>
+          <p className={styles.emptyText}>알림이 없습니다</p>
+        </div>
+      ) : (
+        <div className={styles.notificationList}>
+          {notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`${styles.notificationCard} ${notification.read ? styles.read : styles.unread}`}
+              onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+            >
+              <div className={styles.notificationIcon}>
+                {getNotificationIcon(notification.type)}
+              </div>
+
+              <div className={styles.notificationContent}>
+                <div className={styles.notificationHeader}>
+                  <h3 className={styles.notificationTitle}>
+                    {notification.title}
+                  </h3>
+                  {!notification.read && (
+                    <span className={styles.unreadBadge}>NEW</span>
+                  )}
+                </div>
+
+                <p className={styles.notificationMessage}>
+                  {notification.message}
+                </p>
+
+                <div className={styles.notificationFooter}>
+                  <span className={styles.notificationTime}>
+                    {formatDateTimeKST(notification.createdAt)}
+                  </span>
+
+                  {notification.link && (
+                    <a href={notification.link} className={styles.notificationLink}>
+                      자세히 보기 →
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              <button
+                className={styles.deleteButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(notification.id);
+                }}
+                aria-label="삭제"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
-  )
+  );
 }
+
