@@ -125,6 +125,7 @@
   display: grid;
   grid-template-columns: 1fr 350px;
   gap: 24px;
+  height: calc(100vh - 280px);
   margin-bottom: 0;
 }
 
@@ -132,7 +133,7 @@
 .chatSection {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 420px);
+  height: 100%;
   background: white;
   border: 1px solid var(--gray-200);
   border-radius: 12px;
@@ -228,15 +229,14 @@
 /* 메시지 */
 .message {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  max-width: 70%;
+  gap: 8px;
+  margin-bottom: 12px;
   animation: fadeIn 0.2s ease-in;
 }
 
 .message.mine {
-  margin-left: auto;
   flex-direction: row-reverse;
+  justify-content: flex-start;
 }
 
 @keyframes fadeIn {
@@ -250,9 +250,10 @@
   }
 }
 
+/* 아바타 - 상대방 메시지에만 표시 */
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: var(--pastel-purple-bg);
   border: 2px solid var(--pastel-purple-border);
@@ -260,65 +261,121 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: var(--pastel-purple-text);
+  color: var(--primary-600);
+  font-size: 1rem;
   flex-shrink: 0;
+  align-self: flex-start;
 }
 
+.message.mine .avatar {
+  display: none;
+}
+
+/* 메시지 콘텐츠 래퍼 */
 .messageContent {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-width: 60%;
+  min-width: 100px;
 }
 
+.message.mine .messageContent {
+  align-items: flex-end;
+}
+
+/* 상대방 메시지: 닉네임 표시 */
 .messageMeta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: var(--gray-500);
+  gap: 6px;
+  padding: 0 4px;
 }
 
 .message.mine .messageMeta {
-  justify-content: flex-end;
+  display: none;
 }
 
 .userName {
   font-weight: 600;
+  font-size: 0.8125rem;
   color: var(--gray-700);
 }
 
-.timestamp {
-  color: var(--gray-500);
+/* 메시지 바디 - 말풍선 + 시간 */
+.messageBody {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
 }
 
+.message.mine .messageBody {
+  flex-direction: row-reverse;
+}
+
+/* 메시지 말풍선 */
 .messageBubble {
-  padding: 12px 16px;
-  border-radius: 12px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 0.9375rem;
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* 상대방 메시지 말풍선 - 좌측 정렬, 회색 배경 */
+.message:not(.mine) .messageBubble {
   background: white;
   border: 1px solid var(--gray-200);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  word-wrap: break-word;
-  line-height: 1.5;
+  color: var(--gray-900);
+  border-radius: 4px 18px 18px 18px;
 }
 
+/* 내 메시지 말풍선 - 우측 정렬, 파란색 배경 */
 .message.mine .messageBubble {
   background: var(--primary-600);
   color: white;
-  border: none;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+  border-radius: 18px 4px 18px 18px;
+  text-align: left;
+}
+
+/* 타임스탬프 */
+.timestamp {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: flex-end;
+  padding-bottom: 2px;
 }
 
 .readReceipt {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   font-size: 0.75rem;
-  color: var(--gray-500);
+  color: var(--primary-600);
+  margin-right: 2px;
 }
 
 .message.mine .readReceipt {
-  color: var(--primary-300);
+  color: var(--primary-400);
+}
+
+/* 삭제 버튼 */
+.deleteBtn {
+  font-size: 0.6875rem;
+  color: var(--error-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+.deleteBtn:hover {
+  color: var(--error-700);
+  text-decoration: underline;
 }
 
 /* 파일 첨부 */
@@ -328,14 +385,14 @@
   gap: 12px;
   margin-top: 8px;
   padding: 12px;
-  background: var(--pastel-blue-bg);
-  border: 1px solid var(--pastel-blue-border);
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
   border-radius: 8px;
 }
 
 .message.mine .fileAttachment {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .fileIcon {
@@ -352,31 +409,49 @@
 .fileName {
   font-size: 0.875rem;
   font-weight: 600;
+  color: var(--gray-900);
+}
+
+.message.mine .fileName {
+  color: white;
 }
 
 .fileSize {
   font-size: 0.75rem;
-  opacity: 0.8;
+  color: var(--gray-600);
+}
+
+.message.mine .fileSize {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .downloadButton {
-  padding: 6px 12px;
-  background: white;
-  border: 1px solid var(--pastel-blue-border);
+  padding: 8px 16px;
+  background: var(--primary-600);
+  border: none;
   border-radius: 6px;
-  font-size: 0.75rem;
+  color: white;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
 }
 
 .downloadButton:hover {
-  background: var(--pastel-blue-hover);
+  background: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2);
 }
 
 .message.mine .downloadButton {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: white;
+  color: var(--primary-600);
+}
+
+.message.mine .downloadButton:hover {
+  background: var(--gray-100);
+  color: var(--primary-700);
 }
 
 /* 입력 중 표시 */
@@ -584,7 +659,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: calc(100vh - 420px);
+  height: 100%;
   overflow-y: auto;
 }
 

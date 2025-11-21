@@ -69,11 +69,16 @@ export default function MyStudyChatPage({ params }) {
       console.log('[Chat] New message received:', message);
 
       // 자신이 보낸 메시지는 무시 (이미 낙관적 업데이트로 표시됨)
-      if (message.senderId === currentUser.id) return;
+      const messageSenderId = message.senderId || message.sender?.id;
+      if (messageSenderId === currentUser.id) return;
 
       // 실시간 메시지에 추가
       setRealtimeMessages(prev => [...prev, {
         ...message,
+        sender: message.sender || message.user || {
+          id: message.senderId,
+          name: '알 수 없음'
+        },
         isMine: false,
         createdAt: message.createdAt || new Date().toISOString()
       }]);
@@ -105,14 +110,18 @@ export default function MyStudyChatPage({ params }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!content.trim() || !socket) return;
+    if (!content.trim() || !socket || !currentUser) return;
 
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage = {
       id: tempId,
       content: content.trim(),
-      senderId: currentUser?.id,
-      sender: currentUser,
+      senderId: currentUser.id,
+      sender: {
+        id: currentUser.id,
+        name: currentUser.name,
+        avatar: currentUser.avatar
+      },
       isMine: true,
       createdAt: new Date().toISOString(),
       studyId
@@ -129,10 +138,13 @@ export default function MyStudyChatPage({ params }) {
         data: { content: content.trim() }
       });
 
-      // Socket.io로 실시간 전송
+      // Socket.io로 실시간 전송 (sender 정보 포함)
       socket.emit('study:message', {
         studyId,
-        message: result.data
+        message: {
+          ...result.data,
+          sender: result.data.user || result.data.sender || currentUser
+        }
       });
 
       // 임시 메시지 제거
@@ -382,46 +394,62 @@ export default function MyStudyChatPage({ params }) {
                 return (
                   <div
                     key={message.id}
-                    className={`${styles.message} ${message.isMine ? styles.mine : ''}`}
+                    className={`${styles.message} ${message.sender?.id === currentUser?.id ? styles.mine : ''}`}
                   >
-                    {!message.isMine && (
+                    {/* 상대방 메시지: 프로필 사진 */}
+                    {message.sender?.id !== currentUser?.id && (
                       <div className={styles.avatar}>
                         {message.sender?.name?.[0] || 'U'}
                       </div>
                     )}
+
                     <div className={styles.messageContent}>
-                      {!message.isMine && (
+                      {/* 상대방 메시지: 닉네임 */}
+                      {message.sender?.id !== currentUser?.id && (
                         <div className={styles.messageMeta}>
                           <span className={styles.userName}>{message.sender?.name || '알 수 없음'}</span>
-                          <span className={styles.timestamp}>{formatTime(message.createdAt)}</span>
                         </div>
                       )}
-                      <div className={styles.messageBubble}>
-                        {message.content}
-                        {message.file && (
-                          <div className={styles.fileAttachment}>
-                            <span className={styles.fileIcon}>📄</span>
-                            <div className={styles.fileInfo}>
-                              <span className={styles.fileName}>{message.file.name}</span>
-                              <span className={styles.fileSize}>{formatFileSize(message.file.size)}</span>
+
+                      {/* 말풍선 + 시간 */}
+                      <div className={styles.messageBody}>
+                        <div className={styles.messageBubble}>
+                          {message.content}
+                          {message.file && (
+                            <div className={styles.fileAttachment}>
+                              <span className={styles.fileIcon}>📄</span>
+                              <div className={styles.fileInfo}>
+                                <span className={styles.fileName}>{message.file.name}</span>
+                                <span className={styles.fileSize}>{formatFileSize(message.file.size)}</span>
+                              </div>
+                              <a
+                                href={message.file.url}
+                                download
+                                className={styles.downloadButton}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                다운로드
+                              </a>
                             </div>
-                            <a href={message.file.url} download className={styles.downloadButton}>다운로드</a>
-                          </div>
-                        )}
-                      </div>
-                      {message.isMine && (
-                        <div className={styles.messageMeta}>
-                          <span className={styles.readReceipt}>✓</span>
-                          <span className={styles.timestamp}>{formatTime(message.createdAt)}</span>
-                          <button
-                            onClick={() => handleDeleteMessage(message.id)}
-                            className={styles.deleteBtn}
-                            style={{ marginLeft: '8px', color: '#ef4444', cursor: 'pointer' }}
-                          >
-                            삭제
-                          </button>
+                          )}
                         </div>
-                      )}
+
+                        {/* 시간 + 삭제 버튼 (내 메시지만) */}
+                        <div className={styles.timestamp}>
+                          {message.sender?.id === currentUser?.id && (
+                            <span className={styles.readReceipt}>✓</span>
+                          )}
+                          {formatTime(message.createdAt)}
+                          {message.sender?.id === currentUser?.id && (
+                            <button
+                              onClick={() => handleDeleteMessage(message.id)}
+                              className={styles.deleteBtn}
+                            >
+                              삭제
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );

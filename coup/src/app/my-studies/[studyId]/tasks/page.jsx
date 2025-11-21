@@ -39,7 +39,9 @@ export default function MyStudyTasksPage({ params }) {
   const deleteTaskMutation = useDeleteStudyTask();
 
   const study = studyData?.data;
-  const members = membersData?.data || [];
+  const allMembers = membersData?.data || [];
+  // ACTIVE 상태의 멤버만 필터링
+  const members = allMembers.filter(m => m.status === 'ACTIVE');
   const tasks = tasksData?.data || [];
 
   // 상태별로 할일 분류
@@ -570,18 +572,43 @@ export default function MyStudyTasksPage({ params }) {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>담당자</label>
+                <label className={styles.formLabel}>
+                  담당자 {formData.assigneeIds.length > 0 && (
+                    <span className={styles.assigneeCount}>
+                      ({formData.assigneeIds.length}명 선택됨)
+                    </span>
+                  )}
+                </label>
                 <div className={styles.assigneeList}>
-                  {members.map((member) => (
-                    <label key={member.userId} className={styles.assigneeItem}>
-                      <input
-                        type="checkbox"
-                        checked={formData.assigneeIds.includes(member.userId)}
-                        onChange={() => handleAssigneeToggle(member.userId)}
-                      />
-                      <span>{member.user?.name || '알 수 없음'}</span>
-                    </label>
-                  ))}
+                  {members.length === 0 ? (
+                    <div className={styles.emptyAssignees}>
+                      스터디에 활성 멤버가 없습니다.
+                    </div>
+                  ) : (
+                    members.map((member) => (
+                      <label key={member.userId} className={styles.assigneeItem}>
+                        <input
+                          type="checkbox"
+                          checked={formData.assigneeIds.includes(member.userId)}
+                          onChange={() => handleAssigneeToggle(member.userId)}
+                        />
+                        <div className={styles.assigneeInfo}>
+                          <div className={styles.assigneeAvatar}>
+                            {member.user?.name?.[0] || '?'}
+                          </div>
+                          <div className={styles.assigneeDetails}>
+                            <span className={styles.assigneeName}>
+                              {member.user?.name || '알 수 없음'}
+                            </span>
+                            <span className={styles.assigneeRole}>
+                              {member.role === 'OWNER' ? '👑 방장' :
+                               member.role === 'ADMIN' ? '⭐ 관리자' : '👤 멤버'}
+                            </span>
+                          </div>
+                        </div>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
