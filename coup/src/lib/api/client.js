@@ -88,14 +88,34 @@ export const api = {
   },
 
   // 파일 업로드
-  upload: (endpoint, formData) => {
-    return fetchAPI(endpoint, {
-      method: 'POST',
-      headers: {
+  upload: async (endpoint, formData) => {
+    const url = `${API_BASE_URL}${endpoint}`
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include', // NextAuth 쿠키 포함
+        body: formData,
         // Content-Type을 명시하지 않아야 multipart/form-data 경계가 자동 설정됨
-      },
-      body: formData,
-    })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new ApiError(
+          data.error || 'API 요청 실패',
+          response.status,
+          data
+        )
+      }
+
+      return data
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error
+      }
+      throw new ApiError('네트워크 오류가 발생했습니다', 500, null)
+    }
   },
 }
 

@@ -36,7 +36,7 @@ export default function MyStudyChatPage({ params }) {
 
   const study = studyData?.data;
   const [realtimeMessages, setRealtimeMessages] = useState([]);
-  const allMessages = [...(messagesData?.messages || []), ...realtimeMessages];
+  const allMessages = [...(messagesData?.data || []), ...realtimeMessages];
   const onlineMembers = []; // TODO: Socket.io로 실시간 온라인 멤버 구현
 
 
@@ -172,61 +172,109 @@ export default function MyStudyChatPage({ params }) {
 
   // 파일 전송
   const handleSendFile = async () => {
-    if (!selectedFile || !socket) return;
+    if (!selectedFile) {
+      console.error('[Chat] No file selected');
+      return;
+    }
 
+    if (!socket) {
+      console.error('[Chat] Socket not connected');
+      alert('실시간 연결이 필요합니다. 페이지를 새로고침해주세요.');
+      return;
+    }
+
+    console.log('[Chat] ===== Starting file upload process =====');
+    console.log('[Chat] File name:', selectedFile.name);
+    console.log('[Chat] File size:', selectedFile.size);
+    console.log('[Chat] Study ID:', studyId);
     setIsUploading(true);
 
     try {
-      // FormData로 파일 준비
+      // 1단계: 파일 업로드
+      console.log('[Chat] Step 1: Uploading file...');
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      // 파일 업로드 API 호출
-      const response = await fetch(`/api/studies/${studyId}/files`, {
+      const uploadResponse = await fetch(`/api/studies/${studyId}/files`, {
         method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      console.log('[Chat] Upload response status:', uploadResponse.status);
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        console.error('[Chat] File upload failed:', errorData);
         throw new Error(errorData.error || '파일 업로드 실패');
       }
 
-      const result = await response.json();
+      const uploadResult = await uploadResponse.json();
+      console.log('[Chat] Step 1 Complete - Upload result:', uploadResult);
 
-      // 파일 메시지 생성
-      const fileMessage = {
-        studyId,
-        content: `파일: ${selectedFile.name}`,
-        fileUrl: result.data.url,
-        fileName: selectedFile.name,
-        fileSize: selectedFile.size,
-        fileType: selectedFile.type
+      // 2단계: 채팅 메시지 생성 (fileId 포함)
+      const fileId = uploadResult.data?.id;
+      if (!fileId) {
+        console.error('[Chat] No file ID in upload result:', uploadResult);
+        throw new Error('파일 ID를 찾을 수 없습니다');
+      }
+
+      console.log('[Chat] Step 2: Creating chat message with fileId:', fileId);
+      const messagePayload = {
+        content: `📎 ${selectedFile.name}`,
+        fileId: fileId
       };
+      console.log('[Chat] Message payload:', messagePayload);
 
-      // Socket.io로 파일 메시지 전송
-      socket.emit('study:message', {
-        studyId,
-        message: fileMessage
+      const messageResponse = await fetch(`/api/studies/${studyId}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messagePayload),
       });
 
-      // 로컬에 추가
-      setRealtimeMessages(prev => [...prev, {
-        ...fileMessage,
-        id: `file-${Date.now()}`,
-        senderId: currentUser?.id,
-        sender: currentUser,
+      console.log('[Chat] Message response status:', messageResponse.status);
+
+      if (!messageResponse.ok) {
+        const errorData = await messageResponse.json();
+        console.error('[Chat] Message creation failed:', errorData);
+        throw new Error(errorData.error || '메시지 생성 실패');
+      }
+
+      const messageResult = await messageResponse.json();
+      console.log('[Chat] Step 2 Complete - Message result:', messageResult);
+
+      // 3단계: Socket.io로 실시간 전송
+      console.log('[Chat] Step 3: Emitting socket message');
+      const socketPayload = {
+        studyId,
+        message: messageResult.data
+      };
+      console.log('[Chat] Socket payload:', socketPayload);
+      socket.emit('study:message', socketPayload);
+
+      // 4단계: 로컬에 추가 (낙관적 업데이트)
+      console.log('[Chat] Step 4: Adding to local messages');
+      const localMessage = {
+        ...messageResult.data,
+        sender: messageResult.data.user || currentUser,
         isMine: true,
-        createdAt: new Date().toISOString()
-      }]);
+        createdAt: messageResult.data.createdAt || new Date().toISOString()
+      };
+      console.log('[Chat] Local message:', localMessage);
+      setRealtimeMessages(prev => [...prev, localMessage]);
 
       // 초기화
       setSelectedFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+
+      console.log('[Chat] ===== File upload process completed successfully =====');
     } catch (error) {
-      console.error('[Chat] File upload error:', error);
+      console.error('[Chat] ===== File upload process failed =====');
+      console.error('[Chat] Error details:', error);
+      console.error('[Chat] Error stack:', error.stack);
       alert(`파일 전송에 실패했습니다: ${error.message}`);
     } finally {
       setIsUploading(false);
@@ -350,13 +398,14 @@ export default function MyStudyChatPage({ params }) {
                       )}
                       <div className={styles.messageBubble}>
                         {message.content}
-                        {message.fileUrl && (
+                        {message.file && (
                           <div className={styles.fileAttachment}>
                             <span className={styles.fileIcon}>📄</span>
                             <div className={styles.fileInfo}>
-                              <span className={styles.fileName}>{message.fileName}</span>
+                              <span className={styles.fileName}>{message.file.name}</span>
+                              <span className={styles.fileSize}>{formatFileSize(message.file.size)}</span>
                             </div>
-                            <a href={message.fileUrl} download className={styles.downloadButton}>다운로드</a>
+                            <a href={message.file.url} download className={styles.downloadButton}>다운로드</a>
                           </div>
                         )}
                       </div>

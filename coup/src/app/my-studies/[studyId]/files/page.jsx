@@ -23,7 +23,7 @@ export default function MyStudyFilesPage({ params }) {
   const deleteFileMutation = useDeleteFile();
 
   const study = studyData?.data;
-  const files = filesData?.files || [];
+  const files = filesData?.data || [];
   const folders = []; // TODO: 폴더 기능 구현
 
   const tabs = [
