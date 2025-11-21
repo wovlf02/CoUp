@@ -317,7 +317,7 @@ export default function MyStudyChatPage({ params }) {
           <div className={styles.messagesArea}>
             {messagesLoading ? (
               <div style={{ textAlign: 'center', padding: '2rem' }}>메시지 로딩 중...</div>
-            ) : messages.length === 0 ? (
+            ) : allMessages.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
                 첫 메시지를 보내보세요! 👋
               </div>
