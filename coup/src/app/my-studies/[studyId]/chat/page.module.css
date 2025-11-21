@@ -420,6 +420,93 @@
   }
 }
 
+/* 입력 영역 래퍼 */
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 파일 미리보기 */
+.filePreview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--pastel-blue-bg);
+  border: 1px solid var(--pastel-blue-border);
+  border-radius: 8px;
+}
+
+.filePreviewInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.fileIcon {
+  font-size: 1.5rem;
+}
+
+.fileName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.fileSize {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+}
+
+.fileActions {
+  display: flex;
+  gap: 8px;
+}
+
+.fileSendButton {
+  padding: 6px 16px;
+  background: var(--primary-600);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fileSendButton:hover:not(:disabled) {
+  background: var(--primary-700);
+}
+
+.fileSendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fileCancelButton {
+  padding: 6px 16px;
+  background: var(--gray-200);
+  border: none;
+  border-radius: 6px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fileCancelButton:hover:not(:disabled) {
+  background: var(--gray-300);
+}
+
+.fileCancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* 입력 영역 */
 .inputArea {
   display: flex;
