@@ -61,14 +61,13 @@
 }
 
 .chartPlaceholder {
-  height: 300px;
+  min-height: 300px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #F9FAFB;
+  padding: 20px;
+  background: transparent;
   border-radius: 8px;
-  color: #9CA3AF;
+  color: #111827;
   font-size: 1rem;
 }
 
@@ -307,29 +306,119 @@
 }
 
 .featureItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 12px;
-  background: #F9FAFB;
-  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  transition: transform 0.2s ease;
+}
+
+.featureItem:hover {
+  transform: translateX(4px);
 }
 
 .featureRank {
-  font-weight: 600;
-  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
 }
 
 .featureName {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
   flex: 1;
 }
 
 .featureCount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* 프로그레스 바 스타일 */
+.featureProgress {
+  width: 100%;
+  height: 8px;
+  background: #F3F4F6;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.featureProgressBar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* 트렌드 표시 스타일 */
+.featureTrend {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.featureTrendUp {
+  color: #10B981;
+}
+
+.featureTrendDown {
+  color: #EF4444;
+}
+
+.featureTrendNeutral {
+  color: #6B7280;
+}
+
+/* 순위별 배지 스타일 */
+.rankBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-weight: 700;
   font-size: 0.875rem;
-  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.rankBadge:hover {
+  transform: scale(1.1);
+}
+
+.rankBadge.first {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  color: #F59E0B;
+  border: 2px solid #FBBF24;
+}
+
+.rankBadge.second {
+  background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
   color: #6366F1;
+  border: 2px solid #818CF8;
+}
+
+.rankBadge.third {
+  background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);
+  color: #EA580C;
+  border: 2px solid #FB923C;
+}
+
+.rankBadge.other {
+  background: #F3F4F6;
+  color: #6B7280;
+  border: 2px solid #E5E7EB;
 }
 
 @media (max-width: 1024px) {
