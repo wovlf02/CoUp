@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Header.module.css'
+import { useMe } from '@/lib/hooks/useApi'
 
 /**
  * 상단 헤더
@@ -20,16 +21,11 @@ export default function Header({ onMenuToggle }) {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
 
-  const user = session?.user
+  // 최신 사용자 정보 가져오기
+  const { data: userData } = useMe()
+  const user = userData?.user || session?.user
 
-  // 알림 데이터 가져오기
-  useEffect(() => {
-    if (user) {
-      fetchNotifications()
-    }
-  }, [user])
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const response = await fetch('/api/notifications?limit=5')
       const data = await response.json()
@@ -40,7 +36,14 @@ export default function Header({ onMenuToggle }) {
     } catch (error) {
       console.error('알림 로드 실패:', error)
     }
-  }
+  }, [])
+
+  // 알림 데이터 가져오기
+  useEffect(() => {
+    if (user) {
+      fetchNotifications()
+    }
+  }, [user, fetchNotifications])
 
   const handleMarkAllRead = async () => {
     try {

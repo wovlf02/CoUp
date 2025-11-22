@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { useUpdateProfile } from '@/lib/hooks/useApi'
 import styles from './ProfileEditForm.module.css'
 
 export default function ProfileEditForm({ user, onUpdate }) {
+  const { update: updateSession } = useSession()
   const [formData, setFormData] = useState({
     name: user.name,
     bio: user.bio || ''
@@ -41,6 +43,12 @@ export default function ProfileEditForm({ user, onUpdate }) {
 
     try {
       await updateProfile.mutateAsync(formData)
+
+      // NextAuth 세션 업데이트 (헤더에 즉시 반영되도록)
+      await updateSession({
+        name: formData.name
+      })
+
       setIsEdited(false)
       alert('정보가 수정되었습니다!')
     } catch (error) {

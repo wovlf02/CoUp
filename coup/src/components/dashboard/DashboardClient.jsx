@@ -4,7 +4,7 @@ import Link from 'next/link'
 import styles from '@/app/dashboard/page.module.css'
 import DashboardSkeleton from './DashboardSkeleton'
 import EmptyState from './EmptyState'
-import { useDashboard } from '@/lib/hooks/useApi'
+import { useDashboard, useMe } from '@/lib/hooks/useApi'
 
 // 위젯 컴포넌트 import
 import StudyStatus from './widgets/StudyStatus'
@@ -13,11 +13,15 @@ import QuickActions from './widgets/QuickActions'
 import UrgentTasks from './widgets/UrgentTasks'
 import PinnedNotice from './widgets/PinnedNotice'
 
-export default function DashboardClient({ user }) {
-  // 실제 API Hook 사용
+export default function DashboardClient({ user: initialUser }) {
+  // 실제 API Hook 사용 - 최신 사용자 정보를 가져옴
   const { data: dashboardData, isLoading } = useDashboard()
+  const { data: userData, isLoading: userLoading } = useMe()
 
-  if (isLoading) {
+  // 최신 사용자 정보 사용 (API에서 가져온 데이터가 있으면 그것을 사용, 없으면 초기 데이터 사용)
+  const user = userData?.user || initialUser
+
+  if (isLoading || userLoading) {
     return <DashboardSkeleton />
   }
 
