@@ -5,6 +5,7 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import UserDetailModal from '@/components/admin/UserDetailModal'
 import SuspendUserModal from '@/components/admin/SuspendUserModal'
 import { useAdminUsers, useAdminUser, useSuspendUser, useRestoreUser } from '@/lib/hooks/useApi'
+import { getMockUsers } from '@/mocks/users'
 import styles from './page.module.css'
 
 export default function AdminUsersPage() {
@@ -31,6 +32,9 @@ export default function AdminUsersPage() {
   const totalPages = usersData?.pagination?.totalPages || 1
   const totalUsers = usersData?.pagination?.total || 0
 
+  // Mock 데이터 (데이터가 없을 경우)
+  const displayUsers = users.length === 0 ? getMockUsers() : users
+
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return `${date.getMonth() + 1}/${date.getDate()}`
@@ -50,7 +54,7 @@ export default function AdminUsersPage() {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedUsers(users.map(u => u.id))
+      setSelectedUsers(displayUsers.map(u => u.id))
     } else {
       setSelectedUsers([])
     }
@@ -161,7 +165,7 @@ export default function AdminUsersPage() {
 
               {isLoading ? (
                 <div style={{ textAlign: 'center', padding: '3rem' }}>로딩 중...</div>
-              ) : users.length === 0 ? (
+              ) : displayUsers.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                   사용자가 없습니다.
                 </div>
@@ -173,7 +177,7 @@ export default function AdminUsersPage() {
                         <th style={{ width: '50px' }}>
                           <input
                             type="checkbox"
-                            checked={selectedUsers.length === users.length && users.length > 0}
+                            checked={selectedUsers.length === displayUsers.length && displayUsers.length > 0}
                             onChange={handleSelectAll}
                           />
                         </th>
@@ -186,7 +190,7 @@ export default function AdminUsersPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map(user => (
+                      {displayUsers.map(user => (
                         <tr
                           key={user.id}
                           className={user.status === 'SUSPENDED' ? styles.suspended : ''}
@@ -310,19 +314,19 @@ export default function AdminUsersPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>활성</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                    {users.filter(u => u.status === 'ACTIVE').length}명
+                    {displayUsers.filter(u => u.status === 'ACTIVE').length}명
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>정지</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                    {users.filter(u => u.status === 'SUSPENDED').length}명
+                    {displayUsers.filter(u => u.status === 'SUSPENDED').length}명
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>탈퇴</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                    {users.filter(u => u.status === 'DELETED').length}명
+                    {displayUsers.filter(u => u.status === 'DELETED').length}명
                   </span>
                 </div>
               </div>
@@ -339,19 +343,19 @@ export default function AdminUsersPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>Google</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                    {users.filter(u => u.provider === 'GOOGLE').length}명
+                    {displayUsers.filter(u => u.provider === 'GOOGLE').length}명
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>GitHub</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                    {users.filter(u => u.provider === 'GITHUB').length}명
+                    {displayUsers.filter(u => u.provider === 'GITHUB').length}명
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>Email</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                    {users.filter(u => u.provider === 'EMAIL').length}명
+                    {displayUsers.filter(u => u.provider === 'EMAIL').length}명
                   </span>
                 </div>
               </div>

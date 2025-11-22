@@ -4,6 +4,7 @@ import { useState } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import ReportDetailModal from '@/components/admin/ReportDetailModal'
 import { useAdminReports, useProcessReport } from '@/lib/hooks/useApi'
+import { getMockReports } from '@/mocks/reports'
 import styles from '../users/page.module.css'
 
 export default function AdminReportsPage() {
@@ -23,6 +24,9 @@ export default function AdminReportsPage() {
 
   const processReport = useProcessReport()
   const reports = data?.data || []
+
+  // 데이터가 없을 경우 mock 데이터 생성
+  const mockReports = reports.length === 0 ? getMockReports() : reports
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -55,7 +59,7 @@ export default function AdminReportsPage() {
   }
 
   // 클라이언트 사이드 타입 필터링
-  const filteredReports = reports.filter(report => {
+  const filteredReports = mockReports.filter(report => {
     if (typeFilter !== 'all' && report.type !== typeFilter) {
       return false
     }
@@ -308,26 +312,26 @@ export default function AdminReportsPage() {
                   전체 신고
                 </div>
                 <div style={{ fontSize: '2rem', fontWeight: '700', color: '#111827' }}>
-                  {reports.length}
+                  {mockReports.length}
                 </div>
               </div>
               <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', marginTop: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>미처리</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#EF4444' }}>
-                    {reports.filter(r => r.status === 'PENDING').length}건
+                    {mockReports.filter(r => r.status === 'PENDING').length}건
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>처리중</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#F59E0B' }}>
-                    {reports.filter(r => r.status === 'IN_PROGRESS').length}건
+                    {mockReports.filter(r => r.status === 'IN_PROGRESS').length}건
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>완료</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#10B981' }}>
-                    {reports.filter(r => r.status === 'RESOLVED').length}건
+                    {mockReports.filter(r => r.status === 'RESOLVED').length}건
                   </span>
                 </div>
               </div>
@@ -340,25 +344,25 @@ export default function AdminReportsPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>🔴 스팸/광고</span>
                 <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                  {reports.filter(r => r.type === 'SPAM').length}건
+                  {mockReports.filter(r => r.type === 'SPAM').length}건
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>🟠 욕설/비방</span>
                 <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                  {reports.filter(r => r.type === 'HARASSMENT').length}건
+                  {mockReports.filter(r => r.type === 'HARASSMENT').length}건
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>🟡 부적절</span>
                 <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                  {reports.filter(r => r.type === 'INAPPROPRIATE').length}건
+                  {mockReports.filter(r => r.type === 'INAPPROPRIATE').length}건
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>📜 저작권</span>
                 <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                  {reports.filter(r => r.type === 'COPYRIGHT').length}건
+                  {mockReports.filter(r => r.type === 'COPYRIGHT').length}건
                 </span>
               </div>
             </div>

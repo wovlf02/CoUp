@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminStudies, useAdminDeleteStudy } from '@/lib/hooks/useApi'
+import { getMockStudies } from '@/mocks/studies'
 import styles from '../users/page.module.css'
 
 export default function AdminStudiesPage() {
@@ -26,6 +27,9 @@ export default function AdminStudiesPage() {
   const totalPages = studiesData?.pagination?.totalPages || 1
   const totalStudies = studiesData?.pagination?.total || 0
 
+  // Mock 데이터 (데이터가 없을 경우)
+  const displayStudies = studies.length === 0 ? getMockStudies() : studies
+
   const formatDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -41,10 +45,10 @@ export default function AdminStudiesPage() {
   }
 
   const handleSelectAll = () => {
-    if (selectedStudies.length === studies.length) {
+    if (selectedStudies.length === displayStudies.length) {
       setSelectedStudies([])
     } else {
-      setSelectedStudies(studies.map(s => s.id))
+      setSelectedStudies(displayStudies.map(s => s.id))
     }
   }
 
@@ -153,7 +157,7 @@ export default function AdminStudiesPage() {
 
               {isLoading ? (
                 <div style={{ textAlign: 'center', padding: '3rem' }}>로딩 중...</div>
-              ) : studies.length === 0 ? (
+              ) : displayStudies.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                   스터디가 없습니다.
                 </div>
@@ -165,7 +169,7 @@ export default function AdminStudiesPage() {
                         <th style={{ width: '50px' }}>
                           <input
                             type="checkbox"
-                            checked={selectedStudies.length === studies.length && studies.length > 0}
+                            checked={selectedStudies.length === displayStudies.length && displayStudies.length > 0}
                             onChange={handleSelectAll}
                           />
                         </th>
@@ -179,7 +183,7 @@ export default function AdminStudiesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {studies.map(study => (
+                      {displayStudies.map(study => (
                         <tr key={study.id}>
                           <td>
                             <input

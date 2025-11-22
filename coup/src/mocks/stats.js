@@ -1,0 +1,138 @@
+// src/mocks/stats.js
+// 관리자 대시보드 통계 Mock 데이터
+
+export const mockStats = {
+  users: {
+    total: 1247,
+    active: 1180,
+    suspended: 45,
+    deleted: 22,
+    newToday: 8,
+    newThisWeek: 52
+  },
+  studies: {
+    total: 356,
+    active: 298,
+    inactive: 42,
+    archived: 16,
+    newToday: 3,
+    newThisWeek: 18,
+    byCategory: [
+      { category: 'ALGORITHM', count: 78 },
+      { category: 'WEB_DEVELOPMENT', count: 65 },
+      { category: 'LANGUAGE', count: 52 },
+      { category: 'COMPUTER_SCIENCE', count: 45 },
+      { category: 'CERTIFICATION', count: 38 },
+      { category: 'ETC', count: 78 }
+    ]
+  },
+  tasks: {
+    total: 4523,
+    completed: 3127,
+    pending: 1396,
+    newThisWeek: 234
+  },
+  reports: {
+    total: 67,
+    pending: 15,
+    inProgress: 8,
+    resolved: 38,
+    rejected: 6,
+    urgent: 3
+  },
+  notifications: {
+    total: 8934,
+    unread: 2341
+  }
+}
+
+export function getMockStats() {
+  return mockStats
+}
+
+// 사용자 증가 데이터 생성
+export function generateUserGrowthData(days = 30) {
+  const data = []
+  const today = new Date()
+
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+
+    // 랜덤하지만 증가 추세를 가진 데이터
+    const baseCount = 10 + Math.floor((days - i) * 0.5)
+    const randomVariation = Math.floor(Math.random() * 10) - 5
+    const count = Math.max(5, baseCount + randomVariation)
+
+    data.push({
+      date: date.toISOString().split('T')[0],
+      users: count,
+      label: `${date.getMonth() + 1}/${date.getDate()}`
+    })
+  }
+
+  return data
+}
+
+// 스터디 활동 데이터 생성
+export function generateStudyActivityData() {
+  const days = ['월', '화', '수', '목', '금', '토', '일']
+
+  return days.map((day, index) => ({
+    day,
+    created: Math.floor(Math.random() * 10) + 5,
+    active: Math.floor(Math.random() * 30) + 20 + (index < 5 ? 10 : -5), // 주중이 더 활발
+    messages: Math.floor(Math.random() * 100) + 50
+  }))
+}
+
+// 시스템 상태 데이터
+export function generateSystemStatus() {
+  return {
+    cpu: Math.floor(Math.random() * 30) + 30, // 30-60%
+    memory: Math.floor(Math.random() * 20) + 50, // 50-70%
+    disk: Math.floor(Math.random() * 20) + 30, // 30-50%
+    network: Math.floor(Math.random() * 40) + 20 // 20-60%
+  }
+}
+
+// 참여율 트렌드 데이터
+export function generateEngagementTrend() {
+  const days = ['월', '화', '수', '목', '금', '토', '일']
+
+  return days.map(day => ({
+    day,
+    rate: Math.floor(Math.random() * 20) + 70 // 70-90%
+  }))
+}
+
+// 전환 퍼널 데이터
+export function generateConversionFunnel() {
+  return [
+    { stage: 'visit', label: '방문', count: 1000, conversionRate: 100 },
+    { stage: 'signup', label: '가입', count: 800, conversionRate: 80 },
+    { stage: 'create', label: '스터디 생성', count: 450, conversionRate: 56 },
+    { stage: 'active', label: '활성 사용자', count: 360, conversionRate: 45 }
+  ]
+}
+
+// 디바이스 분포 데이터
+export function generateDeviceDistribution() {
+  return [
+    { device: 'desktop', label: 'PC', count: 720, percentage: 60 },
+    { device: 'mobile', label: '모바일', count: 360, percentage: 30 },
+    { device: 'tablet', label: '태블릿', count: 120, percentage: 10 }
+  ]
+}
+
+// 인기 기능 데이터
+export function generatePopularFeatures() {
+  return [
+    { feature: 'chat', label: '채팅', count: 8500, trend: 12 },
+    { feature: 'files', label: '파일 공유', count: 5200, trend: 8 },
+    { feature: 'calendar', label: '캘린더', count: 4800, trend: -3 },
+    { feature: 'tasks', label: '할일 관리', count: 4200, trend: 15 },
+    { feature: 'notices', label: '공지사항', count: 3600, trend: 5 }
+  ]
+}
+

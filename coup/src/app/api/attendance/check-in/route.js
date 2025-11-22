@@ -1,7 +1,7 @@
 // 출석 체크인 API
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/db/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(_req) {
   try {

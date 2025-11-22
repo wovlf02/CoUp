@@ -10,6 +10,8 @@ import ReportDetailModal from '@/components/admin/ReportDetailModal'
 import UserDetailModal from '@/components/admin/UserDetailModal'
 import SuspendUserModal from '@/components/admin/SuspendUserModal'
 import { useAdminStats, useAdminReports, useSuspendUser } from '@/lib/hooks/useApi'
+import { generateUserGrowthData, generateStudyActivityData, generateSystemStatus, getMockStats } from '@/mocks/stats'
+import { getMockReports } from '@/mocks/reports'
 import styles from './page.module.css'
 
 export default function AdminDashboard() {
@@ -26,21 +28,25 @@ export default function AdminDashboard() {
   const { data: reportsData } = useAdminReports({ status: 'PENDING', limit: 5 })
   const suspendUserMutation = useSuspendUser()
 
-  const adminStats = statsData?.stats || {
-    totalUsers: 0,
-    activeStudies: 0,
-    newSignupsToday: 0,
-    pendingReports: 0,
-    totalUsersChange: 0,
-    activeStudiesChange: 0
+  // Mock 데이터 사용 (실제 데이터가 없을 경우)
+  const mockStats = getMockStats()
+  const hasRealData = statsData?.data?.users?.total > 0
+
+  const adminStats = {
+    totalUsers: hasRealData ? statsData.data.users.total : mockStats.users.total,
+    activeStudies: hasRealData ? statsData.data.studies.active : mockStats.studies.active,
+    newSignupsToday: hasRealData ? statsData.data.users.newToday : mockStats.users.newToday,
+    pendingReports: hasRealData ? statsData.data.reports.pending : mockStats.reports.pending,
+    totalUsersChange: hasRealData ? statsData.data.users.newThisWeek : mockStats.users.newThisWeek,
+    activeStudiesChange: hasRealData ? statsData.data.studies.newThisWeek : mockStats.studies.newThisWeek
   }
 
-  const recentReports = reportsData?.reports || []
+  const recentReports = (reportsData?.data && reportsData.data.length > 0) ? reportsData.data : getMockReports().slice(0, 5)
 
-  // Mock 데이터 (차트용 - 실제로는 API에서 가져와야 함)
-  const userGrowthData = statsData?.userGrowth || []
-  const studyActivitiesData = statsData?.studyActivities || []
-  const systemStatus = statsData?.systemStatus || { cpu: 0, memory: 0, disk: 0 }
+  // Mock 데이터 (차트용)
+  const userGrowthData = generateUserGrowthData(30)
+  const studyActivitiesData = generateStudyActivityData()
+  const systemStatus = generateSystemStatus()
 
   const formatTimeAgo = (dateString) => {
     const now = new Date()
@@ -250,7 +256,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                     ))
-                  }
+                  )}
                 </div>
               </div>
 

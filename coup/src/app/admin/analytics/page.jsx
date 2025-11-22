@@ -6,6 +6,13 @@ import UserGrowthChart from '@/components/admin/UserGrowthChart'
 import StudyActivityChart from '@/components/admin/StudyActivityChart'
 import EngagementChart from '@/components/admin/EngagementChart'
 import { useAdminStats } from '@/lib/hooks/useApi'
+import { 
+  generateUserGrowthData, 
+  generateEngagementTrend,
+  generateConversionFunnel,
+  generateDeviceDistribution,
+  generatePopularFeatures
+} from '@/mocks/stats'
 import styles from './page.module.css'
 
 export default function AdminAnalyticsPage() {
@@ -16,49 +23,13 @@ export default function AdminAnalyticsPage() {
 
   const stats = statsData?.data || {}
 
-  // Mock 데이터 (차트용 - 추후 API 추가 시 교체)
-  const userGrowthData = [
-    { date: '1일', count: 10 },
-    { date: '5일', count: 25 },
-    { date: '10일', count: 45 },
-    { date: '15일', count: 70 },
-    { date: '20일', count: 95 },
-    { date: '25일', count: 120 },
-    { date: '30일', count: 145 }
-  ]
-
+  // Mock 데이터 (차트용)
+  const userGrowthData = generateUserGrowthData(30)
   const studyActivitiesData = stats.studies?.byCategory || []
-
-  const engagementTrend = [
-    { day: '월', rate: 75 },
-    { day: '화', rate: 80 },
-    { day: '수', rate: 85 },
-    { day: '목', rate: 78 },
-    { day: '금', rate: 82 },
-    { day: '토', rate: 65 },
-    { day: '일', rate: 68 }
-  ]
-
-  const conversionFunnel = [
-    { stage: 'visit', count: 1000, conversionRate: 100 },
-    { stage: 'signup', count: 800, conversionRate: 80 },
-    { stage: 'create', count: 450, conversionRate: 56 },
-    { stage: 'active', count: 360, conversionRate: 45 }
-  ]
-
-  const deviceDistribution = [
-    { device: 'desktop', count: 720, percentage: 60 },
-    { device: 'mobile', count: 360, percentage: 30 },
-    { device: 'tablet', count: 120, percentage: 10 }
-  ]
-
-  const popularFeatures = [
-    { feature: '채팅', count: 8500 },
-    { feature: '파일 공유', count: 5200 },
-    { feature: '캘린더', count: 4800 },
-    { feature: '할일 관리', count: 4200 },
-    { feature: '공지사항', count: 3600 }
-  ]
+  const engagementTrend = generateEngagementTrend()
+  const conversionFunnel = generateConversionFunnel()
+  const deviceDistribution = generateDeviceDistribution()
+  const popularFeatures = generatePopularFeatures()
 
   if (isLoading) {
     return (
@@ -191,10 +162,7 @@ export default function AdminAnalyticsPage() {
                     <div key={index} className={styles.funnelStage}>
                       <div className={styles.funnelStageHeader}>
                         <span className={styles.funnelStageName}>
-                          {stage.stage === 'visit' && '방문'}
-                          {stage.stage === 'signup' && '회원가입'}
-                          {stage.stage === 'create' && '스터디 생성'}
-                          {stage.stage === 'active' && '활성 사용자'}
+                          {stage.label}
                         </span>
                         <span className={styles.funnelStageCount}>{stage.count}명</span>
                       </div>
@@ -246,9 +214,7 @@ export default function AdminAnalyticsPage() {
                     <div key={index} className={styles.deviceItem}>
                       <div className={styles.deviceHeader}>
                         <span className={styles.deviceName}>
-                          {item.device === 'desktop' && '🖥️ Desktop'}
-                          {item.device === 'mobile' && '📱 Mobile'}
-                          {item.device === 'tablet' && '💻 Tablet'}
+                          {item.label}
                         </span>
                         <span className={styles.deviceCount}>
                           {item.count}명 ({item.percentage}%)
@@ -274,7 +240,7 @@ export default function AdminAnalyticsPage() {
                     <div key={index} className={styles.featureItem}>
                       <div>
                         <span className={styles.featureRank}>{index + 1}.</span>
-                        <span className={styles.featureName}>{item.feature}</span>
+                        <span className={styles.featureName}>{item.label}</span>
                       </div>
                       <span className={styles.featureCount}>
                         {item.count.toLocaleString()}회

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminSettings, useUpdateSetting } from '@/lib/hooks/useApi'
+import { getMockSettings } from '@/mocks/settings'
 import styles from './page.module.css'
 
 export default function AdminSettingsPage() {
@@ -12,7 +13,7 @@ export default function AdminSettingsPage() {
   const { data, isLoading, error } = useAdminSettings()
   const updateSetting = useUpdateSetting()
 
-  const settings = data?.data || {}
+  const settings = data?.data || getMockSettings()
 
   const tabs = [
     { id: 'service', label: '서비스 설정' },
