@@ -28,7 +28,30 @@ export default function AdminStudiesPage() {
   const totalStudies = studiesData?.pagination?.total || 0
 
   // Mock 데이터 (데이터가 없을 경우)
-  const displayStudies = studies.length === 0 ? getMockStudies() : studies
+  const mockStudies = studies.length === 0 ? getMockStudies() : studies
+
+  // 클라이언트 사이드 필터링 및 검색
+  const displayStudies = mockStudies.filter(study => {
+    // 공개/비공개 필터
+    if (visibilityFilter !== 'all' && study.visibility !== visibilityFilter.toUpperCase()) {
+      return false
+    }
+
+    // 카테고리 필터
+    if (categoryFilter !== 'all' && study.category !== categoryFilter) {
+      return false
+    }
+
+    // 검색 쿼리
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      const matchesName = study.name?.toLowerCase().includes(query)
+      const matchesOwner = study.owner?.name?.toLowerCase().includes(query)
+      return matchesName || matchesOwner
+    }
+
+    return true
+  })
 
   const formatDate = (dateString) => {
     if (!dateString) return ''

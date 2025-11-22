@@ -33,7 +33,25 @@ export default function AdminUsersPage() {
   const totalUsers = usersData?.pagination?.total || 0
 
   // Mock 데이터 (데이터가 없을 경우)
-  const displayUsers = users.length === 0 ? getMockUsers() : users
+  const mockUsers = users.length === 0 ? getMockUsers() : users
+
+  // 클라이언트 사이드 필터링 및 검색
+  const displayUsers = mockUsers.filter(user => {
+    // 상태 필터
+    if (statusFilter !== 'all' && user.status !== statusFilter.toUpperCase()) {
+      return false
+    }
+
+    // 검색 쿼리
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      const matchesName = user.name?.toLowerCase().includes(query)
+      const matchesEmail = user.email?.toLowerCase().includes(query)
+      return matchesName || matchesEmail
+    }
+
+    return true
+  })
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)

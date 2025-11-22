@@ -10,7 +10,7 @@ import ReportDetailModal from '@/components/admin/ReportDetailModal'
 import UserDetailModal from '@/components/admin/UserDetailModal'
 import SuspendUserModal from '@/components/admin/SuspendUserModal'
 import { useAdminStats, useAdminReports, useSuspendUser } from '@/lib/hooks/useApi'
-import { generateUserGrowthData, generateStudyActivityData, generateSystemStatus, getMockStats } from '@/mocks/stats'
+import { generateUserGrowthData, generateUserGrowthByPeriod, generateStudyActivityData, generateSystemStatus, getMockStats } from '@/mocks/stats'
 import { getMockReports } from '@/mocks/reports'
 import styles from './page.module.css'
 
@@ -43,8 +43,8 @@ export default function AdminDashboard() {
 
   const recentReports = (reportsData?.data && reportsData.data.length > 0) ? reportsData.data : getMockReports().slice(0, 5)
 
-  // Mock 데이터 (차트용)
-  const userGrowthData = generateUserGrowthData(30)
+  // Mock 데이터 (차트용) - 기간별로 생성
+  const userGrowthData = generateUserGrowthByPeriod(period)
   const studyActivitiesData = generateStudyActivityData()
   const systemStatus = generateSystemStatus()
 
@@ -161,7 +161,12 @@ export default function AdminDashboard() {
             {/* User Growth Chart */}
             <div className={styles.chartSection}>
               <div className={styles.chartHeader}>
-                <h2 className={styles.chartTitle}>사용자 증가 추이 (지난 30일)</h2>
+                <h2 className={styles.chartTitle}>
+                  사용자 증가 추이
+                  {period === 'weekly' && ' (최근 7일)'}
+                  {period === 'monthly' && ' (최근 30일)'}
+                  {period === 'yearly' && ' (최근 12개월)'}
+                </h2>
                 <div className={styles.chartFilters}>
                   <button
                     className={`${styles.filterButton} ${period === 'weekly' ? styles.active : ''}`}

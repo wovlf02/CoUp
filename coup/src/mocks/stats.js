@@ -74,6 +74,67 @@ export function generateUserGrowthData(days = 30) {
   return data
 }
 
+// 기간별 사용자 증가 데이터 생성
+export function generateUserGrowthByPeriod(period = 'weekly') {
+  const data = []
+  const today = new Date()
+
+  if (period === 'weekly') {
+    // 주간: 최근 7일
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today)
+      date.setDate(date.getDate() - i)
+
+      const baseTotal = 1000 + (6 - i) * 50 + Math.floor(Math.random() * 30)
+      const baseActive = Math.floor(baseTotal * 0.85) + Math.floor(Math.random() * 20)
+      const baseNew = 5 + Math.floor(Math.random() * 15)
+
+      data.push({
+        date: `${date.getMonth() + 1}/${date.getDate()}`,
+        total: baseTotal,
+        active: baseActive,
+        new: baseNew
+      })
+    }
+  } else if (period === 'monthly') {
+    // 월간: 최근 30일 (5일 단위로 표시)
+    for (let i = 29; i >= 0; i -= 5) {
+      const date = new Date(today)
+      date.setDate(date.getDate() - i)
+
+      const baseTotal = 800 + (29 - i) * 20 + Math.floor(Math.random() * 50)
+      const baseActive = Math.floor(baseTotal * 0.82) + Math.floor(Math.random() * 30)
+      const baseNew = 10 + Math.floor(Math.random() * 25)
+
+      data.push({
+        date: `${date.getMonth() + 1}/${date.getDate()}`,
+        total: baseTotal,
+        active: baseActive,
+        new: baseNew
+      })
+    }
+  } else if (period === 'yearly') {
+    // 연간: 최근 12개월
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(today)
+      date.setMonth(date.getMonth() - i)
+
+      const baseTotal = 500 + (11 - i) * 100 + Math.floor(Math.random() * 80)
+      const baseActive = Math.floor(baseTotal * 0.80) + Math.floor(Math.random() * 50)
+      const baseNew = 50 + Math.floor(Math.random() * 100)
+
+      data.push({
+        date: `${date.getMonth() + 1}월`,
+        total: baseTotal,
+        active: baseActive,
+        new: baseNew
+      })
+    }
+  }
+
+  return data
+}
+
 // 스터디 활동 데이터 생성
 export function generateStudyActivityData() {
   const days = ['월', '화', '수', '목', '금', '토', '일']

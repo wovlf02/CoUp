@@ -7,11 +7,13 @@ import StudyActivityChart from '@/components/admin/StudyActivityChart'
 import EngagementChart from '@/components/admin/EngagementChart'
 import { useAdminStats } from '@/lib/hooks/useApi'
 import { 
-  generateUserGrowthData, 
+  generateUserGrowthData,
+  generateUserGrowthByPeriod,
   generateEngagementTrend,
   generateConversionFunnel,
   generateDeviceDistribution,
-  generatePopularFeatures
+  generatePopularFeatures,
+  getMockStats
 } from '@/mocks/stats'
 import styles from './page.module.css'
 
@@ -21,15 +23,45 @@ export default function AdminAnalyticsPage() {
   // 실제 API Hook
   const { data: statsData, isLoading } = useAdminStats()
 
-  const stats = statsData?.data || {}
+  const stats = statsData?.data || getMockStats()
 
-  // Mock 데이터 (차트용)
-  const userGrowthData = generateUserGrowthData(30)
-  const studyActivitiesData = stats.studies?.byCategory || []
+  // Mock 데이터 (차트용) - 기간별로 생성
+  const userGrowthData = generateUserGrowthByPeriod(period)
+  const studyActivitiesData = stats.studies?.byCategory || getMockStats().studies.byCategory
   const engagementTrend = generateEngagementTrend()
   const conversionFunnel = generateConversionFunnel()
   const deviceDistribution = generateDeviceDistribution()
   const popularFeatures = generatePopularFeatures()
+
+  // CSV 다운로드 함수
+  const downloadCSV = (data, filename) => {
+    // CSV 헤더
+    const headers = Object.keys(data[0]).join(',')
+
+    // CSV 행
+    const rows = data.map(row =>
+      Object.values(row).map(value =>
+        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+      ).join(',')
+    ).join('\n')
+
+    // CSV 파일 생성
+    const csv = `\uFEFF${headers}\n${rows}` // UTF-8 BOM 추가
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleDownloadUserGrowth = () => {
+    downloadCSV(userGrowthData, `사용자증가추이_${period}`)
+  }
 
   if (isLoading) {
     return (
@@ -77,8 +109,18 @@ export default function AdminAnalyticsPage() {
             {/* User Growth Chart */}
             <div className={styles.chartSection}>
               <div className={styles.chartHeader}>
-                <h2 className={styles.chartTitle}>사용자 성장 (지난 30일)</h2>
-                <button className={styles.downloadButton}>📥 CSV 다운로드</button>
+                <h2 className={styles.chartTitle}>
+                  사용자 성장
+                  {period === 'weekly' && ' (최근 7일)'}
+                  {period === 'monthly' && ' (최근 30일)'}
+                  {period === 'yearly' && ' (최근 12개월)'}
+                </h2>
+                <button
+                  className={styles.downloadButton}
+                  onClick={handleDownloadUserGrowth}
+                >
+                  📥 CSV 다운로드
+                </button>
               </div>
               <UserGrowthChart data={userGrowthData} />
             </div>
@@ -236,17 +278,65 @@ export default function AdminAnalyticsPage() {
                   <h2 className={styles.chartTitle}>인기 기능 (사용 빈도)</h2>
                 </div>
                 <div className={styles.chartPlaceholder}>
-                  {popularFeatures.map((item, index) => (
-                    <div key={index} className={styles.featureItem}>
-                      <div>
-                        <span className={styles.featureRank}>{index + 1}.</span>
-                        <span className={styles.featureName}>{item.label}</span>
+                  {popularFeatures.map((item, index) => {
+                    const maxCount = Math.max(...popularFeatures.map(f => f.count))
+                    const percentage = (item.count / maxCount) * 100
+                    const trendIcon = item.trend > 0 ? '📈' : item.trend < 0 ? '📉' : '➡️'
+                    const trendColor = item.trend > 0 ? '#10B981' : item.trend < 0 ? '#EF4444' : '#6B7280'
+
+                    return (
+                      <div key={index} className={styles.featureItem} style={{ marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className={styles.featureRank} style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '50%',
+                              background: index === 0 ? '#FEF3C7' : index === 1 ? '#E0E7FF' : '#F3F4F6',
+                              color: index === 0 ? '#F59E0B' : index === 1 ? '#6366F1' : '#6B7280',
+                              fontWeight: '700',
+                              fontSize: '0.875rem'
+                            }}>
+                              {index + 1}
+                            </span>
+                            <span className={styles.featureName} style={{ fontWeight: '600', fontSize: '0.9375rem' }}>
+                              {item.label}
+                            </span>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontWeight: '700', fontSize: '1rem', color: '#111827' }}>
+                              {item.count.toLocaleString()}회
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: trendColor, display: 'flex', alignItems: 'center', gap: '2px', justifyContent: 'flex-end' }}>
+                              <span>{trendIcon}</span>
+                              <span>{item.trend > 0 ? '+' : ''}{item.trend}%</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{
+                          width: '100%',
+                          height: '8px',
+                          background: '#F3F4F6',
+                          borderRadius: '4px',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{
+                            width: `${percentage}%`,
+                            height: '100%',
+                            background: index === 0 ? 'linear-gradient(90deg, #F59E0B, #FBBF24)' :
+                                       index === 1 ? 'linear-gradient(90deg, #6366F1, #818CF8)' :
+                                       index === 2 ? 'linear-gradient(90deg, #10B981, #34D399)' :
+                                       'linear-gradient(90deg, #3B82F6, #60A5FA)',
+                            borderRadius: '4px',
+                            transition: 'width 0.5s ease'
+                          }} />
+                        </div>
                       </div>
-                      <span className={styles.featureCount}>
-                        {item.count.toLocaleString()}회
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>

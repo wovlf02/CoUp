@@ -25,8 +25,8 @@ export default function AdminReportsPage() {
   const processReport = useProcessReport()
   const reports = data?.data || []
 
-  // 데이터가 없을 경우 mock 데이터 생성
-  const mockReports = reports.length === 0 ? getMockReports() : reports
+  // 데이터가 없거나 에러가 있을 경우 mock 데이터 사용
+  const mockReports = (reports.length === 0 || error) ? getMockReports() : reports
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -83,35 +83,6 @@ export default function AdminReportsPage() {
     }
   }
 
-  // 로딩 상태
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="adminPageWrapper">
-          <div className="adminMainContent">
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-              신고 목록을 불러오는 중...
-            </div>
-          </div>
-        </div>
-      </AdminLayout>
-    )
-  }
-
-  // 에러 상태
-  if (error) {
-    return (
-      <AdminLayout>
-        <div className="adminPageWrapper">
-          <div className="adminMainContent">
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#EF4444' }}>
-              신고 목록을 불러오는데 실패했습니다. 다시 시도해주세요.
-            </div>
-          </div>
-        </div>
-      </AdminLayout>
-    )
-  }
 
   return (
     <AdminLayout>

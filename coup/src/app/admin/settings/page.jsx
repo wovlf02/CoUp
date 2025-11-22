@@ -13,12 +13,13 @@ export default function AdminSettingsPage() {
   const { data, isLoading, error } = useAdminSettings()
   const updateSetting = useUpdateSetting()
 
+  // 에러가 있거나 데이터가 없으면 mock 사용
   const settings = data?.data || getMockSettings()
 
   const tabs = [
     { id: 'service', label: '서비스 설정' },
     { id: 'limits', label: '제한 설정' },
-    { id: 'admins', label: '관리자 계정' },
+    { id: 'security', label: '보안 설정' },
     { id: 'backup', label: '백업 및 로그' }
   ]
 
@@ -36,41 +37,39 @@ export default function AdminSettingsPage() {
     alert('모든 설정이 저장되었습니다.')
   }
 
-  // 로딩 상태
-  if (isLoading) {
-    return (
-      <AdminLayout wide>
-        <div className="adminPageWrapper">
-          <div className="adminMainContent">
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-              설정을 불러오는 중...
-            </div>
-          </div>
-        </div>
-      </AdminLayout>
-    )
-  }
-
-  // 에러 상태
-  if (error) {
-    return (
-      <AdminLayout wide>
-        <div className="adminPageWrapper">
-          <div className="adminMainContent">
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#EF4444' }}>
-              설정을 불러오는데 실패했습니다. 다시 시도해주세요.
-            </div>
-          </div>
-        </div>
-      </AdminLayout>
-    )
-  }
-
   return (
     <AdminLayout wide>
       <div className="adminPageWrapper">
         <div className="adminMainContent">
           <div className={styles.settingsPage}>
+            {isLoading && (
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                padding: '8px 16px',
+                background: '#EFF6FF',
+                color: '#1E40AF',
+                borderRadius: '6px',
+                fontSize: '0.875rem'
+              }}>
+                🔄 설정 불러오는 중...
+              </div>
+            )}
+            {error && (
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                padding: '8px 16px',
+                background: '#FEF2F2',
+                color: '#DC2626',
+                borderRadius: '6px',
+                fontSize: '0.875rem'
+              }}>
+                ⚠️ Mock 데이터 사용 중
+              </div>
+            )}
             {/* Header */}
             <div className="contentHeader">
               <h1 className="contentTitle">시스템 설정</h1>
@@ -244,6 +243,100 @@ export default function AdminSettingsPage() {
                           }}
                         />
                         <span className={styles.unit}>회/분</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Security Settings Tab */}
+            {activeTab === 'security' && (
+              <div className={styles.tabContent}>
+                <div className={styles.section}>
+                  <h3 className={styles.sectionTitle}>3. 보안 설정</h3>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>비밀번호 정책</label>
+                    <div className={styles.inputRow}>
+                      <div>
+                        <label className={styles.subLabel}>최소 길이</label>
+                        <input
+                          type="number"
+                          className={styles.input}
+                          value={settings.security?.passwordMinLength || 8}
+                          onChange={(e) => handleUpdateSetting('security.passwordMinLength', e.target.value)}
+                        />
+                        <span className={styles.unit}>자</span>
+                      </div>
+                    </div>
+
+                    <div className={styles.checkboxGroup}>
+                      <label className={styles.checkbox}>
+                        <input
+                          type="checkbox"
+                          checked={settings.security?.passwordRequireUppercase || false}
+                          onChange={(e) => handleUpdateSetting('security.passwordRequireUppercase', e.target.checked)}
+                        />
+                        <span>대문자 필수</span>
+                      </label>
+                      <label className={styles.checkbox}>
+                        <input
+                          type="checkbox"
+                          checked={settings.security?.passwordRequireNumber || false}
+                          onChange={(e) => handleUpdateSetting('security.passwordRequireNumber', e.target.checked)}
+                        />
+                        <span>숫자 필수</span>
+                      </label>
+                      <label className={styles.checkbox}>
+                        <input
+                          type="checkbox"
+                          checked={settings.security?.passwordRequireSpecial || false}
+                          onChange={(e) => handleUpdateSetting('security.passwordRequireSpecial', e.target.checked)}
+                        />
+                        <span>특수문자 필수</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>세션 설정</label>
+                    <div className={styles.inputRow}>
+                      <div>
+                        <label className={styles.subLabel}>세션 만료 시간</label>
+                        <input
+                          type="number"
+                          className={styles.input}
+                          value={(settings.security?.sessionTimeout || 86400) / 3600}
+                          onChange={(e) => handleUpdateSetting('security.sessionTimeout', e.target.value * 3600)}
+                        />
+                        <span className={styles.unit}>시간</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>로그인 보안</label>
+                    <div className={styles.inputRow}>
+                      <div>
+                        <label className={styles.subLabel}>최대 로그인 시도</label>
+                        <input
+                          type="number"
+                          className={styles.input}
+                          value={settings.security?.maxLoginAttempts || 5}
+                          onChange={(e) => handleUpdateSetting('security.maxLoginAttempts', e.target.value)}
+                        />
+                        <span className={styles.unit}>회</span>
+                      </div>
+                      <div>
+                        <label className={styles.subLabel}>잠금 시간</label>
+                        <input
+                          type="number"
+                          className={styles.input}
+                          value={(settings.security?.lockoutDuration || 900) / 60}
+                          onChange={(e) => handleUpdateSetting('security.lockoutDuration', e.target.value * 60)}
+                        />
+                        <span className={styles.unit}>분</span>
                       </div>
                     </div>
                   </div>
