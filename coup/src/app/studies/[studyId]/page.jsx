@@ -64,7 +64,7 @@ export default function StudyPreviewPage({ params }) {
               <span className={styles.category}>
                 {study.category} {study.subCategory && `· ${study.subCategory}`}
               </span>
-              {study.rating && <div className={styles.rating}>⭐ {study.rating}</div>}
+              {study.rating && <div className={styles.rating}>⭐ {study.rating.toFixed(1)}</div>}
             </div>
 
             {study.tags && study.tags.length > 0 && (
@@ -172,7 +172,7 @@ export default function StudyPreviewPage({ params }) {
               {study.rating && (
                 <div className={styles.infoItem}>
                   <span className={styles.infoLabel}>평점</span>
-                  <span className={styles.infoValue}>⭐ {study.rating}</span>
+                  <span className={styles.infoValue}>⭐ {study.rating.toFixed(1)}</span>
                 </div>
               )}
               <div className={styles.infoItem}>

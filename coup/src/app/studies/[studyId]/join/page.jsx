@@ -343,7 +343,7 @@ export default function StudyJoinPage({ params }) {
             {study.rating && (
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>평점</span>
-                <span className={styles.infoValue}>⭐ {study.rating}</span>
+                <span className={styles.infoValue}>⭐ {study.rating.toFixed(1)}</span>
               </div>
             )}
           </div>

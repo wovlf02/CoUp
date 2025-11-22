@@ -172,7 +172,7 @@ export default function StudiesExplorePage() {
                     {study.category} {study.subCategory ? `· ${study.subCategory}` : ''}
                   </span>
                   <div className={styles.rating}>
-                    ⭐ {study.rating || 0}
+                    ⭐ {study.rating ? study.rating.toFixed(1) : '0.0'}
                   </div>
                 </div>
 
