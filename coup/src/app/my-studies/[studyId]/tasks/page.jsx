@@ -5,7 +5,7 @@ import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import styles from './page.module.css';
-import { useStudy, useStudyMembers, useStudyTasks, useCreateStudyTask, useUpdateStudyTask, useDeleteStudyTask } from '@/lib/hooks/useApi';
+import { useStudy, useStudyTasks, useCreateStudyTask, useUpdateStudyTask, useDeleteStudyTask } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import StudyTabs from '@/components/study/StudyTabs';
 
@@ -22,8 +22,7 @@ export default function MyStudyTasksPage({ params }) {
     description: '',
     status: 'TODO',
     priority: 'MEDIUM',
-    dueDate: '',
-    assigneeIds: []
+    dueDate: ''
   });
 
   // 현재 사용자
@@ -32,16 +31,12 @@ export default function MyStudyTasksPage({ params }) {
 
   // API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
-  const { data: membersData } = useStudyMembers(studyId);
   const { data: tasksData, isLoading: tasksLoading } = useStudyTasks(studyId);
   const createTaskMutation = useCreateStudyTask();
   const updateTaskMutation = useUpdateStudyTask();
   const deleteTaskMutation = useDeleteStudyTask();
 
   const study = studyData?.data;
-  const allMembers = membersData?.data || [];
-  // ACTIVE 상태의 멤버만 필터링
-  const members = allMembers.filter(m => m.status === 'ACTIVE');
   const tasks = tasksData?.data || [];
 
   // 상태별로 할일 분류
@@ -67,8 +62,7 @@ export default function MyStudyTasksPage({ params }) {
         description: task.description || '',
         status: task.status,
         priority: task.priority,
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-        assigneeIds: task.assignees?.map(a => a.id) || []
+        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''
       });
     } else {
       setEditingTask(null);
@@ -77,8 +71,7 @@ export default function MyStudyTasksPage({ params }) {
         description: '',
         status: 'TODO',
         priority: 'MEDIUM',
-        dueDate: '',
-        assigneeIds: []
+        dueDate: ''
       });
     }
     setShowModal(true);
@@ -111,14 +104,6 @@ export default function MyStudyTasksPage({ params }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAssigneeToggle = (userId) => {
-    setFormData(prev => ({
-      ...prev,
-      assigneeIds: prev.assigneeIds.includes(userId)
-        ? prev.assigneeIds.filter(id => id !== userId)
-        : [...prev.assigneeIds, userId]
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -155,7 +140,7 @@ export default function MyStudyTasksPage({ params }) {
       await updateTaskMutation.mutateAsync({
         studyId,
         taskId: task.id,
-        data: { ...task, status: newStatus, assigneeIds: task.assignees?.map(a => a.id) || [] }
+        data: { ...task, status: newStatus }
       });
     } catch (error) {
       alert('할일 상태 변경 실패: ' + error.message);
@@ -295,16 +280,6 @@ export default function MyStudyTasksPage({ params }) {
                                 </div>
                               )}
                               <div className={styles.taskCardFooter}>
-                                <div className={styles.taskAssignees}>
-                                  {task.assignees?.slice(0, 3).map((assignee) => (
-                                    <div key={assignee.id} className={styles.assigneeAvatar} title={assignee.name}>
-                                      {assignee.name?.[0] || '?'}
-                                    </div>
-                                  ))}
-                                  {task.assignees?.length > 3 && (
-                                    <div className={styles.assigneeMore}>+{task.assignees.length - 3}</div>
-                                  )}
-                                </div>
                                 <div className={styles.taskActions}>
                                   {canEditTask(task) && (
                                     <button
@@ -430,14 +405,6 @@ export default function MyStudyTasksPage({ params }) {
                             📅 마감: {formatDate(task.dueDate)}
                           </div>
                         )}
-                        <div className={styles.taskAssignees}>
-                          담당자: {' '}
-                          {task.assignees?.length > 0 ? (
-                            task.assignees.map(a => a.name).join(', ')
-                          ) : (
-                            '미지정'
-                          )}
-                        </div>
                         <div className={styles.taskCreator}>
                           작성자: {task.createdBy?.name || '알 수 없음'}
                         </div>
@@ -571,47 +538,6 @@ export default function MyStudyTasksPage({ params }) {
                 />
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  담당자 {formData.assigneeIds.length > 0 && (
-                    <span className={styles.assigneeCount}>
-                      ({formData.assigneeIds.length}명 선택됨)
-                    </span>
-                  )}
-                </label>
-                <div className={styles.assigneeList}>
-                  {members.length === 0 ? (
-                    <div className={styles.emptyAssignees}>
-                      스터디에 활성 멤버가 없습니다.
-                    </div>
-                  ) : (
-                    members.map((member) => (
-                      <label key={member.userId} className={styles.assigneeItem}>
-                        <input
-                          type="checkbox"
-                          checked={formData.assigneeIds.includes(member.userId)}
-                          onChange={() => handleAssigneeToggle(member.userId)}
-                        />
-                        <div className={styles.assigneeInfo}>
-                          <div className={styles.assigneeAvatar}>
-                            {member.user?.name?.[0] || '?'}
-                          </div>
-                          <div className={styles.assigneeDetails}>
-                            <span className={styles.assigneeName}>
-                              {member.user?.name || '알 수 없음'}
-                            </span>
-                            <span className={styles.assigneeRole}>
-                              {member.role === 'OWNER' ? '👑 방장' :
-                               member.role === 'ADMIN' ? '⭐ 관리자' : '👤 멤버'}
-                            </span>
-                          </div>
-                        </div>
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-
               <div className={styles.modalActions}>
                 <button
                   type="button"
@@ -689,26 +615,6 @@ export default function MyStudyTasksPage({ params }) {
                   </div>
                 </div>
               )}
-
-              <div className={styles.detailSection}>
-                <div className={styles.detailLabel}>담당자</div>
-                <div className={styles.detailValue}>
-                  {selectedTask.assignees?.length > 0 ? (
-                    <div className={styles.assigneeListDetail}>
-                      {selectedTask.assignees.map((assignee) => (
-                        <div key={assignee.id} className={styles.assigneeChip}>
-                          <div className={styles.assigneeAvatar}>
-                            {assignee.name?.[0] || '?'}
-                          </div>
-                          <span>{assignee.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    '담당자 없음'
-                  )}
-                </div>
-              </div>
 
               <div className={styles.detailSection}>
                 <div className={styles.detailLabel}>작성자</div>

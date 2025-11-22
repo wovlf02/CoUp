@@ -183,6 +183,106 @@ export default function MyStudyCalendarPage({ params }) {
     }
   };
 
+  // 주간 뷰 관련 함수
+  const getWeekDays = (date) => {
+    const current = new Date(date);
+    const first = current.getDate() - current.getDay(); // 일요일
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(current.setDate(first + i));
+      return new Date(day);
+    });
+  };
+
+  const getWeekRange = (date) => {
+    const weekDays = getWeekDays(date);
+    const start = weekDays[0];
+    const end = weekDays[6];
+
+    const startMonth = start.getMonth() + 1;
+    const endMonth = end.getMonth() + 1;
+    const startDay = start.getDate();
+    const endDay = end.getDate();
+
+    if (startMonth === endMonth) {
+      return `${startMonth}월 ${startDay}일 - ${endDay}일`;
+    }
+    return `${startMonth}월 ${startDay}일 - ${endMonth}월 ${endDay}일`;
+  };
+
+  const goToPreviousWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() - 7);
+    setCurrentDate(newDate);
+  };
+
+  const goToNextWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + 7);
+    setCurrentDate(newDate);
+  };
+
+  const goToPreviousDay = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setCurrentDate(newDate);
+  };
+
+  const goToNextDay = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setCurrentDate(newDate);
+  };
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const getEventsForDate = (date) => {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return events.filter(event => {
+      const eventDate = new Date(event.date);
+      const eventDateStr = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
+      return eventDateStr === dateStr;
+    });
+  };
+
+  const formatDayHeader = (date) => {
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekday = weekdays[date.getDay()];
+    return { month, day, weekday };
+  };
+
+  const isSameDay = (date1, date2) => {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+  };
+
+  const getTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      slots.push(`${String(hour).padStart(2, '0')}:00`);
+    }
+    return slots;
+  };
+
+  const getEventPosition = (event) => {
+    const [startHour, startMinute] = event.startTime.split(':').map(Number);
+    const [endHour, endMinute] = event.endTime.split(':').map(Number);
+
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    const duration = endMinutes - startMinutes;
+
+    return {
+      top: `${(startMinutes / 60) * 60}px`, // 60px per hour
+      height: `${(duration / 60) * 60}px`
+    };
+  };
+
   const formatDateForDisplay = (dateString) => {
     const date = new Date(dateString);
     const month = date.getMonth() + 1;
@@ -292,11 +392,34 @@ export default function MyStudyCalendarPage({ params }) {
               </div>
 
               <div className={styles.monthNavigation}>
-                <button className={styles.navButton} onClick={goToPreviousMonth}>
+                <button
+                  className={styles.navButton}
+                  onClick={() => {
+                    if (viewMode === 'month') goToPreviousMonth();
+                    else if (viewMode === 'week') goToPreviousWeek();
+                    else goToPreviousDay();
+                  }}
+                >
                   ◀
                 </button>
-                <span className={styles.currentMonth}>{formatMonth(currentDate)}</span>
-                <button className={styles.navButton} onClick={goToNextMonth}>
+                <div className={styles.dateDisplay}>
+                  <span className={styles.currentMonth}>
+                    {viewMode === 'month' && formatMonth(currentDate)}
+                    {viewMode === 'week' && getWeekRange(currentDate)}
+                    {viewMode === 'day' && `${currentDate.getMonth() + 1}월 ${currentDate.getDate()}일`}
+                  </span>
+                  <button className={styles.todayButton} onClick={goToToday}>
+                    오늘
+                  </button>
+                </div>
+                <button
+                  className={styles.navButton}
+                  onClick={() => {
+                    if (viewMode === 'month') goToNextMonth();
+                    else if (viewMode === 'week') goToNextWeek();
+                    else goToNextDay();
+                  }}
+                >
                   ▶
                 </button>
               </div>
@@ -305,58 +428,214 @@ export default function MyStudyCalendarPage({ params }) {
 
           {/* 캘린더 뷰 */}
           {viewType === 'calendar' && (
-            <div className={styles.monthView}>
-              <div className={styles.weekdayHeader}>
-                {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-                  <div key={day} className={styles.weekday}>
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {eventsLoading ? (
-                <div style={{ textAlign: 'center', padding: '2rem' }}>일정 로딩 중...</div>
-              ) : (
-                <div className={styles.daysGrid}>
-                  {getDaysInMonth(currentDate).map((day, index) => {
-                    const dayEvents = day ? getEventsForDay(day) : [];
-                    return (
-                      <div
-                        key={index}
-                        className={`${styles.dayCell} ${!day ? styles.emptyDay : ''} ${
-                          isToday(day) ? styles.today : ''
-                        }`}
-                      >
-                        {day && (
-                          <>
-                            <div className={styles.dayNumber}>{day}</div>
-                            <div className={styles.dayEvents}>
-                              {dayEvents.slice(0, 2).map((event) => (
-                                <div
-                                  key={event.id}
-                                  className={styles.eventBadge}
-                                  style={{ backgroundColor: event.color || '#6366F1' }}
-                                  title={`${event.startTime} ${event.title}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenDetailModal(event);
-                                  }}
-                                >
-                                  {event.title.length > 8 ? event.title.substring(0, 8) + '...' : event.title}
-                                </div>
-                              ))}
-                              {dayEvents.length > 2 && (
-                                <div className={styles.eventMore}>+{dayEvents.length - 2}개</div>
-                              )}
-                            </div>
-                          </>
-                        )}
+            <>
+              {/* 월간 뷰 */}
+              {viewMode === 'month' && (
+                <div className={styles.monthView}>
+                  <div className={styles.weekdayHeader}>
+                    {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
+                      <div key={day} className={styles.weekday}>
+                        {day}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+
+                  {eventsLoading ? (
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>일정 로딩 중...</div>
+                  ) : (
+                    <div className={styles.daysGrid}>
+                      {getDaysInMonth(currentDate).map((day, index) => {
+                        const dayEvents = day ? getEventsForDay(day) : [];
+                        return (
+                          <div
+                            key={index}
+                            className={`${styles.dayCell} ${!day ? styles.emptyDay : ''} ${
+                              isToday(day) ? styles.today : ''
+                            }`}
+                          >
+                            {day && (
+                              <>
+                                <div className={styles.dayNumber}>{day}</div>
+                                <div className={styles.dayEvents}>
+                                  {dayEvents.slice(0, 2).map((event) => (
+                                    <div
+                                      key={event.id}
+                                      className={styles.eventBadge}
+                                      style={{ backgroundColor: event.color || '#6366F1' }}
+                                      title={`${event.startTime} ${event.title}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenDetailModal(event);
+                                      }}
+                                    >
+                                      {event.title.length > 8 ? event.title.substring(0, 8) + '...' : event.title}
+                                    </div>
+                                  ))}
+                                  {dayEvents.length > 2 && (
+                                    <div className={styles.eventMore}>+{dayEvents.length - 2}개</div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+
+              {/* 주간 뷰 */}
+              {viewMode === 'week' && (
+                <div className={styles.weekView}>
+                  <div className={styles.weekViewHeader}>
+                    {/* 좌측 상단 코너 셀 (시간/날짜) */}
+                    <div className={styles.cornerCell}>
+                      <span className={styles.cornerTime}>시간</span>
+                      <span className={styles.cornerDate}>날짜</span>
+                    </div>
+                    {/* 요일 헤더 */}
+                    {getWeekDays(currentDate).map((date, index) => {
+                      const { month, day, weekday } = formatDayHeader(date);
+                      const isCurrentDay = isSameDay(date, new Date());
+                      return (
+                        <div
+                          key={index}
+                          className={`${styles.weekDayHeader} ${isCurrentDay ? styles.currentDay : ''} ${index === 0 ? styles.sunday : ''}`}
+                        >
+                          <div className={styles.weekDayName}>{weekday}</div>
+                          <div className={styles.weekDayDate}>
+                            {month}/{day}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {eventsLoading ? (
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>일정 로딩 중...</div>
+                  ) : (
+                    <div className={styles.weekViewBody}>
+                      <div className={styles.timeColumn}>
+                        {getTimeSlots().map((time) => (
+                          <div key={time} className={styles.timeSlot}>
+                            {time}
+                          </div>
+                        ))}
+                      </div>
+                      <div className={styles.weekDaysColumn}>
+                        {getWeekDays(currentDate).map((date, index) => {
+                          const dayEvents = getEventsForDate(date);
+                          return (
+                            <div key={index} className={styles.weekDayColumn}>
+                              <div className={styles.timeGrid}>
+                                {getTimeSlots().map((time) => (
+                                  <div key={time} className={styles.timeGridSlot}></div>
+                                ))}
+                              </div>
+                              <div className={styles.eventsContainer}>
+                                {dayEvents.map((event) => {
+                                  const position = getEventPosition(event);
+                                  return (
+                                    <div
+                                      key={event.id}
+                                      className={styles.weekEvent}
+                                      style={{
+                                        top: position.top,
+                                        height: position.height,
+                                        backgroundColor: event.color || '#6366F1'
+                                      }}
+                                      onClick={() => handleOpenDetailModal(event)}
+                                      title={`${event.startTime} - ${event.endTime}\n${event.title}`}
+                                    >
+                                      <div className={styles.weekEventTime}>
+                                        {event.startTime}
+                                      </div>
+                                      <div className={styles.weekEventTitle}>
+                                        {event.title}
+                                      </div>
+                                      {event.location && (
+                                        <div className={styles.weekEventLocation}>
+                                          📍 {event.location}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 일간 뷰 */}
+              {viewMode === 'day' && (
+                <div className={styles.dayView}>
+                  <div className={styles.dayViewHeader}>
+                    <div className={styles.dayViewTitle}>
+                      {currentDate.getMonth() + 1}월 {currentDate.getDate()}일 ({['일', '월', '화', '수', '목', '금', '토'][currentDate.getDay()]})
+                    </div>
+                  </div>
+
+                  {eventsLoading ? (
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>일정 로딩 중...</div>
+                  ) : (
+                    <div className={styles.dayViewBody}>
+                      <div className={styles.timeColumn}>
+                        {getTimeSlots().map((time) => (
+                          <div key={time} className={styles.timeSlot}>
+                            {time}
+                          </div>
+                        ))}
+                      </div>
+                      <div className={styles.dayEventsColumn}>
+                        <div className={styles.timeGrid}>
+                          {getTimeSlots().map((time) => (
+                            <div key={time} className={styles.timeGridSlot}></div>
+                          ))}
+                        </div>
+                        <div className={styles.eventsContainer}>
+                          {getEventsForDate(currentDate).map((event) => {
+                            const position = getEventPosition(event);
+                            return (
+                              <div
+                                key={event.id}
+                                className={styles.dayEvent}
+                                style={{
+                                  top: position.top,
+                                  height: position.height,
+                                  backgroundColor: event.color || '#6366F1'
+                                }}
+                                onClick={() => handleOpenDetailModal(event)}
+                              >
+                                <div className={styles.dayEventTime}>
+                                  {event.startTime} - {event.endTime}
+                                </div>
+                                <div className={styles.dayEventTitle}>
+                                  {event.title}
+                                </div>
+                                {event.location && (
+                                  <div className={styles.dayEventLocation}>
+                                    📍 {event.location}
+                                  </div>
+                                )}
+                                <div className={styles.dayEventCreator}>
+                                  작성자: {event.createdBy?.name || '알 수 없음'}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {/* 리스트 뷰 */}
