@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import styles from '@/styles/landing/landing-footer.module.css'
 
 export default function LandingFooter() {
@@ -7,8 +8,13 @@ export default function LandingFooter() {
         <div className={styles.topSection}>
           <div className={styles.brandSection}>
             <div className={styles.logo}>
-              <span>🚀</span>
-              <span>CoUp</span>
+              <Image
+                src="/mainlogo.png"
+                alt="CoUp"
+                width={120}
+                height={40}
+                className={styles.logoImage}
+              />
             </div>
             <p className={styles.tagline}>
               함께 성장하는 스터디 플랫폼<br />

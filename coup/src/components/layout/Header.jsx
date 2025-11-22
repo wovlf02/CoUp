@@ -10,7 +10,7 @@ import { useMe } from '@/lib/hooks/useApi'
 
 /**
  * 상단 헤더
- * - 로고, 빠른 액션, 알림, 프로필
+ * - 로고, 글로벌 검색, 알림, 프로필
  * - 높이: 64px (Desktop), 56px (Mobile)
  */
 export default function Header({ onMenuToggle }) {
@@ -20,6 +20,8 @@ export default function Header({ onMenuToggle }) {
   const [showProfile, setShowProfile] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSearchResults, setShowSearchResults] = useState(false)
 
   // 최신 사용자 정보 가져오기
   const { data: userData } = useMe()
@@ -64,6 +66,15 @@ export default function Header({ onMenuToggle }) {
     router.push('/')
   }
 
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/studies?search=${encodeURIComponent(searchQuery)}`)
+      setSearchQuery('')
+      setShowSearchResults(false)
+    }
+  }
+
   return (
     <header className={styles.header}>
       {/* Mobile Menu Button */}
@@ -75,20 +86,47 @@ export default function Header({ onMenuToggle }) {
         <span className={styles.menuIcon}>☰</span>
       </button>
 
-      {/* Quick Actions */}
-      <div className={styles.quickActions}>
-        <Link href="/tasks" className={styles.quickActionButton}>
-          <span className={styles.quickActionIcon}>✅</span>
-          <span className={styles.quickActionText}>할 일</span>
-        </Link>
-        <Link href="/my-studies" className={styles.quickActionButton}>
-          <span className={styles.quickActionIcon}>📚</span>
-          <span className={styles.quickActionText}>내 스터디</span>
-        </Link>
-        <Link href="/studies" className={styles.quickActionButton}>
-          <span className={styles.quickActionIcon}>🔍</span>
-          <span className={styles.quickActionText}>스터디 찾기</span>
-        </Link>
+
+      {/* Global Search */}
+      <div className={styles.searchContainer}>
+        <form onSubmit={handleSearch} className={styles.searchForm}>
+          <span className={styles.searchIcon}>🔍</span>
+          <input
+            type="text"
+            placeholder="스터디, 사용자, 태그 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setShowSearchResults(true)}
+            onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+            className={styles.searchInput}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className={styles.searchClear}
+              aria-label="검색어 지우기"
+            >
+              ✕
+            </button>
+          )}
+        </form>
+        {showSearchResults && searchQuery && (
+          <div className={styles.searchResults}>
+            <div className={styles.searchResultsHeader}>
+              <span className={styles.searchResultsTitle}>빠른 검색</span>
+            </div>
+            <button
+              onClick={handleSearch}
+              className={styles.searchResultItem}
+            >
+              <span className={styles.searchResultIcon}>🔍</span>
+              <span className={styles.searchResultText}>
+                "{searchQuery}" 검색하기
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Right Actions */}
@@ -205,13 +243,9 @@ export default function Header({ onMenuToggle }) {
                 <span className={styles.dropdownIcon}>👤</span>
                 마이페이지
               </Link>
-              <Link href="/user/settings" className={styles.dropdownItem} onClick={() => setShowProfile(false)}>
-                <span className={styles.dropdownIcon}>⚙️</span>
-                개인 설정
-              </Link>
               <Link href="/settings" className={styles.dropdownItem} onClick={() => setShowProfile(false)}>
-                <span className={styles.dropdownIcon}>🔧</span>
-                시스템 설정
+                <span className={styles.dropdownIcon}>⚙️</span>
+                설정
               </Link>
               <div className={styles.dropdownDivider} />
               <button className={`${styles.dropdownItem} ${styles.logout}`} onClick={handleLogout}>

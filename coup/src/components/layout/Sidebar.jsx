@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import styles from './Sidebar.module.css'
 
@@ -44,10 +45,14 @@ export default function Sidebar({ isAdmin = false, isOpen = false, onClose }) {
       {/* Logo */}
       <div className={styles.logo}>
         <Link href={isAdmin ? '/admin' : '/dashboard'} onClick={onClose}>
-          <span className={styles.logoIcon}>📚</span>
-          <span className={styles.logoText}>
-            {isAdmin ? 'CoUp Admin' : 'CoUp'}
-          </span>
+          <Image
+            src="/mainlogo.png"
+            alt="CoUp"
+            width={140}
+            height={46}
+            className={styles.logoImage}
+            priority
+          />
         </Link>
       </div>
 

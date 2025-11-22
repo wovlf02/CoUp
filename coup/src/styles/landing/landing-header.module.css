@@ -31,16 +31,18 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--primary-600);
-  text-decoration: none;
   cursor: pointer;
+  transition: opacity var(--transition-fast);
 }
 
 .logo:hover {
-  color: var(--primary-700);
+  opacity: 0.8;
+}
+
+.logoImage {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .nav {

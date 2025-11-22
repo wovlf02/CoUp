@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { signIn, useSession } from 'next-auth/react'
 import styles from '@/styles/auth/sign-up.module.css'
 
@@ -246,8 +247,14 @@ export default function SignUpPage() {
 
       <div className={styles.card}>
         <div className={styles.logoContainer}>
-          <div className={styles.logo}>🚀</div>
-          <div className={styles.brandName}>CoUp</div>
+          <Image
+            src="/mainlogo.png"
+            alt="CoUp"
+            width={140}
+            height={46}
+            className={styles.logoImage}
+            priority
+          />
         </div>
 
         <h1 className={styles.title}>새로운 여정을 시작하세요</h1>

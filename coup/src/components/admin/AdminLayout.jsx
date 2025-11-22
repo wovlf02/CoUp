@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import styles from './AdminLayout.module.css'
 
@@ -21,7 +22,14 @@ export default function AdminLayout({ children }) {
       {/* Admin Navigation */}
       <nav className={styles.adminNav}>
         <div className={styles.adminLogo}>
-          🔵 CoUp Admin
+          <Image
+            src="/mainlogo.png"
+            alt="CoUp Admin"
+            width={120}
+            height={40}
+            className={styles.logoImage}
+            priority
+          />
         </div>
 
         {navItems.map(item => (

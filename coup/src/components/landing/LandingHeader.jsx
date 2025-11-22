@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import styles from '@/styles/landing/landing-header.module.css'
 
 export default function LandingHeader() {
@@ -33,8 +34,14 @@ export default function LandingHeader() {
     <header className={`${styles.header} ${isScrolled ? styles.solid : styles.transparent}`}>
       <div className={styles.headerContainer}>
         <div className={styles.logo} onClick={scrollToTop}>
-          <span>🚀</span>
-          <span>CoUp</span>
+          <Image
+            src="/mainlogo.png"
+            alt="CoUp"
+            width={120}
+            height={40}
+            className={styles.logoImage}
+            priority
+          />
         </div>
 
         <nav className={styles.nav}>
