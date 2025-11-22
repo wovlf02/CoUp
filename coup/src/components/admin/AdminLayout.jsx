@@ -25,8 +25,8 @@ export default function AdminLayout({ children }) {
           <Image
             src="/mainlogo.png"
             alt="CoUp Admin"
-            width={120}
-            height={40}
+            width={140}
+            height={48}
             className={styles.logoImage}
             priority
           />
