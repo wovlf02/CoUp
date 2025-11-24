@@ -374,6 +374,7 @@ model Report {
   reporterId String
   targetType TargetType
   targetId   String
+  targetName String? // 신고 대상 이름 (캐시)
   type       ReportType
   reason     String     @db.Text
   evidence   Json? // 증거 자료
@@ -391,6 +392,7 @@ model Report {
   reporter User @relation(fields: [reporterId], references: [id])
 
   @@index([status, priority, createdAt])
+  @@index([targetType, targetId])
 }
 
 enum TargetType {

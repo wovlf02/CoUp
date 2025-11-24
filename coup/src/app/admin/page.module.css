@@ -10,6 +10,22 @@
   gap: 16px;
 }
 
+.realtimeSection {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.reportsSection {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 60%;
+}
+
 .chartSection {
   background: white;
   border: 1px solid #E5E7EB;
@@ -17,244 +33,330 @@
   padding: 24px;
 }
 
-.chartHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.chartTitle {
+.sectionTitle {
   font-size: 1.125rem;
   font-weight: 600;
   color: #111827;
+  margin-bottom: 20px;
 }
 
-.chartFilters {
-  display: flex;
-  gap: 8px;
-}
-
-.filterButton {
-  padding: 6px 12px;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.filterButton:hover {
-  border-color: #3B82F6;
-  color: #3B82F6;
-}
-
-.filterButton.active {
-  background: #3B82F6;
-  color: white;
-  border-color: #3B82F6;
-}
-
-.twoColumnGrid {
+.realtimeGrid {
   display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
-.threeColumnGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.cardList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.reportCard {
-  background: #FAFAFA;
+.realtimeCard {
+  background: linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%);
   border: 1px solid #E5E7EB;
-  border-left: 4px solid #F59E0B;
-  border-radius: 8px;
-  padding: 16px;
-  transition: all 0.2s ease;
-}
-
-.reportCard:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.reportCard.urgent {
-  border-left-color: #F59E0B;
-}
-
-.reportCard.resolved {
-  border-left-color: #10B981;
-  opacity: 0.7;
-}
-
-.reportHeader {
-  display: flex;
-  justify-content: between;
-  align-items: start;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.reportType {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.reportType.spam {
-  background: #FEF3C7;
-  color: #92400E;
+.realtimeCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #3B82F6;
 }
 
-.reportType.harassment {
-  background: #FED7AA;
-  color: #C2410C;
+.realtimeIcon {
+  font-size: 2.5rem;
+  line-height: 1;
 }
 
-.reportInfo {
-  font-size: 0.875rem;
-  color: #374151;
+.realtimeContent {
+  flex: 1;
+}
+
+.realtimeLabel {
+  font-size: 0.8125rem;
+  color: #6B7280;
   margin-bottom: 4px;
-  line-height: 1.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 500;
 }
 
-.reportMeta {
+.realtimeValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.realtimeSubtext {
   font-size: 0.75rem;
   color: #9CA3AF;
-  display: flex;
-  gap: 8px;
+  margin-top: 2px;
 }
 
-.reportActions {
-  margin-top: 12px;
-  display: flex;
-  gap: 8px;
+/* 2열 레이아웃 */
+.twoColumnLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.actionButton {
-  padding: 6px 12px;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  font-size: 0.75rem;
-  transition: all 0.2s;
-}
-
-.actionButton.primary {
-  background: #3B82F6;
-  color: white;
-  border-color: #3B82F6;
-}
-
-.actionButton:hover {
-  border-color: #3B82F6;
-  color: #3B82F6;
-}
-
-.actionButton.primary:hover {
-  background: #2563EB;
-  color: white;
-}
-
-.statusSection {
+/* 컴팩트한 신고 섹션 */
+.reportsSectionCompact {
   background: white;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
   padding: 24px;
 }
 
-.statusGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.statusCard {
-  padding: 16px;
-  background: #F9FAFB;
-  border-radius: 8px;
-}
-
-.statusLabel {
-  font-size: 0.875rem;
-  color: #6B7280;
-  margin-bottom: 8px;
-}
-
-.statusValue {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.statusSubtext {
-  font-size: 0.75rem;
-  color: #9CA3AF;
-  margin-top: 4px;
-}
-
-.systemHealth {
-  padding: 16px;
-  background: #DBEAFE;
-  border-radius: 8px;
+.sectionHeader {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.systemHealthIcon {
-  font-size: 2rem;
-}
-
-.systemHealthText {
-  flex: 1;
-}
-
-.systemHealthTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1E40AF;
-  margin-bottom: 4px;
-}
-
-.systemHealthMeta {
-  font-size: 0.875rem;
-  color: #1E40AF;
-}
-
-.moreButton {
-  padding: 8px 16px;
+.viewMoreButton {
+  padding: 6px 12px;
   border: 1px solid #E5E7EB;
   border-radius: 6px;
   background: white;
+  color: #6B7280;
   cursor: pointer;
   font-size: 0.875rem;
-  width: 100%;
   transition: all 0.2s;
-  margin-top: 12px;
 }
 
-.moreButton:hover {
+.viewMoreButton:hover {
   border-color: #3B82F6;
   color: #3B82F6;
+}
+
+.compactCardList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compactReportCard {
+  background: #FAFAFA;
+  border: 1px solid #E5E7EB;
+  border-left: 3px solid #F59E0B;
+  border-radius: 8px;
+  padding: 14px;
+  transition: all 0.2s ease;
+}
+
+.compactReportCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.compactReportCard.urgent {
+  border-left-color: #EF4444;
+  background: #FEF2F2;
+}
+
+.compactReportHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.reportBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.reportBadge.spam {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.reportBadge.harassment {
+  background: #FED7AA;
+  color: #C2410C;
+}
+
+.reportBadge.inappropriate {
+  background: #FECACA;
+  color: #991B1B;
+}
+
+.reportBadge.copyright {
+  background: #E0E7FF;
+  color: #3730A3;
+}
+
+.reportBadge.other {
+  background: #E5E7EB;
+  color: #374151;
+}
+
+.urgentBadge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.compactReportContent {
+  margin-bottom: 8px;
+}
+
+.compactReportInfo {
+  font-size: 0.8125rem;
+  color: #4B5563;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.compactReportInfo strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.compactReportFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.reportTime {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+}
+
+.processButton {
+  padding: 5px 12px;
+  border: 1px solid #3B82F6;
+  border-radius: 6px;
+  background: #3B82F6;
+  color: white;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.processButton:hover {
+  background: #2563EB;
+  border-color: #2563EB;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.emptyText {
+  color: #9CA3AF;
+  font-size: 0.875rem;
+}
+
+/* 최근 활동 섹션 */
+.activitiesSection {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.activityGroup {
+  /* 그룹 스타일 */
+}
+
+.activityGroupTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.activityIcon {
+  font-size: 1.25rem;
+}
+
+.activityItems {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activityItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.activityItem:hover {
+  background: #F3F4F6;
+}
+
+.activityAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.activityContent {
+  flex: 1;
+}
+
+.activityName {
+  font-size: 0.8125rem;
+  color: #111827;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.activityTime {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+}
+
+@media (max-width: 1400px) {
+  .realtimeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .twoColumnLayout {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 1024px) {

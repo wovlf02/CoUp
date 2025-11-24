@@ -47,9 +47,56 @@ export async function GET(request) {
       }
     })
 
+    // targetName이 없는 경우 실제 대상 정보 조회
+    const enrichedReports = await Promise.all(reports.map(async (report) => {
+      let targetName = report.targetName
+      let reported = null
+
+      if (!targetName) {
+        try {
+          if (report.targetType === 'USER') {
+            const user = await prisma.user.findUnique({
+              where: { id: report.targetId },
+              select: { id: true, name: true, email: true }
+            })
+            if (user) {
+              targetName = user.name || user.email
+              reported = user
+            }
+          } else if (report.targetType === 'STUDY') {
+            const study = await prisma.study.findUnique({
+              where: { id: report.targetId },
+              select: { id: true, name: true }
+            })
+            if (study) {
+              targetName = study.name
+              reported = study
+            }
+          } else if (report.targetType === 'MESSAGE') {
+            const message = await prisma.message.findUnique({
+              where: { id: report.targetId },
+              select: { id: true, content: true, user: { select: { id: true, name: true, email: true } } }
+            })
+            if (message) {
+              targetName = `${message.user.name || message.user.email}의 메시지`
+              reported = message.user
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching target info:', err)
+        }
+      }
+
+      return {
+        ...report,
+        targetName: targetName || '알 수 없음',
+        reported
+      }
+    }))
+
     return NextResponse.json({
       success: true,
-      data: reports,
+      data: enrichedReports,
       pagination: {
         page,
         limit,

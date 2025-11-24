@@ -35,9 +35,20 @@ export default function SignInPage() {
           hasValidatedRef.current = true
 
           if (data.valid) {
-            // 세션 유효 - 리다이렉트
-            console.log('✅ Valid session, redirecting to:', callbackUrl)
-            router.push(callbackUrl)
+            // 세션 유효 - 역할에 따라 리다이렉트
+            console.log('✅ Valid session, checking role...')
+
+            // 사용자 정보 가져오기
+            const userResponse = await fetch('/api/auth/me')
+            const userData = await userResponse.json()
+
+            if (userData.user?.role === 'ADMIN' || userData.user?.role === 'SYSTEM_ADMIN') {
+              console.log('👑 Admin user, redirecting to /admin')
+              router.push('/admin')
+            } else {
+              console.log('👤 Regular user, redirecting to:', callbackUrl)
+              router.push(callbackUrl)
+            }
           } else if (data.shouldLogout) {
             // 세션 무효 - NextAuth로 완전히 로그아웃
             console.warn('⚠️ Invalid session detected:', data.error)
@@ -130,8 +141,16 @@ export default function SignInPage() {
       }
 
       if (result?.ok) {
-        // 로그인 성공 - 대시보드로 이동
-        router.push(callbackUrl)
+        // 로그인 성공 - 세션 정보 가져오기
+        const response = await fetch('/api/auth/me')
+        const userData = await response.json()
+
+        // 관리자라면 관리자 페이지로, 아니면 대시보드로
+        if (userData.user?.role === 'ADMIN' || userData.user?.role === 'SYSTEM_ADMIN') {
+          router.push('/admin')
+        } else {
+          router.push(callbackUrl)
+        }
         router.refresh()
       }
 

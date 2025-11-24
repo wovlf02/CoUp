@@ -153,6 +153,24 @@ button {
   padding: 20px;
 }
 
+/* 위젯별 높이 설정 - 각 위젯에 필요한 높이만 */
+.widgetMainStats {
+  /* 자동 높이 */
+}
+
+.widgetUrgentAlerts {
+  /* 자동 높이, 최대 높이만 설정 */
+}
+
+.widgetUrgentAlerts .widgetContent {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.widgetSystemStatus {
+  /* 자동 높이 */
+}
+
 /* 위젯 스크롤바 스타일 */
 .rightWidget::-webkit-scrollbar {
   width: 6px;
