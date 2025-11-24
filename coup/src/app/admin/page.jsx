@@ -7,6 +7,7 @@ import StatCard from '@/components/admin/StatCard'
 import UserGrowthChart from '@/components/admin/UserGrowthChart'
 import StudyActivityChart from '@/components/admin/StudyActivityChart'
 import ReportDetailModal from '@/components/admin/ReportDetailModal'
+import ReportContentModal from '@/components/admin/ReportContentModal'
 import UserDetailModal from '@/components/admin/UserDetailModal'
 import SuspendUserModal from '@/components/admin/SuspendUserModal'
 import { useAdminStats, useAdminReports, useSuspendUser } from '@/lib/hooks/useApi'
@@ -17,15 +18,17 @@ import styles from './page.module.css'
 export default function AdminDashboard() {
   const router = useRouter()
   const [period, setPeriod] = useState('weekly')
+  const [activityPeriod, setActivityPeriod] = useState('weekly')
   const [selectedReport, setSelectedReport] = useState(null)
   const [selectedUser, setSelectedUser] = useState(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [isReportContentModalOpen, setIsReportContentModalOpen] = useState(false)
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false)
 
   // 실제 API Hooks
   const { data: statsData, isLoading: statsLoading } = useAdminStats()
-  const { data: reportsData } = useAdminReports({ status: 'PENDING', limit: 5 })
+  const { data: reportsData } = useAdminReports({ status: 'PENDING', limit: 3 })
   const suspendUserMutation = useSuspendUser()
 
   // Mock 데이터 사용 (실제 데이터가 없을 경우)
@@ -41,11 +44,11 @@ export default function AdminDashboard() {
     activeStudiesChange: hasRealData ? statsData.data.studies.newThisWeek : mockStats.studies.newThisWeek
   }
 
-  const recentReports = (reportsData?.data && reportsData.data.length > 0) ? reportsData.data : getMockReports().slice(0, 5)
+  const recentReports = (reportsData?.data && reportsData.data.length > 0) ? reportsData.data : getMockReports().slice(0, 3)
 
   // Mock 데이터 (차트용) - 기간별로 생성
   const userGrowthData = generateUserGrowthByPeriod(period)
-  const studyActivitiesData = generateStudyActivityData()
+  const studyActivitiesData = generateStudyActivityData(activityPeriod)
   const systemStatus = generateSystemStatus()
 
   const formatTimeAgo = (dateString) => {
@@ -63,11 +66,17 @@ export default function AdminDashboard() {
     setIsReportModalOpen(true)
   }
 
+  const handleReportDetailClick = (report) => {
+    setSelectedReport(report)
+    setIsReportContentModalOpen(true)
+  }
+
   const handleProcessReport = (data) => {
     console.log('신고 처리:', data)
     alert(`신고가 처리되었습니다.\n액션: ${data.action}\n메모: ${data.memo}`)
     setIsReportModalOpen(false)
     setSelectedReport(null)
+    // 여기서 데이터 새로고침
   }
 
   const handleSuspendUser = () => {
@@ -243,12 +252,20 @@ export default function AdminDashboard() {
                         <div className={styles.compactReportFooter}>
                           <span className={styles.reportTime}>{formatTimeAgo(report.createdAt)}</span>
                           {report.status === 'PENDING' && (
-                            <button
-                              className={styles.processButton}
-                              onClick={() => handleReportClick(report)}
-                            >
-                              처리
-                            </button>
+                            <div className={styles.reportActions}>
+                              <button
+                                className={styles.detailButton}
+                                onClick={() => handleReportDetailClick(report)}
+                              >
+                                상세보기
+                              </button>
+                              <button
+                                className={styles.processButton}
+                                onClick={() => handleReportClick(report)}
+                              >
+                                처리
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -262,76 +279,47 @@ export default function AdminDashboard() {
                 <div className={styles.sectionHeader}>
                   <h2 className={styles.sectionTitle}>📈 최근 활동</h2>
                 </div>
-                <div className={styles.activityList}>
-                  {/* 최근 가입한 사용자 */}
-                  <div className={styles.activityGroup}>
-                    <div className={styles.activityGroupTitle}>
-                      <span className={styles.activityIcon}>👥</span>
-                      <span>최근 가입</span>
-                    </div>
-                    <div className={styles.activityItems}>
-                      <div className={styles.activityItem}>
-                        <div className={styles.activityAvatar}>👤</div>
-                        <div className={styles.activityContent}>
-                          <div className={styles.activityName}>김철수님이 가입했습니다</div>
-                          <div className={styles.activityTime}>5분 전</div>
-                        </div>
-                      </div>
-                      <div className={styles.activityItem}>
-                        <div className={styles.activityAvatar}>👤</div>
-                        <div className={styles.activityContent}>
-                          <div className={styles.activityName}>이영희님이 가입했습니다</div>
-                          <div className={styles.activityTime}>23분 전</div>
-                        </div>
-                      </div>
+                <div className={styles.simpleActivityList}>
+                  <div className={styles.simpleActivityItem}>
+                    <div className={styles.activityAvatar}>👤</div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityName}>김철수님이 가입했습니다</div>
+                      <div className={styles.activityTime}>5분 전</div>
                     </div>
                   </div>
-
-                  {/* 새로운 스터디 */}
-                  <div className={styles.activityGroup}>
-                    <div className={styles.activityGroupTitle}>
-                      <span className={styles.activityIcon}>📚</span>
-                      <span>새로운 스터디</span>
-                    </div>
-                    <div className={styles.activityItems}>
-                      <div className={styles.activityItem}>
-                        <div className={styles.activityAvatar}>⚛️</div>
-                        <div className={styles.activityContent}>
-                          <div className={styles.activityName}>React 마스터하기 생성</div>
-                          <div className={styles.activityTime}>1시간 전</div>
-                        </div>
-                      </div>
-                      <div className={styles.activityItem}>
-                        <div className={styles.activityAvatar}>🐍</div>
-                        <div className={styles.activityContent}>
-                          <div className={styles.activityName}>Python 알고리즘 생성</div>
-                          <div className={styles.activityTime}>2시간 전</div>
-                        </div>
-                      </div>
+                  <div className={styles.simpleActivityItem}>
+                    <div className={styles.activityAvatar}>👤</div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityName}>이영희님이 가입했습니다</div>
+                      <div className={styles.activityTime}>23분 전</div>
                     </div>
                   </div>
-
-                  {/* 활발한 활동 */}
-                  <div className={styles.activityGroup}>
-                    <div className={styles.activityGroupTitle}>
-                      <span className={styles.activityIcon}>🔥</span>
-                      <span>활발한 활동</span>
+                  <div className={styles.simpleActivityItem}>
+                    <div className={styles.activityAvatar}>⚛️</div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityName}>React 마스터하기 스터디 생성</div>
+                      <div className={styles.activityTime}>1시간 전</div>
                     </div>
-                    <div className={styles.activityItems}>
-                      <div className={styles.activityItem}>
-                        <div className={styles.activityAvatar}>💬</div>
-                        <div className={styles.activityContent}>
-                          <div className={styles.activityName}>React 스터디에 새 메시지 15개</div>
-                          <div className={styles.activityTime}>방금 전</div>
-                        </div>
-                      </div>
-                      <div className={styles.activityItem}>
-                        <div className={styles.activityAvatar}>📁</div>
-                        <div className={styles.activityContent}>
-                          <div className={styles.activityName}>Python 스터디에 파일 업로드</div>
-                          <div className={styles.activityTime}>10분 전</div>
-                        </div>
-                      </div>
+                  </div>
+                  <div className={styles.simpleActivityItem}>
+                    <div className={styles.activityAvatar}>🐍</div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityName}>Python 알고리즘 스터디 생성</div>
+                      <div className={styles.activityTime}>2시간 전</div>
+                    </div>
+                  </div>
+                  <div className={styles.simpleActivityItem}>
+                    <div className={styles.activityAvatar}>💬</div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityName}>React 스터디에 새 메시지 15개</div>
+                      <div className={styles.activityTime}>방금 전</div>
+                    </div>
+                  </div>
+                  <div className={styles.simpleActivityItem}>
+                    <div className={styles.activityAvatar}>📁</div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityName}>Python 스터디에 파일 업로드</div>
+                      <div className={styles.activityTime}>10분 전</div>
                     </div>
                   </div>
                 </div>
@@ -341,7 +329,32 @@ export default function AdminDashboard() {
             {/* Study Activities Chart */}
             <div className={styles.chartSection}>
               <div className={styles.chartHeader}>
-                <h2 className={styles.chartTitle}>스터디 활동 현황 (주간)</h2>
+                <h2 className={styles.chartTitle}>
+                  스터디 활동 현황
+                  {activityPeriod === 'weekly' && ' (최근 7일)'}
+                  {activityPeriod === 'monthly' && ' (최근 30일)'}
+                  {activityPeriod === 'yearly' && ' (최근 12개월)'}
+                </h2>
+                <div className={styles.chartFilters}>
+                  <button
+                    className={`${styles.filterButton} ${activityPeriod === 'weekly' ? styles.active : ''}`}
+                    onClick={() => setActivityPeriod('weekly')}
+                  >
+                    주간
+                  </button>
+                  <button
+                    className={`${styles.filterButton} ${activityPeriod === 'monthly' ? styles.active : ''}`}
+                    onClick={() => setActivityPeriod('monthly')}
+                  >
+                    월간
+                  </button>
+                  <button
+                    className={`${styles.filterButton} ${activityPeriod === 'yearly' ? styles.active : ''}`}
+                    onClick={() => setActivityPeriod('yearly')}
+                  >
+                    연간
+                  </button>
+                </div>
               </div>
               {studyActivitiesData.length > 0 ? (
                 <StudyActivityChart data={studyActivitiesData} />
@@ -500,6 +513,15 @@ export default function AdminDashboard() {
           setSelectedReport(null)
         }}
         onProcess={handleProcessReport}
+      />
+
+      <ReportContentModal
+        report={selectedReport}
+        isOpen={isReportContentModalOpen}
+        onClose={() => {
+          setIsReportContentModalOpen(false)
+          setSelectedReport(null)
+        }}
       />
 
       <UserDetailModal

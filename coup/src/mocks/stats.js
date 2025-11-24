@@ -136,14 +136,52 @@ export function generateUserGrowthByPeriod(period = 'weekly') {
 }
 
 // 스터디 활동 데이터 생성
-export function generateStudyActivityData() {
-  const days = ['월', '화', '수', '목', '금', '토', '일']
+export function generateStudyActivityData(period = 'weekly') {
+  if (period === 'weekly') {
+    // 주간: 최근 7일
+    const days = ['월', '화', '수', '목', '금', '토', '일']
+    return days.map((day, index) => ({
+      category: day,
+      count: Math.floor(Math.random() * 30) + 20 + (index < 5 ? 10 : -5), // 주중이 더 활발
+      label: day
+    }))
+  } else if (period === 'monthly') {
+    // 월간: 최근 30일을 5일 단위로
+    const data = []
+    const today = new Date()
+    for (let i = 25; i >= 0; i -= 5) {
+      const date = new Date(today)
+      date.setDate(date.getDate() - i)
+      data.push({
+        category: `${date.getMonth() + 1}/${date.getDate()}`,
+        count: Math.floor(Math.random() * 80) + 60,
+        label: `${date.getMonth() + 1}/${date.getDate()}`
+      })
+    }
+    return data
+  } else if (period === 'yearly') {
+    // 연간: 최근 12개월
+    const data = []
+    const today = new Date()
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(today)
+      date.setMonth(date.getMonth() - i)
+      const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
+      data.push({
+        category: monthNames[date.getMonth()],
+        count: Math.floor(Math.random() * 200) + 150,
+        label: monthNames[date.getMonth()]
+      })
+    }
+    return data
+  }
 
+  // 기본값: 주간
+  const days = ['월', '화', '수', '목', '금', '토', '일']
   return days.map((day, index) => ({
-    day,
-    created: Math.floor(Math.random() * 10) + 5,
-    active: Math.floor(Math.random() * 30) + 20 + (index < 5 ? 10 : -5), // 주중이 더 활발
-    messages: Math.floor(Math.random() * 100) + 50
+    category: day,
+    count: Math.floor(Math.random() * 30) + 20 + (index < 5 ? 10 : -5),
+    label: day
   }))
 }
 
