@@ -141,7 +141,7 @@ button {
 }
 
 .widgetTitle {
-  padding: 16px 20px;
+  padding: 18px 20px;
   background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
   border-bottom: 1px solid #E5E7EB;
   font-size: 0.9375rem;
@@ -150,25 +150,25 @@ button {
 }
 
 .widgetContent {
-  padding: 20px;
+  padding: 24px;
 }
 
 /* 위젯별 높이 설정 - 각 위젯에 필요한 높이만 */
-.widgetMainStats {
-  /* 자동 높이 */
-}
-
-.widgetUrgentAlerts {
-  /* 자동 높이, 최대 높이만 설정 */
+.widgetMainStats .widgetContent {
+  min-height: auto;
+  padding: 24px 20px;
 }
 
 .widgetUrgentAlerts .widgetContent {
-  max-height: 350px;
+  max-height: 320px;
   overflow-y: auto;
+  min-height: 120px;
+  padding: 20px;
 }
 
-.widgetSystemStatus {
-  /* 자동 높이 */
+.widgetSystemStatus .widgetContent {
+  min-height: auto;
+  padding: 24px 20px;
 }
 
 /* 위젯 스크롤바 스타일 */

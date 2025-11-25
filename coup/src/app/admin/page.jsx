@@ -6,6 +6,7 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import StatCard from '@/components/admin/StatCard'
 import UserGrowthChart from '@/components/admin/UserGrowthChart'
 import StudyActivityChart from '@/components/admin/StudyActivityChart'
+import CurrentTimeWidget from '@/components/admin/CurrentTimeWidget'
 import ReportDetailModal from '@/components/admin/ReportDetailModal'
 import ReportContentModal from '@/components/admin/ReportContentModal'
 import UserDetailModal from '@/components/admin/UserDetailModal'
@@ -369,28 +370,31 @@ export default function AdminDashboard() {
 
         {/* Right Widget */}
         <div className="rightWidget">
+          {/* Current Time Widget */}
+          <CurrentTimeWidget />
+
           <div className="widget widgetMainStats">
             <div className="widgetTitle">📊 주요 통계</div>
             <div className="widgetContent">
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '4px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '6px' }}>
                   전체 사용자
                 </div>
                 <div style={{ fontSize: '2rem', fontWeight: '700', color: '#111827' }}>
                   {adminStats.totalUsers.toLocaleString()}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#10B981', marginTop: '4px' }}>
+                <div style={{ fontSize: '0.75rem', color: '#10B981', marginTop: '6px' }}>
                   🔺 +{adminStats.totalUsersChange} (1주)
                 </div>
               </div>
-              <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', marginTop: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '16px', marginTop: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>활성 스터디</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
                     {adminStats.activeStudies}개
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6B7280' }}>오늘 신규 가입</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
                     {adminStats.newSignupsToday}명
@@ -413,16 +417,16 @@ export default function AdminDashboard() {
                 <>
                   {recentReports.filter(r => r.priority === 'URGENT').slice(0, 3).map(report => (
                     <div key={report.id} style={{
-                      padding: '12px',
+                      padding: '14px',
                       background: '#FEF2F2',
                       borderRadius: '8px',
-                      marginBottom: '8px',
+                      marginBottom: '10px',
                       border: '1px solid #FEE2E2',
                       cursor: 'pointer'
                     }}
                     onClick={() => handleReportClick(report)}
                     >
-                      <div style={{ fontSize: '0.8125rem', fontWeight: '600', color: '#DC2626', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '0.8125rem', fontWeight: '600', color: '#DC2626', marginBottom: '6px' }}>
                         🔴 {report.type === 'SPAM' ? '스팸' : report.type === 'HARASSMENT' ? '욕설' : '부적절'}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>
@@ -432,7 +436,7 @@ export default function AdminDashboard() {
                   ))}
                 </>
               ) : (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#9CA3AF', fontSize: '0.875rem' }}>
+                <div style={{ textAlign: 'center', padding: '24px', color: '#9CA3AF', fontSize: '0.875rem' }}>
                   긴급 알림이 없습니다
                 </div>
               )}
@@ -442,7 +446,7 @@ export default function AdminDashboard() {
           <div className="widget widgetSystemStatus">
             <div className="widgetTitle">🔄 시스템 상태</div>
             <div className="widgetContent">
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                   <span style={{ fontSize: '1.5rem' }}>🟢</span>
                   <div>
@@ -455,9 +459,9 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-              <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px' }}>
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '16px' }}>
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>CPU</span>
                     <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{systemStatus.cpu}%</span>
                   </div>
@@ -470,8 +474,8 @@ export default function AdminDashboard() {
                     }} />
                   </div>
                 </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>메모리</span>
                     <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{systemStatus.memory}%</span>
                   </div>
@@ -485,7 +489,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>디스크</span>
                     <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{systemStatus.disk}%</span>
                   </div>

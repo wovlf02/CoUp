@@ -1,0 +1,120 @@
+.userBulkActionsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 1px solid #93C5FD;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.userBulkActionsInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: #1E40AF;
+  font-weight: 500;
+}
+
+.userBulkActionsCount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1E3A8A;
+}
+
+.userBulkActionsDeselectBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: rgba(30, 64, 175, 0.1);
+  border-radius: 50%;
+  color: #1E40AF;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.userBulkActionsDeselectBtn:hover {
+  background: rgba(30, 64, 175, 0.2);
+}
+
+.userBulkActionsButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.userBulkActionsBtn {
+  padding: 8px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.userBulkActionsBtn:hover {
+  border-color: #3B82F6;
+  color: #3B82F6;
+  background: #F9FAFB;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.userBulkActionsBtn:active {
+  transform: translateY(0);
+}
+
+.userBulkActionsBtnDanger {
+  color: #DC2626;
+  border-color: #FEE2E2;
+}
+
+.userBulkActionsBtnDanger:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+  background: #FEF2F2;
+}
+
+@media (max-width: 768px) {
+  .userBulkActionsBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .userBulkActionsInfo {
+    justify-content: center;
+  }
+
+  .userBulkActionsButtons {
+    flex-direction: column;
+  }
+
+  .userBulkActionsBtn {
+    width: 100%;
+  }
+}
+

@@ -1,0 +1,82 @@
+.userSearchBarContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 10px 16px;
+  flex: 1;
+  max-width: 400px;
+  transition: all 0.2s;
+}
+
+.userSearchBarContainer:focus-within {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.userSearchBarIcon {
+  font-size: 1rem;
+  color: #9CA3AF;
+}
+
+.userSearchBarInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  color: #111827;
+  background: transparent;
+}
+
+.userSearchBarInput::placeholder {
+  color: #9CA3AF;
+}
+
+.userSearchBarLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #E5E7EB;
+  border-top-color: #3B82F6;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.userSearchBarClearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #F3F4F6;
+  border-radius: 50%;
+  color: #6B7280;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.userSearchBarClearBtn:hover {
+  background: #E5E7EB;
+  color: #374151;
+}
+
+.userSearchBarClearBtn:active {
+  transform: scale(0.95);
+}
+
