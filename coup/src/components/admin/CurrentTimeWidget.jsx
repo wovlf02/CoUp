@@ -21,7 +21,7 @@ export default function CurrentTimeWidget() {
     const weekdays = ['일', '월', '화', '수', '목', '금', '토']
     const weekday = weekdays[date.getDay()]
 
-    return `${year}년 ${month}월 ${day}일 (${weekday})`
+    return `${year}.${month}.${day} (${weekday})`
   }
 
   const formatTime = (date) => {
@@ -34,7 +34,9 @@ export default function CurrentTimeWidget() {
 
   return (
     <div className={styles.timeWidget}>
-      <div className={styles.timeIcon}>🕐</div>
+      <div className={styles.timeHeader}>
+        <div className={styles.systemLabel}>시스템 시각</div>
+      </div>
       <div className={styles.timeContent}>
         <div className={styles.timeDisplay}>{formatTime(currentTime)}</div>
         <div className={styles.timeDate}>{formatDate(currentTime)}</div>

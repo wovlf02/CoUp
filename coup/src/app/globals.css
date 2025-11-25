@@ -156,19 +156,19 @@ button {
 /* 위젯별 높이 설정 - 각 위젯에 필요한 높이만 */
 .widgetMainStats .widgetContent {
   min-height: auto;
-  padding: 24px 20px;
+  padding: 26px 20px;
 }
 
 .widgetUrgentAlerts .widgetContent {
-  max-height: 320px;
+  max-height: 340px;
   overflow-y: auto;
-  min-height: 120px;
-  padding: 20px;
+  min-height: 140px;
+  padding: 22px 20px;
 }
 
 .widgetSystemStatus .widgetContent {
   min-height: auto;
-  padding: 24px 20px;
+  padding: 26px 20px;
 }
 
 /* 위젯 스크롤바 스타일 */
