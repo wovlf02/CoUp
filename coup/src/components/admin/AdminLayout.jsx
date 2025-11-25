@@ -23,12 +23,13 @@ export default function AdminLayout({ children }) {
       <nav className={styles.adminNav}>
         <div className={styles.adminLogo}>
           <Image
-            src="/mainlogo.png"
+            src="/mainlogo.png?v=2"
             alt="CoUp Admin"
-            width={140}
-            height={48}
+            width={180}
+            height={40}
             className={styles.logoImage}
             priority
+            unoptimized
           />
         </div>
 
