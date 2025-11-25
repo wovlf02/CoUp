@@ -1,14 +1,11 @@
 'use client'
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import styles from './StudyActivityChart.module.css'
-
-const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function StudyActivityChart({ data }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
         <XAxis
           dataKey="category"
@@ -27,13 +24,16 @@ export default function StudyActivityChart({ data }) {
             fontSize: '0.875rem'
           }}
         />
-        {/* Note: Recharts Tooltip requires contentStyle prop - cannot be moved to CSS */}
-        <Bar dataKey="count" name="스터디 수" radius={[8, 8, 0, 0]}>
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Bar>
-      </BarChart>
+        <Line
+          type="monotone"
+          dataKey="count"
+          name="스터디 수"
+          stroke="#6366F1"
+          strokeWidth={2}
+          dot={{ fill: '#6366F1', r: 4 }}
+          activeDot={{ r: 6 }}
+        />
+      </LineChart>
     </ResponsiveContainer>
   )
 }
