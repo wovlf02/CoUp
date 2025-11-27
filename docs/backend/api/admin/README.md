@@ -1,152 +1,252 @@
-# 관리자 API 명세 - 개요
+# 관리자 API 명세
 
-> **버전**: 2.0  
 > **Base URL**: `/api/admin`  
-> **인증**: NextAuth.js Session (role: ADMIN or SYSTEM_ADMIN)
+> **인증**: NextAuth JWT (Cookie 기반)  
+> **권한**: ADMIN, SYSTEM_ADMIN
 
 ---
 
-## 📋 API 목록
+## 📋 목차
 
-### 1. 인증 (Authentication)
-- `POST /api/admin/auth/verify` - 관리자 권한 확인
-
-### 2. 대시보드 (Dashboard)
-- `GET /api/admin/dashboard/stats` - 핵심 지표
-- `GET /api/admin/dashboard/recent-users` - 최근 가입 사용자
-- `GET /api/admin/dashboard/recent-studies` - 최근 생성 스터디
-- `GET /api/admin/dashboard/recent-reports` - 최근 신고
-- `GET /api/admin/dashboard/chart-data` - 차트 데이터
-
-### 3. 사용자 관리 (Users)
-- `GET /api/admin/users` - 사용자 목록
-- `GET /api/admin/users/:id` - 사용자 상세
-- `PATCH /api/admin/users/:id/suspend` - 사용자 정지
-- `PATCH /api/admin/users/:id/unsuspend` - 정지 해제
-- `PATCH /api/admin/users/:id/role` - 역할 변경 (SYSTEM_ADMIN)
-- `DELETE /api/admin/users/:id` - 사용자 삭제 (SYSTEM_ADMIN)
-
-### 4. 스터디 관리 (Studies)
-- `GET /api/admin/studies` - 스터디 목록
-- `GET /api/admin/studies/:id` - 스터디 상세
-- `PATCH /api/admin/studies/:id/hide` - 스터디 숨김
-- `PATCH /api/admin/studies/:id/close` - 스터디 종료
-- `PATCH /api/admin/studies/:id/recommend` - 추천 설정
-- `DELETE /api/admin/studies/:id/messages/:messageId` - 메시지 삭제
-- `DELETE /api/admin/studies/:id/files/:fileId` - 파일 삭제
-
-### 5. 신고 관리 (Reports)
-- `GET /api/admin/reports` - 신고 목록
-- `GET /api/admin/reports/:id` - 신고 상세
-- `PATCH /api/admin/reports/:id/status` - 상태 변경
-- `PATCH /api/admin/reports/:id/assign` - 담당자 배정
-- `POST /api/admin/reports/:id/action` - 조치 실행
-- `POST /api/admin/reports/:id/comment` - 코멘트 추가
-
-### 6. 콘텐츠 관리 (Content)
-- `GET /api/admin/content/filter-words` - 금지어 목록
-- `POST /api/admin/content/filter-words` - 금지어 추가 (SYSTEM_ADMIN)
-- `DELETE /api/admin/content/filter-words/:id` - 금지어 삭제 (SYSTEM_ADMIN)
-
-### 7. 통계 (Stats)
-- `GET /api/admin/stats/users` - 사용자 통계
-- `GET /api/admin/stats/studies` - 스터디 통계
-- `GET /api/admin/stats/reports` - 신고 통계
-- `POST /api/admin/stats/report` - 리포트 생성
-
-### 8. 설정 (Settings)
-- `GET /api/admin/settings` - 시스템 설정 조회 (SYSTEM_ADMIN)
-- `PATCH /api/admin/settings` - 시스템 설정 변경 (SYSTEM_ADMIN)
-- `GET /api/admin/settings/email-templates` - 이메일 템플릿 목록
-- `PATCH /api/admin/settings/email-templates/:id` - 템플릿 수정
+1. [인증 및 권한](#1-인증-및-권한)
+2. [API 목록](#2-api-목록)
+3. [공통 응답 형식](#3-공통-응답-형식)
+4. [에러 코드](#4-에러-코드)
 
 ---
 
-## 🔐 인증 및 권한
+## 1. 인증 및 권한
 
-### 인증 방식
-- **NextAuth.js Session** 기반
-- 모든 요청에 세션 쿠키 필요
-
-### 권한 체크
+### 1.1 인증 방식
 ```javascript
-// Middleware
-export async function middleware(request) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session || !['ADMIN', 'SYSTEM_ADMIN'].includes(session.user.role)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  
-  // SYSTEM_ADMIN 전용 API 체크
-  if (request.url.includes('/settings') && session.user.role !== 'SYSTEM_ADMIN') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-  
-  return NextResponse.next()
+// NextAuth 세션 확인
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+
+const session = await getServerSession(authOptions)
+if (!session || !['ADMIN', 'SYSTEM_ADMIN'].includes(session.user.role)) {
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+}
+```
+
+### 1.2 권한 체크
+```javascript
+// SYSTEM_ADMIN만 접근 가능
+if (session.user.role !== 'SYSTEM_ADMIN') {
+  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 }
 ```
 
 ---
 
-## 📝 공통 응답 형식
+## 2. API 목록
 
-### 성공 응답
+### 영역별 API 문서
+
+1. **[대시보드 API](./01-dashboard-api.md)** - `/api/admin/dashboard`
+   - 핵심 지표
+   - 최근 활동
+   - 통계 그래프
+   - 긴급 알림
+
+2. **[사용자 관리 API](./02-users-api.md)** - `/api/admin/users`
+   - 사용자 목록/상세
+   - 경고/정지/해제
+   - 제재 이력
+   - 데이터 익스포트
+
+3. **[스터디 관리 API](./03-studies-api.md)** - `/api/admin/studies`
+   - 스터디 목록/상세
+   - 숨김/종료/복구
+   - 추천 스터디
+   - 콘텐츠 삭제
+
+4. **[신고 관리 API](./04-reports-api.md)** - `/api/admin/reports`
+   - 신고 목록/상세
+   - 담당자 배정
+   - 처리 (승인/기각/보류)
+   - 댓글
+
+5. **[콘텐츠 검열 API](./05-moderation-api.md)** - `/api/admin/moderation`
+   - 차단 로그
+   - 검열 대기
+   - 금지어 관리 (SYSTEM_ADMIN)
+   - 필터링 설정
+
+6. **[시스템 설정 API](./06-settings-api.md)** - `/api/admin/settings` (SYSTEM_ADMIN)
+   - 플랫폼 설정
+   - 이메일 템플릿
+   - 이용약관
+   - 관리자 권한
+
+7. **[분석 API](./07-analytics-api.md)** - `/api/admin/analytics`
+   - 사용자/스터디/활동 통계
+   - 리포트 생성
+
+---
+
+## 3. 공통 응답 형식
+
+### 3.1 성공 응답
 ```json
 {
   "success": true,
-  "data": { ... },
-  "message": "작업이 완료되었습니다."
+  "message": "성공 메시지",
+  "data": { /* 데이터 */ }
 }
 ```
 
-### 에러 응답
+### 3.2 에러 응답
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "권한이 없습니다."
-  }
+  "error": "에러 메시지",
+  "code": "ERROR_CODE",
+  "details": { /* 추가 정보 */ }
 }
 ```
 
-### 페이징 응답
+### 3.3 페이지네이션
 ```json
 {
-  "success": true,
-  "data": [...],
+  "data": [ /* 데이터 배열 */ ],
   "pagination": {
     "page": 1,
     "limit": 20,
-    "total": 156,
-    "totalPages": 8
+    "total": 100,
+    "totalPages": 5,
+    "hasNext": true,
+    "hasPrev": false
   }
 }
 ```
 
 ---
 
-## 🛠️ 에러 코드
+## 4. 에러 코드
 
-| 코드 | HTTP Status | 설명 |
-|------|-------------|------|
-| `UNAUTHORIZED` | 401 | 인증되지 않은 사용자 |
-| `FORBIDDEN` | 403 | 권한 없음 |
-| `NOT_FOUND` | 404 | 리소스를 찾을 수 없음 |
-| `VALIDATION_ERROR` | 400 | 입력 데이터 유효성 검사 실패 |
-| `INTERNAL_ERROR` | 500 | 서버 내부 오류 |
+### 4.1 인증/권한 에러
+- `UNAUTHORIZED` (401): 인증 필요
+- `FORBIDDEN` (403): 권한 없음
+- `ADMIN_ONLY` (403): ADMIN 권한 필요
+- `SYSTEM_ADMIN_ONLY` (403): SYSTEM_ADMIN 권한 필요
+
+### 4.2 입력 검증 에러
+- `VALIDATION_ERROR` (400): 입력값 검증 실패
+- `MISSING_REQUIRED` (400): 필수 필드 누락
+- `INVALID_FORMAT` (400): 형식 오류
+
+### 4.3 비즈니스 로직 에러
+- `NOT_FOUND` (404): 리소스 없음
+- `ALREADY_EXISTS` (409): 이미 존재
+- `CANNOT_PROCESS` (422): 처리 불가 상태
+
+### 4.4 서버 에러
+- `INTERNAL_ERROR` (500): 서버 내부 오류
+- `DATABASE_ERROR` (500): DB 오류
 
 ---
 
-## 📚 다음 문서
+## 5. 미들웨어
 
-- **[01-auth.md](./01-auth.md)** - 관리자 인증 API
-- **[02-dashboard.md](./02-dashboard.md)** - 대시보드 API
-- **[03-users.md](./03-users.md)** - 사용자 관리 API
-- **[04-studies.md](./04-studies.md)** - 스터디 관리 API
-- **[05-reports.md](./05-reports.md)** - 신고 관리 API
-- **[06-content.md](./06-content.md)** - 콘텐츠 관리 API
-- **[07-stats.md](./07-stats.md)** - 통계 API
-- **[08-settings.md](./08-settings.md)** - 설정 API
+### 5.1 관리자 권한 체크
+```javascript
+// middleware/adminAuth.js
+export async function requireAdmin(req) {
+  const session = await getServerSession(authOptions)
+  
+  if (!session) {
+    throw new Error('UNAUTHORIZED')
+  }
+  
+  if (!['ADMIN', 'SYSTEM_ADMIN'].includes(session.user.role)) {
+    throw new Error('FORBIDDEN')
+  }
+  
+  return session
+}
+
+export async function requireSystemAdmin(req) {
+  const session = await requireAdmin(req)
+  
+  if (session.user.role !== 'SYSTEM_ADMIN') {
+    throw new Error('SYSTEM_ADMIN_ONLY')
+  }
+  
+  return session
+}
+```
+
+### 5.2 로깅
+```javascript
+// 모든 관리자 작업 로깅
+export async function logAdminAction(adminId, action, target, details) {
+  await prisma.adminLog.create({
+    data: {
+      adminId,
+      action,
+      targetType: target.type,
+      targetId: target.id,
+      details: JSON.stringify(details),
+      ipAddress: req.headers['x-forwarded-for'] || req.ip,
+      userAgent: req.headers['user-agent']
+    }
+  })
+}
+```
+
+---
+
+## 6. 레이트 리미팅
+
+### 6.1 일반 API
+- 분당 60회
+- 시간당 1000회
+
+### 6.2 제재 실행 API
+- 분당 10회 (악용 방지)
+
+### 6.3 데이터 익스포트
+- 시간당 5회
+
+```javascript
+// lib/rateLimit.js
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(60, '1 m'),
+})
+
+export async function checkRateLimit(identifier) {
+  const { success } = await ratelimit.limit(identifier)
+  
+  if (!success) {
+    throw new Error('RATE_LIMIT_EXCEEDED')
+  }
+}
+```
+
+---
+
+## 7. 구현 체크리스트
+
+### API 문서
+- [ ] 01-dashboard-api.md
+- [ ] 02-users-api.md
+- [ ] 03-studies-api.md
+- [ ] 04-reports-api.md
+- [ ] 05-moderation-api.md
+- [ ] 06-settings-api.md
+- [ ] 07-analytics-api.md
+
+### 공통 유틸
+- [ ] 인증 미들웨어
+- [ ] 로깅 시스템
+- [ ] 레이트 리미팅
+- [ ] 에러 핸들러
+
+---
+
+**다음**: 각 영역별 API 상세 명세 작성
 

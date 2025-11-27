@@ -1,219 +1,171 @@
-# CoUp 관리자 시스템 - README
+# CoUp 관리자 시스템 문서
 
-> **버전**: 2.0  
-> **최종 업데이트**: 2025-11-26  
-> **상태**: ✅ 설계 완료 → 개발 대기
-
----
-
-## 📚 문서 구조
-
-### 📖 기본 문서
-- **[00-overview.md](./00-overview.md)** - 관리자 시스템 전체 개요
-- **[01-user-features-analysis.md](./01-user-features-analysis.md)** - 일반 사용자 기능 분석
-- **[02-admin-roles.md](./02-admin-roles.md)** - 관리자 역할 및 권한 정의
-- **[03-functional-requirements.md](./03-functional-requirements.md)** - 기능 요구사항 상세
-
-### 🎯 영역별 기능 명세
-`features/` 폴더:
-- **[01-dashboard.md](./features/01-dashboard.md)** - 대시보드 및 통계
-- **02-user-management.md** - 사용자 관리
-- **03-study-management.md** - 스터디 관리
-- **04-report-management.md** - 신고 및 제재 관리
-- **05-content-moderation.md** - 콘텐츠 검열
-- **06-system-settings.md** - 시스템 설정
-- **07-analytics.md** - 분석 및 리포트
-- **08-notification-management.md** - 공지 및 알림
-
-### 🔌 API 명세서
-`../backend/api/admin/` 폴더 (생성 예정):
-- **01-auth.md** - 관리자 인증
-- **02-dashboard.md** - 대시보드 API
-- **03-users.md** - 사용자 관리 API
-- **04-studies.md** - 스터디 관리 API
-- **05-reports.md** - 신고 관리 API
-- **06-content.md** - 콘텐츠 관리 API
-- **07-stats.md** - 통계 API
-- **08-settings.md** - 설정 API
-
-### 🎨 화면 설계
-`../screens/admin/` 폴더 (생성 예정):
-- **01-layout.md** - 관리자 레이아웃
-- **02-dashboard.md** - 대시보드 화면
-- **03-users-list.md** - 사용자 목록
-- **04-users-detail.md** - 사용자 상세
-- **05-studies-list.md** - 스터디 목록
-- **06-studies-detail.md** - 스터디 상세
-- **07-reports-list.md** - 신고 목록
-- **08-reports-detail.md** - 신고 상세
-- **09-settings.md** - 시스템 설정
+> **작성일**: 2025-11-26  
+> **버전**: 3.0 (완전 재설계)  
+> **목적**: 플랫폼 관리자의 역할, 권한, 기능을 처음부터 체계적으로 정의
 
 ---
 
-## 🚀 빠른 시작
+## 📋 문서 구조
 
-### 신규 개발자 온보딩
-1. **[00-overview.md](./00-overview.md)** 읽기 → 전체 시스템 이해
-2. **[01-user-features-analysis.md](./01-user-features-analysis.md)** 읽기 → 일반 사용자 기능 파악
-3. **[02-admin-roles.md](./02-admin-roles.md)** 읽기 → 관리자 권한 체계 이해
-4. **[03-functional-requirements.md](./03-functional-requirements.md)** 읽기 → 기능 요구사항 파악
+### 1. 기초 분석
+- [`01-user-features.md`](./01-user-features.md) - 일반 사용자 기능 및 화면, 모달 파악
+- [`02-admin-roles.md`](./02-admin-roles.md) - 관리자 역할 상세 정리
 
-### 개발 시작 전
-1. **features/** 폴더에서 개발할 영역 선택
-2. 해당 영역의 기능 명세 상세 읽기
-3. API 명세서 확인
-4. 화면 설계 확인
-5. 개발 시작
+### 2. 기능 명세 (영역별)
+- [`features/01-dashboard.md`](./features/01-dashboard.md) - 대시보드 및 통계
+- [`features/02-user-management.md`](./features/02-user-management.md) - 사용자 관리
+- [`features/03-study-management.md`](./features/03-study-management.md) - 스터디 관리
+- [`features/04-report-management.md`](./features/04-report-management.md) - 신고 및 제재
+- [`features/05-content-moderation.md`](./features/05-content-moderation.md) - 콘텐츠 검열
+- [`features/06-system-settings.md`](./features/06-system-settings.md) - 시스템 설정
+- [`features/07-analytics.md`](./features/07-analytics.md) - 분석 및 리포트
 
----
+### 3. API 명세
+- [`../../backend/api/admin/`](../../backend/api/admin/) - 영역별 API 명세
 
-## 🎯 핵심 개념
-
-### 관리자 역할
-- **ADMIN**: 일반 관리 작업 (사용자, 스터디, 신고 관리)
-- **SYSTEM_ADMIN**: 시스템 설정 변경 및 관리자 권한 관리
-
-### 주요 기능
-1. **모니터링**: 실시간 플랫폼 현황 파악
-2. **사용자 관리**: 회원 정보, 정지, 탈퇴 처리
-3. **스터디 관리**: 스터디 검열, 종료, 추천
-4. **신고 처리**: 신고 검토 및 조치
-5. **콘텐츠 검열**: 부적절한 콘텐츠 삭제
-6. **통계 분석**: 가입, 활동, 유지율 분석
-7. **시스템 설정**: 정책, 공지, 설정 관리
+### 4. 화면 설계
+- [`../../screens/admin/`](../../screens/admin/) - 영역별 화면 설계
 
 ---
 
-## 📊 개발 우선순위
+## 🎯 관리자 시스템의 목표
 
-### Phase 1: 핵심 기능 (2주)
-- [x] 문서 작성 완료
-- [ ] 관리자 인증 및 권한 체계
-- [ ] 대시보드 (기본 통계)
-- [ ] 사용자 관리 (목록, 검색, 정지)
-- [ ] 스터디 관리 (목록, 검색, 종료)
-
-### Phase 2: 신고 및 검열 (2주)
-- [ ] 신고 관리 시스템
-- [ ] 콘텐츠 검열 도구
-- [ ] 제재 이력 관리
-- [ ] 자동 필터링 규칙
-
-### Phase 3: 통계 및 분석 (1주)
-- [ ] 종합 통계 대시보드
-- [ ] 사용자 활동 분석
-- [ ] 스터디 품질 분석
-- [ ] 리포트 생성 및 익스포트
-
-### Phase 4: 시스템 관리 (1주)
-- [ ] 시스템 설정 UI
-- [ ] 공지사항 발송
-- [ ] 이메일 템플릿 관리
-- [ ] 로그 뷰어
+1. **플랫폼 건전성 유지**: 부적절한 콘텐츠 및 행위 차단
+2. **사용자 보호**: 신고 처리 및 분쟁 조정
+3. **서비스 품질 관리**: 스터디 품질 모니터링
+4. **데이터 기반 의사결정**: 통계 및 분석을 통한 서비스 개선
 
 ---
 
-## 🔗 관련 문서 링크
+## 📊 관리 영역
 
-### 프로젝트 문서
-- [프로젝트 개요](../project-init/overview.md)
-- [데이터베이스 스키마](../backend/database-schema.md)
-- [인증 시스템](../auth/README.md)
+### 1. 대시보드
+- 핵심 지표 한눈에 보기
+- 최근 활동 모니터링
+- 긴급 알림 확인
 
-### 일반 사용자 화면 설계
-- [화면 설계 개요](../screens/overview.md)
-- [대시보드](../screens/dashboard/)
-- [스터디](../screens/study/)
+### 2. 사용자 관리
+- 사용자 목록 조회
+- 사용자 정지/경고
+- 제재 이력 관리
+
+### 3. 스터디 관리
+- 스터디 목록 조회
+- 스터디 종료/숨김
+- 스터디 추천
+
+### 4. 신고 관리
+- 신고 접수 및 검토
+- 조치 결정 및 실행
+- 신고 통계
+
+### 5. 콘텐츠 검열
+- 부적절한 콘텐츠 삭제
+- 자동 필터링 규칙 관리
+- 검열 이력 조회
+
+### 6. 시스템 설정
+- 플랫폼 설정
+- 이메일 템플릿
+- 이용약관 관리
+
+### 7. 분석 및 리포트
+- 사용자 통계
+- 스터디 통계
+- 리포트 생성
 
 ---
 
-## 🛠️ 기술 스택
+## 🔐 권한 시스템
 
-### 프론트엔드
-- **Framework**: Next.js 14 (App Router)
-- **Language**: JavaScript/React
-- **Styling**: CSS Modules
-- **Charts**: Chart.js / Recharts
-- **Data Fetching**: SWR / React Query
+### USER (일반 사용자)
+- 스터디 생성, 참여
+- 콘텐츠 작성
+- 신고 제출
 
-### 백엔드
-- **Runtime**: Node.js
-- **Framework**: Next.js API Routes
-- **ORM**: Prisma
-- **Database**: PostgreSQL
-- **Authentication**: NextAuth.js
+### ADMIN (일반 관리자)
+- 사용자/스터디 조회
+- 신고 처리
+- 콘텐츠 검열
+- 통계 조회
 
-### 인프라
-- **Hosting**: Vercel
-- **Database**: Supabase / Railway
-- **File Storage**: AWS S3 / Cloudinary
-- **Monitoring**: Sentry
+### SYSTEM_ADMIN (시스템 관리자)
+- ADMIN의 모든 권한
+- 시스템 설정 변경
+- 관리자 권한 관리
+- 데이터베이스 관리
 
 ---
 
 ## 📝 문서 작성 규칙
 
-### 파일명
-- 소문자 + 하이픈 사용: `user-management.md`
-- 번호 prefix: `01-`, `02-` (순서가 있는 경우)
+### 1. 각 문서는 600라인 이내
+- 긴 내용은 여러 파일로 분할
+- 명확한 섹션 구분
 
-### 구조
+### 2. 일관된 구조
 ```markdown
 # 제목
 
-> **메타데이터**
+> 메타 정보
 
----
-
-## 목차
-
----
-
-## 내용
-
----
-
-**다음 문서**: 링크
+## 개요
+## 기능 상세
+## 권한
+## API 연동
+## UI/UX
+## 구현 체크리스트
 ```
 
-### 코드 블록
-- API 예시: `json` 또는 `typescript`
-- UI 레이아웃: 아스키 아트
-- SQL: `sql`
+### 3. 실제 구현 가능한 명세
+- 모호한 표현 금지
+- 구체적인 데이터 구조
+- 명확한 플로우
 
 ---
 
-## 🎉 완료 현황
+## 🚀 개발 순서
 
-### ✅ 완료
-- [x] 관리자 시스템 개요 문서
-- [x] 사용자 기능 분석
-- [x] 관리자 역할 및 권한 정의
-- [x] 기능 요구사항 상세
-- [x] 대시보드 기능 명세
+### Phase 1: 핵심 기능 (1-2주)
+1. 관리자 인증 및 권한 체계
+2. 대시보드 (기본 통계)
+3. 사용자 관리 (목록, 정지)
+4. 스터디 관리 (목록, 종료)
 
-### 🔄 진행 중
-- [ ] 나머지 영역별 기능 명세 (7개)
-- [ ] API 명세서 작성 (8개)
-- [ ] 화면 설계 작성 (9개)
+### Phase 2: 신고 처리 (1주)
+5. 신고 목록 및 검토
+6. 조치 실행
+7. 신고 통계
 
-### 📅 예정
-- [ ] 코드 구현
-- [ ] 테스트
-- [ ] 배포
+### Phase 3: 검열 및 분석 (1주)
+8. 콘텐츠 검열
+9. 통계 대시보드
+10. 리포트 생성
 
----
-
-## 💬 문의 및 피드백
-
-문서에 대한 질문이나 개선 제안이 있으시면:
-1. 이슈 생성
-2. PR 제출
-3. 팀 채널에서 논의
+### Phase 4: 고급 기능 (선택)
+11. 시스템 설정 UI
+12. 감사 로그 뷰어
 
 ---
 
-**작성자**: GitHub Copilot  
-**문서 버전**: 2.0  
-**최종 업데이트**: 2025-11-26
+## 📌 완료 현황
+
+1. ✅ 일반 사용자 기능 파악 → `01-user-features.md` (527 라인)
+2. ✅ 관리자 역할 정의 → `02-admin-roles.md` (596 라인)
+3. ✅ 영역별 기능 명세 작성 → `features/` (7개 문서)
+4. ✅ API 명세 작성 → `../../backend/api/admin/` (8개 문서)
+5. ✅ 화면 설계 작성 → `../../screens/admin/` (1개 README)
+6. ⏳ 개발 시작 준비 완료
+
+### 📊 문서 통계
+- **총 문서 수**: 19개
+- **총 라인 수**: ~5,000 라인
+- **모든 문서 600라인 이하** ✅
+- **실제 구현 가능한 명세** ✅
+
+---
+
+**최종 업데이트**: 2025-11-26  
+**작성자**: GitHub Copilot
 
