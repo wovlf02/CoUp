@@ -40,18 +40,23 @@ docs/admin/
     └── reports/realtime.md
 ## 🚀 빠른 시작
 
-### 개발자라면?
+### 📝 문서 작성자라면?
+1. **[TODO-DOCUMENT-SIMPLE.md](TODO-DOCUMENT-SIMPLE.md)** 읽고 남은 작업 확인
+2. **[DOCUMENT-COMPLETION-TODO.md](DOCUMENT-COMPLETION-TODO.md)** 보고 상세 가이드라인 참고
+3. 작성 템플릿 및 분량 기준 준수
+
+### 💻 개발자라면?
 1. **[TODO-SIMPLE.md](TODO-SIMPLE.md)** 읽고 체크리스트 확인
 2. **[IMPLEMENTATION-TODO.md](IMPLEMENTATION-TODO.md)** 참고하여 구현 시작
 3. 각 기능별 상세 명세는 `features/` 폴더 참고
 4. UI/UX 설계는 `screens/admin/` 폴더 참고
 5. 최적화 전략은 `optimize/` 폴더 참고
 
-### 디자이너라면?
+### 🎨 디자이너라면?
 1. **[screens/admin/README.md](../screens/admin/README.md)** 읽고 디자인 시스템 확인
 2. 각 영역별 폴더에서 레이아웃 및 컴포넌트 설계 참고
 
-### PM이라면?
+### 📊 PM이라면?
 1. **[FINAL-COMPLETION-REPORT.md](FINAL-COMPLETION-REPORT.md)** 읽고 전체 현황 파악
 2. **[03-admin-system-integrated.md](03-admin-system-integrated.md)** 읽고 10주 로드맵 확인
 3. **[TODO-SIMPLE.md](TODO-SIMPLE.md)** 보고 진행률 추적
