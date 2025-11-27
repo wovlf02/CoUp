@@ -419,11 +419,14 @@ enum ReportStatus {
 // ============================================
 // 시스템 설정 (Setting)
 // ============================================
-model Setting {
-  id    String      @id @default(cuid())
-  key   String      @unique
-  value String      @db.Text
-  type  SettingType @default(STRING)
+// 시스템 설정 (SystemSetting) - SYSTEM_ADMIN 전용
+// ============================================
+model SystemSetting {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  value       String      @db.Text
+  type        SettingType @default(STRING)
+  description String?     @db.Text
 
   updatedAt DateTime @updatedAt
   updatedBy String?
@@ -522,4 +525,33 @@ enum AdminAction {
   REPORT_REJECT
   CONTENT_DELETE
   SETTINGS_UPDATE
+}
+
+// ============================================
+// 이메일 템플릿 (EmailTemplate) - SYSTEM_ADMIN 전용
+// ============================================
+model EmailTemplate {
+  id      String            @id @default(cuid())
+  name    String            @unique // 'welcome', 'email_verification', 'password_reset' 등
+  type    EmailTemplateType
+  subject String
+  body    String            @db.Text // HTML 템플릿
+
+  variables String[] // 사용 가능한 변수들: ['userName', 'email', 'verificationLink']
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@index([name])
+  @@index([type])
+}
+
+enum EmailTemplateType {
+  AUTH // 인증 관련 (가입, 이메일 인증)
+  NOTIFICATION // 알림
+  SANCTION // 제재 관련
+  SYSTEM // 시스템 공지
 }

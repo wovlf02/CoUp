@@ -170,7 +170,11 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching dashboard data:', error)
     return NextResponse.json(
-      { success: false, error: "대시보드 데이터 조회 실패" },
+      { 
+        success: false, 
+        error: "대시보드 데이터 조회 실패",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     )
   }

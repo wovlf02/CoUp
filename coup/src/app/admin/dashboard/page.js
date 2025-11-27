@@ -7,6 +7,7 @@ import styles from './page.module.css'
 export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -14,13 +15,20 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
+      setLoading(true)
+      setError(null)
       const res = await fetch('/api/admin/dashboard')
       const data = await res.json()
+
       if (data.success) {
         setDashboardData(data.data)
+      } else {
+        setError(data.error || '데이터를 불러올 수 없습니다')
+        console.error('API Error:', data)
       }
     } catch (error) {
       console.error('Failed to fetch dashboard:', error)
+      setError('서버 연결 실패: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -28,6 +36,18 @@ export default function AdminDashboard() {
 
   if (loading) {
     return <div className={styles.loading}>로딩 중...</div>
+  }
+
+  if (error) {
+    return (
+      <div className={styles.error}>
+        <h3>⚠️ 데이터를 불러올 수 없습니다</h3>
+        <p>{error}</p>
+        <button onClick={fetchDashboardData} className={styles.retryButton}>
+          다시 시도
+        </button>
+      </div>
+    )
   }
 
   if (!dashboardData) {
