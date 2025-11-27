@@ -1,7 +1,8 @@
-# 관리자 기능 - 신고 관리 상세 명세 (요약본)
+# 관리자 기능 - 신고 관리 상세 명세
 
-> **작성일**: 2025-11-27  
-> **영역**: Report Management  
+> **작성일**: 2025-11-27
+> **수정일**: 2025-11-28
+> **영역**: Report Management
 > **우선순위**: P0 (최우선)
 
 ---
@@ -54,51 +55,106 @@
 
 ## 4. 신고 처리 워크플로우
 
-```
-[신고 접수]
-    ↓
-[자동 우선순위 계산] (AI 기반)
-    ↓
-[담당자 할당] (Round-robin 또는 수동)
-    ↓
-[검토] (증거 확인, 이력 조회)
-    ↓
-[판단] (승인/거절/보류)
-    ↓
-[조치 실행] (제재 적용)
-    ↓
-[관련자 통보] (신고자, 피신고자)
-    ↓
-[완료 및 로그]
+### 4.1 워크플로우 다이어그램
+
+```mermaid
+graph TD
+    A[신고 접수] --> B{자동 우선순위 계산};
+    B --> C{자동 담당자 할당};
+    C --> D[상태: PENDING];
+    D --> E{관리자 검토};
+    E --> F{판단};
+    F -- 승인 --> G[제재 조치 실행];
+    F -- 거절 --> H[신고 기각];
+    F -- 보류 --> I[상태: IN_PROGRESS];
+    G --> J[상태: RESOLVED];
+    H --> J;
+    J --> K[관련자에게 결과 통보];
+    K --> L[감사 로그 기록];
 ```
 
-### 우선순위 자동 계산
+### 4.2 우선순위 자동 계산 알고리즘 상세
+
+신고가 접수되면 `calculateReportPriority` 함수가 호출되어, 여러 요소를 기반으로 점수를 계산하고 우선순위를 결정합니다. 이 점수는 관리자가 어떤 신고를 먼저 처리해야 할지 판단하는 데 도움을 줍니다.
+
+**평가 항목:**
+| 항목 | 최대 점수 | 설명 |
+|---|---|---|
+| **신고 유형 심각도** | 30점 | 내용의 심각성에 따라 차등 부여 (괴롭힘 > 부적절 > 스팸) |
+| **피신고자 이력** | 40점 | 과거 제재(경고, 정지) 횟수가 많을수록 높은 점수 부여 |
+| **신고 빈도** | 20점 | 단기간(예: 7일) 내에 동일 대상에 대한 신고가 많을수록 높은 점수 부여 |
+| **증거 자료 품질** | 10점 | 스크린샷, 상세 설명 등 구체적인 증거가 있을수록 높은 점수 부여 |
+
+**구현 예시:**
 ```javascript
-function calculateReportPriority(report) {
+function calculateReportPriority(report, targetUser, recentReports) {
   let score = 0;
   
-  // 신고 유형 (0-30점)
-  if (report.type === 'HARASSMENT') score += 30;
-  if (report.type === 'INAPPROPRIATE') score += 20;
-  if (report.type === 'SPAM') score += 10;
+  // 1. 신고 유형 심각도 (0-30점)
+  switch (report.type) {
+    case 'HARASSMENT': score += 30; break;
+    case 'INAPPROPRIATE': score += 20; break;
+    case 'SPAM': score += 10; break;
+    default: score += 5;
+  }
   
-  // 피신고자 이력 (0-40점)
-  score += report.target.warningCount * 15;
-  score += report.target.suspensionCount * 25;
-  
-  // 신고 빈도 (0-20점)
-  const recentReports = getRecentReports(report.targetId, 7);
-  score += recentReports.length * 10;
-  
-  // 증거 품질 (0-10점)
+  // 2. 피신고자 이력 (0-40점)
+  score += (targetUser.warningCount || 0) * 5; // 경고 1회당 5점
+  score += (targetUser.suspensionCount || 0) * 15; // 정지 1회당 15점
+
+  // 3. 신고 빈도 (0-20점)
+  score += Math.min(recentReports.length * 5, 20); // 최근 신고 1건당 5점, 최대 20점
+
+  // 4. 증거 자료 품질 (0-10점)
   if (report.evidence?.screenshots?.length > 0) score += 5;
   if (report.evidence?.description?.length > 100) score += 5;
   
-  // 우선순위 결정
+  // 최종 우선순위 결정
   if (score >= 70) return 'URGENT';
   if (score >= 50) return 'HIGH';
   if (score >= 30) return 'MEDIUM';
   return 'LOW';
+}
+```
+
+### 4.3 자동 담당자 할당 로직
+
+신규 신고가 접수되고 우선순위 계산이 끝나면, 처리할 담당자를 자동으로 할당할 수 있습니다. 이는 팀의 업무 부담을 균등하게 분배하고 신속한 처리를 돕습니다.
+
+**할당 정책:**
+1.  **라운드 로빈(Round-robin)**: 온라인 상태인 관리자 목록을 순서대로 순회하며 담당자를 할당합니다. 가장 간단하고 일반적인 방식입니다.
+2.  **업무량 기반(Load-based)**: 현재 처리 중인 신고 건수가 가장 적은 관리자에게 할당합니다.
+3.  **전문 분야 기반(Specialization-based)**: 신고 유형(예: 저작권, 기술적 문제)에 따라 해당 분야 전문 관리자에게 할당합니다.
+
+**구현 예시 (라운드 로빈):**
+Redis와 같은 외부 저장소를 사용하여 마지막으로 할당받은 관리자의 인덱스를 저장합니다.
+
+```javascript
+async function assignReportToAdmin(report) {
+  // 1. 현재 온라인이며, 신고 처리 권한이 있는 관리자 목록 조회
+  const availableAdmins = await getAvailableAdmins();
+  if (availableAdmins.length === 0) return null; // 할당할 관리자 없음
+
+  // 2. Redis에서 마지막 할당 인덱스 가져오기
+  let lastIndex = await redis.get('last_report_admin_index') || -1;
+  
+  // 3. 다음 관리자 인덱스 계산
+  const nextIndex = (parseInt(lastIndex) + 1) % availableAdmins.length;
+  
+  // 4. 다음 담당자 지정
+  const assignedAdmin = availableAdmins[nextIndex];
+
+  // 5. 신고 정보에 담당자 ID 업데이트
+  await prisma.report.update({
+    where: { id: report.id },
+    data: { assignedToId: assignedAdmin.id },
+  });
+
+  // 6. Redis에 다음 인덱스 저장
+  await redis.set('last_report_admin_index', nextIndex);
+  
+  // 7. 담당자에게 알림 발송 (Slack, 이메일 등)
+  // ...
 }
 ```
 
@@ -195,6 +251,6 @@ GET    /api/admin/reports/statistics        # 신고 통계
 
 ---
 
-**문서 버전**: 1.0 (요약본)  
-**작성 완료일**: 2025-11-27
+**문서 버전**: 1.1 (보강)
+**작성 완료일**: 2025-11-28
 
