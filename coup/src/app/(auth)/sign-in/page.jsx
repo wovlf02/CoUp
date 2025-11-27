@@ -43,8 +43,8 @@ export default function SignInPage() {
             const userData = await userResponse.json()
 
             if (userData.user?.role === 'ADMIN' || userData.user?.role === 'SYSTEM_ADMIN') {
-              console.log('👑 Admin user, redirecting to /admin')
-              router.push('/admin')
+              console.log('👑 Admin user, redirecting to /admin/dashboard')
+              router.push('/admin/dashboard')
             } else {
               console.log('👤 Regular user, redirecting to:', callbackUrl)
               router.push(callbackUrl)
@@ -147,7 +147,7 @@ export default function SignInPage() {
 
         // 관리자라면 관리자 페이지로, 아니면 대시보드로
         if (userData.user?.role === 'ADMIN' || userData.user?.role === 'SYSTEM_ADMIN') {
-          router.push('/admin')
+          router.push('/admin/dashboard')
         } else {
           router.push(callbackUrl)
         }

@@ -18,7 +18,19 @@ export default withAuth(
 
     const isPublicPath = publicPaths.includes(pathname)
 
-    // API 경로는 각 Route Handler에서 처리
+    // 관리자 API 경로 권한 확인 (페이지 권한과 동일하게 처리)
+    if (pathname.startsWith('/api/admin')) {
+      if (!token || (token.role !== 'ADMIN' && token.role !== 'SYSTEM_ADMIN')) {
+        return NextResponse.json(
+          { success: false, error: '관리자 권한이 필요합니다' },
+          { status: 403 }
+        )
+      }
+      // 통과하면 계속 진행 (각 API Route에서 추가 검증)
+      return NextResponse.next()
+    }
+
+    // 일반 API 경로는 각 Route Handler에서 처리
     if (pathname.startsWith('/api/')) {
       return NextResponse.next()
     }
@@ -27,6 +39,10 @@ export default withAuth(
     if (isPublicPath) {
       // 이미 로그인한 사용자가 로그인/회원가입 페이지 접근 시 대시보드로
       if (token && (pathname === '/sign-in' || pathname === '/sign-up')) {
+        // 관리자는 관리자 대시보드로, 일반 사용자는 일반 대시보드로
+        if (token.role === 'ADMIN' || token.role === 'SYSTEM_ADMIN') {
+          return NextResponse.redirect(new URL('/admin/dashboard', req.url))
+        }
         return NextResponse.redirect(new URL('/dashboard', req.url))
       }
       return NextResponse.next()
@@ -45,8 +61,18 @@ export default withAuth(
 
     // 관리자 페이지 권한 확인
     if (pathname.startsWith('/admin')) {
+      // unauthorized 페이지는 예외
+      if (pathname === '/admin/unauthorized') {
+        return NextResponse.next()
+      }
+
       if (token?.role !== 'ADMIN' && token?.role !== 'SYSTEM_ADMIN') {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
+        return NextResponse.redirect(new URL('/admin/unauthorized', req.url))
+      }
+
+      // /admin 루트 경로는 /admin/dashboard로 리다이렉트
+      if (pathname === '/admin' || pathname === '/admin/') {
+        return NextResponse.redirect(new URL('/admin/dashboard', req.url))
       }
     }
 

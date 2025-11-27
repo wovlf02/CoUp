@@ -1,0 +1,353 @@
+/* Admin Studies Page Styles */
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0;
+}
+
+/* Filter Card - 사용자 페이지와 동일 */
+.filterCard {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.filterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.filterLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.filterInput,
+.filterSelect {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #111827;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.filterInput:focus,
+.filterSelect:focus {
+  outline: none;
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.filterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.filterButton {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterButtonReset {
+  background: white;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+}
+
+.filterButtonReset:hover {
+  background: #F9FAFB;
+}
+
+.filterButtonSubmit {
+  background: #6366F1;
+  color: white;
+}
+
+.filterButtonSubmit:hover {
+  background: #4F46E5;
+}
+
+/* Table */
+.tableCard {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHead {
+  background: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.tableHeadCell {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tableBody {
+  background: white;
+}
+
+.tableRow {
+  border-bottom: 1px solid #E5E7EB;
+  transition: background 0.2s ease;
+}
+
+.tableRow:hover {
+  background: #F9FAFB;
+}
+
+.tableCell {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+  color: #111827;
+  white-space: nowrap;
+}
+
+/* Study Cell */
+.studyCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.studyEmoji {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.studyInfo {
+  min-width: 0;
+}
+
+.studyName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  margin: 0 0 0.125rem 0;
+}
+
+.studyCategory {
+  font-size: 0.75rem;
+  color: #6B7280;
+  margin: 0;
+}
+
+/* Member Count */
+.memberCount {
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.memberCount .current {
+  font-weight: 600;
+}
+
+.memberCount .max {
+  color: #6B7280;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+}
+
+.badgePublic {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badgePrivate {
+  background: #F3F4F6;
+  color: #4B5563;
+}
+
+.badgeRecruiting {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.badgeClosed {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.star {
+  color: #FBBF24;
+  font-size: 1rem;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionLink {
+  color: #6366F1;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.actionLink:hover {
+  color: #4F46E5;
+}
+
+/* Pagination */
+.pagination {
+  background: white;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  border-top: 1px solid #E5E7EB;
+}
+
+.paginationInfo {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.paginationButtons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pageButton {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #D1D5DB;
+  background: white;
+  color: #374151;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageButton.active {
+  background: #EEF2FF;
+  border-color: #6366F1;
+  color: #6366F1;
+}
+
+/* Loading & Empty */
+.loading,
+.empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.loading {
+  color: #6B7280;
+  font-size: 1rem;
+}
+
+.empty {
+  color: #9CA3AF;
+  font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .tableHeadCell,
+  .tableCell {
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .filterRow {
+    grid-template-columns: 1fr;
+  }
+
+  .table {
+    font-size: 0.8125rem;
+  }
+
+  .tableHeadCell,
+  .tableCell {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Hide less important columns on mobile */
+  .tableCell:nth-child(5),
+  .tableCell:nth-child(6),
+  .tableHeadCell:nth-child(5),
+  .tableHeadCell:nth-child(6) {
+    display: none;
+  }
+}
+

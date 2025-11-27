@@ -1,0 +1,473 @@
+/* Admin User Detail Styles */
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Back Button */
+.backButton {
+  margin-bottom: 1.5rem;
+  color: #6366F1;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+
+.backButton:hover {
+  color: #4F46E5;
+}
+
+/* User Card */
+.userCard {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.userCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.userInfo {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+.userAvatar {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.userAvatarPlaceholder {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: #D1D5DB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B7280;
+  font-size: 1.5rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.userDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.userEmail {
+  color: #6B7280;
+  margin: 0 0 0.25rem 0;
+}
+
+.userId {
+  font-size: 0.875rem;
+  color: #9CA3AF;
+  margin: 0 0 0.5rem 0;
+}
+
+.userBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+}
+
+.badgeActive {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.badgeSuspended {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.badgeDeleted {
+  background: #F3F4F6;
+  color: #4B5563;
+}
+
+.badgeRole {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badgeProvider {
+  color: #9CA3AF;
+  font-size: 0.75rem;
+  padding: 0;
+  background: none;
+  font-weight: 400;
+}
+
+.suspendReason {
+  font-size: 0.875rem;
+  color: #DC2626;
+  margin-top: 0.5rem;
+}
+
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.actionButton {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.warnButton {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.warnButton:hover {
+  background: #FDE68A;
+}
+
+.suspendButton {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.suspendButton:hover {
+  background: #FECACA;
+}
+
+.unsuspendButton {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.unsuspendButton:hover {
+  background: #A7F3D0;
+}
+
+/* User Meta */
+.userMeta {
+  background: #F9FAFB;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.userBio {
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #F9FAFB;
+  border-radius: 0.5rem;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.metaItem {
+  color: #6B7280;
+}
+
+.metaItem strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.statCard {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statInfo {
+  flex: 1;
+}
+
+.statTitle {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin: 0 0 0.25rem 0;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.statIcon {
+  font-size: 1.875rem;
+}
+
+/* Activity Grid */
+.activityGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.activityCard {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.activityHeader {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1rem 0;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sanctionSummary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.sanctionSummary > div {
+  color: #6B7280;
+}
+
+.sanctionSummary strong {
+  font-weight: 600;
+}
+
+.warningCount {
+  color: #D97706;
+}
+
+.suspendCount {
+  color: #DC2626;
+}
+
+.sanctionItem {
+  padding: 0.75rem;
+  background: #F9FAFB;
+  border-radius: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.sanctionItem:hover {
+  background: #F3F4F6;
+}
+
+.sanctionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.sanctionIcon {
+  font-size: 1.25rem;
+}
+
+.sanctionType {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sanctionDuration {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.sanctionReason {
+  font-size: 0.75rem;
+  color: #6B7280;
+  margin: 0.25rem 0;
+}
+
+.sanctionTime {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  margin: 0;
+}
+
+.emptyState {
+  font-size: 0.875rem;
+  color: #9CA3AF;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Report Cards */
+.reportCard {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.reportCard.reported {
+  background: #FEF2F2;
+}
+
+.reportCard.reporter {
+  background: #EFF6FF;
+}
+
+.reportTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0 0 0.25rem 0;
+}
+
+.reportCard.reported .reportTitle {
+  color: #991B1B;
+}
+
+.reportCard.reporter .reportTitle {
+  color: #1E40AF;
+}
+
+.reportValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0 0;
+}
+
+.reportCard.reported .reportValue {
+  color: #DC2626;
+}
+
+.reportCard.reporter .reportValue {
+  color: #2563EB;
+}
+
+/* Loading & Error */
+.loading,
+.error {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.loading {
+  color: #6B7280;
+}
+
+.error {
+  color: #DC2626;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .activityGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .userCardHeader {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .actionButtons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .actionButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .userCard {
+    padding: 1rem;
+  }
+
+  .userInfo {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .userName {
+    font-size: 1.25rem;
+  }
+}
+

@@ -154,8 +154,13 @@ export const authConfig = {
     },
     async redirect({ url, baseUrl }) {
       // 로그인 후 리다이렉트 처리
+      // 상대 경로면 baseUrl과 합침
       if (url.startsWith("/")) return `${baseUrl}${url}`
+      // 같은 origin이면 그대로 사용
       else if (new URL(url).origin === baseUrl) return url
+
+      // 기본 리다이렉트는 미들웨어에서 처리
+      // (미들웨어가 role에 따라 /admin/dashboard 또는 /dashboard로 보냄)
       return baseUrl + "/dashboard"
     }
   },

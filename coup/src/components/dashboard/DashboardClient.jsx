@@ -103,6 +103,11 @@ export default function DashboardClient({ user: initialUser }) {
               나의 활동을 한눈에 확인하세요
             </p>
           </div>
+          {(user?.role === 'ADMIN' || user?.role === 'SYSTEM_ADMIN') && (
+            <Link href="/admin/dashboard" className={styles.adminLink}>
+              🛡️ 관리자 모드
+            </Link>
+          )}
         </header>
 
         {/* 환영 메시지 */}
