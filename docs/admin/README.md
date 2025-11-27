@@ -1,18 +1,45 @@
-# CoUp 관리자 시스템 문서
+# CoUp 관리자 시스템 설계 문서
 
-> **작성일**: 2025-11-26  
-> **버전**: 3.0 (완전 재설계)  
-> **목적**: 플랫폼 관리자의 역할, 권한, 기능을 처음부터 체계적으로 정의
+> **작성일**: 2025-11-27  
+> **목적**: 관리자 페이지 UX 설계 및 구현 가이드
+
+---
+
+## 🚀 빠른 시작
+
+### 관리자 계정 생성
+```bash
+cd coup
+node scripts/create-admin.js admin@coup.com ADMIN
+node scripts/create-admin.js superadmin@coup.com SYSTEM_ADMIN
+```
+
+### 데이터베이스 시드
+```bash
+node scripts/seed-system-admin-data.js
+node scripts/check-admin-data.js
+```
 
 ---
 
 ## 📋 문서 구조
 
-### 1. 기초 분석
-- [`01-user-features.md`](./01-user-features.md) - 일반 사용자 기능 및 화면, 모달 파악
-- [`02-admin-roles.md`](./02-admin-roles.md) - 관리자 역할 상세 정리
+### 1️⃣ 기초 분석
+- [`01-user-features.md`](./01-user-features.md) - 일반 사용자 기능 파악
+- [`02-admin-roles.md`](./02-admin-roles.md) - 관리자 역할 및 권한 정의
 
-### 2. 기능 명세 (영역별)
+### 2️⃣ UX 설계 (사용자 중심)
+- [`UX_DESIGN_00_SUMMARY.md`](./UX_DESIGN_00_SUMMARY.md) - UX 개선 전체 요약
+- [`UX_DESIGN_01_DASHBOARD.md`](./UX_DESIGN_01_DASHBOARD.md) - 대시보드
+- [`UX_DESIGN_02_USER_MANAGEMENT.md`](./UX_DESIGN_02_USER_MANAGEMENT.md) - 사용자 관리
+- [`UX_DESIGN_03_REPORT_MANAGEMENT.md`](./UX_DESIGN_03_REPORT_MANAGEMENT.md) - 신고 관리
+- [`UX_DESIGN_04_SYSTEM_SETTINGS.md`](./UX_DESIGN_04_SYSTEM_SETTINGS.md) - 시스템 설정
+
+### 3️⃣ 기술 문서 (Next.js 15)
+- [`NEXTJS_15_OPTIMIZATION.md`](./NEXTJS_15_OPTIMIZATION.md) - 최적화 전략
+- [`NEXTJS_15_EXAMPLES_JS.md`](./NEXTJS_15_EXAMPLES_JS.md) - JavaScript 코드 예제
+
+### 4️⃣ 기능 명세
 - [`features/01-dashboard.md`](./features/01-dashboard.md) - 대시보드 및 통계
 - [`features/02-user-management.md`](./features/02-user-management.md) - 사용자 관리
 - [`features/03-study-management.md`](./features/03-study-management.md) - 스터디 관리
@@ -21,11 +48,6 @@
 - [`features/06-system-settings.md`](./features/06-system-settings.md) - 시스템 설정
 - [`features/07-analytics.md`](./features/07-analytics.md) - 분석 및 리포트
 
-### 3. API 명세
-- [`../../backend/api/admin/`](../../backend/api/admin/) - 영역별 API 명세
-
-### 4. 화면 설계
-- [`../../screens/admin/`](../../screens/admin/) - 영역별 화면 설계
 
 ---
 
