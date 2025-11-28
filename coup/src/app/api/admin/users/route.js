@@ -27,10 +27,14 @@ export async function GET(request) {
 
     // 필터
     const search = searchParams.get('search')
-    const status = searchParams.get('status')
+    const statusParam = searchParams.get('status')
     const provider = searchParams.get('provider')
     const hasWarnings = searchParams.get('hasWarnings') === 'true'
     const isSuspended = searchParams.get('isSuspended') === 'true'
+
+    // 유효한 status 값만 허용
+    const validStatuses = ['ACTIVE', 'SUSPENDED', 'DELETED', 'all']
+    const status = validStatuses.includes(statusParam) ? statusParam : null
 
     // 날짜 필터
     const createdFrom = searchParams.get('createdFrom')
@@ -44,6 +48,15 @@ export async function GET(request) {
 
     // Where 조건 구성
     const where = {}
+
+    console.log('📝 [Admin Users API] Query params:', {
+      search,
+      status,
+      statusParam,
+      provider,
+      hasWarnings,
+      isSuspended
+    })
 
     // 검색
     if (search) {
@@ -191,9 +204,11 @@ export async function GET(request) {
       },
     })
   } catch (error) {
-    console.error('Get users error:', error)
+    console.error('❌ [Admin Users API] Error:', error)
+    console.error('❌ [Admin Users API] Stack:', error.stack)
+    console.error('❌ [Admin Users API] Message:', error.message)
     return NextResponse.json(
-      { success: false, error: '사용자 목록 조회 실패' },
+      { success: false, error: '사용자 목록 조회 실패', details: error.message },
       { status: 500 }
     )
   } finally {
