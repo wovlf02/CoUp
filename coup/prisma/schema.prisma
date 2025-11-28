@@ -48,8 +48,16 @@ model User {
   createdStudyTasks  StudyTask[]         @relation("StudyTaskCreator")
   assignedStudyTasks StudyTaskAssignee[] @relation("TaskAssignee")
 
+  // 관리자 관련
+  sanctions        Sanction[] @relation("UserSanctions")
+  receivedWarnings Warning[]
+  adminLogs        AdminLog[] @relation("AdminActions")
+  adminRole        AdminRole?
+
   @@index([email])
   @@index([status])
+  @@index([createdAt])
+  @@index([lastLoginAt])
 }
 
 enum Provider {
@@ -431,4 +439,147 @@ enum ReportStatus {
   IN_PROGRESS
   RESOLVED
   REJECTED
+}
+
+// ============================================
+// 관리자 시스템 (Admin System)
+// ============================================
+
+// 경고 시스템
+model Warning {
+  id             String          @id @default(cuid())
+  userId         String
+  adminId        String
+  reason         String          @db.Text
+  severity       WarningSeverity @default(NORMAL)
+  relatedContent String? // URL or ID
+  expiresAt      DateTime? // 경고 유효 기간
+  createdAt      DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([severity, createdAt])
+}
+
+enum WarningSeverity {
+  MINOR // 경미한 위반
+  NORMAL // 일반 위반
+  SERIOUS // 심각한 위반
+  CRITICAL // 치명적 위반
+}
+
+// 제재 이력
+model Sanction {
+  id              String       @id @default(cuid())
+  userId          String
+  adminId         String
+  type            SanctionType
+  reason          String       @db.Text
+  duration        String? // "1d", "3d", "7d", "30d", "permanent"
+  expiresAt       DateTime?
+  relatedReportId String?
+
+  // 해제 정보
+  isActive        Boolean   @default(true)
+  unsuspendedBy   String?
+  unsuspendReason String?
+  unsuspendedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation("UserSanctions", fields: [userId], references: [id])
+
+  @@index([userId, type, createdAt])
+  @@index([isActive, expiresAt])
+}
+
+enum SanctionType {
+  WARNING // 경고
+  CHAT_BAN // 채팅 금지
+  STUDY_CREATE_BAN // 스터디 생성 금지
+  FILE_UPLOAD_BAN // 파일 업로드 금지
+  SUSPENSION // 계정 정지
+  PERMANENT_BAN // 영구 정지
+}
+
+// 관리자 활동 로그
+model AdminLog {
+  id         String      @id @default(cuid())
+  adminId    String
+  action     AdminAction
+  targetType String? // "User", "Study", "Report"
+  targetId   String?
+
+  // 변경 내용
+  before Json?
+  after  Json?
+  reason String? @db.Text
+
+  // 메타 정보
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  admin User @relation("AdminActions", fields: [adminId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+}
+
+enum AdminAction {
+  // 사용자 관리
+  USER_VIEW
+  USER_SEARCH
+  USER_WARN
+  USER_SUSPEND
+  USER_UNSUSPEND
+  USER_DELETE
+  USER_RESTORE
+  USER_UPDATE
+
+  // 스터디 관리
+  STUDY_VIEW
+  STUDY_HIDE
+  STUDY_CLOSE
+  STUDY_DELETE
+  STUDY_RECOMMEND
+
+  // 신고 처리
+  REPORT_VIEW
+  REPORT_ASSIGN
+  REPORT_RESOLVE
+  REPORT_REJECT
+
+  // 콘텐츠 관리
+  CONTENT_DELETE
+  CONTENT_RESTORE
+
+  // 시스템 설정
+  SETTINGS_VIEW
+  SETTINGS_UPDATE
+}
+
+// 관리자 역할 및 권한
+model AdminRole {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  role        AdminRoleType
+  permissions Json // 세부 권한 JSON
+  grantedBy   String
+  grantedAt   DateTime      @default(now())
+  expiresAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([role])
+}
+
+enum AdminRoleType {
+  VIEWER // 조회만 가능
+  MODERATOR // 콘텐츠 모더레이션
+  ADMIN // 사용자/스터디 관리
+  SUPER_ADMIN // 모든 권한
 }

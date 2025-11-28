@@ -1,0 +1,231 @@
+.error {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.errorDetail {
+  color: #666;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* 통계 카드 */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* 테이블 */
+.tableContainer {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: #f8f9fa;
+}
+
+.table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background: #fafafa;
+}
+
+.emptyRow {
+  text-align: center;
+  padding: 48px 16px !important;
+  color: #999;
+}
+
+/* 스터디 정보 */
+.studyInfo {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.studyName {
+  font-weight: 600;
+  color: #1a1a1a;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.studyName:hover {
+  color: #6366f1;
+}
+
+.studyDescription {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 스터디장 정보 */
+.ownerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ownerName {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.ownerEmail {
+  font-size: 13px;
+  color: #666;
+}
+
+/* 카테고리 */
+.category {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.subCategory {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* 멤버 수 */
+.memberCount {
+  font-size: 16px;
+}
+
+.memberCount strong {
+  color: #6366f1;
+}
+
+.maxMembers {
+  color: #999;
+  font-size: 14px;
+}
+
+/* 활동 통계 */
+.activityStats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* 상태 배지 */
+.statusBadges {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 날짜 */
+.date {
+  font-size: 14px;
+  color: #1a1a1a;
+}
+
+.lastActivity {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+/* 버튼 */
+.detailButton {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #6366f1;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.detailButton:hover {
+  background: #4f46e5;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.pageButton {
+  padding: 10px 20px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1a1a1a;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.pageButton:hover {
+  background: #f5f5f5;
+  border-color: #b0b0b0;
+}
+
+.pageInfo {
+  font-weight: 500;
+  color: #666;
+}
+

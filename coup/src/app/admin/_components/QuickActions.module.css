@@ -1,0 +1,141 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.actions {
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  text-decoration: none;
+  color: #111827;
+  transition: all 0.2s;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.action:last-child {
+  border-bottom: none;
+}
+
+.action:hover {
+  background-color: #f9fafb;
+}
+
+.action.blue:hover {
+  background-color: #eff6ff;
+}
+
+.action.red:hover {
+  background-color: #fef2f2;
+}
+
+.action.purple:hover {
+  background-color: #faf5ff;
+}
+
+.action.green:hover {
+  background-color: #f0fdf4;
+}
+
+.actionIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.actionContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.actionTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.125rem;
+}
+
+.actionDescription {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.actionArrow {
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.action:hover .actionArrow {
+  transform: translateX(4px);
+}
+
+.tips {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  color: white;
+}
+
+.tipsTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.tipsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tipsList li {
+  font-size: 0.875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.tipsList li::before {
+  content: '✓';
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .container {
+    grid-column: 1 / -1;
+  }
+}
+

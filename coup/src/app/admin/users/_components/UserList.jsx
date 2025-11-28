@@ -1,0 +1,171 @@
+import Link from 'next/link'
+import Image from 'next/image'
+import Badge from '@/components/admin/ui/Badge'
+import styles from './UserList.module.css'
+
+async function getUsers(searchParams) {
+  try {
+    const params = new URLSearchParams()
+
+    if (searchParams.page) params.set('page', searchParams.page)
+    if (searchParams.search) params.set('search', searchParams.search)
+    if (searchParams.status) params.set('status', searchParams.status)
+    if (searchParams.provider) params.set('provider', searchParams.provider)
+
+    const res = await fetch(
+      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?${params.toString()}`,
+      { cache: 'no-store' }
+    )
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch users')
+    }
+
+    return res.json()
+  } catch (error) {
+    console.error('Failed to fetch users:', error)
+    return { success: false, data: null }
+  }
+}
+
+export default async function UserList({ searchParams }) {
+  const result = await getUsers(searchParams)
+
+  if (!result.success || !result.data) {
+    return (
+      <div className={styles.error}>
+        <p>사용자 목록을 불러올 수 없습니다.</p>
+      </div>
+    )
+  }
+
+  const { users, pagination } = result.data
+
+  if (users.length === 0) {
+    return (
+      <div className={styles.empty}>
+        <p>사용자가 없습니다.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>사용자</th>
+              <th>상태</th>
+              <th>가입일</th>
+              <th>활동</th>
+              <th>경고</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>
+                  <div className={styles.userCell}>
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name || 'User'}
+                        width={40}
+                        height={40}
+                        className={styles.avatar}
+                      />
+                    ) : (
+                      <div className={styles.avatarPlaceholder}>
+                        {(user.name || user.email)[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <div className={styles.userName}>{user.name || '이름 없음'}</div>
+                      <div className={styles.userEmail}>{user.email}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <Badge variant={getStatusVariant(user.status)}>
+                    {getStatusLabel(user.status)}
+                  </Badge>
+                </td>
+                <td className={styles.dateCell}>
+                  {new Date(user.createdAt).toLocaleDateString('ko-KR')}
+                </td>
+                <td>
+                  <div className={styles.statsCell}>
+                    <span>스터디 {user.stats.studiesOwned + user.stats.studiesJoined}</span>
+                    <span>메시지 {user.stats.messagesCount}</span>
+                  </div>
+                </td>
+                <td>
+                  {user.stats.warningsCount > 0 ? (
+                    <Badge variant="warning">{user.stats.warningsCount}회</Badge>
+                  ) : (
+                    <span className={styles.noWarning}>없음</span>
+                  )}
+                </td>
+                <td>
+                  <Link href={`/admin/users/${user.id}`} className={styles.viewButton}>
+                    상세보기
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className={styles.pagination}>
+          <button
+            disabled={pagination.page === 1}
+            className={styles.pageButton}
+          >
+            이전
+          </button>
+          <span className={styles.pageInfo}>
+            {pagination.page} / {pagination.totalPages}
+          </span>
+          <button
+            disabled={pagination.page === pagination.totalPages}
+            className={styles.pageButton}
+          >
+            다음
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function getStatusVariant(status) {
+  switch (status) {
+    case 'ACTIVE':
+      return 'success'
+    case 'SUSPENDED':
+      return 'danger'
+    case 'DELETED':
+      return 'default'
+    default:
+      return 'default'
+  }
+}
+
+function getStatusLabel(status) {
+  switch (status) {
+    case 'ACTIVE':
+      return '활성'
+    case 'SUSPENDED':
+      return '정지'
+    case 'DELETED':
+      return '삭제됨'
+    default:
+      return status
+  }
+}
+
