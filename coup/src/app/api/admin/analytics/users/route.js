@@ -163,11 +163,11 @@ async function getActivityMetrics() {
  */
 async function getSanctions() {
   const [warnings, suspensions, bans] = await Promise.all([
-    // 경고 누적 사용자 (warningCount > 0)
+    // 경고를 받은 사용자 수 (receivedWarnings relation 사용)
     prisma.user.count({
       where: {
-        warningCount: {
-          gt: 0
+        receivedWarnings: {
+          some: {}  // 경고가 하나라도 있는 사용자
         }
       }
     }),

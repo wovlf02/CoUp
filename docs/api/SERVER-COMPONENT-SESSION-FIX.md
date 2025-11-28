@@ -7,7 +7,7 @@
 
 ## 🔍 문제 원인
 
-### 로그 분석
+### 1. 로그 분석
 ```
 ✅ [requireAdmin] Admin check successful  (다른 API는 성공)
 🔍 [Admin Studies API] Starting request...
@@ -16,7 +16,15 @@
 GET /api/admin/studies 401
 ```
 
+### 2. Next.js 15+ searchParams 변경
+```
+Error: Route "/admin/reports" used `searchParams.page`. 
+`searchParams` is a Promise and must be unwrapped with `await`
+```
+
 ### 핵심 문제
+
+#### 문제 1: Server Component에서 쿠키 미전달
 **Server Component에서 `fetch()`로 내부 API를 호출할 때 쿠키가 전달되지 않음!**
 
 ```javascript
@@ -27,6 +35,14 @@ async function getStudies(searchParams) {
     cache: 'no-store',
   })
   // 쿠키가 전달되지 않아 세션 정보 없음!
+}
+```
+
+#### 문제 2: Next.js 15에서 searchParams가 Promise로 변경
+```javascript
+// ❌ 문제 코드
+export default async function MyPage({ searchParams }) {
+  const page = searchParams.page  // Error!
 }
 ```
 
@@ -50,7 +66,7 @@ async function getStudies(searchParams) {
 
 ## ✅ 해결 방법
 
-### Server Component에서 직접 DB 조회
+### 해결책 1: Server Component에서 직접 DB 조회
 
 **Before - fetch() 사용 (❌ 세션 없음)**
 ```javascript
@@ -99,6 +115,27 @@ async function getStudies(searchParams) {
 }
 ```
 
+### 해결책 2: searchParams Promise 처리 (Next.js 15+)
+
+**Before - 동기 접근 (❌ 에러)**
+```javascript
+export default async function MyPage({ searchParams }) {
+  const page = searchParams.page  // Error!
+  const data = await getStudies(searchParams)
+}
+```
+
+**After - await로 Promise 해제 (✅ 정상)**
+```javascript
+export default async function MyPage({ searchParams }) {
+  // ✅ searchParams를 await로 해제
+  const params = await searchParams
+  
+  const page = params.page  // OK!
+  const data = await getStudies(params)
+}
+```
+
 ---
 
 ## 🎯 장점
@@ -129,10 +166,13 @@ async function getStudies(searchParams) {
 - ✅ `getServerSession` 추가
 - ✅ Prisma 직접 조회
 - ✅ 세션 및 권한 확인
+- ✅ **`searchParams` await 처리** (Next.js 15)
 
 ### 2. `/coup/src/app/admin/reports/_components/ReportList.jsx` ⭐
 - ✅ 동일한 패턴 적용
 - ✅ 직접 DB 조회
+- ✅ **`searchParams` await 처리** (Next.js 15)
+- ✅ **`assignee` 필드 제거** (Prisma 스키마에 없음)
 
 ---
 

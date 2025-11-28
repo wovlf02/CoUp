@@ -128,9 +128,12 @@ async function getStudies(searchParams) {
 }
 
 export default async function StudyList({ searchParams = {} }) {
+  // Next.js 15+에서 searchParams는 Promise
+  const params = await searchParams
+
   let data
   try {
-    data = await getStudies(searchParams)
+    data = await getStudies(params)
   } catch (error) {
     return (
       <div className={styles.error}>

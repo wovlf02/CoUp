@@ -61,7 +61,7 @@ async function getReports(searchParams) {
   }
 
   try {
-    const [reports, total] = await Promise.all([
+    const [reports, total, pendingCount, inProgressCount, resolvedCount] = await Promise.all([
       prisma.report.findMany({
         where,
         skip,
@@ -76,16 +76,12 @@ async function getReports(searchParams) {
               avatar: true,
             },
           },
-          assignee: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
         },
       }),
       prisma.report.count({ where }),
+      prisma.report.count({ where: { ...where, status: 'PENDING' } }),
+      prisma.report.count({ where: { ...where, status: 'IN_PROGRESS' } }),
+      prisma.report.count({ where: { ...where, status: 'RESOLVED' } }),
     ])
 
     return {
@@ -95,6 +91,12 @@ async function getReports(searchParams) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      stats: {
+        total,
+        pending: pendingCount,
+        in_progress: inProgressCount,
+        resolved: resolvedCount,
       },
     }
   } catch (error) {
@@ -197,8 +199,10 @@ function getTargetTypeLabel(targetType) {
 }
 
 export default async function ReportList({ searchParams }) {
-  const data = await getReports(searchParams)
-  const { reports, pagination } = data
+  // Next.js 15+에서 searchParams는 Promise
+  const params = await searchParams
+  const data = await getReports(params)
+  const { reports, pagination, stats } = data
 
   return (
     <div className={styles.container}>
