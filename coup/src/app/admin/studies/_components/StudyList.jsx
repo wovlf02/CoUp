@@ -1,44 +1,136 @@
 /**
  * 스터디 목록 컴포넌트
- * Server Component - API 데이터 페칭 및 테이블 렌더링
+ * Server Component - 직접 DB 조회
  */
 
+import { getServerSession } from 'next-auth'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { PrismaClient } from '@prisma/client'
+import { authOptions } from '@/lib/auth'
 import Badge from '@/components/admin/ui/Badge'
 import StudyFilters from './StudyFilters'
 import styles from './StudyList.module.css'
 
-// API에서 스터디 데이터 가져오기
+const prisma = new PrismaClient()
+
+// 스터디 데이터 가져오기 (직접 DB 조회)
 async function getStudies(searchParams) {
-  const params = new URLSearchParams()
-
-  // 필터 파라미터 추가
-  if (searchParams.page) params.set('page', searchParams.page)
-  if (searchParams.search) params.set('search', searchParams.search)
-  if (searchParams.category) params.set('category', searchParams.category)
-  if (searchParams.isPublic) params.set('isPublic', searchParams.isPublic)
-  if (searchParams.isRecruiting)
-    params.set('isRecruiting', searchParams.isRecruiting)
-  if (searchParams.sortBy) params.set('sortBy', searchParams.sortBy)
-  if (searchParams.sortOrder) params.set('sortOrder', searchParams.sortOrder)
-
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-  const res = await fetch(`${baseUrl}/api/admin/studies?${params.toString()}`, {
-    cache: 'no-store',
-  })
-
-  if (!res.ok) {
-    throw new Error('스터디 목록을 불러오는데 실패했습니다')
+  // 세션 확인
+  const session = await getServerSession(authOptions)
+  if (!session?.user) {
+    redirect('/sign-in?callbackUrl=/admin/studies')
   }
 
-  return res.json()
+  // 관리자 권한 확인
+  const adminRole = await prisma.adminRole.findUnique({
+    where: { userId: session.user.id },
+  })
+
+  if (!adminRole) {
+    redirect('/dashboard')
+  }
+
+  // 페이지네이션
+  const page = parseInt(searchParams.page || '1')
+  const limit = 20
+  const skip = (page - 1) * limit
+
+  // 필터
+  const search = searchParams.search
+  const category = searchParams.category
+  const isPublic = searchParams.isPublic
+  const isRecruiting = searchParams.isRecruiting
+  const sortBy = searchParams.sortBy || 'createdAt'
+  const sortOrder = searchParams.sortOrder || 'desc'
+
+  // Where 조건 구성
+  const where = {}
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+
+  if (category && category !== 'all') {
+    where.category = category
+  }
+
+  if (isPublic !== null && isPublic !== 'all') {
+    where.isPublic = isPublic === 'true'
+  }
+
+  if (isRecruiting !== null && isRecruiting !== 'all') {
+    where.isRecruiting = isRecruiting === 'true'
+  }
+
+  try {
+    // 스터디 조회
+    const [studies, total] = await Promise.all([
+      prisma.study.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+              status: true,
+            },
+          },
+          _count: {
+            select: {
+              members: { where: { status: 'ACTIVE' } },
+              messages: true,
+              files: true,
+              notices: true,
+            },
+          },
+        },
+      }),
+      prisma.study.count({ where }),
+    ])
+
+    // 통계
+    const [publicCount, recruitingCount] = await Promise.all([
+      prisma.study.count({ where: { ...where, isPublic: true } }),
+      prisma.study.count({ where: { ...where, isRecruiting: true } }),
+    ])
+
+    return {
+      studies,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1,
+      },
+      stats: {
+        total,
+        public: publicCount,
+        recruiting: recruitingCount,
+      },
+    }
+  } catch (error) {
+    console.error('❌ [StudyList] Database error:', error)
+    throw new Error('스터디 목록을 불러오는데 실패했습니다')
+  } finally {
+    await prisma.$disconnect()
+  }
 }
 
 export default async function StudyList({ searchParams = {} }) {
   let data
   try {
-    const response = await getStudies(searchParams)
-    data = response.data
+    data = await getStudies(searchParams)
   } catch (error) {
     return (
       <div className={styles.error}>

@@ -1,29 +1,108 @@
+import { getServerSession } from 'next-auth'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { PrismaClient } from '@prisma/client'
+import { authOptions } from '@/lib/auth'
 import Badge from '@/components/admin/ui/Badge'
 import styles from './ReportList.module.css'
 
-// API 호출 함수
+const prisma = new PrismaClient()
+
+// 신고 목록 가져오기 (직접 DB 조회)
 async function getReports(searchParams) {
-  const params = new URLSearchParams()
-
-  if (searchParams.search) params.set('search', searchParams.search)
-  if (searchParams.status) params.set('status', searchParams.status)
-  if (searchParams.type) params.set('type', searchParams.type)
-  if (searchParams.priority) params.set('priority', searchParams.priority)
-  if (searchParams.targetType) params.set('targetType', searchParams.targetType)
-  if (searchParams.assignedTo) params.set('assignedTo', searchParams.assignedTo)
-  if (searchParams.page) params.set('page', searchParams.page)
-
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-  const res = await fetch(`${baseUrl}/api/admin/reports?${params.toString()}`, {
-    cache: 'no-store',
-  })
-
-  if (!res.ok) {
-    throw new Error('신고 목록을 불러오는데 실패했습니다.')
+  // 세션 확인
+  const session = await getServerSession(authOptions)
+  if (!session?.user) {
+    redirect('/sign-in?callbackUrl=/admin/reports')
   }
 
-  return res.json()
+  // 관리자 권한 확인
+  const adminRole = await prisma.adminRole.findUnique({
+    where: { userId: session.user.id },
+  })
+
+  if (!adminRole) {
+    redirect('/dashboard')
+  }
+
+  // 페이지네이션
+  const page = parseInt(searchParams.page || '1')
+  const limit = 20
+  const skip = (page - 1) * limit
+
+  // 필터
+  const where = {}
+
+  if (searchParams.search) {
+    where.OR = [
+      { id: { contains: searchParams.search } },
+      { reason: { contains: searchParams.search, mode: 'insensitive' } },
+    ]
+  }
+
+  if (searchParams.status && searchParams.status !== 'all') {
+    where.status = searchParams.status
+  }
+
+  if (searchParams.type && searchParams.type !== 'all') {
+    where.type = searchParams.type
+  }
+
+  if (searchParams.priority && searchParams.priority !== 'all') {
+    where.priority = searchParams.priority
+  }
+
+  if (searchParams.targetType && searchParams.targetType !== 'all') {
+    where.targetType = searchParams.targetType
+  }
+
+  if (searchParams.assignedTo) {
+    where.assignedTo = searchParams.assignedTo
+  }
+
+  try {
+    const [reports, total] = await Promise.all([
+      prisma.report.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          reporter: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          assignee: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      prisma.report.count({ where }),
+    ])
+
+    return {
+      reports,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
+  } catch (error) {
+    console.error('❌ [ReportList] Database error:', error)
+    throw new Error('신고 목록을 불러오는데 실패했습니다.')
+  } finally {
+    await prisma.$disconnect()
+  }
 }
 
 // 우선순위 색상 매핑
@@ -119,7 +198,7 @@ function getTargetTypeLabel(targetType) {
 
 export default async function ReportList({ searchParams }) {
   const data = await getReports(searchParams)
-  const { reports, pagination, stats } = data.data
+  const { reports, pagination } = data
 
   return (
     <div className={styles.container}>

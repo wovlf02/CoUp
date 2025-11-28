@@ -11,14 +11,21 @@ import { PERMISSIONS } from '@/lib/admin/permissions'
 const prisma = new PrismaClient()
 
 export async function GET(request) {
+  console.log('🔍 [Admin Studies API] Starting request...')
+
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_VIEW)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    console.log('❌ [Admin Studies API] Auth failed')
+    return auth
+  }
 
   const { adminRole } = auth
+  console.log('✅ [Admin Studies API] Auth successful:', adminRole.userId)
 
   try {
     const { searchParams } = new URL(request.url)
+    console.log('📝 [Admin Studies API] Query params:', Object.fromEntries(searchParams))
 
     // 페이지네이션
     const page = parseInt(searchParams.get('page') || '1')
@@ -182,19 +189,28 @@ export async function GET(request) {
     })
 
     // 로그 기록
-    await logAdminAction({
-      adminId: adminRole.userId,
-      action: 'STUDY_LIST_VIEW',
-      details: {
-        filters: {
-          search,
-          category,
-          isPublic,
-          isRecruiting,
+    try {
+      await logAdminAction({
+        adminId: adminRole.userId,
+        action: 'STUDY_VIEW',
+        targetType: 'Study',
+        reason: `Viewed studies list with filters: ${JSON.stringify({ search, category, isPublic, isRecruiting })}`,
+        after: {
+          filters: {
+            search,
+            category,
+            isPublic,
+            isRecruiting,
+          },
+          resultCount: transformedStudies.length,
         },
-        resultCount: transformedStudies.length,
-      },
-    })
+      })
+    } catch (logError) {
+      console.warn('⚠️ [Admin Studies API] Failed to log action:', logError.message)
+      // 로그 실패는 무시하고 계속 진행
+    }
+
+    console.log('✅ [Admin Studies API] Success, returning', transformedStudies.length, 'studies')
 
     return NextResponse.json({
       success: true,
@@ -216,14 +232,21 @@ export async function GET(request) {
       },
     })
   } catch (error) {
-    console.error('스터디 목록 조회 실패:', error)
+    console.error('❌ [Admin Studies API] Error:', error)
+    console.error('❌ [Admin Studies API] Error name:', error.name)
+    console.error('❌ [Admin Studies API] Error message:', error.message)
+    console.error('❌ [Admin Studies API] Error stack:', error.stack)
+
     return NextResponse.json(
       {
         success: false,
         error: '스터디 목록 조회에 실패했습니다',
+        details: error.message,
       },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 

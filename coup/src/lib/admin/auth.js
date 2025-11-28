@@ -18,10 +18,19 @@ const prisma = new PrismaClient()
  */
 export async function requireAdmin(request, requiredPermissions = null) {
   try {
+    console.log('🔐 [requireAdmin] Starting admin check...')
+
     // 1. 세션 확인
     const session = await getServerSession(authOptions)
+    console.log('🔐 [requireAdmin] Session:', session ? {
+      userId: session.user?.id,
+      email: session.user?.email,
+      isAdmin: session.user?.isAdmin,
+      adminRole: session.user?.adminRole
+    } : 'No session')
 
     if (!session || !session.user) {
+      console.log('❌ [requireAdmin] No session found')
       return NextResponse.json(
         { success: false, error: '로그인이 필요합니다.' },
         { status: 401 }
@@ -29,6 +38,7 @@ export async function requireAdmin(request, requiredPermissions = null) {
     }
 
     // 2. 관리자 역할 확인
+    console.log('🔍 [requireAdmin] Checking admin role for user:', session.user.id)
     const adminRole = await prisma.adminRole.findUnique({
       where: { userId: session.user.id },
       include: {
@@ -43,7 +53,14 @@ export async function requireAdmin(request, requiredPermissions = null) {
       }
     })
 
+    console.log('🔍 [requireAdmin] Admin role query result:', adminRole ? {
+      userId: adminRole.userId,
+      role: adminRole.role,
+      expiresAt: adminRole.expiresAt
+    } : 'No admin role')
+
     if (!adminRole) {
+      console.log('❌ [requireAdmin] User is not an admin')
       return NextResponse.json(
         { success: false, error: '관리자 권한이 없습니다.' },
         { status: 403 }
@@ -52,6 +69,7 @@ export async function requireAdmin(request, requiredPermissions = null) {
 
     // 3. 역할 만료 확인
     if (adminRole.expiresAt && new Date(adminRole.expiresAt) < new Date()) {
+      console.log('❌ [requireAdmin] Admin role expired')
       return NextResponse.json(
         { success: false, error: '관리자 권한이 만료되었습니다.' },
         { status: 403 }
@@ -69,6 +87,7 @@ export async function requireAdmin(request, requiredPermissions = null) {
       )
 
       if (!hasRequiredPermissions) {
+        console.log('❌ [requireAdmin] Insufficient permissions:', permissions)
         return NextResponse.json(
           { success: false, error: '해당 작업을 수행할 권한이 없습니다.' },
           { status: 403 }
@@ -76,16 +95,20 @@ export async function requireAdmin(request, requiredPermissions = null) {
       }
     }
 
+    console.log('✅ [requireAdmin] Admin check successful')
     return {
       user: session.user,
       adminRole,
     }
   } catch (error) {
-    console.error('Admin auth error:', error)
+    console.error('❌ [requireAdmin] Error:', error)
+    console.error('❌ [requireAdmin] Stack:', error.stack)
     return NextResponse.json(
       { success: false, error: '인증 처리 중 오류가 발생했습니다.' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
@@ -174,8 +197,8 @@ export async function logAdminAction({
         action,
         targetType,
         targetId,
-        before,
-        after,
+        before: before ? JSON.parse(JSON.stringify(before)) : null,
+        after: after ? JSON.parse(JSON.stringify(after)) : null,
         reason,
         ipAddress,
         userAgent,

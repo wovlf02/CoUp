@@ -169,8 +169,9 @@ export const authConfig = {
       return token
     },
     async session({ session, token }) {
-      // JWT 토큰에서 세션으로 정보 전달 (단순하게)
+      // JWT 토큰에서 세션으로 정보 전달
       if (token && session) {
+        // 기본 사용자 정보
         session.user = {
           id: token.id || '',
           email: token.email || '',
@@ -178,7 +179,37 @@ export const authConfig = {
           image: token.image || null,
           role: token.role || 'USER',
           status: token.status || 'ACTIVE',
-          provider: token.provider || 'CREDENTIALS'
+          provider: token.provider || 'CREDENTIALS',
+          isAdmin: false,
+          adminRole: null,
+        }
+
+        // 관리자 권한을 DB에서 실시간 조회 (매 요청마다 최신 정보)
+        try {
+          const adminRole = await prisma.adminRole.findUnique({
+            where: { userId: token.id },
+            select: {
+              role: true,
+              expiresAt: true,
+            }
+          })
+
+          const isAdmin = adminRole && (!adminRole.expiresAt || new Date(adminRole.expiresAt) > new Date())
+
+          if (isAdmin) {
+            session.user.isAdmin = true
+            session.user.adminRole = adminRole.role
+          }
+
+          console.log('📝 [AUTH] Session created:', {
+            email: session.user.email,
+            isAdmin: session.user.isAdmin,
+            adminRole: session.user.adminRole,
+            fetchedFromDB: !!adminRole
+          })
+        } catch (error) {
+          console.error('❌ [AUTH] Failed to fetch admin role:', error)
+          // 에러 발생 시에도 세션은 반환 (관리자 권한 없는 상태로)
         }
       }
 
