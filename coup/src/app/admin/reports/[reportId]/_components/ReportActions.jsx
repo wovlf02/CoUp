@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/admin/ui/Button'
 import Modal from '@/components/admin/ui/Modal'
+import api from '@/lib/api'
 import styles from './ReportActions.module.css'
 
 export default function ReportActions({ report }) {
@@ -35,15 +36,9 @@ export default function ReportActions({ report }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/reports/${report.id}/assign`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          autoAssign: !assignToMe,
-        }),
+      const data = await api.post(`/api/admin/reports/${report.id}/assign`, {
+        autoAssign: !assignToMe,
       })
-
-      const data = await res.json()
 
       if (data.success) {
         alert(data.message)
@@ -78,18 +73,12 @@ export default function ReportActions({ report }) {
         linkedActionDetails.severity = warningSeverity
       }
 
-      const res = await fetch(`/api/admin/reports/${report.id}/process`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'approve',
-          resolution: approveReason,
-          linkedAction,
-          linkedActionDetails,
-        }),
+      const data = await api.post(`/api/admin/reports/${report.id}/process`, {
+        action: 'approve',
+        resolution: approveReason,
+        linkedAction,
+        linkedActionDetails,
       })
-
-      const data = await res.json()
 
       if (data.success) {
         alert(data.message)
@@ -116,17 +105,11 @@ export default function ReportActions({ report }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/reports/${report.id}/process`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'reject',
-          resolution: rejectReason,
-          linkedAction: 'none',
-        }),
+      const data = await api.post(`/api/admin/reports/${report.id}/process`, {
+        action: 'reject',
+        resolution: rejectReason,
+        linkedAction: 'none',
       })
-
-      const data = await res.json()
 
       if (data.success) {
         alert(data.message)
@@ -153,17 +136,11 @@ export default function ReportActions({ report }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/reports/${report.id}/process`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'hold',
-          resolution: holdReason,
-          linkedAction: 'none',
-        }),
+      const data = await api.post(`/api/admin/reports/${report.id}/process`, {
+        action: 'hold',
+        resolution: holdReason,
+        linkedAction: 'none',
       })
-
-      const data = await res.json()
 
       if (data.success) {
         alert(data.message)

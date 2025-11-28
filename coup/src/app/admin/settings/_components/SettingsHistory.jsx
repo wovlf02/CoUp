@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import api from '@/lib/api'
 import styles from './SettingsHistory.module.css'
 
 export default function SettingsHistory() {
@@ -12,8 +13,10 @@ export default function SettingsHistory() {
   const fetchHistory = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/admin/settings/history?page=${page}&limit=10`)
-      const data = await res.json()
+      const data = await api.get('/api/admin/settings/history', {
+        page,
+        limit: 10
+      })
 
       if (data.success) {
         setLogs(data.data.logs)

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import StatsCards from './_components/StatsCards'
 import RecentActivity from './_components/RecentActivity'
 import QuickActions from './_components/QuickActions'
+import api from '@/lib/api'
 import styles from './page.module.css'
 
 export default function AdminDashboardPage() {
@@ -29,21 +30,11 @@ export default function AdminDashboardPage() {
   async function fetchStats() {
     try {
       setLoading(true)
-      const res = await fetch('/api/admin/stats', {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
 
-      if (!res.ok) {
-        const errorData = await res.json()
-        setError(errorData.error || 'Failed to fetch stats')
-        return
-      }
+      // 간단한 GET 요청
+      const result = await api.get('/api/admin/stats')
 
-      const data = await res.json()
-      setStats(data.success ? data.data : null)
+      setStats(result.success ? result.data : null)
       setError(null)
     } catch (err) {
       console.error('Failed to fetch stats:', err)

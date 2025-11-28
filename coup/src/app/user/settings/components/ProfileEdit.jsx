@@ -3,6 +3,7 @@
 
 import { useState, useRef } from 'react';
 import Image from 'next/image';
+import api from '@/lib/api';
 import styles from './ProfileEdit.module.css';
 
 export default function ProfileEdit({ user }) {
@@ -39,14 +40,10 @@ export default function ProfileEdit({ user }) {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/api/user/avatar', {
-        method: 'POST',
-        body: formData,
+      const data = await api.post('/api/user/avatar', formData, {
+        headers: {} // FormData는 헤더를 비워야 Content-Type이 자동 설정됨
       });
 
-      if (!response.ok) throw new Error('업로드 실패');
-
-      const data = await response.json();
       setAvatar(data.url);
       alert('프로필 사진이 변경되었습니다.');
     } catch (error) {
@@ -83,14 +80,7 @@ export default function ProfileEdit({ user }) {
     setIsSaving(true);
 
     try {
-      const response = await fetch('/api/user/settings/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error('저장 실패');
-
+      await api.put('/api/user/settings/profile', formData);
       alert('프로필이 저장되었습니다.');
       window.location.reload();
     } catch (error) {

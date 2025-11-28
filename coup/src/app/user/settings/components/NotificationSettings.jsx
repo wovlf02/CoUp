@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import api from '@/lib/api';
 import styles from './NotificationSettings.module.css';
 
 export default function NotificationSettings() {
@@ -25,14 +26,7 @@ export default function NotificationSettings() {
     setIsSaving(true);
 
     try {
-      const response = await fetch('/api/user/settings/notifications', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) throw new Error('저장 실패');
-
+      await api.put('/api/user/settings/notifications', settings);
       alert('알림 설정이 저장되었습니다.');
     } catch (error) {
       console.error('Save error:', error);

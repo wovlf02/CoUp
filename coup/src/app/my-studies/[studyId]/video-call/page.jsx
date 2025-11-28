@@ -13,6 +13,7 @@ import ControlBar from '@/components/video-call/ControlBar';
 import SettingsModal from '@/components/video-call/SettingsModal';
 import StudyTabs from '@/components/study/StudyTabs';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
+import api from '@/lib/api';
 import styles from './page.module.css';
 
 export default function MyStudyVideoCallPage({ params }) {
@@ -351,17 +352,9 @@ export default function MyStudyVideoCallPage({ params }) {
       formData.append('file', selectedFile);
 
       // 파일 업로드 API 호출 (올바른 경로)
-      const response = await fetch(`/api/studies/${studyId}/files`, {
-        method: 'POST',
-        body: formData,
+      const result = await api.post(`/api/studies/${studyId}/files`, formData, {
+        headers: {} // FormData는 헤더를 비워야 Content-Type이 자동 설정됨
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '파일 업로드 실패');
-      }
-
-      const result = await response.json();
 
       // 파일 메시지 생성
       const fileMessage = {

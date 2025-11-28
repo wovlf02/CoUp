@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import api from '@/lib/api';
 import styles from './PasswordChange.module.css';
 
 export default function PasswordChange() {
@@ -45,19 +46,10 @@ export default function PasswordChange() {
     setIsChanging(true);
 
     try {
-      const response = await fetch('/api/user/settings/password', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword
-        }),
+      await api.put('/api/user/settings/password', {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || '비밀번호 변경 실패');
-      }
 
       alert('비밀번호가 변경되었습니다.');
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });

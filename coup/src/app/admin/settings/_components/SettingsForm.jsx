@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Button from '@/components/admin/ui/Button'
+import api from '@/lib/api'
 import styles from './SettingsForm.module.css'
 
 const categoryNames = {
@@ -28,8 +29,7 @@ export default function SettingsForm() {
   const fetchSettings = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/admin/settings')
-      const data = await res.json()
+      const data = await api.get('/api/admin/settings')
 
       if (data.success) {
         setSettings(data.data)
@@ -81,13 +81,9 @@ export default function SettingsForm() {
         return
       }
 
-      const res = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: changedSettings })
+      const data = await api.put('/api/admin/settings', {
+        settings: changedSettings
       })
-
-      const data = await res.json()
 
       if (data.success) {
         setMessage({ type: 'success', text: `${data.updated}개의 설정이 업데이트되었습니다.` })
@@ -109,11 +105,7 @@ export default function SettingsForm() {
 
     try {
       setClearingCache(true)
-      const res = await fetch('/api/admin/settings/cache/clear', {
-        method: 'POST'
-      })
-
-      const data = await res.json()
+      const data = await api.post('/api/admin/settings/cache/clear')
 
       if (data.success) {
         setMessage({ type: 'success', text: '캐시가 초기화되었습니다.' })

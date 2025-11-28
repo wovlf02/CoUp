@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/admin/ui/Button'
 import Modal from '@/components/admin/ui/Modal'
+import api from '@/lib/api'
 import styles from './UserActions.module.css'
 
 export default function UserActions({ user }) {
@@ -19,22 +20,12 @@ export default function UserActions({ user }) {
   const handleWarn = async (data) => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/warn`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (res.ok) {
-        alert('경고가 부여되었습니다.')
-        router.refresh()
-        setShowWarnModal(false)
-      } else {
-        const error = await res.json()
-        alert(error.error || '경고 부여 실패')
-      }
+      await api.post(`/api/admin/users/${user.id}/warn`, data)
+      alert('경고가 부여되었습니다.')
+      router.refresh()
+      setShowWarnModal(false)
     } catch (error) {
-      alert('오류가 발생했습니다.')
+      alert(error.message || '경고 부여 실패')
     } finally {
       setLoading(false)
     }
@@ -43,22 +34,12 @@ export default function UserActions({ user }) {
   const handleSuspend = async (data) => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/suspend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (res.ok) {
-        alert('사용자가 정지되었습니다.')
-        router.refresh()
-        setShowSuspendModal(false)
-      } else {
-        const error = await res.json()
-        alert(error.error || '정지 실패')
-      }
+      await api.post(`/api/admin/users/${user.id}/suspend`, data)
+      alert('사용자가 정지되었습니다.')
+      router.refresh()
+      setShowSuspendModal(false)
     } catch (error) {
-      alert('오류가 발생했습니다.')
+      alert(error.message || '정지 실패')
     } finally {
       setLoading(false)
     }
@@ -69,21 +50,13 @@ export default function UserActions({ user }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/unsuspend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: '관리자에 의한 수동 해제' }),
+      await api.post(`/api/admin/users/${user.id}/unsuspend`, {
+        reason: '관리자에 의한 수동 해제'
       })
-
-      if (res.ok) {
-        alert('정지가 해제되었습니다.')
-        router.refresh()
-      } else {
-        const error = await res.json()
-        alert(error.error || '정지 해제 실패')
-      }
+      alert('정지가 해제되었습니다.')
+      router.refresh()
     } catch (error) {
-      alert('오류가 발생했습니다.')
+      alert(error.message || '정지 해제 실패')
     } finally {
       setLoading(false)
     }

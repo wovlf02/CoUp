@@ -5,6 +5,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
+import api from '@/lib/api'
 import styles from './StudyAnalytics.module.css'
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
@@ -19,15 +20,10 @@ export default function StudyAnalytics() {
   const fetchStudyAnalytics = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch(
-        `/api/admin/analytics/studies?period=${period}&range=${range}`
-      )
-
-      if (!response.ok) {
-        throw new Error('스터디 분석 조회 실패')
-      }
-
-      const result = await response.json()
+      const result = await api.get('/api/admin/analytics/studies', {
+        period,
+        range
+      })
       setData(result.data)
     } catch (err) {
       console.error('스터디 분석 조회 오류:', err)

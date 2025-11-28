@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import api from '@/lib/api';
 import styles from './ThemeSettings.module.css';
 
 export default function ThemeSettings() {
@@ -37,14 +38,7 @@ export default function ThemeSettings() {
     setIsSaving(true);
 
     try {
-      const response = await fetch('/api/user/settings/theme', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) throw new Error('저장 실패');
-
+      await api.put('/api/user/settings/theme', settings);
       alert('테마 설정이 저장되었습니다.');
       // 실제로는 여기서 테마를 적용하는 로직이 필요합니다
     } catch (error) {

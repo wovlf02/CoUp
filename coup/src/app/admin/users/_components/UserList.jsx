@@ -1,45 +1,82 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Badge from '@/components/admin/ui/Badge'
+import api from '@/lib/api'
 import styles from './UserList.module.css'
 
-async function getUsers(searchParams) {
-  try {
-    const params = new URLSearchParams()
+export default function UserList({ searchParams }) {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [users, setUsers] = useState([])
+  const [pagination, setPagination] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-    if (searchParams.page) params.set('page', searchParams.page)
-    if (searchParams.search) params.set('search', searchParams.search)
-    if (searchParams.status) params.set('status', searchParams.status)
-    if (searchParams.provider) params.set('provider', searchParams.provider)
-
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?${params.toString()}`,
-      { cache: 'no-store' }
-    )
-
-    if (!res.ok) {
-      throw new Error('Failed to fetch users')
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/sign-in?callbackUrl=/admin/users')
+      return
     }
 
-    return res.json()
-  } catch (error) {
-    console.error('Failed to fetch users:', error)
-    return { success: false, data: null }
+    if (status === 'authenticated') {
+      fetchUsers()
+    }
+  }, [status, searchParams, router])
+
+  async function fetchUsers() {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // 간단한 GET 요청 with query parameters
+      const params = {}
+      if (searchParams?.page) params.page = searchParams.page
+      if (searchParams?.search) params.search = searchParams.search
+      if (searchParams?.status) params.status = searchParams.status
+      if (searchParams?.provider) params.provider = searchParams.provider
+
+      const result = await api.get('/api/admin/users', params)
+
+      if (result.success && result.data) {
+        setUsers(result.data.users)
+        setPagination(result.data.pagination)
+      } else {
+        throw new Error('Invalid response format')
+      }
+    } catch (err) {
+      console.error('Failed to fetch users:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
-export default async function UserList({ searchParams }) {
-  const result = await getUsers(searchParams)
-
-  if (!result.success || !result.data) {
+  if (status === 'loading' || loading) {
     return (
-      <div className={styles.error}>
-        <p>사용자 목록을 불러올 수 없습니다.</p>
+      <div className={styles.container}>
+        <div className={styles.loading}>사용자 목록을 불러오는 중...</div>
       </div>
     )
   }
 
-  const { users, pagination } = result.data
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <p>⚠️ 사용자 목록을 불러올 수 없습니다.</p>
+          <p>{error}</p>
+          <button onClick={fetchUsers} className={styles.retryButton}>
+            다시 시도
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (users.length === 0) {
     return (

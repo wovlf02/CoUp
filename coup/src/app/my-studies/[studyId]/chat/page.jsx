@@ -10,6 +10,7 @@ import { useStudy, useStudyMembers, useMessages, useSendMessage, useDeleteMessag
 import { useSocket } from '@/lib/hooks/useSocket';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import StudyTabs from '@/components/study/StudyTabs';
+import api from '@/lib/api';
 
 export default function MyStudyChatPage({ params }) {
   const router = useRouter();
@@ -231,20 +232,10 @@ export default function MyStudyChatPage({ params }) {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const uploadResponse = await fetch(`/api/studies/${studyId}/files`, {
-        method: 'POST',
-        body: formData,
+      const uploadResult = await api.post(`/api/studies/${studyId}/files`, formData, {
+        headers: {} // FormData는 헤더를 비워야 Content-Type이 자동 설정됨
       });
 
-      console.log('[Chat] Upload response status:', uploadResponse.status);
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        console.error('[Chat] File upload failed:', errorData);
-        throw new Error(errorData.error || '파일 업로드 실패');
-      }
-
-      const uploadResult = await uploadResponse.json();
       console.log('[Chat] Step 1 Complete - Upload result:', uploadResult);
 
       // 2단계: 채팅 메시지 생성 (fileId 포함)
@@ -261,23 +252,8 @@ export default function MyStudyChatPage({ params }) {
       };
       console.log('[Chat] Message payload:', messagePayload);
 
-      const messageResponse = await fetch(`/api/studies/${studyId}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messagePayload),
-      });
+      const messageResult = await api.post(`/api/studies/${studyId}/chat`, messagePayload);
 
-      console.log('[Chat] Message response status:', messageResponse.status);
-
-      if (!messageResponse.ok) {
-        const errorData = await messageResponse.json();
-        console.error('[Chat] Message creation failed:', errorData);
-        throw new Error(errorData.error || '메시지 생성 실패');
-      }
-
-      const messageResult = await messageResponse.json();
       console.log('[Chat] Step 2 Complete - Message result:', messageResult);
 
       // 3단계: Socket.io로 실시간 전송
@@ -406,15 +382,9 @@ export default function MyStudyChatPage({ params }) {
     if (!content.trim() || !editingMessage) return;
 
     try {
-      const response = await fetch(`/api/studies/${studyId}/chat/${editingMessage.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content.trim() })
+      const result = await api.patch(`/api/studies/${studyId}/chat/${editingMessage.id}`, {
+        content: content.trim()
       });
-
-      if (!response.ok) throw new Error('메시지 수정 실패');
-
-      const result = await response.json();
 
       // Socket으로 수정 알림
       if (socket) {

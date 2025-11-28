@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Button from '@/components/admin/ui/Button'
+import api from '@/lib/api'
 import styles from './LogFilters.module.css'
 
 const actionGroups = [
@@ -37,8 +38,7 @@ export default function LogFilters({ onFilterChange }) {
 
   const fetchAdmins = async () => {
     try {
-      const res = await fetch('/api/admin/audit-logs?limit=1')
-      const data = await res.json()
+      const data = await api.get('/api/admin/audit-logs', { limit: 1 })
       if (data.success) {
         setAdmins(data.data.admins || [])
       }

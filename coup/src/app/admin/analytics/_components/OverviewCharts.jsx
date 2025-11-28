@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import Badge from '@/components/admin/ui/Badge'
+import api from '@/lib/api'
 import styles from './OverviewCharts.module.css'
 
 export default function OverviewCharts() {
@@ -17,13 +18,7 @@ export default function OverviewCharts() {
   const fetchOverview = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/analytics/overview')
-
-      if (!response.ok) {
-        throw new Error('통계 조회 실패')
-      }
-
-      const result = await response.json()
+      const result = await api.get('/api/admin/analytics/overview')
       setData(result.data)
     } catch (err) {
       console.error('통계 조회 오류:', err)

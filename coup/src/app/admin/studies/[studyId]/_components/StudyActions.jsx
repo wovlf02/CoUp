@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/admin/ui/Button'
 import Modal from '@/components/admin/ui/Modal'
+import api from '@/lib/api'
 import styles from './StudyActions.module.css'
 
 export default function StudyActions({ studyId, study }) {
@@ -32,17 +33,11 @@ export default function StudyActions({ studyId, study }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/studies/${studyId}/hide`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reason: reason.trim(),
-          notifyOwner,
-          notifyMembers,
-        }),
+      const data = await api.post(`/api/admin/studies/${studyId}/hide`, {
+        reason: reason.trim(),
+        notifyOwner,
+        notifyMembers,
       })
-
-      const data = await res.json()
 
       if (data.success) {
         alert('스터디가 숨김 처리되었습니다')
@@ -66,11 +61,7 @@ export default function StudyActions({ studyId, study }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/studies/${studyId}/hide`, {
-        method: 'DELETE',
-      })
-
-      const data = await res.json()
+      const data = await api.delete(`/api/admin/studies/${studyId}/hide`)
 
       if (data.success) {
         alert('스터디 숨김이 해제되었습니다')
@@ -95,17 +86,11 @@ export default function StudyActions({ studyId, study }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/studies/${studyId}/close`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reason: reason.trim(),
-          notifyOwner,
-          notifyMembers,
-        }),
+      const data = await api.post(`/api/admin/studies/${studyId}/close`, {
+        reason: reason.trim(),
+        notifyOwner,
+        notifyMembers,
       })
-
-      const data = await res.json()
 
       if (data.success) {
         alert('스터디가 종료되었습니다')
@@ -129,11 +114,7 @@ export default function StudyActions({ studyId, study }) {
 
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/studies/${studyId}/close`, {
-        method: 'DELETE',
-      })
-
-      const data = await res.json()
+      const data = await api.delete(`/api/admin/studies/${studyId}/close`)
 
       if (data.success) {
         alert('스터디가 재개되었습니다')
@@ -167,16 +148,9 @@ export default function StudyActions({ studyId, study }) {
 
     setLoading(true)
     try {
-      const res = await fetch(
-        `/api/admin/studies/${studyId}/delete?reason=${encodeURIComponent(
-          reason.trim()
-        )}`,
-        {
-          method: 'DELETE',
-        }
-      )
-
-      const data = await res.json()
+      const data = await api.delete(`/api/admin/studies/${studyId}/delete`, {
+        reason: reason.trim()
+      })
 
       if (data.success) {
         alert('스터디가 삭제되었습니다')

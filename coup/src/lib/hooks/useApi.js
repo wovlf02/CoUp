@@ -2,39 +2,27 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  authApi,
-  userApi,
-  dashboardApi,
-  studyApi,
-  chatApi,
-  noticeApi,
-  fileApi,
-  calendarApi,
-  taskApi,
-  studyTaskApi,
-  notificationApi,
-} from '@/lib/api'
+import api from '@/lib/api'
 
 // ==================== 사용자 ====================
 export function useMe() {
   return useQuery({
     queryKey: ['user', 'me'],
-    queryFn: () => userApi.getMe(),
+    queryFn: () => api.get('/api/auth/me'),
   })
 }
 
 export function useUserStats() {
   return useQuery({
     queryKey: ['user', 'stats'],
-    queryFn: () => userApi.getStats(),
+    queryFn: () => api.get('/api/user/stats'),
   })
 }
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data) => userApi.updateProfile(data),
+    mutationFn: (data) => api.put('/api/user/profile', data),
     onSuccess: () => {
       queryClient.invalidateQueries(['user', 'me'])
     },
@@ -43,22 +31,22 @@ export function useUpdateProfile() {
 
 export function useChangePassword() {
   return useMutation({
-    mutationFn: (data) => userApi.changePassword(data),
+    mutationFn: (data) => api.put('/api/user/password', data),
   })
 }
 
 export function useSearchUsers(query) {
   return useQuery({
     queryKey: ['users', 'search', query],
-    queryFn: () => userApi.search(query),
-    enabled: !!query.q,
+    queryFn: () => api.get('/api/users/search', { q: query }),
+    enabled: !!query,
   })
 }
 
 export function useUser(userId) {
   return useQuery({
     queryKey: ['users', userId],
-    queryFn: () => userApi.getById(userId),
+    queryFn: () => api.get(`/api/users/${userId}`),
     enabled: !!userId,
   })
 }
@@ -67,14 +55,14 @@ export function useUser(userId) {
 export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],
-    queryFn: () => dashboardApi.getData(),
+    queryFn: () => api.get('/api/dashboard'),
   })
 }
 
 export function useMyStudies(params = {}) {
   return useQuery({
     queryKey: ['my-studies', params],
-    queryFn: () => dashboardApi.getMyStudies(params),
+    queryFn: () => api.get('/api/my-studies', params),
   })
 }
 
@@ -82,14 +70,14 @@ export function useMyStudies(params = {}) {
 export function useStudies(params = {}) {
   return useQuery({
     queryKey: ['studies', params],
-    queryFn: () => studyApi.getList(params),
+    queryFn: () => api.get('/api/studies', params),
   })
 }
 
 export function useStudy(id) {
   return useQuery({
     queryKey: ['studies', id],
-    queryFn: () => studyApi.getById(id),
+    queryFn: () => api.get(`/api/studies/${id}`),
     enabled: !!id,
   })
 }
@@ -97,7 +85,7 @@ export function useStudy(id) {
 export function useCreateStudy() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data) => studyApi.create(data),
+    mutationFn: (data) => api.post('/api/studies', data),
     onSuccess: () => {
       queryClient.invalidateQueries(['studies'])
       queryClient.invalidateQueries(['my-studies'])
@@ -108,7 +96,7 @@ export function useCreateStudy() {
 export function useUpdateStudy() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => studyApi.update(id, data),
+    mutationFn: ({ id, data }) => api.put(`/api/studies/${id}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.id])
       queryClient.invalidateQueries(['studies'])
@@ -119,7 +107,7 @@ export function useUpdateStudy() {
 export function useDeleteStudy() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id) => studyApi.delete(id),
+    mutationFn: (id) => api.delete(`/api/studies/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries(['studies'])
       queryClient.invalidateQueries(['my-studies'])
@@ -130,7 +118,7 @@ export function useDeleteStudy() {
 export function useJoinStudy() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => studyApi.join(id, data),
+    mutationFn: ({ id, data }) => api.post(`/api/studies/${id}/join`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.id])
       queryClient.invalidateQueries(['my-studies'])
@@ -141,7 +129,7 @@ export function useJoinStudy() {
 export function useLeaveStudy() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id) => studyApi.leave(id),
+    mutationFn: (id) => api.post(`/api/studies/${id}/leave`),
     onSuccess: () => {
       queryClient.invalidateQueries(['studies'])
       queryClient.invalidateQueries(['my-studies'])
@@ -153,7 +141,7 @@ export function useLeaveStudy() {
 export function useStudyMembers(studyId, params = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'members', params],
-    queryFn: () => studyApi.getMembers(studyId, params),
+    queryFn: () => api.get(`/api/studies/${studyId}/members`, params),
     enabled: !!studyId,
   })
 }
@@ -161,7 +149,7 @@ export function useStudyMembers(studyId, params = {}) {
 export function useJoinRequests(studyId) {
   return useQuery({
     queryKey: ['studies', studyId, 'join-requests'],
-    queryFn: () => studyApi.getJoinRequests(studyId),
+    queryFn: () => api.get(`/api/studies/${studyId}/join-requests`),
     enabled: !!studyId,
   })
 }
@@ -169,7 +157,7 @@ export function useJoinRequests(studyId) {
 export function useApproveMember() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, userId }) => studyApi.approveMember(studyId, userId),
+    mutationFn: ({ studyId, userId }) => api.post(`/api/studies/${studyId}/members/${userId}/approve`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
       queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
@@ -180,7 +168,7 @@ export function useApproveMember() {
 export function useRejectMember() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, userId }) => studyApi.rejectMember(studyId, userId),
+    mutationFn: ({ studyId, userId }) => api.post(`/api/studies/${studyId}/members/${userId}/reject`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
     },
@@ -190,7 +178,7 @@ export function useRejectMember() {
 export function useKickMember() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, userId }) => studyApi.kickMember(studyId, userId),
+    mutationFn: ({ studyId, userId }) => api.post(`/api/studies/${studyId}/members/${userId}/kick`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
     },
@@ -200,7 +188,7 @@ export function useKickMember() {
 export function useChangeMemberRole() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, memberId, role }) => studyApi.changeMemberRole(studyId, memberId, role),
+    mutationFn: ({ studyId, memberId, role }) => api.patch(`/api/studies/${studyId}/members/${memberId}`, { role }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
     },
@@ -210,7 +198,7 @@ export function useChangeMemberRole() {
 export function useApproveJoinRequest() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, requestId }) => studyApi.approveJoinRequest(studyId, requestId),
+    mutationFn: ({ studyId, requestId }) => api.post(`/api/studies/${studyId}/join-requests/${requestId}/approve`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
       queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
@@ -221,7 +209,7 @@ export function useApproveJoinRequest() {
 export function useRejectJoinRequest() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, requestId, reason }) => studyApi.rejectJoinRequest(studyId, requestId, reason),
+    mutationFn: ({ studyId, requestId, reason }) => api.post(`/api/studies/${studyId}/join-requests/${requestId}/reject`, { reason }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
     },
@@ -232,7 +220,7 @@ export function useRejectJoinRequest() {
 export function useMessages(studyId, params = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'messages', params],
-    queryFn: () => chatApi.getMessages(studyId, params),
+    queryFn: () => api.get(`/api/studies/${studyId}/chat`, params),
     enabled: !!studyId,
   })
 }
@@ -240,7 +228,7 @@ export function useMessages(studyId, params = {}) {
 export function useSendMessage() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, data }) => chatApi.sendMessage(studyId, data),
+    mutationFn: ({ studyId, data }) => api.post(`/api/studies/${studyId}/chat`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'messages'])
     },
@@ -250,7 +238,7 @@ export function useSendMessage() {
 export function useDeleteMessage() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, messageId }) => chatApi.deleteMessage(studyId, messageId),
+    mutationFn: ({ studyId, messageId }) => api.delete(`/api/studies/${studyId}/chat/${messageId}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'messages'])
     },
@@ -260,7 +248,7 @@ export function useDeleteMessage() {
 export function useSearchMessages(studyId, params) {
   return useQuery({
     queryKey: ['studies', studyId, 'messages', 'search', params],
-    queryFn: () => chatApi.search(studyId, params),
+    queryFn: () => api.get(`/api/studies/${studyId}/chat/search`, params),
     enabled: !!studyId && !!params.q,
   })
 }
@@ -269,7 +257,7 @@ export function useSearchMessages(studyId, params) {
 export function useNotices(studyId, params = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'notices', params],
-    queryFn: () => noticeApi.getList(studyId, params),
+    queryFn: () => api.get(`/api/studies/${studyId}/notices`, params),
     enabled: !!studyId,
   })
 }
@@ -277,7 +265,7 @@ export function useNotices(studyId, params = {}) {
 export function useNotice(studyId, noticeId) {
   return useQuery({
     queryKey: ['studies', studyId, 'notices', noticeId],
-    queryFn: () => noticeApi.getById(studyId, noticeId),
+    queryFn: () => api.get(`/api/studies/${studyId}/notices/${noticeId}`),
     enabled: !!studyId && !!noticeId,
   })
 }
@@ -285,7 +273,7 @@ export function useNotice(studyId, noticeId) {
 export function useCreateNotice() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, data }) => noticeApi.create(studyId, data),
+    mutationFn: ({ studyId, data }) => api.post(`/api/studies/${studyId}/notices`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
     },
@@ -295,7 +283,7 @@ export function useCreateNotice() {
 export function useUpdateNotice() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, noticeId, data }) => noticeApi.update(studyId, noticeId, data),
+    mutationFn: ({ studyId, noticeId, data }) => api.put(`/api/studies/${studyId}/notices/${noticeId}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
       queryClient.invalidateQueries(['studies', variables.studyId, 'notices', variables.noticeId])
@@ -306,7 +294,7 @@ export function useUpdateNotice() {
 export function useDeleteNotice() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, noticeId }) => noticeApi.delete(studyId, noticeId),
+    mutationFn: ({ studyId, noticeId }) => api.delete(`/api/studies/${studyId}/notices/${noticeId}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
     },
@@ -316,7 +304,7 @@ export function useDeleteNotice() {
 export function useTogglePinNotice() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, noticeId }) => noticeApi.togglePin(studyId, noticeId),
+    mutationFn: ({ studyId, noticeId }) => api.post(`/api/studies/${studyId}/notices/${noticeId}/toggle-pin`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
     },
@@ -327,7 +315,7 @@ export function useTogglePinNotice() {
 export function useFiles(studyId, params = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'files', params],
-    queryFn: () => fileApi.getList(studyId, params),
+    queryFn: () => api.get(`/api/studies/${studyId}/files`, params),
     enabled: !!studyId,
   })
 }
@@ -335,7 +323,7 @@ export function useFiles(studyId, params = {}) {
 export function useUploadFile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, formData }) => fileApi.upload(studyId, formData),
+    mutationFn: ({ studyId, formData }) => api.post(`/api/studies/${studyId}/files`, formData, { headers: {} }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'files'])
     },
@@ -345,7 +333,7 @@ export function useUploadFile() {
 export function useDeleteFile() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, fileId }) => fileApi.delete(studyId, fileId),
+    mutationFn: ({ studyId, fileId }) => api.delete(`/api/studies/${studyId}/files/${fileId}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'files'])
     },
@@ -356,7 +344,7 @@ export function useDeleteFile() {
 export function useEvents(studyId, params = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'calendar', params],
-    queryFn: () => calendarApi.getEvents(studyId, params),
+    queryFn: () => api.get(`/api/studies/${studyId}/calendar`, params),
     enabled: !!studyId,
   })
 }
@@ -364,7 +352,7 @@ export function useEvents(studyId, params = {}) {
 export function useCreateEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, data }) => calendarApi.createEvent(studyId, data),
+    mutationFn: ({ studyId, data }) => api.post(`/api/studies/${studyId}/calendar`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'calendar'])
     },
@@ -374,7 +362,7 @@ export function useCreateEvent() {
 export function useUpdateEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, eventId, data }) => calendarApi.updateEvent(studyId, eventId, data),
+    mutationFn: ({ studyId, eventId, data }) => api.put(`/api/studies/${studyId}/calendar/${eventId}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'calendar'])
     },
@@ -384,7 +372,7 @@ export function useUpdateEvent() {
 export function useDeleteEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, eventId }) => calendarApi.deleteEvent(studyId, eventId),
+    mutationFn: ({ studyId, eventId }) => api.delete(`/api/studies/${studyId}/calendar/${eventId}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'calendar'])
     },
@@ -395,14 +383,14 @@ export function useDeleteEvent() {
 export function useTasks(params = {}) {
   return useQuery({
     queryKey: ['tasks', params],
-    queryFn: () => taskApi.getList(params),
+    queryFn: () => api.get('/api/tasks', params),
   })
 }
 
 export function useTask(id) {
   return useQuery({
     queryKey: ['tasks', id],
-    queryFn: () => taskApi.getById(id),
+    queryFn: () => api.get(`/api/tasks/${id}`),
     enabled: !!id,
   })
 }
@@ -410,7 +398,7 @@ export function useTask(id) {
 export function useCreateTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data) => taskApi.create(data),
+    mutationFn: (data) => api.post('/api/tasks', data),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks'])
     },
@@ -420,7 +408,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => taskApi.update(id, data),
+    mutationFn: ({ id, data }) => api.put(`/api/tasks/${id}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['tasks'])
       queryClient.invalidateQueries(['tasks', variables.id])
@@ -431,7 +419,7 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id) => taskApi.delete(id),
+    mutationFn: (id) => api.delete(`/api/tasks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks'])
     },
@@ -441,7 +429,7 @@ export function useDeleteTask() {
 export function useToggleTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id) => taskApi.toggle(id),
+    mutationFn: (id) => api.post(`/api/tasks/${id}/toggle`),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks'])
     },
@@ -452,7 +440,7 @@ export function useToggleTask() {
 export function useStudyTasks(studyId, params = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'tasks', params],
-    queryFn: () => studyTaskApi.getList(studyId, params),
+    queryFn: () => api.get(`/api/studies/${studyId}/tasks`, params),
     enabled: !!studyId,
   })
 }
@@ -460,7 +448,7 @@ export function useStudyTasks(studyId, params = {}) {
 export function useCreateStudyTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, data }) => studyTaskApi.create(studyId, data),
+    mutationFn: ({ studyId, data }) => api.post(`/api/studies/${studyId}/tasks`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'tasks'])
     },
@@ -470,7 +458,7 @@ export function useCreateStudyTask() {
 export function useUpdateStudyTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, taskId, data }) => studyTaskApi.update(studyId, taskId, data),
+    mutationFn: ({ studyId, taskId, data }) => api.put(`/api/studies/${studyId}/tasks/${taskId}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'tasks'])
     },
@@ -480,7 +468,7 @@ export function useUpdateStudyTask() {
 export function useDeleteStudyTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, taskId }) => studyTaskApi.delete(studyId, taskId),
+    mutationFn: ({ studyId, taskId }) => api.delete(`/api/studies/${studyId}/tasks/${taskId}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'tasks'])
     },
@@ -490,7 +478,7 @@ export function useDeleteStudyTask() {
 export function useTaskStats() {
   return useQuery({
     queryKey: ['tasks', 'stats'],
-    queryFn: () => taskApi.getStats(),
+    queryFn: () => api.get('/api/tasks/stats'),
   })
 }
 
@@ -498,14 +486,14 @@ export function useTaskStats() {
 export function useNotifications(params = {}) {
   return useQuery({
     queryKey: ['notifications', params],
-    queryFn: () => notificationApi.getList(params),
+    queryFn: () => api.get('/api/notifications', params),
   })
 }
 
 export function useMarkNotificationAsRead() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id) => notificationApi.markAsRead(id),
+    mutationFn: (id) => api.post(`/api/notifications/${id}/read`),
     onSuccess: () => {
       queryClient.invalidateQueries(['notifications'])
     },
@@ -515,10 +503,9 @@ export function useMarkNotificationAsRead() {
 export function useMarkAllNotificationsAsRead() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () => notificationApi.markAllAsRead(),
+    mutationFn: () => api.post('/api/notifications/mark-all-read'),
     onSuccess: () => {
       queryClient.invalidateQueries(['notifications'])
     },
   })
 }
-

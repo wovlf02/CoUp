@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Badge from '@/components/admin/ui/Badge'
 import Modal from '@/components/admin/ui/Modal'
+import api from '@/lib/api'
 import styles from './LogTable.module.css'
 
 const actionLabels = {
@@ -54,15 +55,14 @@ export default function LogTable() {
     try {
       setLoading(true)
 
-      const params = new URLSearchParams({ page, limit: 20 })
+      const params = { page, limit: 20 }
       Object.keys(filters).forEach(key => {
         if (filters[key]) {
-          params.append(key, filters[key])
+          params[key] = filters[key]
         }
       })
 
-      const res = await fetch(`/api/admin/audit-logs?${params.toString()}`)
-      const data = await res.json()
+      const data = await api.get('/api/admin/audit-logs', params)
 
       if (data.success) {
         setLogs(data.data.logs)

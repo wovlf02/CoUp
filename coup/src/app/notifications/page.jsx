@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { formatDateTimeKST } from '@/utils/time';
+import api from '@/lib/api';
 import styles from './page.module.css';
 
 export default function NotificationsPage() {
@@ -21,12 +22,11 @@ export default function NotificationsPage() {
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filter === 'unread') params.append('read', 'false');
-      if (filter === 'read') params.append('read', 'true');
+      const params = {};
+      if (filter === 'unread') params.read = 'false';
+      if (filter === 'read') params.read = 'true';
 
-      const response = await fetch(`/api/notifications?${params.toString()}`);
-      const data = await response.json();
+      const data = await api.get('/api/notifications', params);
 
       if (data.success) {
         setNotifications(data.data);
@@ -40,15 +40,10 @@ export default function NotificationsPage() {
 
   const handleMarkAsRead = async (id) => {
     try {
-      const response = await fetch(`/api/notifications/${id}/read`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        setNotifications(notifications.map(n =>
-          n.id === id ? { ...n, read: true } : n
-        ));
-      }
+      await api.post(`/api/notifications/${id}/read`);
+      setNotifications(notifications.map(n =>
+        n.id === id ? { ...n, read: true } : n
+      ));
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error);
     }
@@ -56,13 +51,8 @@ export default function NotificationsPage() {
 
   const handleMarkAllRead = async () => {
     try {
-      const response = await fetch('/api/notifications/mark-all-read', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        setNotifications(notifications.map(n => ({ ...n, read: true })));
-      }
+      await api.post('/api/notifications/mark-all-read');
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
     } catch (error) {
       console.error('전체 읽음 처리 실패:', error);
     }
@@ -72,13 +62,8 @@ export default function NotificationsPage() {
     if (!confirm('이 알림을 삭제하시겠습니까?')) return;
 
     try {
-      const response = await fetch(`/api/notifications/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setNotifications(notifications.filter(n => n.id !== id));
-      }
+      await api.delete(`/api/notifications/${id}`);
+      setNotifications(notifications.filter(n => n.id !== id));
     } catch (error) {
       console.error('알림 삭제 실패:', error);
     }

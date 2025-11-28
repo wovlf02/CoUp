@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signIn, signOut, useSession } from 'next-auth/react'
+import api from '@/lib/api'
 import styles from '@/styles/auth/sign-in.module.css'
 
 export default function SignInPage() {
@@ -29,8 +30,7 @@ export default function SignInPage() {
 
       console.log('🔍 이미 로그인된 사용자, 세션 검증 중:', session.user.id)
 
-      fetch('/api/auth/validate-session', { credentials: 'include' })
-        .then(r => r.json())
+      api.get('/api/auth/validate-session')
         .then(async data => {
           hasValidatedRef.current = true
 
@@ -39,23 +39,14 @@ export default function SignInPage() {
             console.log('✅ Valid session, 관리자 권한 확인 중...')
 
             try {
-              const adminCheckRes = await fetch('/api/auth/me', {
-                credentials: 'include',
-              })
+              const userData = await api.get('/api/auth/me')
+              console.log('👤 사용자 정보:', userData)
 
-              if (adminCheckRes.ok) {
-                const userData = await adminCheckRes.json()
-                console.log('👤 사용자 정보:', userData)
-
-                if (userData.adminRole && !userData.adminRole.isExpired) {
-                  console.log('🔐 관리자 확인, /admin으로 이동')
-                  router.push('/admin')
-                } else {
-                  console.log('👤 일반 사용자, /dashboard로 이동')
-                  router.push('/dashboard')
-                }
+              if (userData.adminRole && !userData.adminRole.isExpired) {
+                console.log('🔐 관리자 확인, /admin으로 이동')
+                router.push('/admin')
               } else {
-                console.log('⚠️ 사용자 정보 조회 실패, /dashboard로 이동')
+                console.log('👤 일반 사용자, /dashboard로 이동')
                 router.push('/dashboard')
               }
             } catch (err) {
@@ -160,36 +151,22 @@ export default function SignInPage() {
         console.log('✅ 로그인 성공, 세션 정보 확인 중...')
 
         // 세션 정보 가져오기
-        const sessionRes = await fetch('/api/auth/session')
-        const sessionData = await sessionRes.json()
+        const sessionData = await api.get('/api/auth/session')
 
         console.log('📋 세션 데이터:', sessionData)
 
         if (sessionData?.user) {
-          // JWT 토큰에서 isAdmin 확인
-          // NextAuth 세션에는 jwt 콜백에서 설정한 정보가 포함됨
-
           // 관리자 권한 확인을 위한 API 호출
           try {
-            const adminCheckRes = await fetch('/api/auth/me', {
-              credentials: 'include',
-            })
+            const userData = await api.get('/api/auth/me')
+            console.log('👤 사용자 정보:', userData)
 
-            if (adminCheckRes.ok) {
-              const userData = await adminCheckRes.json()
-              console.log('👤 사용자 정보:', userData)
-
-              // AdminRole이 있으면 관리자
-              if (userData.adminRole) {
-                console.log('🔐 관리자 확인, /admin으로 이동')
-                router.push('/admin')
-              } else {
-                console.log('👤 일반 사용자, /dashboard로 이동')
-                router.push('/dashboard')
-              }
+            // AdminRole이 있으면 관리자
+            if (userData.adminRole) {
+              console.log('🔐 관리자 확인, /admin으로 이동')
+              router.push('/admin')
             } else {
-              // API 실패 시 기본 대시보드로
-              console.log('⚠️ 사용자 정보 조회 실패, /dashboard로 이동')
+              console.log('👤 일반 사용자, /dashboard로 이동')
               router.push('/dashboard')
             }
           } catch (err) {
