@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { Card, CardHeader, CardContent } from '@/components/admin/ui/Card'
 import Badge from '@/components/admin/ui/Badge'
 import Button from '@/components/admin/ui/Button'
-import { Modal, ConfirmModal } from '@/components/admin/ui/Modal'
+import Modal, { ConfirmModal } from '@/components/admin/ui/Modal/Modal'
 import api from '@/lib/api'
 import styles from './page.module.css'
 
@@ -15,13 +15,19 @@ export default function UserDetailPage() {
   const { status } = useSession()
   const router = useRouter()
   const params = useParams()
-  const userId = params.id
-
+  const [userId, setUserId] = useState(null)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+
+  // params에서 id 추출
+  useEffect(() => {
+    if (params?.id) {
+      setUserId(params.id)
+    }
+  }, [params])
 
   const fetchUser = async () => {
     try {

@@ -148,4 +148,3 @@ ConfirmModal.propTypes = {
   cancelText: PropTypes.string,
   variant: PropTypes.string,
 }
-
