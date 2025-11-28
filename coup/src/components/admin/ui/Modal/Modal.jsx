@@ -3,7 +3,6 @@
 import { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import Button from '@/components/admin/ui/Button'
-import clsx from '@/utils/clsx'
 import styles from './Modal.module.css'
 
 /**
@@ -18,7 +17,7 @@ export default function Modal({
   footer,
   size = 'md',
   closable = true,
-  className,
+  className = '',
 }) {
   // ESC 키로 닫기
   useEffect(() => {
@@ -49,11 +48,7 @@ export default function Modal({
 
   if (!isOpen) return null
 
-  const modalClass = clsx(
-    styles.modal,
-    styles[`modal--${size}`],
-    className
-  )
+  const modalClass = `${styles.modal} ${styles[`modal--${size}`]} ${className}`.trim()
 
   return (
     <>

@@ -155,8 +155,8 @@
 /* Background Colors */
 :root {
   --bg-primary: #ffffff;
-  --bg-secondary: var(--gray-50);
-  --bg-tertiary: var(--gray-100);
+  --bg-secondary: #faf8ff; /* 파스텔 퍼플 배경 */
+  --bg-tertiary: #f0f9ff; /* 파스텔 블루 배경 */
   --bg-elevated: #ffffff;
   --bg-overlay: rgba(0, 0, 0, 0.5);
 }
