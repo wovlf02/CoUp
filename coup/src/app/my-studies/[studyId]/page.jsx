@@ -4,7 +4,7 @@
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useStudy } from '@/lib/hooks/useApi';
+import { useStudy, useNotices } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import StudyTabs from '@/components/study/StudyTabs';
 import { formatDateTimeKST } from '@/utils/time';
@@ -20,13 +20,19 @@ export default function MyStudyDashboardPage({ params }) {
 
   // 추가 데이터는 향후 API 구현 시 활성화
   // 현재는 빈 배열로 처리하여 오류 방지
-  const recentNotices = [];
+  // const recentNotices = []; -> useNotices 훅 사용으로 대체
+
+  // 최근 공지사항 가져오기
+  const { data: noticesData, isLoading: isNoticesLoading } = useNotices(studyId, { limit: 3 });
+  const recentNotices = noticesData?.data || [];
+
   const recentFiles = [];
   const upcomingEvents = [];
   const urgentTasks = [];
 
   // 로딩 상태
-  if (isLoading) {
+  if (isLoading || isNoticesLoading) {
+
     return (
       <div className={styles.container}>
         <div className={styles.loading}>스터디 정보를 불러오는 중...</div>
@@ -157,14 +163,14 @@ export default function MyStudyDashboardPage({ params }) {
                   <p className={styles.emptyText}>최근 공지가 없습니다</p>
                 ) : (
                   recentNotices.map((notice) => (
-                    <div key={notice.id} className={styles.listItem}>
+                    <Link href={`/my-studies/${studyId}/announcements/${notice.id}`} key={notice.id} className={styles.listItemLink}>
                       <div className={styles.itemContent}>
                         <span className={styles.itemTitle}>{notice.title}</span>
                         <span className={styles.itemMeta}>
                           {notice.author?.name || '작성자'} · {formatDateTimeKST(notice.createdAt)}
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   ))
                 )}
               </div>

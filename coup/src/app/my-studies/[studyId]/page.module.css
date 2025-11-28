@@ -330,19 +330,25 @@
 }
 
 .listItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 8px;
-  transition: all 0.2s;
+  /* This is now handled by .listItemLink */
+  /* If .listItem still needs some styling for non-link items, keep it. */
 }
 
-.listItem:hover {
+.listItemLink {
+  display: block; /* Make the entire area clickable */
+  text-decoration: none; /* Remove underline */
+  color: inherit; /* Inherit text color */
+  transition: all 0.2s ease;
+  padding: 12px; /* Match existing .listItem padding */
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+}
+
+.listItemLink:hover {
   background: rgba(255, 255, 255, 0.9);
   transform: translateX(4px);
 }
+
 
 .itemContent {
   flex: 1;

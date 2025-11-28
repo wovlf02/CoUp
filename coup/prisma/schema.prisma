@@ -202,11 +202,30 @@ model Notice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  attachments NoticeFile[] // 공지사항에 첨부된 파일들
+
   study  Study @relation(fields: [studyId], references: [id], onDelete: Cascade)
   author User  @relation(fields: [authorId], references: [id])
 
   @@index([studyId, isPinned, createdAt])
   @@index([authorId])
+}
+
+// ============================================
+// 공지사항 파일 (NoticeFile)
+// ============================================
+model NoticeFile {
+  id        String   @id @default(cuid())
+  noticeId  String
+  fileId    String
+  createdAt DateTime @default(now())
+
+  notice Notice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([noticeId, fileId]) // A file can only be attached once to a specific notice
+  @@index([noticeId])
+  @@index([fileId])
 }
 
 // ============================================
@@ -229,6 +248,7 @@ model File {
   study    Study     @relation(fields: [studyId], references: [id], onDelete: Cascade)
   uploader User      @relation("FileUploader", fields: [uploaderId], references: [id])
   messages Message[]
+  noticeFiles NoticeFile[]
 
   @@index([studyId, folderId])
   @@index([uploaderId])
