@@ -3,6 +3,7 @@
 /* CSS 변수 및 유틸리티 임포트 */
 @import '../styles/variables.css';
 @import '../styles/utilities.css';
+@import '../styles/admin-tokens.css';
 
 /* 기본 리셋 */
 *,

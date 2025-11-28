@@ -1,345 +1,232 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { PrismaClient } from '@prisma/client'
-import { authOptions } from '@/lib/auth'
+import Table from '@/components/admin/ui/Table'
 import Badge from '@/components/admin/ui/Badge'
+import Button from '@/components/admin/ui/Button'
+import { Card } from '@/components/admin/ui/Card'
+import api from '@/lib/api'
 import styles from './ReportList.module.css'
 
-const prisma = new PrismaClient()
+export default function ReportList() {
+  const { status } = useSession()
+  const router = useRouter()
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedRows, setSelectedRows] = useState([])
 
-// 신고 목록 가져오기 (직접 DB 조회)
-async function getReports(searchParams) {
-  // 세션 확인
-  const session = await getServerSession(authOptions)
-  if (!session?.user) {
-    redirect('/sign-in?callbackUrl=/admin/reports')
-  }
+  const fetchReports = async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-  // 관리자 권한 확인
-  const adminRole = await prisma.adminRole.findUnique({
-    where: { userId: session.user.id },
-  })
+      const result = await api.get('/api/admin/reports')
 
-  if (!adminRole) {
-    redirect('/dashboard')
-  }
-
-  // 페이지네이션
-  const page = parseInt(searchParams.page || '1')
-  const limit = 20
-  const skip = (page - 1) * limit
-
-  // 필터
-  const where = {}
-
-  if (searchParams.search) {
-    where.OR = [
-      { id: { contains: searchParams.search } },
-      { reason: { contains: searchParams.search, mode: 'insensitive' } },
-    ]
-  }
-
-  if (searchParams.status && searchParams.status !== 'all') {
-    where.status = searchParams.status
-  }
-
-  if (searchParams.type && searchParams.type !== 'all') {
-    where.type = searchParams.type
-  }
-
-  if (searchParams.priority && searchParams.priority !== 'all') {
-    where.priority = searchParams.priority
-  }
-
-  if (searchParams.targetType && searchParams.targetType !== 'all') {
-    where.targetType = searchParams.targetType
-  }
-
-  if (searchParams.assignedTo) {
-    where.assignedTo = searchParams.assignedTo
-  }
-
-  try {
-    const [reports, total, pendingCount, inProgressCount, resolvedCount] = await Promise.all([
-      prisma.report.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          reporter: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-            },
-          },
-        },
-      }),
-      prisma.report.count({ where }),
-      prisma.report.count({ where: { ...where, status: 'PENDING' } }),
-      prisma.report.count({ where: { ...where, status: 'IN_PROGRESS' } }),
-      prisma.report.count({ where: { ...where, status: 'RESOLVED' } }),
-    ])
-
-    return {
-      reports,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-      stats: {
-        total,
-        pending: pendingCount,
-        in_progress: inProgressCount,
-        resolved: resolvedCount,
-      },
+      if (result.success && result.data) {
+        setReports(result.data.reports || [])
+      } else {
+        setError('Invalid response format')
+      }
+    } catch (err) {
+      console.error('Failed to fetch reports:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-  } catch (error) {
-    console.error('❌ [ReportList] Database error:', error)
-    throw new Error('신고 목록을 불러오는데 실패했습니다.')
-  } finally {
-    await prisma.$disconnect()
   }
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/sign-in?callbackUrl=/admin/reports')
+      return
+    }
+
+    if (status === 'authenticated') {
+      fetchReports()
+    }
+  }, [status, router])
+
+  const columns = [
+    {
+      key: 'type',
+      label: '유형',
+      sortable: true,
+      width: '120px',
+      render: (type) => (
+        <Badge variant="default" style={{
+          backgroundColor: getTypeColor(type).bg,
+          color: getTypeColor(type).fg,
+        }}>
+          {getTypeLabel(type)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'target',
+      label: '대상',
+      sortable: true,
+      width: '200px',
+      render: (_, report) => (
+        <div className={styles.targetCell}>
+          <div className={styles.targetTitle}>
+            {report.targetType === 'USER' ? report.targetUser?.name : report.targetStudy?.title}
+          </div>
+          <div className={styles.targetType}>{report.targetType === 'USER' ? '사용자' : '스터디'}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'reporter',
+      label: '신고자',
+      sortable: true,
+      width: '150px',
+      render: (_, report) => (
+        <div className={styles.reporterName}>
+          {report.reporter?.name || '알 수 없음'}
+        </div>
+      ),
+    },
+    {
+      key: 'reason',
+      label: '사유',
+      width: '250px',
+      render: (reason) => (
+        <div className={styles.reason}>{reason}</div>
+      ),
+    },
+    {
+      key: 'status',
+      label: '상태',
+      sortable: true,
+      width: '100px',
+      render: (status) => (
+        <Badge variant={getStatusVariant(status)}>
+          {getStatusLabel(status)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'createdAt',
+      label: '신고일',
+      sortable: true,
+      width: '120px',
+      render: (date) => new Date(date).toLocaleDateString('ko-KR'),
+    },
+    {
+      key: 'actions',
+      label: '액션',
+      width: '120px',
+      render: (_, report) => (
+        <Link href={`/admin/reports/${report.id}`}>
+          <Button size="sm" variant="outline">처리하기</Button>
+        </Link>
+      ),
+    },
+  ]
+
+  if (status === 'loading') {
+    return (
+      <Card>
+        <Table columns={columns} data={[]} loading />
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <div className={styles.error}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
+            <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+          </svg>
+          <p>⚠️ 신고 목록을 불러올 수 없습니다.</p>
+          <p>{error}</p>
+          <Button onClick={fetchReports} variant="primary">다시 시도</Button>
+        </div>
+      </Card>
+    )
+  }
+
+  return (
+    <div className={styles.container}>
+      {selectedRows.length > 0 && (
+        <div className={styles.bulkActions}>
+          <span>{selectedRows.length}개 선택됨</span>
+          <Button size="sm" variant="outline" onClick={() => setSelectedRows([])}>
+            선택 해제
+          </Button>
+          <Button size="sm" variant="primary">일괄 승인</Button>
+          <Button size="sm" variant="danger">일괄 거부</Button>
+        </div>
+      )}
+
+      <Card>
+        <Table
+          columns={columns}
+          data={reports}
+          sortable
+          selectable
+          selectedRows={selectedRows}
+          onSelectRows={setSelectedRows}
+          loading={loading}
+          stickyHeader
+          emptyState={
+            <div className={styles.empty}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p>신고가 없습니다</p>
+            </div>
+          }
+        />
+      </Card>
+    </div>
+  )
 }
 
-// 우선순위 색상 매핑
-const PRIORITY_COLORS = {
-  LOW: 'default',
-  MEDIUM: 'primary',
-  HIGH: 'warning',
-  URGENT: 'danger',
+function getStatusVariant(status) {
+  const variants = {
+    PENDING: 'warning',
+    APPROVED: 'success',
+    REJECTED: 'danger',
+    IN_REVIEW: 'primary',
+  }
+  return variants[status] || 'default'
 }
 
-// 상태 색상 매핑
-const STATUS_COLORS = {
-  PENDING: 'warning',
-  IN_PROGRESS: 'primary',
-  RESOLVED: 'success',
-  REJECTED: 'default',
+function getStatusLabel(status) {
+  const labels = {
+    PENDING: '대기중',
+    APPROVED: '승인됨',
+    REJECTED: '거부됨',
+    IN_REVIEW: '검토중',
+  }
+  return labels[status] || status
 }
 
-// 신고 유형 아이콘
-const TYPE_ICONS = {
-  SPAM: '🚫',
-  HARASSMENT: '⚠️',
-  INAPPROPRIATE: '🔞',
-  COPYRIGHT: '©️',
-  OTHER: '❓',
-}
-
-// 날짜 포맷
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now - date
-
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
-  if (minutes < 1) return '방금 전'
-  if (minutes < 60) return `${minutes}분 전`
-  if (hours < 24) return `${hours}시간 전`
-  if (days < 7) return `${days}일 전`
-
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-// 신고 유형 한글 변환
 function getTypeLabel(type) {
   const labels = {
     SPAM: '스팸',
     HARASSMENT: '괴롭힘',
-    INAPPROPRIATE: '부적절한 콘텐츠',
-    COPYRIGHT: '저작권 침해',
+    INAPPROPRIATE: '부적절',
+    COPYRIGHT: '저작권',
     OTHER: '기타',
   }
   return labels[type] || type
 }
 
-// 상태 한글 변환
-function getStatusLabel(status) {
-  const labels = {
-    PENDING: '대기중',
-    IN_PROGRESS: '처리중',
-    RESOLVED: '해결됨',
-    REJECTED: '거부됨',
+function getTypeColor(type) {
+  const colors = {
+    SPAM: { bg: 'var(--pastel-orange-100)', fg: 'var(--pastel-orange-600)' },
+    HARASSMENT: { bg: 'var(--pastel-pink-100)', fg: 'var(--pastel-pink-600)' },
+    INAPPROPRIATE: { bg: 'var(--danger-100)', fg: 'var(--danger-600)' },
+    COPYRIGHT: { bg: 'var(--pastel-purple-100)', fg: 'var(--pastel-purple-600)' },
+    OTHER: { bg: 'var(--pastel-indigo-100)', fg: 'var(--pastel-indigo-600)' },
   }
-  return labels[status] || status
-}
-
-// 우선순위 한글 변환
-function getPriorityLabel(priority) {
-  const labels = {
-    LOW: '낮음',
-    MEDIUM: '보통',
-    HIGH: '높음',
-    URGENT: '긴급',
-  }
-  return labels[priority] || priority
-}
-
-// 대상 유형 한글 변환
-function getTargetTypeLabel(targetType) {
-  const labels = {
-    USER: '사용자',
-    STUDY: '스터디',
-    MESSAGE: '메시지',
-  }
-  return labels[targetType] || targetType
-}
-
-export default async function ReportList({ searchParams }) {
-  // Next.js 15+에서 searchParams는 Promise
-  const params = await searchParams
-  const data = await getReports(params)
-  const { reports, pagination, stats } = data
-
-  return (
-    <div className={styles.container}>
-      {/* 통계 카드 */}
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: '#e0e7ff' }}>📊</div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{stats.total}</div>
-            <div className={styles.statLabel}>전체 신고</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: '#fef3c7' }}>⏰</div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{stats.pending}</div>
-            <div className={styles.statLabel}>대기중</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: '#dbeafe' }}>🔄</div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{stats.in_progress}</div>
-            <div className={styles.statLabel}>처리중</div>
-          </div>
-        </div>
-
-        <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: '#dcfce7' }}>✅</div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{stats.resolved}</div>
-            <div className={styles.statLabel}>해결됨</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 신고 목록 */}
-      {reports.length === 0 ? (
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>📋</div>
-          <div className={styles.emptyText}>신고가 없습니다.</div>
-        </div>
-      ) : (
-        <>
-          <div className={styles.reportGrid}>
-            {reports.map(report => (
-              <Link
-                key={report.id}
-                href={`/admin/reports/${report.id}`}
-                className={styles.reportCard}
-              >
-                {/* 헤더 */}
-                <div className={styles.cardHeader}>
-                  <div className={styles.headerLeft}>
-                    <span className={styles.typeIcon}>
-                      {TYPE_ICONS[report.type]}
-                    </span>
-                    <span className={styles.typeLabel}>
-                      {getTypeLabel(report.type)}
-                    </span>
-                  </div>
-                  <Badge variant={PRIORITY_COLORS[report.priority]}>
-                    {getPriorityLabel(report.priority)}
-                  </Badge>
-                </div>
-
-                {/* 내용 */}
-                <div className={styles.cardBody}>
-                  <div className={styles.reason}>
-                    {report.reason.length > 100
-                      ? `${report.reason.substring(0, 100)}...`
-                      : report.reason}
-                  </div>
-
-                  <div className={styles.details}>
-                    <div className={styles.detailItem}>
-                      <span className={styles.detailLabel}>대상:</span>
-                      <span className={styles.detailValue}>
-                        {getTargetTypeLabel(report.targetType)} - {report.targetName || report.targetId}
-                      </span>
-                    </div>
-                    <div className={styles.detailItem}>
-                      <span className={styles.detailLabel}>신고자:</span>
-                      <span className={styles.detailValue}>
-                        {report.reporter.name || report.reporter.email}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 푸터 */}
-                <div className={styles.cardFooter}>
-                  <div className={styles.footerLeft}>
-                    <Badge variant={STATUS_COLORS[report.status]}>
-                      {getStatusLabel(report.status)}
-                    </Badge>
-                    <span className={styles.timestamp}>
-                      {formatDate(report.createdAt)}
-                    </span>
-                  </div>
-                  {report.processedBy && (
-                    <span className={styles.assigned}>
-                      👤 담당자 배정됨
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* 페이지네이션 */}
-          {pagination.totalPages > 1 && (
-            <div className={styles.pagination}>
-              <Link
-                href={`?${new URLSearchParams({ ...searchParams, page: (pagination.page - 1).toString() }).toString()}`}
-                className={`${styles.pageButton} ${pagination.page === 1 ? styles.disabled : ''}`}
-              >
-                이전
-              </Link>
-
-              <div className={styles.pageInfo}>
-                {pagination.page} / {pagination.totalPages}
-              </div>
-
-              <Link
-                href={`?${new URLSearchParams({ ...searchParams, page: (pagination.page + 1).toString() }).toString()}`}
-                className={`${styles.pageButton} ${pagination.page === pagination.totalPages ? styles.disabled : ''}`}
-              >
-                다음
-              </Link>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
+  return colors[type] || { bg: 'var(--gray-100)', fg: 'var(--gray-600)' }
 }
 

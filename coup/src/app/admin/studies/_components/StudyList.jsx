@@ -1,338 +1,229 @@
-/**
- * 스터디 목록 컴포넌트
- * Server Component - 직접 DB 조회
- */
+'use client'
 
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { PrismaClient } from '@prisma/client'
-import { authOptions } from '@/lib/auth'
+import Image from 'next/image'
+import Table from '@/components/admin/ui/Table'
 import Badge from '@/components/admin/ui/Badge'
-import StudyFilters from './StudyFilters'
+import Button from '@/components/admin/ui/Button'
+import { Card } from '@/components/admin/ui/Card'
+import api from '@/lib/api'
 import styles from './StudyList.module.css'
 
-const prisma = new PrismaClient()
+export default function StudyList() {
+  const { status } = useSession()
+  const router = useRouter()
+  const [studies, setStudies] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedRows, setSelectedRows] = useState([])
 
-// 스터디 데이터 가져오기 (직접 DB 조회)
-async function getStudies(searchParams) {
-  // 세션 확인
-  const session = await getServerSession(authOptions)
-  if (!session?.user) {
-    redirect('/sign-in?callbackUrl=/admin/studies')
-  }
+  const fetchStudies = async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-  // 관리자 권한 확인
-  const adminRole = await prisma.adminRole.findUnique({
-    where: { userId: session.user.id },
-  })
+      const result = await api.get('/api/admin/studies')
 
-  if (!adminRole) {
-    redirect('/dashboard')
-  }
-
-  // 페이지네이션
-  const page = parseInt(searchParams.page || '1')
-  const limit = 20
-  const skip = (page - 1) * limit
-
-  // 필터
-  const search = searchParams.search
-  const category = searchParams.category
-  const isPublic = searchParams.isPublic
-  const isRecruiting = searchParams.isRecruiting
-  const sortBy = searchParams.sortBy || 'createdAt'
-  const sortOrder = searchParams.sortOrder || 'desc'
-
-  // Where 조건 구성
-  const where = {}
-
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
-    ]
-  }
-
-  if (category && category !== 'all') {
-    where.category = category
-  }
-
-  if (isPublic !== null && isPublic !== 'all') {
-    where.isPublic = isPublic === 'true'
-  }
-
-  if (isRecruiting !== null && isRecruiting !== 'all') {
-    where.isRecruiting = isRecruiting === 'true'
-  }
-
-  try {
-    // 스터디 조회
-    const [studies, total] = await Promise.all([
-      prisma.study.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { [sortBy]: sortOrder },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-              status: true,
-            },
-          },
-          _count: {
-            select: {
-              members: { where: { status: 'ACTIVE' } },
-              messages: true,
-              files: true,
-              notices: true,
-            },
-          },
-        },
-      }),
-      prisma.study.count({ where }),
-    ])
-
-    // 통계
-    const [publicCount, recruitingCount] = await Promise.all([
-      prisma.study.count({ where: { ...where, isPublic: true } }),
-      prisma.study.count({ where: { ...where, isRecruiting: true } }),
-    ])
-
-    return {
-      studies,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1,
-      },
-      stats: {
-        total,
-        public: publicCount,
-        recruiting: recruitingCount,
-      },
+      if (result.success && result.data) {
+        setStudies(result.data.studies || [])
+      } else {
+        setError('Invalid response format')
+      }
+    } catch (err) {
+      console.error('Failed to fetch studies:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-  } catch (error) {
-    console.error('❌ [StudyList] Database error:', error)
-    throw new Error('스터디 목록을 불러오는데 실패했습니다')
-  } finally {
-    await prisma.$disconnect()
   }
-}
 
-export default async function StudyList({ searchParams = {} }) {
-  // Next.js 15+에서 searchParams는 Promise
-  const params = await searchParams
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/sign-in?callbackUrl=/admin/studies')
+      return
+    }
 
-  let data
-  try {
-    data = await getStudies(params)
-  } catch (error) {
+    if (status === 'authenticated') {
+      fetchStudies()
+    }
+  }, [status, router])
+
+  const columns = [
+    {
+      key: 'title',
+      label: '스터디명',
+      sortable: true,
+      width: '300px',
+      render: (title, study) => (
+        <div className={styles.studyCell}>
+          {study.thumbnail ? (
+            <Image
+              src={study.thumbnail}
+              alt={title}
+              width={56}
+              height={56}
+              className={styles.thumbnail}
+            />
+          ) : (
+            <div className={styles.thumbnailPlaceholder}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M6 3.75A2.75 2.75 0 018.75 1h2.5A2.75 2.75 0 0114 3.75v.443c.572.055 1.14.122 1.706.2C17.053 4.582 18 5.75 18 7.07v3.469c0 1.126-.694 2.191-1.83 2.54-1.952.599-4.024.921-6.17.921s-4.219-.322-6.17-.921C2.694 12.73 2 11.665 2 10.539V7.07c0-1.321.947-2.489 2.294-2.676A41.047 41.047 0 016 4.193V3.75zm6.5 0v.325a41.622 41.622 0 00-5 0V3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25zM10 10a1 1 0 00-1 1v.01a1 1 0 001 1h.01a1 1 0 001-1V11a1 1 0 00-1-1H10z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+          <div className={styles.studyInfo}>
+            <div className={styles.studyTitle}>{title}</div>
+            <div className={styles.studyOwner}>{study.owner?.name || '알 수 없음'}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      label: '카테고리',
+      sortable: true,
+      width: '120px',
+      render: (category) => (
+        <Badge variant="default" style={{
+          backgroundColor: getCategoryColor(category).bg,
+          color: getCategoryColor(category).fg,
+        }}>
+          {category}
+        </Badge>
+      ),
+    },
+    {
+      key: 'status',
+      label: '상태',
+      sortable: true,
+      width: '100px',
+      render: (status) => (
+        <Badge variant={getStatusVariant(status)}>
+          {getStatusLabel(status)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'members',
+      label: '인원',
+      sortable: true,
+      width: '100px',
+      render: (_, study) => (
+        <span className={styles.memberCount}>
+          {study.currentMembers}/{study.maxMembers}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      label: '생성일',
+      sortable: true,
+      width: '120px',
+      render: (date) => new Date(date).toLocaleDateString('ko-KR'),
+    },
+    {
+      key: 'actions',
+      label: '액션',
+      width: '120px',
+      render: (_, study) => (
+        <Link href={`/admin/studies/${study.id}`}>
+          <Button size="sm" variant="outline">상세보기</Button>
+        </Link>
+      ),
+    },
+  ]
+
+  if (status === 'loading') {
     return (
-      <div className={styles.error}>
-        <p>스터디 목록을 불러오는데 실패했습니다.</p>
-        <p className={styles.errorDetail}>{error.message}</p>
-      </div>
+      <Card>
+        <Table columns={columns} data={[]} loading />
+      </Card>
     )
   }
 
-  const { studies, pagination, stats } = data
-  const currentPage = pagination.page
+  if (error) {
+    return (
+      <Card>
+        <div className={styles.error}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
+            <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+          </svg>
+          <p>⚠️ 스터디 목록을 불러올 수 없습니다.</p>
+          <p>{error}</p>
+          <Button onClick={fetchStudies} variant="primary">다시 시도</Button>
+        </div>
+      </Card>
+    )
+  }
 
   return (
-    <div>
-      {/* 필터 */}
-      <StudyFilters />
-
-      {/* 통계 */}
-      <div className={styles.stats}>
-        <div className={styles.statCard}>
-          <div className={styles.statLabel}>전체 스터디</div>
-          <div className={styles.statValue}>{stats.total.toLocaleString()}</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statLabel}>공개 스터디</div>
-          <div className={styles.statValue}>{stats.public.toLocaleString()}</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statLabel}>모집중</div>
-          <div className={styles.statValue}>
-            {stats.recruiting.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      {/* 테이블 */}
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>스터디 정보</th>
-              <th>스터디장</th>
-              <th>카테고리</th>
-              <th>멤버</th>
-              <th>활동</th>
-              <th>상태</th>
-              <th>생성일</th>
-              <th>액션</th>
-            </tr>
-          </thead>
-          <tbody>
-            {studies.length === 0 ? (
-              <tr>
-                <td colSpan="8" className={styles.emptyRow}>
-                  스터디가 없습니다
-                </td>
-              </tr>
-            ) : (
-              studies.map((study) => (
-                <tr key={study.id}>
-                  {/* 스터디 정보 */}
-                  <td>
-                    <div className={styles.studyInfo}>
-                      <span className={styles.emoji}>{study.emoji}</span>
-                      <div>
-                        <Link
-                          href={`/admin/studies/${study.id}`}
-                          className={styles.studyName}
-                        >
-                          {study.name}
-                        </Link>
-                        <div className={styles.studyDescription}>
-                          {study.description.length > 50
-                            ? `${study.description.slice(0, 50)}...`
-                            : study.description}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* 스터디장 */}
-                  <td>
-                    <div className={styles.ownerInfo}>
-                      <div className={styles.ownerName}>
-                        {study.owner.name || '익명'}
-                      </div>
-                      <div className={styles.ownerEmail}>{study.owner.email}</div>
-                    </div>
-                  </td>
-
-                  {/* 카테고리 */}
-                  <td>
-                    <div className={styles.category}>{study.category}</div>
-                    {study.subCategory && (
-                      <div className={styles.subCategory}>
-                        {study.subCategory}
-                      </div>
-                    )}
-                  </td>
-
-                  {/* 멤버 수 */}
-                  <td>
-                    <div className={styles.memberCount}>
-                      <strong>{study.stats.memberCount}</strong>
-                      <span className={styles.maxMembers}>
-                        /{study.settings.maxMembers}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* 활동 통계 */}
-                  <td>
-                    <div className={styles.activityStats}>
-                      <div>💬 {study.stats.messageCount}</div>
-                      <div>📎 {study.stats.fileCount}</div>
-                      <div>⭐ {study.stats.rating.toFixed(1)}</div>
-                    </div>
-                  </td>
-
-                  {/* 상태 */}
-                  <td>
-                    <div className={styles.statusBadges}>
-                      {study.settings.isPublic ? (
-                        <Badge variant="success">공개</Badge>
-                      ) : (
-                        <Badge variant="secondary">비공개</Badge>
-                      )}
-                      {study.settings.isRecruiting ? (
-                        <Badge variant="primary">모집중</Badge>
-                      ) : (
-                        <Badge variant="secondary">모집마감</Badge>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* 생성일 */}
-                  <td>
-                    <div className={styles.date}>
-                      {new Date(study.createdAt).toLocaleDateString('ko-KR')}
-                    </div>
-                    <div className={styles.lastActivity}>
-                      최근 활동:{' '}
-                      {new Date(study.lastActivityAt).toLocaleDateString(
-                        'ko-KR'
-                      )}
-                    </div>
-                  </td>
-
-                  {/* 액션 */}
-                  <td>
-                    <Link
-                      href={`/admin/studies/${study.id}`}
-                      className={styles.detailButton}
-                    >
-                      상세보기
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 페이지네이션 */}
-      {pagination.totalPages > 1 && (
-        <div className={styles.pagination}>
-          {pagination.hasPrev && (
-            <Link
-              href={`/admin/studies?page=${currentPage - 1}${
-                searchParams.search ? `&search=${searchParams.search}` : ''
-              }${
-                searchParams.category ? `&category=${searchParams.category}` : ''
-              }`}
-              className={styles.pageButton}
-            >
-              이전
-            </Link>
-          )}
-
-          <div className={styles.pageInfo}>
-            {currentPage} / {pagination.totalPages}
-          </div>
-
-          {pagination.hasNext && (
-            <Link
-              href={`/admin/studies?page=${currentPage + 1}${
-                searchParams.search ? `&search=${searchParams.search}` : ''
-              }${
-                searchParams.category ? `&category=${searchParams.category}` : ''
-              }`}
-              className={styles.pageButton}
-            >
-              다음
-            </Link>
-          )}
+    <div className={styles.container}>
+      {selectedRows.length > 0 && (
+        <div className={styles.bulkActions}>
+          <span>{selectedRows.length}개 선택됨</span>
+          <Button size="sm" variant="outline" onClick={() => setSelectedRows([])}>
+            선택 해제
+          </Button>
+          <Button size="sm" variant="danger">일괄 종료</Button>
         </div>
       )}
+
+      <Card>
+        <Table
+          columns={columns}
+          data={studies}
+          sortable
+          selectable
+          selectedRows={selectedRows}
+          onSelectRows={setSelectedRows}
+          loading={loading}
+          stickyHeader
+          emptyState={
+            <div className={styles.empty}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <p>스터디가 없습니다</p>
+            </div>
+          }
+        />
+      </Card>
     </div>
   )
+}
+
+function getStatusVariant(status) {
+  const variants = {
+    ACTIVE: 'success',
+    RECRUITING: 'primary',
+    COMPLETED: 'default',
+    CLOSED: 'danger',
+  }
+  return variants[status] || 'default'
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    ACTIVE: '진행중',
+    RECRUITING: '모집중',
+    COMPLETED: '완료',
+    CLOSED: '종료',
+  }
+  return labels[status] || status
+}
+
+function getCategoryColor(category) {
+  const colors = {
+    '프로그래밍': { bg: 'var(--pastel-blue-100)', fg: 'var(--pastel-blue-600)' },
+    '디자인': { bg: 'var(--pastel-pink-100)', fg: 'var(--pastel-pink-600)' },
+    '어학': { bg: 'var(--pastel-green-100)', fg: 'var(--pastel-green-600)' },
+    '자격증': { bg: 'var(--pastel-orange-100)', fg: 'var(--pastel-orange-600)' },
+    '취미': { bg: 'var(--pastel-purple-100)', fg: 'var(--pastel-purple-600)' },
+    '기타': { bg: 'var(--pastel-indigo-100)', fg: 'var(--pastel-indigo-600)' },
+  }
+  return colors[category] || { bg: 'var(--gray-100)', fg: 'var(--gray-600)' }
 }
 
