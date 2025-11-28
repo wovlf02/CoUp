@@ -247,15 +247,6 @@ export default function Header({ onMenuToggle }) {
                 <span className={styles.dropdownIcon}>⚙️</span>
                 설정
               </Link>
-              {(user?.role === 'ADMIN' || user?.role === 'SYSTEM_ADMIN') && (
-                <>
-                  <div className={styles.dropdownDivider} />
-                  <Link href="/admin/dashboard" className={styles.dropdownItem} onClick={() => setShowProfile(false)}>
-                    <span className={styles.dropdownIcon}>🛡️</span>
-                    관리자 모드
-                  </Link>
-                </>
-              )}
               <div className={styles.dropdownDivider} />
               <button className={`${styles.dropdownItem} ${styles.logout}`} onClick={handleLogout}>
                 <span className={styles.dropdownIcon}>🚪</span>

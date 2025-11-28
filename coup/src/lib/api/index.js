@@ -113,27 +113,3 @@ export const notificationApi = {
   markAllAsRead: () => api.post('/api/notifications/mark-all-read'),
 }
 
-// ==================== 관리자 API ====================
-export const adminApi = {
-  // 통계
-  getStats: () => api.get('/api/admin/stats'),
-
-  // 사용자 관리
-  getUsers: (params) => api.get('/api/admin/users', params),
-  getUser: (id) => api.get(`/api/admin/users/${id}`),
-  suspendUser: (id, data) => api.post(`/api/admin/users/${id}/suspend`, data),
-  restoreUser: (id) => api.post(`/api/admin/users/${id}/restore`),
-
-  // 스터디 관리
-  getStudies: (params) => api.get('/api/admin/studies', params),
-  deleteStudy: (id) => api.delete(`/api/admin/studies/${id}`),
-
-  // 신고 관리
-  getReports: (params) => api.get('/api/admin/reports', params),
-  getReport: (id) => api.get(`/api/admin/reports/${id}`),
-  processReport: (id, data) => api.post(`/api/admin/reports/${id}/process`, data),
-
-  // 시스템 설정
-  getSettings: () => api.get('/api/admin/settings'),
-  updateSetting: (key, value) => api.patch('/api/admin/settings', { key, value }),
-}

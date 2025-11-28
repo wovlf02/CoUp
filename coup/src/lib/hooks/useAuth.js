@@ -8,8 +8,6 @@ import { useSession } from "next-auth/react"
  * @property {Object|null} user - 현재 로그인한 사용자 정보
  * @property {boolean} isLoading - 세션 로딩 중 여부
  * @property {boolean} isAuthenticated - 인증 여부
- * @property {boolean} isAdmin - 관리자 여부
- * @property {boolean} isSystemAdmin - 시스템 관리자 여부
  * @property {"loading"|"authenticated"|"unauthenticated"} status - 세션 상태
  */
 export function useAuth() {
@@ -19,8 +17,6 @@ export function useAuth() {
     user: session?.user || null,
     isLoading: status === "loading",
     isAuthenticated: status === "authenticated",
-    isAdmin: session?.user?.role === "ADMIN" || session?.user?.role === "SYSTEM_ADMIN",
-    isSystemAdmin: session?.user?.role === "SYSTEM_ADMIN",
     status,
   }
 }

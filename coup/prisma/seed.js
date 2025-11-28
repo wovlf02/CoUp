@@ -97,20 +97,7 @@ async function main() {
     users.push(user)
   }
 
-  // 관리자 추가
-  const admin = await prisma.user.create({
-    data: {
-      email: 'admin@example.com',
-      password: hashedPassword,
-      name: '관리자',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
-      bio: 'CoUp 관리자입니다.',
-      role: 'SYSTEM_ADMIN',
-      status: 'ACTIVE',
-    },
-  })
-
-  console.log(`✅ Users created: ${users.length + 1} users`)
+  console.log(`✅ Users created: ${users.length} users`)
 
   // ============================================
   // 스터디 생성 (30개로 확장!)
@@ -469,36 +456,9 @@ async function main() {
 
   console.log(`✅ Reports created: ${reports.length} reports`)
 
-  // ============================================
-  // 시스템 설정 생성
-  // ============================================
-  const settings = [
-    { key: 'service.status', value: 'OPERATIONAL', type: 'STRING' },
-    { key: 'service.signupEnabled', value: 'true', type: 'BOOLEAN' },
-    { key: 'service.studyCreationEnabled', value: 'true', type: 'BOOLEAN' },
-    { key: 'service.socialLoginEnabled', value: 'true', type: 'BOOLEAN' },
-    { key: 'service.publicBrowsingEnabled', value: 'true', type: 'BOOLEAN' },
-    { key: 'limits.maxStudiesPerUser', value: '10', type: 'NUMBER' },
-    { key: 'limits.maxMembersPerStudy', value: '50', type: 'NUMBER' },
-    { key: 'limits.maxFileSize', value: '50', type: 'NUMBER' },
-    { key: 'limits.maxStoragePerStudy', value: '1024', type: 'NUMBER' },
-    { key: 'limits.maxMessageLength', value: '2000', type: 'NUMBER' },
-    { key: 'limits.messageRateLimit', value: '{"count":10,"window":60}', type: 'JSON' },
-  ]
-
-  for (const setting of settings) {
-    await prisma.setting.upsert({
-      where: { key: setting.key },
-      update: {},
-      create: setting
-    })
-  }
-
-  console.log(`✅ Settings created: ${settings.length} system settings`)
-
   console.log('\n🎉 MASSIVE seed completed successfully!')
   console.log('\n📊 Summary:')
-  console.log(`  - Users: ${users.length + 1} (50 regular + 1 admin)`)
+  console.log(`  - Users: ${users.length} regular users`)
   console.log(`  - Studies: ${studies.length} (다양한 카테고리)`)
   console.log(`  - Study Members: ${memberData.length}`)
   console.log(`  - Notices: ${noticeCount}`)
@@ -507,15 +467,11 @@ async function main() {
   console.log(`  - Notifications: ${notifications.length}`)
   console.log(`  - Messages: ${messages.length}`)
   console.log(`  - Reports: ${reports.length}`)
-  console.log(`  - Settings: ${settings.length}`)
   console.log('\n✅ You can now login with:')
   console.log('  Email: kim@example.com')
   console.log('  Password: password123')
   console.log('\n  Or any other user:')
   console.log('  Email: lee@example.com, park@example.com, etc.')
-  console.log('  Password: password123')
-  console.log('\n  Admin:')
-  console.log('  Email: admin@example.com')
   console.log('  Password: password123')
 }
 

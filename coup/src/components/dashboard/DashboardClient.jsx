@@ -103,11 +103,6 @@ export default function DashboardClient({ user: initialUser }) {
               나의 활동을 한눈에 확인하세요
             </p>
           </div>
-          {(user?.role === 'ADMIN' || user?.role === 'SYSTEM_ADMIN') && (
-            <Link href="/admin/dashboard" className={styles.adminLink}>
-              🛡️ 관리자 모드
-            </Link>
-          )}
         </header>
 
         {/* 환영 메시지 */}
@@ -156,8 +151,7 @@ export default function DashboardClient({ user: initialUser }) {
                   <p className={styles.studyCategory}>{study.category}</p>
                   <div className={styles.studyMeta}>
                     <span className={styles.studyRole}>
-                      {study.role === 'OWNER' ? '👑 스터디장' :
-                       study.role === 'ADMIN' ? '⚡ 관리자' : '👤 멤버'}
+                      {study.role === 'OWNER' ? '👑 스터디장' : '👤 멤버'}
                     </span>
                     <span className={styles.studyMembers}>
                       {study.memberCount}명
@@ -255,7 +249,7 @@ export default function DashboardClient({ user: initialUser }) {
         />
 
         {/* 빠른 액션 */}
-        <QuickActions isAdmin={user.role === 'ADMIN' || user.role === 'SYSTEM_ADMIN'} />
+        <QuickActions />
 
         {/* 고정 공지 */}
         {widgetData?.pinnedNotice && (

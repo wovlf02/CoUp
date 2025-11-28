@@ -60,8 +60,6 @@ enum Provider {
 
 enum UserRole {
   USER
-  ADMIN
-  SYSTEM_ADMIN
 }
 
 enum UserStatus {
@@ -146,7 +144,6 @@ model StudyMember {
 
 enum MemberRole {
   OWNER
-  ADMIN
   MEMBER
 }
 
@@ -245,9 +242,9 @@ model File {
 
   createdAt DateTime @default(now())
 
-  study    Study     @relation(fields: [studyId], references: [id], onDelete: Cascade)
-  uploader User      @relation("FileUploader", fields: [uploaderId], references: [id])
-  messages Message[]
+  study       Study        @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  uploader    User         @relation("FileUploader", fields: [uploaderId], references: [id])
+  messages    Message[]
   noticeFiles NoticeFile[]
 
   @@index([studyId, folderId])
@@ -434,144 +431,4 @@ enum ReportStatus {
   IN_PROGRESS
   RESOLVED
   REJECTED
-}
-
-// ============================================
-// 시스템 설정 (Setting)
-// ============================================
-// 시스템 설정 (SystemSetting) - SYSTEM_ADMIN 전용
-// ============================================
-model SystemSetting {
-  id          String      @id @default(cuid())
-  key         String      @unique
-  value       String      @db.Text
-  type        SettingType @default(STRING)
-  description String?     @db.Text
-
-  updatedAt DateTime @updatedAt
-  updatedBy String?
-
-  @@index([key])
-}
-
-enum SettingType {
-  STRING
-  NUMBER
-  BOOLEAN
-  JSON
-}
-
-// ============================================
-// 제재 (Sanction) - 관리자 시스템
-// ============================================
-model Sanction {
-  id     String       @id @default(cuid())
-  userId String
-  type   SanctionType
-
-  // 제재 정보
-  reason          String  @db.Text
-  duration        String? // '1일', '3일', '7일', '30일', '영구'
-  relatedReportId String?
-
-  // 관리자
-  adminId String
-
-  // 정지 해제 정보
-  unsuspendReason  String?
-  unsuspendAdminId String?
-  unsuspendAt      DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([userId, type, createdAt])
-  @@index([adminId])
-}
-
-enum SanctionType {
-  WARNING
-  SUSPEND
-  UNSUSPEND
-  RESTRICT
-}
-
-// ============================================
-// 기능 제한 (FunctionRestriction) - 관리자 시스템
-// ============================================
-model FunctionRestriction {
-  id                  String   @id @default(cuid())
-  userId              String
-  restrictedFunctions String[] // ['CHAT', 'STUDY_CREATE', 'FILE_UPLOAD', 'NOTICE_CREATE']
-  restrictedUntil     DateTime
-  reason              String   @db.Text
-  adminId             String
-
-  createdAt DateTime @default(now())
-
-  @@index([userId, restrictedUntil])
-}
-
-// ============================================
-// 관리자 로그 (AdminLog) - 관리자 시스템
-// ============================================
-model AdminLog {
-  id         String      @id @default(cuid())
-  adminId    String
-  action     AdminAction
-  targetType String? // 'User', 'Study', 'Report' 등
-  targetId   String?
-  details    Json? // 상세 정보
-
-  ipAddress String?
-  userAgent String?
-
-  createdAt DateTime @default(now())
-
-  @@index([adminId, createdAt])
-  @@index([action, createdAt])
-}
-
-enum AdminAction {
-  USER_WARN
-  USER_SUSPEND
-  USER_UNSUSPEND
-  USER_RESTRICT
-  USER_DELETE
-  STUDY_HIDE
-  STUDY_CLOSE
-  STUDY_RECOMMEND
-  REPORT_ASSIGN
-  REPORT_APPROVE
-  REPORT_REJECT
-  CONTENT_DELETE
-  SETTINGS_UPDATE
-}
-
-// ============================================
-// 이메일 템플릿 (EmailTemplate) - SYSTEM_ADMIN 전용
-// ============================================
-model EmailTemplate {
-  id      String            @id @default(cuid())
-  name    String            @unique // 'welcome', 'email_verification', 'password_reset' 등
-  type    EmailTemplateType
-  subject String
-  body    String            @db.Text // HTML 템플릿
-
-  variables String[] // 사용 가능한 변수들: ['userName', 'email', 'verificationLink']
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  updatedBy String?
-
-  @@index([name])
-  @@index([type])
-}
-
-enum EmailTemplateType {
-  AUTH // 인증 관련 (가입, 이메일 인증)
-  NOTIFICATION // 알림
-  SANCTION // 제재 관련
-  SYSTEM // 시스템 공지
 }

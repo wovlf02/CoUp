@@ -90,27 +90,9 @@ export async function requireAuth() {
 }
 
 /**
- * 관리자 확인
- */
-export async function requireAdmin() {
-  const result = await requireAuth()
-
-  if (result instanceof NextResponse) return result
-
-  if (!['ADMIN', 'SYSTEM_ADMIN'].includes(result.user.role)) {
-    return NextResponse.json(
-      { error: "관리자 권한이 필요합니다" },
-      { status: 403 }
-    )
-  }
-
-  return result
-}
-
-/**
  * 스터디 멤버 확인
  * @param {string} studyId - 스터디 ID
- * @param {string} minRole - 최소 요구 역할 (MEMBER, ADMIN, OWNER)
+ * @param {string} minRole - 최소 요구 역할 (MEMBER, OWNER)
  */
 export async function requireStudyMember(studyId, minRole = 'MEMBER') {
   const result = await requireAuth()
@@ -133,7 +115,7 @@ export async function requireStudyMember(studyId, minRole = 'MEMBER') {
   }
 
   // 역할 확인
-  const roleHierarchy = { MEMBER: 0, ADMIN: 1, OWNER: 2 }
+  const roleHierarchy = { MEMBER: 0, OWNER: 1 }
   if (roleHierarchy[member.role] < roleHierarchy[minRole]) {
     return NextResponse.json(
       { error: "권한이 부족합니다" },

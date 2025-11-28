@@ -26,7 +26,7 @@ export default function OnlineMembersWidget({ studyId }) {
                 <span className={styles.memberName}>
                   {member.name}
                 </span>
-                {(member.role === 'OWNER' || member.role === 'ADMIN') && (
+                {member.role === 'OWNER' && (
                   <span className={`${styles.badge} ${styles.badgePrimary}`}>
                     {member.role}
                   </span>

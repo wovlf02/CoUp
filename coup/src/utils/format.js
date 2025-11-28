@@ -52,7 +52,6 @@ export const getInitials = (name) => {
 export const getRoleText = (role) => {
   const roleMap = {
     OWNER: '방장',
-    ADMIN: '관리자',
     MEMBER: '멤버',
     PENDING: '대기중'
   }

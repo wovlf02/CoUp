@@ -18,8 +18,8 @@ export default function StudyHeader({ studyId, study }) {
     { label: '화상 스터디', path: `/my-studies/${studyId}/video-call` },
   ]
 
-  // 관리자만 설정 탭 표시
-  if (study?.role === 'OWNER' || study?.role === 'ADMIN') {
+  // 스터디장만 설정 탭 표시
+  if (study?.role === 'OWNER') {
     tabs.push({ label: '설정', path: `/my-studies/${studyId}/settings` })
   }
 

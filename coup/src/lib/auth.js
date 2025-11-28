@@ -10,7 +10,7 @@ import bcrypt from "bcryptjs"
  * @property {string} email
  * @property {string} name
  * @property {string} image
- * @property {"USER" | "ADMIN" | "SYSTEM_ADMIN"} role
+ * @property {"USER"} role
  * @property {"ACTIVE" | "SUSPENDED" | "DELETED"} status
  * @property {"CREDENTIALS" | "GOOGLE" | "GITHUB"} provider
  */
@@ -159,8 +159,7 @@ export const authConfig = {
       // 같은 origin이면 그대로 사용
       else if (new URL(url).origin === baseUrl) return url
 
-      // 기본 리다이렉트는 미들웨어에서 처리
-      // (미들웨어가 role에 따라 /admin/dashboard 또는 /dashboard로 보냄)
+      // 기본 리다이렉트는 대시보드로
       return baseUrl + "/dashboard"
     }
   },

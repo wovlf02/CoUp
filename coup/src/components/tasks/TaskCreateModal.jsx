@@ -175,7 +175,6 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
                           <span className={styles.memberName}>{member.user?.name || '이름 없음'}</span>
                           <span className={styles.memberRole}>
                             {member.role === 'OWNER' && '👑 방장'}
-                            {member.role === 'ADMIN' && '⭐ 관리자'}
                             {member.role === 'MEMBER' && '👤 멤버'}
                           </span>
                         </div>

@@ -41,7 +41,6 @@ export default function OnlineMembers({ members, totalMembers }) {
                 <div className={styles.memberName}>
                   {member.name}
                   {member.role === 'OWNER' && <span className={styles.roleBadge}>👑</span>}
-                  {member.role === 'ADMIN' && <span className={styles.roleBadge}>⚡</span>}
                 </div>
                 {member.currentActivity && (
                   <div className={styles.memberActivity}>{member.currentActivity}</div>
