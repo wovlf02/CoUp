@@ -148,6 +148,7 @@ model StudyMember {
   @@unique([studyId, userId])
   @@index([userId])
   @@index([status])
+  @@index([studyId, status]) // 스터디 멤버 필터링 최적화
 }
 
 enum MemberRole {
@@ -460,6 +461,7 @@ model Warning {
 
   @@index([userId, createdAt])
   @@index([severity, createdAt])
+  @@index([userId, severity, createdAt]) // 복합 조회 최적화
 }
 
 enum WarningSeverity {
@@ -491,6 +493,7 @@ model Sanction {
   user User @relation("UserSanctions", fields: [userId], references: [id])
 
   @@index([userId, type, createdAt])
+  @@index([userId, isActive, expiresAt]) // 활성 제재 조회 최적화
   @@index([isActive, expiresAt])
 }
 
@@ -560,6 +563,11 @@ enum AdminAction {
   // 시스템 설정
   SETTINGS_VIEW
   SETTINGS_UPDATE
+  SETTINGS_CACHE_CLEAR
+
+  // 감사 로그
+  AUDIT_VIEW
+  AUDIT_EXPORT
 }
 
 // 관리자 역할 및 권한
@@ -582,4 +590,21 @@ enum AdminRoleType {
   MODERATOR // 콘텐츠 모더레이션
   ADMIN // 사용자/스터디 관리
   SUPER_ADMIN // 모든 권한
+}
+
+// ============================================
+// 시스템 설정 (System Settings)
+// ============================================
+model SystemSetting {
+  id          String   @id @default(cuid())
+  category    String // general, security, notification, feature
+  key         String   @unique
+  value       String   @db.Text
+  type        String // string, number, boolean, json
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String
+
+  @@index([category])
+  @@index([key])
 }

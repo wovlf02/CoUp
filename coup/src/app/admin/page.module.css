@@ -56,6 +56,41 @@
   margin-bottom: 0.75rem;
 }
 
+.error {
+  background-color: #fef2f2;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  border: 1px solid #fee2e2;
+  text-align: center;
+}
+
+.error p {
+  color: #991b1b;
+  margin-bottom: 1rem;
+}
+
+.error p:last-of-type {
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+.retryButton {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background: #b91c1c;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;

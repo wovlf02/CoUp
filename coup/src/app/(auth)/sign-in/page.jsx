@@ -27,7 +27,7 @@ export default function SignInPage() {
     if (status === 'authenticated' && session?.user?.id) {
       isValidatingRef.current = true
 
-      console.log('🔍 Validating session for user:', session.user.id)
+      console.log('🔍 이미 로그인된 사용자, 세션 검증 중:', session.user.id)
 
       fetch('/api/auth/validate-session', { credentials: 'include' })
         .then(r => r.json())
@@ -35,9 +35,33 @@ export default function SignInPage() {
           hasValidatedRef.current = true
 
           if (data.valid) {
-            // 세션 유효 - 대시보드로 리다이렉트
-            console.log('✅ Valid session, redirecting to:', callbackUrl)
-            router.push(callbackUrl)
+            // 세션 유효 - 관리자 권한 확인 후 리다이렉트
+            console.log('✅ Valid session, 관리자 권한 확인 중...')
+
+            try {
+              const adminCheckRes = await fetch('/api/auth/me', {
+                credentials: 'include',
+              })
+
+              if (adminCheckRes.ok) {
+                const userData = await adminCheckRes.json()
+                console.log('👤 사용자 정보:', userData)
+
+                if (userData.adminRole && !userData.adminRole.isExpired) {
+                  console.log('🔐 관리자 확인, /admin으로 이동')
+                  router.push('/admin')
+                } else {
+                  console.log('👤 일반 사용자, /dashboard로 이동')
+                  router.push('/dashboard')
+                }
+              } else {
+                console.log('⚠️ 사용자 정보 조회 실패, /dashboard로 이동')
+                router.push('/dashboard')
+              }
+            } catch (err) {
+              console.error('❌ 관리자 권한 확인 오류:', err)
+              router.push('/dashboard')
+            }
           } else if (data.shouldLogout) {
             // 세션 무효 - NextAuth로 완전히 로그아웃
             console.warn('⚠️ Invalid session detected:', data.error)
@@ -63,7 +87,7 @@ export default function SignInPage() {
           isValidatingRef.current = false
         })
     }
-  }, [status, session?.user?.id, router, callbackUrl])
+  }, [status, session?.user?.id, router])
 
   // Form state
   const [email, setEmail] = useState('')
@@ -116,22 +140,67 @@ export default function SignInPage() {
       setLoading('credentials')
       setError(null)
 
-      // NextAuth signIn 사용
+      console.log('🔐 로그인 시도:', email)
+
+      // NextAuth signIn 사용 - redirect: false로 설정하여 수동 리다이렉션
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        redirect: false,  // 수동 리다이렉션
       })
 
       if (result?.error) {
+        console.error('❌ 로그인 실패:', result.error)
         setError(result.error)
         setLoading(null)
         return
       }
 
       if (result?.ok) {
-        // 로그인 성공 - 대시보드로 이동
-        router.push(callbackUrl)
+        console.log('✅ 로그인 성공, 세션 정보 확인 중...')
+
+        // 세션 정보 가져오기
+        const sessionRes = await fetch('/api/auth/session')
+        const sessionData = await sessionRes.json()
+
+        console.log('📋 세션 데이터:', sessionData)
+
+        if (sessionData?.user) {
+          // JWT 토큰에서 isAdmin 확인
+          // NextAuth 세션에는 jwt 콜백에서 설정한 정보가 포함됨
+
+          // 관리자 권한 확인을 위한 API 호출
+          try {
+            const adminCheckRes = await fetch('/api/auth/me', {
+              credentials: 'include',
+            })
+
+            if (adminCheckRes.ok) {
+              const userData = await adminCheckRes.json()
+              console.log('👤 사용자 정보:', userData)
+
+              // AdminRole이 있으면 관리자
+              if (userData.adminRole) {
+                console.log('🔐 관리자 확인, /admin으로 이동')
+                router.push('/admin')
+              } else {
+                console.log('👤 일반 사용자, /dashboard로 이동')
+                router.push('/dashboard')
+              }
+            } else {
+              // API 실패 시 기본 대시보드로
+              console.log('⚠️ 사용자 정보 조회 실패, /dashboard로 이동')
+              router.push('/dashboard')
+            }
+          } catch (err) {
+            console.error('❌ 사용자 정보 조회 오류:', err)
+            router.push('/dashboard')
+          }
+        } else {
+          console.log('⚠️ 세션 정보 없음, /dashboard로 이동')
+          router.push('/dashboard')
+        }
+
         router.refresh()
       }
 

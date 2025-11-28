@@ -13,7 +13,8 @@ const menuItems = [
   { label: '스터디', href: '/admin/studies' },
   { label: '신고', href: '/admin/reports' },
   { label: '분석', href: '/admin/analytics' },
-  { label: '설정', href: '/admin/settings', superAdminOnly: true }
+  { label: '설정', href: '/admin/settings', superAdminOnly: true },
+  { label: '감사 로그', href: '/admin/audit-logs', superAdminOnly: true }
 ]
 
 export default function AdminNavbar({ user, adminRole }) {

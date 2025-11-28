@@ -25,15 +25,31 @@ export default withAuth(
 
     // 공개 경로는 항상 허용
     if (isPublicPath) {
-      // 이미 로그인한 사용자가 로그인/회원가입 페이지 접근 시 대시보드로
-      if (token && (pathname === '/sign-in' || pathname === '/sign-up')) {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-      }
+      // 로그인/회원가입 페이지는 NextAuth의 redirect 콜백이 처리
       return NextResponse.next()
     }
 
     // 여기까지 왔다면 보호된 페이지 + 로그인됨 (withAuth가 처리)
     
+    // 관리자 페이지 접근 체크
+    if (pathname.startsWith('/admin')) {
+      console.log('🔐 [MIDDLEWARE] 관리자 페이지 접근 시도:', {
+        pathname,
+        userId: token?.id,
+        email: token?.email,
+        hasToken: !!token
+      })
+
+      // 관리자 권한이 없으면 로그인 페이지로
+      // (실제 권한은 각 페이지/API에서 체크)
+      if (!token) {
+        console.log('❌ [MIDDLEWARE] 토큰 없음, 로그인 페이지로 리다이렉트')
+        return NextResponse.redirect(new URL('/sign-in?callbackUrl=' + encodeURIComponent(pathname), req.url))
+      }
+
+      console.log('✅ [MIDDLEWARE] 관리자 페이지 접근 허용')
+    }
+
     // 계정 상태 확인
     if (token?.status === 'DELETED') {
       return NextResponse.redirect(new URL('/sign-in?error=account-deleted', req.url))
