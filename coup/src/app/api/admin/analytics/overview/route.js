@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin } from '@/lib/admin/auth'
+import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
 
 const prisma = new PrismaClient()
@@ -79,6 +79,15 @@ export async function GET(request) {
 
     // 6. 일일 신고 접수 추이 (최근 30일)
     const dailyReports = await getDailyReports(thirtyDaysAgo, now)
+
+    // 관리자 로그 기록
+    await logAdminAction({
+      adminId: auth.adminRole.userId,
+      action: 'ANALYTICS_VIEW',
+      targetType: 'Analytics',
+      targetId: 'overview',
+      request,
+    })
 
     return NextResponse.json({
       success: true,

@@ -177,9 +177,12 @@ export async function GET(request, { params }) {
     }
 
     // 관리자 로그 기록
-    await logAdminAction(adminRole.userId, 'REPORT_VIEW', 'Report', reportId, {
-      status: report.status,
-      type: report.type,
+    await logAdminAction({
+      adminId: adminRole.userId,
+      action: 'REPORT_VIEW',
+      targetType: 'Report',
+      targetId: reportId,
+      request,
     })
 
     return NextResponse.json({

@@ -60,7 +60,10 @@ export default function UserDetailPage() {
 
   async function handleSuspend() {
     try {
-      await api.post(`/api/admin/users/${userId}/suspend`)
+      await api.post(`/api/admin/users/${userId}/suspend`, {
+        reason: '관리자에 의한 정지',
+        duration: null, // 영구 정지
+      })
       alert('사용자가 정지되었습니다')
       fetchUser()
     } catch (err) {
@@ -227,7 +230,7 @@ export default function UserDetailPage() {
                   </div>
                   <div className={styles.statInfo}>
                     <span className={styles.statLabel}>참여 스터디</span>
-                    <span className={styles.statValue}>{user.stats?.studiesJoined || 0}개</span>
+                    <span className={styles.statValue}>{user._count?.studyMembers || 0}개</span>
                   </div>
                 </div>
                 <div className={styles.statItem}>
@@ -238,7 +241,7 @@ export default function UserDetailPage() {
                   </div>
                   <div className={styles.statInfo}>
                     <span className={styles.statLabel}>개설 스터디</span>
-                    <span className={styles.statValue}>{user.stats?.studiesOwned || 0}개</span>
+                    <span className={styles.statValue}>{user._count?.ownedStudies || 0}개</span>
                   </div>
                 </div>
                 <div className={styles.statItem}>
@@ -249,7 +252,7 @@ export default function UserDetailPage() {
                   </div>
                   <div className={styles.statInfo}>
                     <span className={styles.statLabel}>메시지</span>
-                    <span className={styles.statValue}>{user.stats?.messagesCount || 0}개</span>
+                    <span className={styles.statValue}>{user._count?.messages || 0}개</span>
                   </div>
                 </div>
                 <div className={styles.statItem}>
@@ -259,14 +262,74 @@ export default function UserDetailPage() {
                     </svg>
                   </div>
                   <div className={styles.statInfo}>
-                    <span className={styles.statLabel}>경고</span>
-                    <span className={styles.statValue}>{user.stats?.warningsCount || 0}회</span>
+                    <span className={styles.statLabel}>신고 수신</span>
+                    <span className={styles.statValue}>{user._count?.reports || 0}회</span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* 제재 및 경고 내역 */}
+        {(user.sanctions?.length > 0 || user.receivedWarnings?.length > 0) && (
+          <div className={styles.historySection}>
+            {/* 제재 내역 */}
+            {user.sanctions?.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <h3>제재 내역</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className={styles.historyList}>
+                    {user.sanctions.map((sanction) => (
+                      <div key={sanction.id} className={styles.historyItem}>
+                        <div className={styles.historyIcon}>
+                          <Badge variant="danger">제재</Badge>
+                        </div>
+                        <div className={styles.historyContent}>
+                          <div className={styles.historyTitle}>{sanction.reason}</div>
+                          <div className={styles.historyMeta}>
+                            {new Date(sanction.createdAt).toLocaleString('ko-KR')}
+                            {sanction.expiresAt && (
+                              <span> • 만료: {new Date(sanction.expiresAt).toLocaleString('ko-KR')}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 경고 내역 */}
+            {user.receivedWarnings?.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <h3>경고 내역</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className={styles.historyList}>
+                    {user.receivedWarnings.map((warning) => (
+                      <div key={warning.id} className={styles.historyItem}>
+                        <div className={styles.historyIcon}>
+                          <Badge variant="warning">경고</Badge>
+                        </div>
+                        <div className={styles.historyContent}>
+                          <div className={styles.historyTitle}>{warning.reason}</div>
+                          <div className={styles.historyMeta}>
+                            {new Date(warning.createdAt).toLocaleString('ko-KR')}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Edit Modal (준비중) */}

@@ -195,7 +195,7 @@ export async function GET(request, { params }) {
     // 로그 기록
     await logAdminAction({
       adminId: adminRole.userId,
-      action: 'STUDY_DETAIL_VIEW',
+      action: 'STUDY_VIEW',
       targetType: 'Study',
       targetId: studyId,
       details: {

@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin } from '@/lib/admin/auth'
+import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
 
 const prisma = new PrismaClient()
@@ -42,6 +42,15 @@ export async function GET(request) {
 
     // 6. 평균 세션 시간 (더미 데이터 - 추후 구현)
     const avgSessionTime = '12분 34초'
+
+    // 관리자 로그 기록
+    await logAdminAction({
+      adminId: auth.adminRole.userId,
+      action: 'ANALYTICS_VIEW',
+      targetType: 'Analytics',
+      targetId: 'users',
+      request,
+    })
 
     return NextResponse.json({
       success: true,

@@ -25,7 +25,7 @@ export async function POST(request, { params }) {
       where: { id: userId },
       data: {
         status: 'SUSPENDED',
-        suspendedAt: new Date(),
+        suspendReason: reason || '관리자에 의한 정지',
         ...(duration && { suspendedUntil: new Date(Date.now() + duration * 24 * 60 * 60 * 1000) }),
       },
     })
@@ -33,7 +33,7 @@ export async function POST(request, { params }) {
     // 관리자 로그
     await logAdminAction({
       adminId: auth.adminRole.userId,
-      action: 'SUSPEND_USER',
+      action: 'USER_SUSPEND',
       targetType: 'USER',
       targetId: userId,
       details: { userId, reason, duration },

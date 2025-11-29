@@ -28,18 +28,23 @@ export async function GET(request, { params }) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        accounts: {
-          select: {
-            provider: true,
-            providerAccountId: true,
-          },
+        adminRole: true,
+        sanctions: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+        receivedWarnings: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
         },
         // 통계 정보
         _count: {
           select: {
-            studiesOwned: true,
+            ownedStudies: true,
             studyMembers: true,
             messages: true,
+            reports: true,
+            notifications: true,
           },
         },
       },
@@ -52,41 +57,19 @@ export async function GET(request, { params }) {
       )
     }
 
-    // 경고 횟수 조회 (가상 필드, 실제 구현 필요)
-    const warningsCount = 0 // TODO: warnings 테이블에서 조회
-
-    // 응답 데이터 구성
-    const userData = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      avatar: user.image,
-      role: user.role || 'USER',
-      status: user.status || 'ACTIVE',
-      provider: user.accounts[0]?.provider || 'email',
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      lastLoginAt: user.lastLoginAt || null,
-      stats: {
-        studiesOwned: user._count.studiesOwned,
-        studiesJoined: user._count.studyMembers,
-        messagesCount: user._count.messages,
-        warningsCount: warningsCount,
-      },
-    }
-
     // 관리자 로그
     await logAdminAction({
       adminId: auth.adminRole.userId,
-      action: 'VIEW_USER',
+      action: 'USER_VIEW',
       targetType: 'USER',
       targetId: userId,
       details: { userId },
     })
 
+    // 응답 데이터 - 프론트엔드가 기대하는 구조 그대로 반환
     return NextResponse.json({
       success: true,
-      data: userData,
+      data: user, // Prisma 결과를 그대로 반환 (_count, sanctions, receivedWarnings 포함)
     })
   } catch (error) {
     console.error('사용자 조회 실패:', error)
@@ -127,7 +110,7 @@ export async function PATCH(request, { params }) {
     // 관리자 로그
     await logAdminAction({
       adminId: auth.adminRole.userId,
-      action: 'UPDATE_USER',
+      action: 'USER_UPDATE',
       targetType: 'USER',
       targetId: userId,
       details: { changes: body },
@@ -164,14 +147,13 @@ export async function DELETE(request, { params }) {
       where: { id: userId },
       data: {
         status: 'DELETED',
-        deletedAt: new Date(),
       },
     })
 
     // 관리자 로그
     await logAdminAction({
       adminId: auth.adminRole.userId,
-      action: 'DELETE_USER',
+      action: 'USER_DELETE',
       targetType: 'USER',
       targetId: userId,
       details: { userId, email: user.email },

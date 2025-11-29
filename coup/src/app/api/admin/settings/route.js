@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin } from '@/lib/admin/auth'
+import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
 
 const prisma = new PrismaClient()
 
@@ -81,6 +81,15 @@ export async function GET(request) {
     // 캐시 업데이트
     settingsCache = grouped
     cacheTimestamp = Date.now()
+
+    // 관리자 로그 기록
+    await logAdminAction({
+      adminId: auth.adminRole.userId,
+      action: 'SETTINGS_VIEW',
+      targetType: 'Settings',
+      targetId: 'all',
+      request,
+    })
 
     return NextResponse.json({
       success: true,

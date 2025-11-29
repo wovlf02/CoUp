@@ -115,18 +115,15 @@ export async function POST(request, { params }) {
       })
 
       // 관리자 로그 기록
-      await logAdminAction(
-        adminRole.userId,
-        'REPORT_ASSIGN',
-        'Report',
-        reportId,
-        {
-          before: { processedBy: report.processedBy },
-          after: { processedBy: targetAdminId },
-          autoAssign,
-        },
-        tx
-      )
+      await logAdminAction({
+        adminId: adminRole.userId,
+        action: 'REPORT_ASSIGN',
+        targetType: 'Report',
+        targetId: reportId,
+        before: { processedBy: report.processedBy },
+        after: { processedBy: targetAdminId },
+        request,
+      })
 
       return updated
     })

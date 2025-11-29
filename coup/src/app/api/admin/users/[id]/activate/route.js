@@ -23,15 +23,15 @@ export async function POST(request, { params }) {
       where: { id: userId },
       data: {
         status: 'ACTIVE',
-        suspendedAt: null,
         suspendedUntil: null,
+        suspendReason: null,
       },
     })
 
     // 관리자 로그
     await logAdminAction({
       adminId: auth.adminRole.userId,
-      action: 'ACTIVATE_USER',
+      action: 'USER_UNSUSPEND',
       targetType: 'USER',
       targetId: userId,
       details: { userId },

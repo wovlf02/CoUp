@@ -163,36 +163,28 @@ export async function POST(request, { params }) {
           }
 
           // 콘텐츠 삭제 로그
-          await logAdminAction(
-            adminRole.userId,
-            'CONTENT_DELETE',
-            report.targetType,
-            report.targetId,
-            {
-              reason: resolution,
-              reportId,
-            },
-            tx
-          )
+          await logAdminAction({
+            adminId: adminRole.userId,
+            action: 'CONTENT_DELETE',
+            targetType: report.targetType,
+            targetId: report.targetId,
+            reason: resolution,
+            request,
+          })
         }
       }
 
       // 3. 관리자 로그 기록
-      await logAdminAction(
-        adminRole.userId,
-        action === 'approve' ? 'REPORT_RESOLVE' : 'REPORT_REJECT',
-        'Report',
-        reportId,
-        {
-          before: { status: report.status },
-          after: { status: newStatus },
-          action,
-          resolution,
-          linkedAction,
-          linkedActionDetails,
-        },
-        tx
-      )
+      await logAdminAction({
+        adminId: adminRole.userId,
+        action: action === 'approve' ? 'REPORT_RESOLVE' : 'REPORT_REJECT',
+        targetType: 'Report',
+        targetId: reportId,
+        before: { status: report.status },
+        after: { status: newStatus },
+        reason: resolution,
+        request,
+      })
 
       return { report: updatedReport, actionResult }
     })

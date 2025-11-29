@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin } from '@/lib/admin/auth'
+import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
 
 const prisma = new PrismaClient()
@@ -42,6 +42,15 @@ export async function GET(request) {
 
     // 6. 모집 현황
     const recruitmentStatus = await getRecruitmentStatus()
+
+    // 관리자 로그 기록
+    await logAdminAction({
+      adminId: auth.adminRole.userId,
+      action: 'ANALYTICS_VIEW',
+      targetType: 'Analytics',
+      targetId: 'studies',
+      request,
+    })
 
     return NextResponse.json({
       success: true,
