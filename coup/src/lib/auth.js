@@ -3,6 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { AUTH_ERRORS, logAuthError } from "@/lib/exceptions/auth-errors"
+import { validateEmail, validatePassword, sanitizeEmail } from "@/lib/exceptions/validation-helpers"
 
 /**
  * @typedef {Object} SessionUser
@@ -33,87 +35,141 @@ export const authConfig = {
         console.log('🔐 [AUTH] authorize 시작')
         console.log('🔐 [AUTH] credentials:', { email: credentials?.email, hasPassword: !!credentials?.password })
         
-        if (!credentials?.email || !credentials?.password) {
-          console.log('❌ [AUTH] 이메일 또는 비밀번호 누락')
-          throw new Error("이메일과 비밀번호를 입력해주세요.")
-        }
-
-        // 사용자 조회
-        console.log('🔍 [AUTH] 사용자 조회 중:', credentials.email)
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
-
-        if (!user) {
-          console.log('❌ [AUTH] 사용자를 찾을 수 없음')
-          throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.")
-        }
-        
-        console.log('✅ [AUTH] 사용자 발견:', { id: user.id, email: user.email, status: user.status })
-
-        // 비밀번호 확인
-        if (!user.password) {
-          console.log('❌ [AUTH] 비밀번호가 설정되지 않음 (소셜 로그인 계정)')
-          throw new Error("소셜 로그인 계정입니다. 해당 방법으로 로그인해주세요.")
-        }
-
-        console.log('🔑 [AUTH] 비밀번호 검증 중...')
-        const isValid = await bcrypt.compare(credentials.password, user.password)
-        console.log('🔑 [AUTH] 비밀번호 검증 결과:', isValid)
-        
-        if (!isValid) {
-          console.log('❌ [AUTH] 비밀번호 불일치')
-          throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.")
-        }
-
-        // 계정 상태 확인
-        if (user.status === "DELETED") {
-          console.log('❌ [AUTH] 삭제된 계정')
-          throw new Error("삭제된 계정입니다.")
-        }
-
-        if (user.status === "SUSPENDED") {
-          console.log('❌ [AUTH] 정지된 계정')
-          const message = user.suspendReason
-            ? `정지된 계정입니다. 사유: ${user.suspendReason}`
-            : "정지된 계정입니다."
-          throw new Error(message)
-        }
-
-        // 관리자 권한 확인
-        console.log('🔍 [AUTH] 관리자 권한 확인 중...')
-        const adminRole = await prisma.adminRole.findUnique({
-          where: { userId: user.id },
-          select: {
-            role: true,
-            expiresAt: true,
+        try {
+          // 1. 입력값 검증
+          if (!credentials?.email || !credentials?.password) {
+            console.log('❌ [AUTH] 이메일 또는 비밀번호 누락')
+            throw new Error(AUTH_ERRORS.MISSING_CREDENTIALS.message)
           }
-        })
 
-        const isAdmin = adminRole && (!adminRole.expiresAt || new Date(adminRole.expiresAt) > new Date())
-        console.log(`👤 [AUTH] 관리자 여부: ${isAdmin ? '✅ 관리자' : '❌ 일반 사용자'}`, adminRole?.role)
+          // 이메일 정제 및 검증
+          const email = sanitizeEmail(credentials.email)
+          const emailValidation = validateEmail(email)
+          if (!emailValidation.valid) {
+            console.log('❌ [AUTH] 이메일 형식 오류:', emailValidation.error)
+            throw new Error(AUTH_ERRORS.INVALID_EMAIL_FORMAT.message)
+          }
 
-        // lastLoginAt 업데이트
-        console.log('✅ [AUTH] 로그인 성공, lastLoginAt 업데이트 중...')
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() }
-        })
+          // 비밀번호 기본 검증
+          const passwordValidation = validatePassword(credentials.password)
+          if (!passwordValidation.valid) {
+            console.log('❌ [AUTH] 비밀번호 형식 오류:', passwordValidation.error)
+            throw new Error(AUTH_ERRORS.INVALID_CREDENTIALS.message)
+          }
 
-        const result = {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.avatar,
-          role: user.role,
-          status: user.status,
-          provider: user.provider,
-          isAdmin: isAdmin,  // 관리자 여부 추가
-          adminRole: adminRole?.role || null,  // 관리자 역할 추가
+          // 2. 사용자 조회
+          console.log('🔍 [AUTH] 사용자 조회 중:', email)
+          let user
+          try {
+            user = await prisma.user.findUnique({
+              where: { email }
+            })
+          } catch (dbError) {
+            logAuthError('authorize - DB 조회', dbError, { email })
+            throw new Error(AUTH_ERRORS.DB_QUERY_ERROR.message)
+          }
+
+          if (!user) {
+            console.log('❌ [AUTH] 사용자를 찾을 수 없음')
+            // 보안: 사용자 존재 여부를 숨기기 위해 동일한 메시지 사용
+            throw new Error(AUTH_ERRORS.INVALID_CREDENTIALS.message)
+          }
+
+          console.log('✅ [AUTH] 사용자 발견:', { id: user.id, email: user.email, status: user.status })
+
+          // 3. 소셜 로그인 계정 체크
+          if (!user.password) {
+            console.log('❌ [AUTH] 비밀번호가 설정되지 않음 (소셜 로그인 계정)')
+            throw new Error(AUTH_ERRORS.SOCIAL_ACCOUNT.message)
+          }
+
+          // 4. 비밀번호 검증
+          console.log('🔑 [AUTH] 비밀번호 검증 중...')
+          let isValid = false
+          try {
+            isValid = await bcrypt.compare(credentials.password, user.password)
+          } catch (bcryptError) {
+            logAuthError('authorize - bcrypt 비교', bcryptError, { email })
+            throw new Error(AUTH_ERRORS.INVALID_CREDENTIALS.message)
+          }
+
+          console.log('🔑 [AUTH] 비밀번호 검증 결과:', isValid)
+
+          if (!isValid) {
+            console.log('❌ [AUTH] 비밀번호 불일치')
+            throw new Error(AUTH_ERRORS.INVALID_CREDENTIALS.message)
+          }
+
+          // 5. 계정 상태 확인
+          if (user.status === "DELETED") {
+            console.log('❌ [AUTH] 삭제된 계정')
+            throw new Error(AUTH_ERRORS.ACCOUNT_DELETED.message)
+          }
+
+          if (user.status === "SUSPENDED") {
+            console.log('❌ [AUTH] 정지된 계정')
+            const message = user.suspendReason
+              ? `${AUTH_ERRORS.ACCOUNT_SUSPENDED.message}. 사유: ${user.suspendReason}`
+              : AUTH_ERRORS.ACCOUNT_SUSPENDED.message
+            throw new Error(message)
+          }
+
+          // 6. 관리자 권한 확인
+          console.log('🔍 [AUTH] 관리자 권한 확인 중...')
+          let adminRole = null
+          try {
+            adminRole = await prisma.adminRole.findUnique({
+              where: { userId: user.id },
+              select: {
+                role: true,
+                expiresAt: true,
+              }
+            })
+          } catch (dbError) {
+            logAuthError('authorize - 관리자 권한 조회', dbError, { userId: user.id })
+            // 관리자 권한 조회 실패는 무시하고 진행
+          }
+
+          const isAdmin = adminRole && (!adminRole.expiresAt || new Date(adminRole.expiresAt) > new Date())
+          console.log(`👤 [AUTH] 관리자 여부: ${isAdmin ? '✅ 관리자' : '❌ 일반 사용자'}`, adminRole?.role)
+
+          // 7. lastLoginAt 업데이트
+          console.log('✅ [AUTH] 로그인 성공, lastLoginAt 업데이트 중...')
+          try {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { lastLoginAt: new Date() }
+            })
+          } catch (dbError) {
+            // lastLoginAt 업데이트 실패는 로그만 남기고 진행
+            logAuthError('authorize - lastLoginAt 업데이트', dbError, { userId: user.id })
+          }
+
+          const result = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.avatar,
+            role: user.role,
+            status: user.status,
+            provider: user.provider,
+            isAdmin: isAdmin,
+            adminRole: adminRole?.role || null,
+          }
+
+          console.log('✅ [AUTH] authorize 완료, 반환값:', result)
+          return result
+
+        } catch (error) {
+          // 에러 로깅
+          logAuthError('authorize', error, {
+            email: credentials?.email,
+            hasPassword: !!credentials?.password
+          })
+
+          // NextAuth는 Error의 message를 사용
+          throw error
         }
-        
-        console.log('✅ [AUTH] authorize 완료, 반환값:', result)
-        return result
       }
     })
   ],
@@ -141,36 +197,51 @@ export const authConfig = {
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      // 초기 로그인 시
-      if (user) {
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-        token.image = user.image
-        token.role = user.role
-        token.status = user.status
-        token.provider = user.provider
-        token.isAdmin = user.isAdmin  // 관리자 여부 추가
-        token.adminRole = user.adminRole  // 관리자 역할 추가
+      try {
+        // 초기 로그인 시
+        if (user) {
+          token.id = user.id
+          token.email = user.email
+          token.name = user.name
+          token.image = user.image
+          token.role = user.role
+          token.status = user.status
+          token.provider = user.provider
+          token.isAdmin = user.isAdmin
+          token.adminRole = user.adminRole
 
-        console.log('🔑 [AUTH] JWT 생성:', {
-          email: token.email,
-          isAdmin: token.isAdmin,
-          adminRole: token.adminRole
+          console.log('🔑 [AUTH] JWT 생성:', {
+            email: token.email,
+            isAdmin: token.isAdmin,
+            adminRole: token.adminRole
+          })
+        }
+
+        // 세션 업데이트 시 (update 호출 시)
+        if (trigger === "update" && session) {
+          token.name = session.name || token.name
+          token.image = session.image || token.image
+        }
+
+        return token
+      } catch (error) {
+        logAuthError('jwt callback', error, {
+          userId: user?.id || token?.id,
+          trigger
         })
-      }
 
-      // 세션 업데이트 시 (update 호출 시)
-      if (trigger === "update" && session) {
-        token.name = session.name || token.name
-        token.image = session.image || token.image
+        // JWT 생성 실패 시에도 기존 token 반환 (세션 유지)
+        return token
       }
-
-      return token
     },
     async session({ session, token }) {
-      // JWT 토큰에서 세션으로 정보 전달
-      if (token && session) {
+      try {
+        // JWT 토큰 검증
+        if (!token || !token.id) {
+          console.log('❌ [AUTH] 유효하지 않은 토큰')
+          throw new Error(AUTH_ERRORS.INVALID_SESSION.message)
+        }
+
         // 기본 사용자 정보
         session.user = {
           id: token.id || '',
@@ -207,13 +278,54 @@ export const authConfig = {
             adminRole: session.user.adminRole,
             fetchedFromDB: !!adminRole
           })
-        } catch (error) {
-          console.error('❌ [AUTH] Failed to fetch admin role:', error)
+        } catch (dbError) {
+          logAuthError('session - 관리자 권한 조회', dbError, { userId: token.id })
           // 에러 발생 시에도 세션은 반환 (관리자 권한 없는 상태로)
         }
-      }
 
-      return session
+        // 사용자 계정 상태 확인 (DB 실시간 조회)
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { status: true }
+          })
+
+          if (!user) {
+            console.log('❌ [AUTH] 사용자를 찾을 수 없음 (삭제됨)')
+            throw new Error(AUTH_ERRORS.ACCOUNT_DELETED.message)
+          }
+
+          if (user.status === 'DELETED') {
+            console.log('❌ [AUTH] 삭제된 계정')
+            throw new Error(AUTH_ERRORS.ACCOUNT_DELETED.message)
+          }
+
+          if (user.status === 'SUSPENDED') {
+            console.log('❌ [AUTH] 정지된 계정')
+            throw new Error(AUTH_ERRORS.ACCOUNT_SUSPENDED.message)
+          }
+
+          // 세션에 최신 상태 반영
+          session.user.status = user.status
+        } catch (dbError) {
+          if (dbError.message === AUTH_ERRORS.ACCOUNT_DELETED.message ||
+              dbError.message === AUTH_ERRORS.ACCOUNT_SUSPENDED.message) {
+            throw dbError
+          }
+          logAuthError('session - 사용자 상태 조회', dbError, { userId: token.id })
+          // DB 조회 실패 시 토큰의 상태 사용
+        }
+
+        return session
+      } catch (error) {
+        logAuthError('session callback', error, {
+          userId: token?.id,
+          email: token?.email
+        })
+
+        // 세션 생성 실패 시 null 반환 (로그아웃 처리)
+        throw error
+      }
     },
     async signIn({ user: _user, account, profile: _profile }) {
       // OAuth 로그인 시 처리

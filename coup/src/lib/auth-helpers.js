@@ -3,6 +3,11 @@ import { NextResponse } from "next/server"
 import { prisma } from "./prisma"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "./auth"
+import {
+  AUTH_ERRORS,
+  createAuthErrorResponse,
+  logAuthError
+} from "./exceptions/auth-errors"
 
 /**
  * 세션 가져오기 (Server Component용)
@@ -24,50 +29,98 @@ export async function getSession() {
  */
 export async function requireAuth() {
   try {
-    const session = await getServerSession(authOptions)
+    // 1. 세션 조회
+    let session
+    try {
+      session = await getServerSession(authOptions)
+    } catch (sessionError) {
+      logAuthError('requireAuth - getServerSession', sessionError)
+      const errorResponse = createAuthErrorResponse('INVALID_SESSION')
+      return NextResponse.json(
+        { error: errorResponse.code, message: errorResponse.message },
+        { status: errorResponse.statusCode }
+      )
+    }
 
-    // 세션 없거나 user 정보 없음
+    // 2. 세션 검증
     if (!session || !session.user || !session.user.id) {
-      console.warn('⚠️ requireAuth: No valid session')
+      console.warn('⚠️ [AUTH] requireAuth: 세션 없음')
+      const errorResponse = createAuthErrorResponse('NO_SESSION')
       return NextResponse.json(
-        { error: "로그인이 필요합니다" },
-        { status: 401 }
+        { error: errorResponse.code, message: errorResponse.message },
+        { status: errorResponse.statusCode }
       )
     }
 
-    // 데이터베이스에서 사용자 확인 (실제 검증)
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-        role: true,
-        status: true,
-        provider: true
-      }
-    })
+    // 3. 데이터베이스에서 사용자 확인 (실제 검증)
+    let user
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          avatar: true,
+          role: true,
+          status: true,
+          provider: true
+        }
+      })
+    } catch (dbError) {
+      logAuthError('requireAuth - DB 조회', dbError, {
+        userId: session.user.id
+      })
+      const errorResponse = createAuthErrorResponse('DB_QUERY_ERROR')
+      return NextResponse.json(
+        { error: errorResponse.code, message: errorResponse.message },
+        { status: errorResponse.statusCode }
+      )
+    }
 
-    // 사용자 없음
+    // 4. 사용자 존재 확인
     if (!user) {
-      console.warn(`⚠️ requireAuth: User ${session.user.id} not found in database`)
+      console.warn(`⚠️ [AUTH] requireAuth: 사용자 없음 ${session.user.id}`)
+      const errorResponse = createAuthErrorResponse('NO_SESSION')
       return NextResponse.json(
-        { error: "사용자를 찾을 수 없습니다" },
-        { status: 401 }
+        { error: errorResponse.code, message: errorResponse.message },
+        { status: errorResponse.statusCode }
       )
     }
 
-    // 비활성 계정
-    if (user.status !== 'ACTIVE') {
-      console.warn(`⚠️ requireAuth: User ${session.user.id} is ${user.status}`)
+    // 5. 계정 상태 확인
+    if (user.status === 'DELETED') {
+      console.warn(`⚠️ [AUTH] requireAuth: 삭제된 계정 ${user.id}`)
+      const errorResponse = createAuthErrorResponse('ACCOUNT_DELETED')
       return NextResponse.json(
-        { error: user.status === 'SUSPENDED' ? "정지된 계정입니다" : "비활성화된 계정입니다" },
+        { error: errorResponse.code, message: errorResponse.message },
+        { status: errorResponse.statusCode }
+      )
+    }
+
+    if (user.status === 'SUSPENDED') {
+      console.warn(`⚠️ [AUTH] requireAuth: 정지된 계정 ${user.id}`)
+      const errorResponse = createAuthErrorResponse('ACCOUNT_SUSPENDED')
+      return NextResponse.json(
+        { error: errorResponse.code, message: errorResponse.message },
+        { status: errorResponse.statusCode }
+      )
+    }
+
+    if (user.status !== 'ACTIVE') {
+      console.warn(`⚠️ [AUTH] requireAuth: 비활성 계정 ${user.id}, status: ${user.status}`)
+      return NextResponse.json(
+        { error: 'INACTIVE_ACCOUNT', message: `계정 상태: ${user.status}` },
         { status: 403 }
       )
     }
 
-    // 최신 사용자 정보 반환
+    // 6. 최신 사용자 정보 반환
+    console.log('✅ [AUTH] requireAuth: 인증 성공', {
+      userId: user.id,
+      email: user.email
+    })
+
     return {
       user: {
         id: user.id,
@@ -81,10 +134,13 @@ export async function requireAuth() {
     }
 
   } catch (error) {
-    console.error('❌ requireAuth error:', error)
+    // 최상위 예외 처리
+    logAuthError('requireAuth - 최상위', error)
+
+    const errorResponse = createAuthErrorResponse('UNKNOWN_ERROR')
     return NextResponse.json(
-      { error: "인증 처리 중 오류가 발생했습니다" },
-      { status: 500 }
+      { error: errorResponse.code, message: errorResponse.message },
+      { status: errorResponse.statusCode }
     )
   }
 }
