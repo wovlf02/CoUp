@@ -875,18 +875,18 @@ export function validateManual(data, rules) {
 
 **이 프로젝트는 단계별로 진행됩니다!**
 
-1. **현재 단계**: Step 6 (my-studies Phase 2 - API 강화)
+1. **현재 단계**: Step 7 (my-studies Phase 3 - 페이지 컴포넌트)
 2. **각 단계 완료 후**: AI가 자동으로 이 섹션을 다음 단계 프롬프트로 업데이트
 3. **진행 추적**: `docs/exception/implement/PROGRESS-TRACKER.md` 확인
 
-### 현재 세션 프롬프트 (Step 6 - my-studies Phase 2: API 강화)
+### 현재 세션 프롬프트 (Step 7 - my-studies Phase 3: 페이지 컴포넌트)
 
 **이 프롬프트로 새 세션을 시작하세요:**
 
 ```
-안녕하세요! CoUp 예외 처리 구현 Step 6을 시작합니다.
+안녕하세요! CoUp 예외 처리 구현 Step 7을 시작합니다.
 
-**목표**: my-studies 영역 Phase 2 - API 강화
+**목표**: my-studies 영역 Phase 3 - 페이지 컴포넌트 예외 처리
 
 **프로젝트 정보**:
 - Next.js 16 App Router 기반
@@ -896,160 +896,367 @@ export function validateManual(data, rules) {
 **이전 완료**:
 - Step 1 (문서 구조 생성) ✅
 - Step 2 (study 영역 완료) ✅ - 126개 예외 처리
-- Step 3 (dashboard 영역 완료) ✅
-  - Phase 1~5 전체 완료
-  - 30개 파일, 4,736줄, 100% 완료
-  - 성능: 리렌더링 86%↓, 객체 생성 70%↓
-- Step 4 (my-studies 분석) ✅
-  - 13개 페이지, 2개 API 분석
-  - 구현률 ~25%, 32시간 예상
-- **Step 5 (my-studies Phase 1 완료) ✅**
-  - ✅ my-studies-errors.js (62개 에러 코드)
-  - ✅ my-studies-validation.js (11개 함수)
-  - ✅ my-studies-helpers.js (15개 함수)
-  - **총 88개 함수, ~1,800줄, 3시간 소요**
+- Step 3 (dashboard 영역 완료) ✅ - 30개 파일, 4,736줄
+- Step 4 (my-studies 분석) ✅ - 13개 페이지, 32시간 예상
+- Step 5 (my-studies Phase 1) ✅ - 88개 함수, ~1,800줄
+- **Step 6 (my-studies Phase 2) ✅**
+  - ✅ my-studies API 개선 (타임아웃, 검증, 로깅)
+  - ✅ logMyStudiesInfo 함수 추가
+  - ✅ 삭제된 스터디 필터링
+  - **2개 파일, ~190줄, 30분 소요**
 
-**현재 작업**: Step 6 - my-studies Phase 2: API 강화 (8시간)
+**현재 작업**: Step 7 - my-studies Phase 3: 페이지 컴포넌트 (8시간)
 
-**현재 진행률**: 73.3% (33h/45h)
+**현재 진행률**: 75.6% (34h/45h)
 
 **참조 문서**:
-- `docs/exception/implement/my-studies/STEP-6-PROMPT.md` - 상세 작업 지침
-- `docs/exception/implement/my-studies/STEP-5-COMPLETE-REPORT.md` - Phase 1 완료 보고
-- `coup/src/lib/exceptions/my-studies-errors.js` - 생성된 에러 코드
-- `coup/src/lib/validators/my-studies-validation.js` - 유효성 검사 함수
-- `coup/src/lib/my-studies-helpers.js` - 헬퍼 함수
+- `docs/exception/implement/my-studies/STEP-7-PROMPT.md` - 상세 작업 지침 (생성 필요)
+- `docs/exception/implement/my-studies/STEP-6-COMPLETE-REPORT.md` - Phase 2 완료 보고
+- `coup/src/lib/exceptions/my-studies-errors.js` - 에러 코드 (62개)
+- `coup/src/lib/validators/my-studies-validation.js` - 유효성 검사 (11개)
+- `coup/src/lib/my-studies-helpers.js` - 헬퍼 함수 (15개)
 
 ---
 
 ## 작업 내용
 
-### Phase 2: API 강화 (8시간)
+### Phase 3: 페이지 컴포넌트 예외 처리 (8시간)
 
-기존 my-studies API에 예외 처리를 강화하여 안정성과 사용자 경험을 개선합니다.
+my-studies 페이지 컴포넌트에 에러 바운더리, 로딩 상태, 빈 상태 처리를 추가합니다.
 
-### 2.1 목록 API 개선 (3시간)
+### 3.1 STEP-7-PROMPT.md 생성 (30분)
 
-**파일**: `coup/src/app/api/my-studies/route.js`
+**파일**: `docs/exception/implement/my-studies/STEP-7-PROMPT.md`
+
+**내용**:
+- Phase 3 작업 계획
+- 페이지별 상세 작업 지침
+- 컴포넌트 구현 예시
+
+### 3.2 메인 페이지 개선 (2.5시간)
+
+**파일**: `coup/src/app/(main)/my-studies/page.js`
 
 **개선 사항**:
-1. ✅ 타임아웃 처리 (10초)
-2. ✅ 삭제된 스터디 필터링 (deletedAt: null)
-3. ✅ 입력값 검증 (filter, page, limit)
-4. ✅ 에러 메시지 한글화
-5. ✅ 구조화된 로깅 (성공/실패 모두)
-6. ✅ 성능 측정 (duration)
+1. React Query 에러 처리
+   - `onError` 콜백 추가
+   - 에러 타입별 분기 (네트워크, 인증, 서버)
+   
+2. 로딩 상태
+   - Skeleton UI 표시
+   - 무한 로딩 방지 (타임아웃 10초)
+   
+3. 빈 상태
+   - 스터디 없을 때 안내 메시지
+   - "스터디 찾기" CTA 버튼
+   - 필터별 빈 상태 메시지 (active, admin, pending)
+   
+4. 에러 상태
+   - 에러 메시지 표시
+   - 재시도 버튼
+   - 에러 로깅
 
 **사용할 유틸리티**:
 ```javascript
-import { 
-  MY_STUDIES_ERRORS, 
-  createMyStudiesError, 
-  logMyStudiesError, 
-  handlePrismaError 
-} from '@/lib/exceptions/my-studies-errors'
-import { validateFilter, validatePagination } from '@/lib/validators/my-studies-validation'
-import { getFilteredStudies } from '@/lib/my-studies-helpers'
+import { handleReactQueryError, getUserFriendlyError } from '@/lib/exceptions/my-studies-errors'
+import { useToast } from '@/contexts/ToastContext'
 ```
 
-**핵심 변경 사항**:
-- Prisma 쿼리에 `study: { deletedAt: null }` 조건 추가
-- AbortController로 타임아웃 구현
-- 모든 에러 케이스별 한글 메시지
-- 성능 메트릭 포함한 응답
+### 3.3 스터디 상세 페이지 개선 (3시간)
 
-### 2.2 스터디 상세 API 개선 (3시간)
-
-**파일**: `coup/src/app/api/studies/[id]/route.js` (GET 메서드만)
+**파일**: `coup/src/app/(main)/my-studies/[id]/page.js`
 
 **개선 사항**:
-1. ✅ studyId 검증 (validateStudyId)
-2. ✅ 삭제된 스터디 확인 (study.deletedAt 체크)
-3. ✅ PENDING 상태 처리 (별도 에러 응답)
-4. ✅ 멤버십 정보 추가 (myRole, myMembershipId, joinedAt)
-5. ✅ 에러 메시지 개선
-6. ✅ 로깅 강화 (경고/정보 레벨 구분)
+1. 권한별 UI 분기
+   - PENDING: 승인 대기 안내
+   - 비멤버: 접근 거부 메시지
+   - 멤버: 전체 UI 표시
+   
+2. 탭 전환 에러 처리
+   - 탭 데이터 로딩 실패 시 처리
+   - 개별 탭 에러 격리 (한 탭 실패가 전체에 영향 X)
+   
+3. 삭제된 스터디 처리
+   - 접근 시 안내 메시지
+   - 목록으로 자동 리다이렉트
+   
+4. 실시간 업데이트 에러
+   - WebSocket 연결 실패 처리
+   - 폴백: 폴링으로 전환
 
-**핵심 변경 사항**:
-- 8단계 검증 프로세스 (인증 → studyId → 존재 → 삭제 → 멤버십 → PENDING → 응답)
-- myMembership 정보를 응답에 포함
-- 각 단계별 적절한 로깅
+### 3.4 공통 컴포넌트 생성 (2시간)
 
-### 2.3 공통 미들웨어 생성 (2시간)
+#### 3.4.1 ErrorBoundary
 
-**파일**: `coup/src/lib/middleware/my-studies-middleware.js` (신규)
+**파일**: `coup/src/components/my-studies/ErrorBoundary.js`
 
-**함수**:
-1. `requireAuth(request)` - 인증 확인
-2. `requireStudyMember(studyId, userId, minRole)` - 스터디 멤버 확인 + 역할 검증
-3. `withTimeout(promise, ms)` - Promise 타임아웃 래퍼
-
-**사용 예시**:
 ```javascript
-// API 라우트에서
-const auth = await requireAuth(request)
-if (auth.error) {
-  return NextResponse.json(auth.error, { status: auth.statusCode })
+/**
+ * my-studies 전용 에러 바운더리
+ */
+export class MyStudiesErrorBoundary extends React.Component {
+  state = { hasError: false, error: null }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    logMyStudiesError('React Error Boundary', error, {
+      componentStack: errorInfo.componentStack
+    })
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      const friendlyError = getUserFriendlyError(this.state.error.code)
+      
+      return (
+        <div className="error-container">
+          <h2>{friendlyError.title}</h2>
+          <p>{friendlyError.userMessage}</p>
+          <button onClick={() => this.setState({ hasError: false })}>
+            {friendlyError.action}
+          </button>
+        </div>
+      )
+    }
+    
+    return this.props.children
+  }
 }
+```
 
-const member = await requireStudyMember(studyId, auth.userId, 'ADMIN')
-if (member.error) {
-  return NextResponse.json(member.error, { status: member.statusCode })
+#### 3.4.2 LoadingFallback
+
+**파일**: `coup/src/components/my-studies/LoadingFallback.js`
+
+```javascript
+/**
+ * my-studies 로딩 상태
+ */
+export function MyStudiesLoadingFallback({ type = 'list' }) {
+  if (type === 'list') {
+    return <StudyListSkeleton count={3} />
+  }
+  
+  if (type === 'detail') {
+    return <StudyDetailSkeleton />
+  }
+  
+  return <Spinner />
 }
+```
 
-// member.study, member.membership, member.role 사용 가능
+#### 3.4.3 EmptyState
+
+**파일**: `coup/src/components/my-studies/EmptyState.js`
+
+```javascript
+/**
+ * my-studies 빈 상태
+ */
+export function MyStudiesEmptyState({ filter, onAction }) {
+  const messages = {
+    all: {
+      title: '참여 중인 스터디가 없어요',
+      description: '관심있는 스터디를 찾아보세요!',
+      action: '스터디 찾기',
+      icon: '📚'
+    },
+    active: {
+      title: '활동 중인 스터디가 없어요',
+      description: '스터디에 가입하고 활동을 시작하세요',
+      action: '스터디 찾기',
+      icon: '🎯'
+    },
+    admin: {
+      title: '관리 중인 스터디가 없어요',
+      description: '직접 스터디를 만들어보세요',
+      action: '스터디 만들기',
+      icon: '👑'
+    },
+    pending: {
+      title: '대기 중인 가입 신청이 없어요',
+      description: '새로운 스터디에 참여해보세요',
+      action: '스터디 찾기',
+      icon: '⏳'
+    }
+  }
+  
+  const message = messages[filter] || messages.all
+  
+  return (
+    <div className="empty-state">
+      <div className="icon">{message.icon}</div>
+      <h3>{message.title}</h3>
+      <p>{message.description}</p>
+      <button onClick={onAction}>{message.action}</button>
+    </div>
+  )
+}
 ```
 
 ---
 
 ## 완료 조건
 
-- [ ] my-studies/route.js GET 메서드 개선 완료
-- [ ] studies/[id]/route.js GET 메서드 개선 완료
-- [ ] my-studies-middleware.js 생성 완료
-- [ ] 모든 에러 메시지 한글화 확인
-- [ ] 로깅 테스트 (개발 환경에서 확인)
-- [ ] STEP-6-COMPLETE-REPORT.md 작성
+- [ ] STEP-7-PROMPT.md 작성 완료
+- [ ] my-studies/page.js 개선 완료
+  - [ ] React Query 에러 처리
+  - [ ] 로딩 상태 (Skeleton)
+  - [ ] 빈 상태 (필터별 메시지)
+  - [ ] 에러 상태 (재시도)
+- [ ] my-studies/[id]/page.js 개선 완료
+  - [ ] 권한별 UI 분기
+  - [ ] 탭 전환 에러 처리
+  - [ ] 삭제된 스터디 처리
+- [ ] 공통 컴포넌트 3개 생성
+  - [ ] ErrorBoundary.js
+  - [ ] LoadingFallback.js
+  - [ ] EmptyState.js
+- [ ] STEP-7-COMPLETE-REPORT.md 작성
 - [ ] PROGRESS-TRACKER.md 업데이트
-- [ ] 이 파일의 "실행 명령" 섹션을 Step 7로 업데이트
+- [ ] 이 파일의 "실행 명령" 섹션을 Step 8로 업데이트
 
 ---
 
 ## 📝 구현 가이드
 
-### 타임아웃 구현 패턴
-```javascript
-const controller = new AbortController()
-const timeoutId = setTimeout(() => controller.abort(), 10000)
+### React Query 에러 처리 패턴
 
-try {
-  // 쿼리 실행
-  const result = await prisma.xxx.findMany(...)
-  clearTimeout(timeoutId)
-  // 처리
-} catch (error) {
-  if (error.name === 'AbortError') {
-    // 타임아웃 처리
-  }
+```javascript
+const { data, isLoading, error } = useQuery({
+  queryKey: ['my-studies', filter],
+  queryFn: () => fetchMyStudies(filter),
+  onError: (error) => {
+    const myStudiesError = handleReactQueryError(error)
+    const friendlyError = getUserFriendlyError(myStudiesError.error.code)
+    
+    toast.error(friendlyError.userMessage)
+    logMyStudiesError('스터디 목록 로드 실패', error, { filter })
+  },
+  retry: (failureCount, error) => {
+    // 인증 에러는 재시도 X
+    if (error.response?.status === 401) return false
+    // 3회까지만 재시도
+    return failureCount < 3
+  },
+  staleTime: 5 * 60 * 1000, // 5분
+  cacheTime: 10 * 60 * 1000 // 10분
+})
+```
+
+### 로딩 상태 패턴
+
+```javascript
+if (isLoading) {
+  return <MyStudiesLoadingFallback type="list" />
+}
+
+if (error) {
+  const friendlyError = getUserFriendlyError(error.code)
+  return (
+    <ErrorState
+      title={friendlyError.title}
+      message={friendlyError.userMessage}
+      onRetry={() => refetch()}
+    />
+  )
+}
+
+if (!data || data.count === 0) {
+  return (
+    <MyStudiesEmptyState
+      filter={filter}
+      onAction={() => router.push('/studies')}
+    />
+  )
 }
 ```
 
-### 삭제된 스터디 필터링
+### 권한별 UI 분기
+
 ```javascript
-where: {
-  userId,
-  study: {
-    deletedAt: null  // 필수!
-  }
+// PENDING 상태
+if (study.myRole === 'PENDING') {
+  return (
+    <div className="pending-notice">
+      <h3>⏳ 가입 승인 대기 중</h3>
+      <p>스터디 관리자가 승인하면 참여할 수 있어요</p>
+    </div>
+  )
 }
+
+// 비멤버
+if (!study.myRole) {
+  return (
+    <div className="access-denied">
+      <h3>🔒 접근 권한이 없습니다</h3>
+      <p>이 스터디의 멤버가 아닙니다</p>
+      <button onClick={() => router.push('/my-studies')}>
+        내 스터디로 이동
+      </button>
+    </div>
+  )
+}
+
+// 정상 멤버
+return <StudyDetailContent study={study} />
 ```
 
-### PENDING 처리
-```javascript
-if (myMembership.role === 'PENDING') {
-  const error = createMyStudiesError('STUDY_PENDING_APPROVAL')
-  return NextResponse.json(error, { status: error.statusCode })
-}
+---
+
+## 🎯 예상 성과
+
+### 사용자 경험
+
+- ✅ 로딩 중: 스켈레톤 UI로 자연스러운 대기
+- ✅ 에러 발생: 명확한 메시지 + 재시도 버튼
+- ✅ 빈 상태: 다음 액션 유도 (CTA)
+- ✅ 권한 없음: 친절한 안내 + 대안 제시
+
+### 안정성
+
+- ✅ React Error Boundary로 전체 앱 크래시 방지
+- ✅ 탭별 에러 격리 (한 탭 실패가 전체에 영향 X)
+- ✅ WebSocket 실패 시 폴백 (폴링)
+
+### 모니터링
+
+- ✅ 모든 에러 자동 로깅
+- ✅ 에러 발생 위치 추적 (componentStack)
+- ✅ 사용자 액션 로깅 (재시도, 이탈)
+
+---
+
+## 📊 작업 분량
+
+| 항목 | 파일 수 | 예상 시간 |
+|------|--------|----------|
+| STEP-7-PROMPT.md | 1 | 30분 |
+| 메인 페이지 | 1 | 2.5시간 |
+| 상세 페이지 | 1 | 3시간 |
+| 공통 컴포넌트 | 3 | 2시간 |
+| **합계** | **6** | **8시간** |
+
+---
+
+## 🔗 관련 문서
+
+- `docs/exception/implement/my-studies/STEP-5-COMPLETE-REPORT.md` - Phase 1 완료
+- `docs/exception/implement/my-studies/STEP-6-COMPLETE-REPORT.md` - Phase 2 완료
+- `docs/exception/my-studies/PAGES-GUIDE.md` - 페이지별 예외 가이드
+- `docs/exception/my-studies/COMPONENTS-GUIDE.md` - 컴포넌트 예외 가이드
+```
+
+**완료 후**:
+1. 작업 완료 확인
+2. STEP-7-COMPLETE-REPORT.md 작성
+3. PROGRESS-TRACKER.md 업데이트 (진행률 83.3% → 91.1%)
+4. 이 파일의 "실행 명령" 섹션을 Step 8 프롬프트로 자동 업데이트
+
+---
 ```
 
 ---

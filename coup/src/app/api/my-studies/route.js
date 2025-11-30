@@ -1,56 +1,63 @@
 // src/app/api/my-studies/route.js
 import { NextResponse } from "next/server"
-import { requireAuth } from "@/lib/auth-helpers"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import {
+  createMyStudiesError,
+  logMyStudiesError,
+  logMyStudiesInfo,
+  handlePrismaError
+} from '@/lib/exceptions/my-studies-errors'
+import { validateFilter, validatePagination } from '@/lib/validators/my-studies-validation'
+import { getFilteredStudies } from '@/lib/my-studies-helpers'
 
 export async function GET(request) {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
+  const startTime = Date.now()
+  let userId = null
 
   try {
+    // 1. 타임아웃 설정 (10초)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+    // 2. 인증 확인
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      const error = createMyStudiesError('UNAUTHORIZED')
+      return NextResponse.json(error, { status: error.statusCode })
+    }
+
+    userId = parseInt(session.user.id)
+
+    // 3. 쿼리 파라미터 검증
     const { searchParams } = new URL(request.url)
-    const filter = searchParams.get('filter') || 'all' // all | owner | admin | pending
+    const filter = searchParams.get('filter') || 'all'
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const skip = (page - 1) * limit
+    const limit = parseInt(searchParams.get('limit') || '1000')
 
-    const userId = session.user.id
-
-    // 필터 조건 생성
-    let whereClause = {
-      userId
+    // 필터 검증
+    const filterValidation = validateFilter(filter)
+    if (!filterValidation.valid) {
+      const error = createMyStudiesError('INVALID_FILTER', filterValidation.error)
+      return NextResponse.json(error, { status: error.statusCode })
     }
 
-    if (filter === 'owner') {
-      whereClause.role = 'OWNER'
-      whereClause.status = 'ACTIVE'
-    } else if (filter === 'admin') {
-      whereClause.role = { in: ['OWNER', 'ADMIN'] }
-      whereClause.status = 'ACTIVE'
-    } else if (filter === 'pending') {
-      whereClause.status = 'PENDING'
-    } else if (filter === 'active') {
-      // ACTIVE 상태의 모든 스터디
-      whereClause.status = 'ACTIVE'
-    } else if (filter === 'all') {
-      whereClause.status = { in: ['ACTIVE', 'PENDING'] }
-    } else {
-      // 기본값: ACTIVE 상태만
-      whereClause.status = 'ACTIVE'
+    // 페이지네이션 검증
+    const paginationValidation = validatePagination({ page, limit })
+    if (!paginationValidation.valid) {
+      const error = createMyStudiesError('INVALID_REQUEST', paginationValidation.error)
+      return NextResponse.json(error, { status: error.statusCode })
     }
 
-    // 총 개수 조회
-    const total = await prisma.studyMember.count({ where: whereClause })
-
-    // 스터디 목록 조회
+    // 4. DB 쿼리 (삭제된 스터디 제외)
     const studyMembers = await prisma.studyMember.findMany({
-      where: whereClause,
-      skip,
-      take: limit,
-      orderBy: [
-        { status: 'desc' }, // PENDING이 먼저
-        { joinedAt: 'desc' }
-      ],
+      where: {
+        userId,
+        study: {
+          deletedAt: null  // 삭제된 스터디 제외
+        }
+      },
       include: {
         study: {
           select: {
@@ -65,6 +72,7 @@ export async function GET(request) {
             isRecruiting: true,
             tags: true,
             createdAt: true,
+            deletedAt: true,
             _count: {
               select: {
                 members: {
@@ -88,11 +96,20 @@ export async function GET(request) {
             }
           }
         }
-      }
+      },
+      orderBy: [
+        { status: 'desc' }, // PENDING이 먼저
+        { joinedAt: 'desc' }
+      ]
     })
 
-    // 응답 데이터 포맷팅
-    const studies = studyMembers.map(sm => ({
+    clearTimeout(timeoutId)
+
+    // 5. 필터링 (안전)
+    const filtered = getFilteredStudies(studyMembers, filter)
+
+    // 6. 응답 데이터 포맷팅
+    const studies = filtered.map(sm => ({
       membershipId: sm.id,
       role: sm.role,
       status: sm.status,
@@ -116,23 +133,63 @@ export async function GET(request) {
       }
     }))
 
+    // 7. 응답
+    const duration = Date.now() - startTime
+
+    // 로깅
+    logMyStudiesInfo('스터디 목록 로드 성공', {
+      userId,
+      filter,
+      totalCount: studyMembers.length,
+      filteredCount: studies.length,
+      duration: `${duration}ms`
+    })
+
     return NextResponse.json({
       success: true,
-      data: studies,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
+      data: {
+        studies,
+        count: studies.length,
+        filter
+      },
+      meta: {
+        duration,
+        timestamp: new Date().toISOString()
       }
     })
 
   } catch (error) {
-    console.error('My studies error:', error)
-    return NextResponse.json(
-      { error: "스터디 목록을 가져오는 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+    const duration = Date.now() - startTime
+
+    // Prisma 에러 변환
+    if (error.code?.startsWith('P')) {
+      const prismaError = handlePrismaError(error)
+      logMyStudiesError('스터디 목록 로드 실패 (Prisma)', error, {
+        userId,
+        prismaCode: error.code,
+        duration: `${duration}ms`
+      })
+      return NextResponse.json(prismaError, { status: prismaError.statusCode })
+    }
+
+    // 타임아웃
+    if (error.name === 'AbortError') {
+      const timeoutError = createMyStudiesError('TIMEOUT')
+      logMyStudiesError('스터디 목록 로드 타임아웃', error, {
+        userId,
+        duration: `${duration}ms`
+      })
+      return NextResponse.json(timeoutError, { status: timeoutError.statusCode })
+    }
+
+    // 일반 에러
+    logMyStudiesError('스터디 목록 로드 실패', error, {
+      userId,
+      duration: `${duration}ms`
+    })
+
+    const genericError = createMyStudiesError('STUDIES_LOAD_FAILED')
+    return NextResponse.json(genericError, { status: genericError.statusCode })
   }
 }
 

@@ -696,6 +696,40 @@ export function logMyStudiesWarning(context, message, metadata = {}) {
 }
 
 /**
+ * my-studies 정보 로깅 (Info Level)
+ *
+ * @param {string} context - 정보 로깅 컨텍스트
+ * @param {Object} [metadata] - 추가 메타데이터
+ *
+ * @example
+ * logMyStudiesInfo('스터디 목록 로드 성공', {
+ *   userId: 123,
+ *   filter: 'all',
+ *   count: 5,
+ *   duration: '45ms'
+ * })
+ */
+export function logMyStudiesInfo(context, metadata = {}) {
+  const logData = {
+    level: 'INFO',
+    context: `[MY-STUDIES] ${context}`,
+    timestamp: new Date().toISOString(),
+    ...metadata
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    console.log(JSON.stringify(logData))
+  } else {
+    console.log(`\n✅ [MY-STUDIES] ${context}`)
+    console.log(`📅 Time: ${logData.timestamp}`)
+    if (Object.keys(metadata).length > 0) {
+      console.log(`📊 Metadata:`, JSON.stringify(metadata, null, 2))
+    }
+    console.log('')
+  }
+}
+
+/**
  * Prisma 에러를 my-studies 에러로 변환
  *
  * @param {Error} error - Prisma 에러 객체
