@@ -1,551 +1,699 @@
 /**
- * 트랜잭션 헬퍼 함수
+ * transaction-helpers.js
+ *
+ * 스터디 관련 트랜잭션 헬퍼 함수
+ * 데이터 일관성을 보장하기 위한 트랜잭션 로직 제공
+ *
+ * 사용 예시:
+ * ```js
+ * import { createStudyWithOwner, approveJoinRequest, deleteStudyWithCleanup } from '@/lib/transaction-helpers'
+ *
+ * const result = await createStudyWithOwner(prisma, userId, studyData)
+ * ```
+ *
  * @module lib/transaction-helpers
  */
 
-import { PrismaClient } from '@prisma/client';
-import { logStudyError } from './exceptions/study-errors.js';
+import { logStudyError } from '@/lib/exceptions/study-errors'
+import { createTemplatedNotification, notifyStudyAdmins } from '@/lib/notification-helpers'
+import { NOTIFICATION_TYPES } from '@/lib/notification-helpers'
 
-const prisma = new PrismaClient();
+// ============================================
+// 스터디 CRUD 트랜잭션
+// ============================================
 
 /**
- * 스터디 생성 트랜잭션
- * 스터디 생성 + OWNER 멤버 자동 생성
+ * 스터디 생성 + OWNER 멤버 생성 (트랜잭션)
  *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} userId - 생성자 ID
  * @param {Object} studyData - 스터디 데이터
- * @param {string} ownerId - 소유자 ID
- * @returns {Promise<Object>} { study, member }
+ * @returns {Promise<Object>} { success: boolean, study?: Object, error?: string }
+ *
+ * @example
+ * const result = await createStudyWithOwner(prisma, session.user.id, {
+ *   name: '알고리즘 스터디',
+ *   description: '코딩테스트 준비',
+ *   maxMembers: 10,
+ *   category: 'IT'
+ * })
  */
-export async function createStudyWithOwner(studyData, ownerId) {
+export async function createStudyWithOwner(prisma, userId, studyData) {
   try {
+    // 트랜잭션으로 스터디 생성 + OWNER 멤버 생성
     const result = await prisma.$transaction(async (tx) => {
       // 1. 스터디 생성
       const study = await tx.study.create({
         data: {
           ...studyData,
-          currentMembers: 1
+          ownerId: userId,
+          currentMembers: 1 // OWNER 포함
         }
-      });
+      })
 
       // 2. OWNER 멤버 생성
-      const member = await tx.studyMember.create({
+      const ownerMember = await tx.studyMember.create({
         data: {
           studyId: study.id,
-          userId: ownerId,
+          userId: userId,
           role: 'OWNER',
           status: 'ACTIVE',
           joinedAt: new Date()
         }
-      });
+      })
 
-      return { study, member };
-    });
+      return { study, ownerMember }
+    })
 
-    console.log('✅ [TRANSACTION] 스터디 생성 완료:', {
+    console.log('[TRANSACTION] 스터디 생성 성공:', {
       studyId: result.study.id,
-      ownerId,
-      studyName: result.study.name
-    });
+      studyName: result.study.name,
+      ownerId: userId
+    })
 
-    return result;
+    return {
+      success: true,
+      study: result.study,
+      member: result.ownerMember
+    }
+
   } catch (error) {
-    logStudyError('createStudyWithOwner', error, {
-      studyName: studyData.name,
-      ownerId
-    });
-    throw error;
+    logStudyError('스터디 생성 트랜잭션', error, { userId, studyData })
+
+    return {
+      success: false,
+      error: '스터디 생성에 실패했습니다'
+    }
   }
 }
 
 /**
- * 스터디 삭제 트랜잭션
- * 관련된 모든 데이터 삭제
+ * 스터디 삭제 + 관련 데이터 정리 (트랜잭션)
  *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
  * @param {string} studyId - 스터디 ID
- * @returns {Promise<Object>} 삭제된 데이터 통계
+ * @returns {Promise<Object>} { success: boolean, deletedCount?: Object, error?: string }
+ *
+ * @example
+ * const result = await deleteStudyWithCleanup(prisma, studyId)
  */
-export async function deleteStudyWithRelations(studyId) {
+export async function deleteStudyWithCleanup(prisma, studyId) {
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 삭제 순서: 자식 -> 부모
+    // 트랜잭션으로 모든 관련 데이터 삭제
+    const deletedCount = await prisma.$transaction(async (tx) => {
+      const counts = {}
 
       // 1. 채팅 메시지 삭제
-      const messagesDeleted = await tx.studyMessage.deleteMany({
+      counts.messages = await tx.studyMessage.deleteMany({
         where: { studyId }
-      });
+      })
 
-      // 2. 파일 삭제
-      const filesDeleted = await tx.studyFile.deleteMany({
+      // 2. 할일 삭제
+      counts.tasks = await tx.studyTask.deleteMany({
         where: { studyId }
-      });
+      })
 
-      // 3. 할일 삭제
-      const tasksDeleted = await tx.studyTask.deleteMany({
+      // 3. 일정 삭제
+      counts.events = await tx.studyEvent.deleteMany({
         where: { studyId }
-      });
+      })
 
-      // 4. 일정 삭제
-      const eventsDeleted = await tx.studyEvent.deleteMany({
+      // 4. 파일 삭제 (DB 레코드만, 실제 파일은 별도 처리 필요)
+      counts.files = await tx.studyFile.deleteMany({
         where: { studyId }
-      });
+      })
 
       // 5. 공지 삭제
-      const noticesDeleted = await tx.studyNotice.deleteMany({
+      counts.notices = await tx.studyNotice.deleteMany({
         where: { studyId }
-      });
+      })
 
       // 6. 멤버 삭제
-      const membersDeleted = await tx.studyMember.deleteMany({
+      counts.members = await tx.studyMember.deleteMany({
         where: { studyId }
-      });
+      })
 
-      // 7. 가입 요청 삭제 (있는 경우)
-      const joinRequestsDeleted = await tx.studyJoinRequest?.deleteMany({
-        where: { studyId }
-      }) || { count: 0 };
-
-      // 8. 스터디 삭제
+      // 7. 스터디 삭제
       const study = await tx.study.delete({
         where: { id: studyId }
-      });
+      })
 
-      return {
-        study,
-        deleted: {
-          messages: messagesDeleted.count,
-          files: filesDeleted.count,
-          tasks: tasksDeleted.count,
-          events: eventsDeleted.count,
-          notices: noticesDeleted.count,
-          members: membersDeleted.count,
-          joinRequests: joinRequestsDeleted.count
-        }
-      };
-    });
+      return { ...counts, study: 1, studyName: study.name }
+    })
 
-    console.log('✅ [TRANSACTION] 스터디 삭제 완료:', {
+    console.log('[TRANSACTION] 스터디 삭제 성공:', {
       studyId,
-      studyName: result.study.name,
-      deletedCounts: result.deleted
-    });
+      deletedCount
+    })
 
-    return result;
+    return {
+      success: true,
+      deletedCount
+    }
+
   } catch (error) {
-    logStudyError('deleteStudyWithRelations', error, { studyId });
-    throw error;
+    logStudyError('스터디 삭제 트랜잭션', error, { studyId })
+
+    return {
+      success: false,
+      error: '스터디 삭제에 실패했습니다'
+    }
   }
 }
 
+// ============================================
+// 가입/승인 트랜잭션
+// ============================================
+
 /**
- * 가입 요청 승인 트랜잭션
- * 요청 삭제 + 멤버 생성 + 정원 업데이트
+ * 가입 요청 승인 (트랜잭션)
  *
- * @param {string} requestId - 가입 요청 ID
- * @param {Object} studyInfo - 스터디 정보 { id, currentMembers, maxMembers }
- * @returns {Promise<Object>} { member, study }
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} studyId - 스터디 ID
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 옵션
+ * @returns {Promise<Object>} { success: boolean, member?: Object, error?: string }
+ *
+ * @example
+ * const result = await approveJoinRequest(prisma, studyId, userId, {
+ *   checkCapacity: true,
+ *   sendNotification: true
+ * })
  */
-export async function approveJoinRequestWithMember(requestId, studyInfo) {
+export async function approveJoinRequest(prisma, studyId, userId, options = {}) {
+  const {
+    checkCapacity = true,
+    sendNotification = true
+  } = options
+
   try {
+    // 트랜잭션으로 승인 + 멤버 수 업데이트 + 알림
     const result = await prisma.$transaction(async (tx) => {
-      // 1. 가입 요청 조회
-      const joinRequest = await tx.studyJoinRequest.findUnique({
-        where: { id: requestId }
-      });
+      // 1. 정원 재확인 (옵션)
+      if (checkCapacity) {
+        const study = await tx.study.findUnique({
+          where: { id: studyId },
+          select: {
+            maxMembers: true,
+            _count: {
+              select: {
+                members: {
+                  where: { status: 'ACTIVE' }
+                }
+              }
+            }
+          }
+        })
+
+        if (!study) {
+          throw new Error('스터디를 찾을 수 없습니다')
+        }
+
+        if (study._count.members >= study.maxMembers) {
+          throw new Error('정원이 마감되었습니다')
+        }
+      }
+
+      // 2. 가입 요청 조회
+      const joinRequest = await tx.studyMember.findFirst({
+        where: {
+          studyId,
+          userId,
+          status: 'PENDING'
+        }
+      })
 
       if (!joinRequest) {
-        throw new Error('가입 요청을 찾을 수 없습니다');
+        throw new Error('가입 요청을 찾을 수 없습니다')
       }
 
-      // 2. 정원 확인
-      if (studyInfo.currentMembers >= studyInfo.maxMembers) {
-        throw new Error('정원이 마감되었습니다');
-      }
-
-      // 3. 기존 멤버십 확인 및 업데이트
-      const existingMember = await tx.studyMember.findFirst({
-        where: {
-          studyId: studyInfo.id,
-          userId: joinRequest.userId
+      // 3. 멤버 상태 업데이트 (PENDING -> ACTIVE)
+      const member = await tx.studyMember.update({
+        where: { id: joinRequest.id },
+        data: {
+          status: 'ACTIVE',
+          joinedAt: new Date()
+        },
+        include: {
+          study: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
         }
-      });
+      })
 
-      let member;
-      if (existingMember) {
-        // 기존 멤버십이 있으면 업데이트 (PENDING -> ACTIVE)
-        member = await tx.studyMember.update({
-          where: { id: existingMember.id },
-          data: {
-            status: 'ACTIVE',
-            role: 'MEMBER',
-            joinedAt: new Date()
-          }
-        });
-      } else {
-        // 새로운 멤버십 생성
-        member = await tx.studyMember.create({
-          data: {
-            studyId: studyInfo.id,
-            userId: joinRequest.userId,
-            role: 'MEMBER',
-            status: 'ACTIVE',
-            joinedAt: new Date()
-          }
-        });
-      }
-
-      // 4. 가입 요청 삭제
-      await tx.studyJoinRequest.delete({
-        where: { id: requestId }
-      });
-
-      // 5. 스터디 멤버 수 증가
-      const study = await tx.study.update({
-        where: { id: studyInfo.id },
+      // 4. 스터디 멤버 수 증가
+      await tx.study.update({
+        where: { id: studyId },
         data: {
           currentMembers: {
             increment: 1
           }
         }
-      });
+      })
 
-      return { member, study };
-    });
+      return member
+    })
 
-    console.log('✅ [TRANSACTION] 가입 승인 완료:', {
-      studyId: studyInfo.id,
-      userId: result.member.userId,
-      currentMembers: result.study.currentMembers
-    });
+    console.log('[TRANSACTION] 가입 승인 성공:', {
+      studyId,
+      userId,
+      memberId: result.id
+    })
 
-    return result;
+    // 5. 승인 알림 전송 (트랜잭션 외부)
+    if (sendNotification) {
+      await createTemplatedNotification(
+        prisma,
+        userId,
+        NOTIFICATION_TYPES.STUDY_JOIN_APPROVED,
+        {
+          studyId: studyId,
+          studyName: result.study.name
+        }
+      ).catch(error => {
+        console.error('[NOTIFICATION] 승인 알림 전송 실패:', error)
+      })
+    }
+
+    return {
+      success: true,
+      member: result
+    }
+
   } catch (error) {
-    logStudyError('approveJoinRequestWithMember', error, {
-      requestId,
-      studyId: studyInfo.id
-    });
-    throw error;
+    logStudyError('가입 승인 트랜잭션', error, { studyId, userId })
+
+    return {
+      success: false,
+      error: error.message || '가입 승인에 실패했습니다'
+    }
   }
 }
 
 /**
- * 멤버 강퇴 트랜잭션
- * 멤버 상태 변경 + 정원 감소
+ * 가입 요청 거절 (트랜잭션)
  *
- * @param {string} memberId - 멤버 ID
+ * @param {PrismaClient} prisma - Prisma 클라이언트
  * @param {string} studyId - 스터디 ID
- * @param {string} reason - 강퇴 사유 (선택)
- * @returns {Promise<Object>} { member, study }
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 옵션
+ * @returns {Promise<Object>} { success: boolean, error?: string }
  */
-export async function kickMemberWithUpdate(memberId, studyId, reason = null) {
-  try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. 멤버 상태를 KICKED로 변경
-      const member = await tx.studyMember.update({
-        where: { id: memberId },
-        data: {
-          status: 'KICKED',
-          leftAt: new Date(),
-          kickReason: reason
-        }
-      });
+export async function rejectJoinRequest(prisma, studyId, userId, options = {}) {
+  const {
+    reason = null,
+    sendNotification = true
+  } = options
 
-      // 2. 스터디 멤버 수 감소
-      const study = await tx.study.update({
-        where: { id: studyId },
-        data: {
-          currentMembers: {
-            decrement: 1
+  try {
+    // 트랜잭션으로 거절 처리
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. 가입 요청 조회
+      const joinRequest = await tx.studyMember.findFirst({
+        where: {
+          studyId,
+          userId,
+          status: 'PENDING'
+        },
+        include: {
+          study: {
+            select: {
+              id: true,
+              name: true
+            }
           }
         }
-      });
+      })
 
-      return { member, study };
-    });
+      if (!joinRequest) {
+        throw new Error('가입 요청을 찾을 수 없습니다')
+      }
 
-    console.log('✅ [TRANSACTION] 멤버 강퇴 완료:', {
+      // 2. 멤버 레코드 삭제
+      await tx.studyMember.delete({
+        where: { id: joinRequest.id }
+      })
+
+      return joinRequest
+    })
+
+    console.log('[TRANSACTION] 가입 거절 성공:', {
       studyId,
-      memberId,
-      currentMembers: result.study.currentMembers
-    });
+      userId,
+      reason
+    })
 
-    return result;
+    // 3. 거절 알림 전송 (트랜잭션 외부)
+    if (sendNotification) {
+      await createTemplatedNotification(
+        prisma,
+        userId,
+        NOTIFICATION_TYPES.STUDY_JOIN_REJECTED,
+        {
+          studyId: studyId,
+          studyName: result.study.name,
+          reason: reason
+        }
+      ).catch(error => {
+        console.error('[NOTIFICATION] 거절 알림 전송 실패:', error)
+      })
+    }
+
+    return {
+      success: true
+    }
+
   } catch (error) {
-    logStudyError('kickMemberWithUpdate', error, {
-      memberId,
-      studyId
-    });
-    throw error;
+    logStudyError('가입 거절 트랜잭션', error, { studyId, userId })
+
+    return {
+      success: false,
+      error: error.message || '가입 거절에 실패했습니다'
+    }
   }
 }
 
 /**
- * 멤버 탈퇴 트랜잭션
- * 멤버 상태 변경 + 정원 감소
+ * 스터디 탈퇴 (트랜잭션)
  *
- * @param {string} memberId - 멤버 ID
+ * @param {PrismaClient} prisma - Prisma 클라이언트
  * @param {string} studyId - 스터디 ID
- * @returns {Promise<Object>} { member, study }
+ * @param {string} userId - 사용자 ID
+ * @returns {Promise<Object>} { success: boolean, error?: string }
  */
-export async function leaveMemberWithUpdate(memberId, studyId) {
+export async function leaveStudy(prisma, studyId, userId) {
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. 멤버 상태를 LEFT로 변경
-      const member = await tx.studyMember.update({
-        where: { id: memberId },
+    // 트랜잭션으로 탈퇴 + 멤버 수 감소
+    await prisma.$transaction(async (tx) => {
+      // 1. 멤버 조회
+      const member = await tx.studyMember.findUnique({
+        where: {
+          studyId_userId: {
+            studyId,
+            userId
+          }
+        }
+      })
+
+      if (!member) {
+        throw new Error('멤버를 찾을 수 없습니다')
+      }
+
+      // 2. OWNER 탈퇴 방지
+      if (member.role === 'OWNER') {
+        throw new Error('스터디장은 탈퇴할 수 없습니다. 스터디를 삭제하거나 소유권을 이전하세요')
+      }
+
+      // 3. 멤버 상태 업데이트 (ACTIVE -> LEFT)
+      await tx.studyMember.update({
+        where: { id: member.id },
         data: {
           status: 'LEFT',
           leftAt: new Date()
         }
-      });
+      })
 
-      // 2. 스터디 멤버 수 감소
-      const study = await tx.study.update({
+      // 4. 스터디 멤버 수 감소
+      await tx.study.update({
         where: { id: studyId },
         data: {
           currentMembers: {
             decrement: 1
           }
         }
-      });
+      })
+    })
 
-      return { member, study };
-    });
+    console.log('[TRANSACTION] 탈퇴 성공:', { studyId, userId })
 
-    console.log('✅ [TRANSACTION] 멤버 탈퇴 완료:', {
-      studyId,
-      memberId,
-      currentMembers: result.study.currentMembers
-    });
+    return {
+      success: true
+    }
 
-    return result;
   } catch (error) {
-    logStudyError('leaveMemberWithUpdate', error, {
-      memberId,
-      studyId
-    });
-    throw error;
+    logStudyError('탈퇴 트랜잭션', error, { studyId, userId })
+
+    return {
+      success: false,
+      error: error.message || '탈퇴 처리에 실패했습니다'
+    }
   }
 }
 
+// ============================================
+// 멤버 관리 트랜잭션
+// ============================================
+
 /**
- * 스터디 가입 트랜잭션 (자동 승인)
- * 멤버 생성 + 정원 증가
+ * 멤버 강퇴 (트랜잭션)
  *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
  * @param {string} studyId - 스터디 ID
- * @param {string} userId - 사용자 ID
- * @param {boolean} autoApprove - 자동 승인 여부
- * @returns {Promise<Object>} { member, study }
+ * @param {string} targetUserId - 대상 사용자 ID
+ * @param {Object} options - 옵션
+ * @returns {Promise<Object>} { success: boolean, error?: string }
  */
-export async function joinStudyWithMember(studyId, userId, autoApprove = true) {
+export async function kickMember(prisma, studyId, targetUserId, options = {}) {
+  const {
+    reason = null,
+    sendNotification = true
+  } = options
+
   try {
+    // 트랜잭션으로 강퇴 + 멤버 수 감소
     const result = await prisma.$transaction(async (tx) => {
-      // 1. 기존 멤버십 확인
-      const existingMember = await tx.studyMember.findFirst({
+      // 1. 멤버 조회
+      const member = await tx.studyMember.findUnique({
         where: {
-          studyId,
-          userId
-        }
-      });
-
-      let member;
-      const memberData = {
-        role: 'MEMBER',
-        status: autoApprove ? 'ACTIVE' : 'PENDING',
-        joinedAt: autoApprove ? new Date() : null
-      };
-
-      if (existingMember) {
-        // 기존 멤버십 업데이트
-        member = await tx.studyMember.update({
-          where: { id: existingMember.id },
-          data: memberData
-        });
-      } else {
-        // 새로운 멤버십 생성
-        member = await tx.studyMember.create({
-          data: {
+          studyId_userId: {
             studyId,
-            userId,
-            ...memberData
+            userId: targetUserId
           }
-        });
-      }
-
-      // 2. 자동 승인인 경우 멤버 수 증가
-      let study;
-      if (autoApprove) {
-        study = await tx.study.update({
-          where: { id: studyId },
-          data: {
-            currentMembers: {
-              increment: 1
+        },
+        include: {
+          study: {
+            select: {
+              id: true,
+              name: true
             }
           }
-        });
-      } else {
-        study = await tx.study.findUnique({
-          where: { id: studyId }
-        });
-      }
-
-      return { member, study };
-    });
-
-    console.log('✅ [TRANSACTION] 스터디 가입 완료:', {
-      studyId,
-      userId,
-      autoApprove,
-      status: result.member.status
-    });
-
-    return result;
-  } catch (error) {
-    logStudyError('joinStudyWithMember', error, {
-      studyId,
-      userId,
-      autoApprove
-    });
-    throw error;
-  }
-}
-
-/**
- * 스터디 업데이트 (정원 변경 시 검증 포함)
- *
- * @param {string} studyId - 스터디 ID
- * @param {Object} updateData - 업데이트 데이터
- * @returns {Promise<Object>} 업데이트된 스터디
- */
-export async function updateStudyWithValidation(studyId, updateData) {
-  try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. 현재 스터디 조회
-      const currentStudy = await tx.study.findUnique({
-        where: { id: studyId }
-      });
-
-      if (!currentStudy) {
-        throw new Error('스터디를 찾을 수 없습니다');
-      }
-
-      // 2. maxMembers 변경 시 검증
-      if (updateData.maxMembers !== undefined) {
-        if (updateData.maxMembers < currentStudy.currentMembers) {
-          throw new Error(
-            `최대 인원은 현재 멤버 수(${currentStudy.currentMembers}명)보다 작을 수 없습니다`
-          );
         }
-      }
-
-      // 3. 스터디 업데이트
-      const study = await tx.study.update({
-        where: { id: studyId },
-        data: updateData
-      });
-
-      return study;
-    });
-
-    console.log('✅ [TRANSACTION] 스터디 업데이트 완료:', {
-      studyId,
-      updatedFields: Object.keys(updateData)
-    });
-
-    return result;
-  } catch (error) {
-    logStudyError('updateStudyWithValidation', error, {
-      studyId,
-      updateData
-    });
-    throw error;
-  }
-}
-
-/**
- * 역할 변경 트랜잭션 (검증 포함)
- *
- * @param {string} memberId - 멤버 ID
- * @param {string} newRole - 새 역할
- * @param {string} currentRole - 현재 역할 (검증용)
- * @returns {Promise<Object>} 업데이트된 멤버
- */
-export async function changeRoleWithValidation(memberId, newRole, currentRole) {
-  try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. 현재 멤버 조회
-      const member = await tx.studyMember.findUnique({
-        where: { id: memberId }
-      });
+      })
 
       if (!member) {
-        throw new Error('멤버를 찾을 수 없습니다');
+        throw new Error('멤버를 찾을 수 없습니다')
       }
 
-      // 2. OWNER 역할 변경 방지
-      if (member.role === 'OWNER') {
-        throw new Error('스터디장의 역할은 변경할 수 없습니다');
+      if (member.status !== 'ACTIVE') {
+        throw new Error('활동 중인 멤버만 강퇴할 수 있습니다')
       }
 
-      // 3. 유효한 역할인지 확인
-      if (!['ADMIN', 'MEMBER'].includes(newRole)) {
-        throw new Error('역할은 ADMIN 또는 MEMBER만 가능합니다');
-      }
+      // 2. 멤버 상태 업데이트 (ACTIVE -> KICKED)
+      await tx.studyMember.update({
+        where: { id: member.id },
+        data: {
+          status: 'KICKED',
+          kickedAt: new Date(),
+          kickReason: reason
+        }
+      })
 
-      // 4. 역할 변경
-      const updatedMember = await tx.studyMember.update({
-        where: { id: memberId },
-        data: { role: newRole }
-      });
+      // 3. 스터디 멤버 수 감소
+      await tx.study.update({
+        where: { id: studyId },
+        data: {
+          currentMembers: {
+            decrement: 1
+          }
+        }
+      })
 
-      return updatedMember;
-    });
+      return member
+    })
 
-    console.log('✅ [TRANSACTION] 역할 변경 완료:', {
-      memberId,
-      oldRole: currentRole,
-      newRole
-    });
+    console.log('[TRANSACTION] 강퇴 성공:', {
+      studyId,
+      targetUserId,
+      reason
+    })
 
-    return result;
+    // 4. 강퇴 알림 전송 (트랜잭션 외부)
+    if (sendNotification) {
+      await createTemplatedNotification(
+        prisma,
+        targetUserId,
+        NOTIFICATION_TYPES.STUDY_MEMBER_KICKED,
+        {
+          studyId: studyId,
+          studyName: result.study.name,
+          reason: reason
+        }
+      ).catch(error => {
+        console.error('[NOTIFICATION] 강퇴 알림 전송 실패:', error)
+      })
+    }
+
+    return {
+      success: true
+    }
+
   } catch (error) {
-    logStudyError('changeRoleWithValidation', error, {
-      memberId,
-      newRole,
-      currentRole
-    });
-    throw error;
+    logStudyError('멤버 강퇴 트랜잭션', error, { studyId, targetUserId })
+
+    return {
+      success: false,
+      error: error.message || '멤버 강퇴에 실패했습니다'
+    }
   }
 }
+
+/**
+ * 소유권 이전 (트랜잭션)
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} studyId - 스터디 ID
+ * @param {string} currentOwnerId - 현재 소유자 ID
+ * @param {string} newOwnerId - 새 소유자 ID
+ * @returns {Promise<Object>} { success: boolean, error?: string }
+ */
+export async function transferOwnership(prisma, studyId, currentOwnerId, newOwnerId) {
+  try {
+    // 트랜잭션으로 소유권 이전
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. 스터디 조회
+      const study = await tx.study.findUnique({
+        where: { id: studyId },
+        select: {
+          id: true,
+          name: true,
+          ownerId: true
+        }
+      })
+
+      if (!study) {
+        throw new Error('스터디를 찾을 수 없습니다')
+      }
+
+      if (study.ownerId !== currentOwnerId) {
+        throw new Error('스터디 소유자가 아닙니다')
+      }
+
+      // 2. 새 소유자 멤버 확인
+      const newOwnerMember = await tx.studyMember.findUnique({
+        where: {
+          studyId_userId: {
+            studyId,
+            userId: newOwnerId
+          }
+        }
+      })
+
+      if (!newOwnerMember) {
+        throw new Error('새 소유자가 스터디 멤버가 아닙니다')
+      }
+
+      if (newOwnerMember.status !== 'ACTIVE') {
+        throw new Error('새 소유자가 활동 중인 멤버가 아닙니다')
+      }
+
+      // 3. 현재 소유자 역할 변경 (OWNER -> ADMIN)
+      await tx.studyMember.update({
+        where: {
+          studyId_userId: {
+            studyId,
+            userId: currentOwnerId
+          }
+        },
+        data: { role: 'ADMIN' }
+      })
+
+      // 4. 새 소유자 역할 변경 (현재 역할 -> OWNER)
+      await tx.studyMember.update({
+        where: { id: newOwnerMember.id },
+        data: { role: 'OWNER' }
+      })
+
+      // 5. 스터디 소유자 변경
+      await tx.study.update({
+        where: { id: studyId },
+        data: { ownerId: newOwnerId }
+      })
+
+      return study
+    })
+
+    console.log('[TRANSACTION] 소유권 이전 성공:', {
+      studyId,
+      from: currentOwnerId,
+      to: newOwnerId
+    })
+
+    // 6. 알림 전송 (트랜잭션 외부)
+    await createTemplatedNotification(
+      prisma,
+      newOwnerId,
+      NOTIFICATION_TYPES.STUDY_OWNER_TRANSFERRED,
+      {
+        studyId: studyId,
+        studyName: result.name
+      }
+    ).catch(error => {
+      console.error('[NOTIFICATION] 소유권 이전 알림 전송 실패:', error)
+    })
+
+    return {
+      success: true
+    }
+
+  } catch (error) {
+    logStudyError('소유권 이전 트랜잭션', error, {
+      studyId,
+      currentOwnerId,
+      newOwnerId
+    })
+
+    return {
+      success: false,
+      error: error.message || '소유권 이전에 실패했습니다'
+    }
+  }
+}
+
+// ============================================
+// 유틸리티 함수
+// ============================================
 
 /**
  * 트랜잭션 재시도 래퍼
- * 동시성 오류 발생 시 자동 재시도
  *
  * @param {Function} transactionFn - 트랜잭션 함수
  * @param {number} maxRetries - 최대 재시도 횟수
+ * @param {number} delayMs - 재시도 간격 (밀리초)
  * @returns {Promise<any>} 트랜잭션 결과
  */
-export async function retryTransaction(transactionFn, maxRetries = 3) {
-  let lastError;
+export async function retryTransaction(transactionFn, maxRetries = 3, delayMs = 100) {
+  let lastError
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return await transactionFn();
+      return await transactionFn()
     } catch (error) {
-      lastError = error;
+      lastError = error
 
-      // P2034: 트랜잭션 충돌 (재시도 가능)
+      // P2034: 트랜잭션 충돌
       if (error.code === 'P2034' && attempt < maxRetries) {
-        console.warn(`⚠️ [TRANSACTION] 재시도 ${attempt}/${maxRetries}:`, error.message);
-        // 지수 백오프
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 100));
-        continue;
+        console.log(`[TRANSACTION] 재시도 ${attempt}/${maxRetries}...`)
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt))
+        continue
       }
 
-      throw error;
+      throw error
     }
   }
 
-  throw lastError;
+  throw lastError
 }
 

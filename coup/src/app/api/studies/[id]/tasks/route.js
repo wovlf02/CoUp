@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server"
 import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import { validateAndSanitize } from "@/lib/utils/input-sanitizer"
 
 export async function GET(request, { params }) {
   const { id: studyId } = await params
@@ -79,16 +80,83 @@ export async function POST(request, { params }) {
 
   try {
     const body = await request.json()
-    const { title, description, status, priority, dueDate, assigneeIds } = body
 
-    if (!title) {
-      return NextResponse.json(
-        { error: "제목을 입력해주세요" },
-        { status: 400 }
-      )
+    // 1. 입력값 검증 및 정제
+    const validation = validateAndSanitize(body, 'TASK');
+    if (!validation.valid) {
+      return NextResponse.json({
+        error: "입력값이 유효하지 않습니다",
+        details: validation.errors
+      }, { status: 400 });
     }
 
-    // 트랜잭션으로 할일과 담당자 생성
+    const sanitizedData = validation.sanitized;
+    const { title, description, status, priority, dueDate, assigneeIds } = sanitizedData;
+
+    // 2. 제목 길이 검증 (1-200자)
+    if (!title || title.length < 1 || title.length > 200) {
+      return NextResponse.json({
+        error: "제목은 1자 이상 200자 이하여야 합니다"
+      }, { status: 400 });
+    }
+
+    // 3. 설명 길이 검증 (0-2000자)
+    if (description && description.length > 2000) {
+      return NextResponse.json({
+        error: "설명은 최대 2000자까지 가능합니다"
+      }, { status: 400 });
+    }
+
+    // 4. 상태 검증
+    const validStatuses = ['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE', 'CANCELLED'];
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json({
+        error: "유효하지 않은 상태입니다. (TODO, IN_PROGRESS, REVIEW, DONE, CANCELLED 중 선택)"
+      }, { status: 400 });
+    }
+
+    // 5. 우선순위 검증
+    const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+    if (priority && !validPriorities.includes(priority)) {
+      return NextResponse.json({
+        error: "유효하지 않은 우선순위입니다. (LOW, MEDIUM, HIGH, URGENT 중 선택)"
+      }, { status: 400 });
+    }
+
+    // 6. 담당자 멤버 확인
+    if (assigneeIds && assigneeIds.length > 0) {
+      const members = await prisma.studyMember.findMany({
+        where: {
+          studyId,
+          userId: { in: assigneeIds },
+          status: 'ACTIVE',
+        },
+      });
+
+      if (members.length !== assigneeIds.length) {
+        const validUserIds = members.map(m => m.userId);
+        const invalidUserIds = assigneeIds.filter(id => !validUserIds.includes(id));
+        return NextResponse.json({
+          error: "일부 담당자가 스터디 멤버가 아닙니다",
+          details: { invalidUserIds }
+        }, { status: 400 });
+      }
+    }
+
+    // 7. 마감일 과거 검증 (미래 날짜만 허용)
+    if (dueDate) {
+      const dueDateObj = new Date(dueDate);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // 오늘 날짜의 시작
+
+      if (dueDateObj < now) {
+        return NextResponse.json({
+          error: "마감일은 현재보다 미래여야 합니다"
+        }, { status: 400 });
+      }
+    }
+
+    // 8. 트랜잭션으로 할일과 담당자 생성
     const task = await prisma.$transaction(async (tx) => {
       // 할일 생성
       const newTask = await tx.studyTask.create({
@@ -139,7 +207,7 @@ export async function POST(request, { params }) {
       })
     })
 
-    // 담당자들에게 알림
+    // 9. 담당자들에게 알림
     if (assigneeIds && assigneeIds.length > 0) {
       const study = await prisma.study.findUnique({
         where: { id: studyId },

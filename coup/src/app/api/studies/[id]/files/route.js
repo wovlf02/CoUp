@@ -5,6 +5,12 @@ import { prisma } from "@/lib/prisma"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
+import {
+  validateFileSecurity,
+  generateSafeFilename,
+  checkStudyStorageQuota
+} from "@/lib/utils/file-security-validator"
+import { sanitizeFilename } from "@/lib/utils/xss-sanitizer"
 
 export async function GET(request, { params }) {
   const { id: studyId } = await params
@@ -79,6 +85,7 @@ export async function POST(request, { params }) {
     const formData = await request.formData()
     const file = formData.get('file')
     const folderId = formData.get('folderId')
+    const category = formData.get('category') || 'DOCUMENT' // IMAGE, DOCUMENT, etc.
 
     if (!file) {
       return NextResponse.json(
@@ -87,39 +94,101 @@ export async function POST(request, { params }) {
       )
     }
 
-    // 파일 크기 제한 (50MB)
-    const maxSize = 50 * 1024 * 1024
-    if (file.size > maxSize) {
+    // 1. 파일 이름 정제
+    const sanitizedFilename = sanitizeFilename(file.name);
+
+    if (!sanitizedFilename || sanitizedFilename === 'untitled') {
       return NextResponse.json(
-        { error: "파일 크기는 50MB를 초과할 수 없습니다" },
+        { error: "유효하지 않은 파일명입니다" },
         { status: 400 }
-      )
+      );
     }
 
-    // uploads 폴더 생성
+    // 2. 파일 버퍼 읽기
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
+    // 3. 파일 보안 검증 (통합)
+    const securityValidation = await validateFileSecurity({
+      filename: sanitizedFilename,
+      mimeType: file.type,
+      size: file.size,
+      buffer: buffer,
+    }, category);
+
+    if (!securityValidation.valid) {
+      console.warn('[File Security] Validation failed:', {
+        userId: session.user.id,
+        studyId,
+        filename: sanitizedFilename,
+        errors: securityValidation.errors,
+      });
+
+      return NextResponse.json(
+        {
+          error: "파일 보안 검증에 실패했습니다",
+          details: securityValidation.errors.map(e => e.message),
+        },
+        { status: 400 }
+      );
+    }
+
+    // 경고가 있으면 로깅
+    if (securityValidation.warnings.length > 0) {
+      console.warn('[File Security] Warnings:', {
+        userId: session.user.id,
+        studyId,
+        filename: sanitizedFilename,
+        warnings: securityValidation.warnings,
+      });
+    }
+
+    // 4. 저장 공간 확인 (스터디당 1GB 제한)
+    const studyQuota = 1024 * 1024 * 1024; // 1GB
+    const studyUsed = await prisma.file.aggregate({
+      where: { studyId },
+      _sum: { size: true },
+    });
+
+    const currentUsage = studyUsed._sum.size || 0;
+    const quotaCheck = checkStudyStorageQuota(studyId, file.size, studyQuota, currentUsage);
+
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: "스터디 저장 공간이 부족합니다",
+          details: {
+            quota: `${quotaCheck.quotaInMB}MB`,
+            used: `${quotaCheck.usedInMB}MB`,
+            available: `${quotaCheck.availableInMB}MB`,
+            requested: `${quotaCheck.requestedInMB}MB`,
+          }
+        },
+        { status: 400 }
+      );
+    }
+
+    // 5. uploads 폴더 생성
     const uploadsDir = join(process.cwd(), 'public', 'uploads', studyId)
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
 
-    // 파일명 생성 (timestamp + 원본 파일명)
-    const timestamp = Date.now()
-    const filename = `${timestamp}-${file.name}`
-    const filepath = join(uploadsDir, filename)
+    // 6. 안전한 파일명 생성
+    const safeFilename = generateSafeFilename(sanitizedFilename, session.user.id);
+    const filepath = join(uploadsDir, safeFilename)
 
-    // 파일 저장
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    // 7. 파일 저장
     await writeFile(filepath, buffer)
 
-    // DB에 파일 정보 저장
-    const fileUrl = `/uploads/${studyId}/${filename}`
+    // 8. DB에 파일 정보 저장
+    const fileUrl = `/uploads/${studyId}/${safeFilename}`
 
     const savedFile = await prisma.file.create({
       data: {
         studyId,
         uploaderId: session.user.id,
-        name: file.name,
+        name: sanitizedFilename, // 원본 파일명 (정제된)
         size: file.size,
         type: file.type,
         url: fileUrl,
@@ -136,7 +205,7 @@ export async function POST(request, { params }) {
       }
     })
 
-    // 파일 업로드 알림
+    // 9. 파일 업로드 알림 (최대 10명)
     const members = await prisma.studyMember.findMany({
       where: {
         studyId,
@@ -158,14 +227,19 @@ export async function POST(request, { params }) {
         studyId,
         studyName: study.name,
         studyEmoji: study.emoji,
-        message: `새 파일: ${file.name}`
+        message: `새 파일: ${sanitizedFilename}`
       }))
     })
 
     return NextResponse.json({
       success: true,
       message: "파일이 업로드되었습니다",
-      data: savedFile
+      data: savedFile,
+      storage: {
+        usagePercentage: quotaCheck.usagePercentage,
+        used: `${(quotaCheck.afterUpload / (1024 * 1024)).toFixed(2)}MB`,
+        quota: `${(studyQuota / (1024 * 1024)).toFixed(2)}MB`,
+      }
     }, { status: 201 })
 
   } catch (error) {

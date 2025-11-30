@@ -2,6 +2,14 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import {
+  createStudyErrorResponse,
+  logStudyError,
+  handlePrismaError
+} from '@/lib/exceptions/study-errors'
+import { validateStudyUpdate } from '@/lib/validators/study-validation'
+import { isDuplicateStudyName } from '@/lib/study-helpers'
+import { deleteStudyWithCleanup } from '@/lib/transaction-helpers'
 
 export async function GET(request, { params }) {
   try {
@@ -114,56 +122,70 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Get study detail error:', error)
-    return NextResponse.json(
-      { error: "스터디 정보를 가져오는 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+    // Prisma 에러 처리
+    if (error.code?.startsWith('P')) {
+      const studyError = handlePrismaError(error)
+      return NextResponse.json(studyError, { status: studyError.statusCode })
+    }
+
+    // 일반 에러
+    logStudyError('스터디 상세 조회', error)
+    const errorResponse = createStudyErrorResponse('STUDY_NOT_FOUND')
+    return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
   }
 }
 
 export async function PATCH(request, { params }) {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
-
   try {
+    // 1. 인증 확인
+    const session = await requireAuth()
+    if (session instanceof NextResponse) return session
+
+    // 2. 파라미터 파싱
     const { id } = await params
     const body = await request.json()
 
-    // 스터디 소유자 확인
+    // 3. 스터디 존재 및 소유자 확인
     const study = await prisma.study.findUnique({
       where: { id }
     })
 
     if (!study) {
-      return NextResponse.json(
-        { error: "스터디를 찾을 수 없습니다" },
-        { status: 404 }
-      )
+      const errorResponse = createStudyErrorResponse('STUDY_NOT_FOUND')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
     if (study.ownerId !== session.user.id) {
+      const errorResponse = createStudyErrorResponse('STUDY_OWNER_ONLY')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
+    }
+
+    // 4. 필드 검증 강화
+    const validation = validateStudyUpdate(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "스터디 소유자만 수정할 수 있습니다" },
-        { status: 403 }
+        {
+          success: false,
+          error: validation.error,
+          errors: validation.errors
+        },
+        { status: 400 }
       )
     }
 
-    // 스터디 수정
+    // 5. 이름 중복 확인 (이름이 변경되는 경우)
+    if (validation.data.name && validation.data.name !== study.name) {
+      const isDuplicate = await isDuplicateStudyName(prisma, validation.data.name, id)
+      if (isDuplicate) {
+        const errorResponse = createStudyErrorResponse('DUPLICATE_STUDY_NAME')
+        return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
+      }
+    }
+
+    // 6. 스터디 수정
     const updated = await prisma.study.update({
       where: { id },
-      data: {
-        ...(body.name && { name: body.name }),
-        ...(body.emoji && { emoji: body.emoji }),
-        ...(body.description && { description: body.description }),
-        ...(body.category && { category: body.category }),
-        ...(body.subCategory !== undefined && { subCategory: body.subCategory }),
-        ...(body.maxMembers && { maxMembers: body.maxMembers }),
-        ...(body.isPublic !== undefined && { isPublic: body.isPublic }),
-        ...(body.autoApprove !== undefined && { autoApprove: body.autoApprove }),
-        ...(body.isRecruiting !== undefined && { isRecruiting: body.isRecruiting }),
-        ...(body.tags && { tags: body.tags })
-      }
+      data: validation.data
     })
 
     return NextResponse.json({
@@ -173,44 +195,55 @@ export async function PATCH(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Update study error:', error)
-    return NextResponse.json(
-      { error: "스터디 수정 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+    // Prisma 에러 처리
+    if (error.code?.startsWith('P')) {
+      const studyError = handlePrismaError(error)
+      return NextResponse.json(studyError, { status: studyError.statusCode })
+    }
+
+    // 일반 에러
+    logStudyError('스터디 수정', error)
+    const errorResponse = createStudyErrorResponse('STUDY_UPDATE_FAILED')
+    return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
   }
 }
 
 export async function DELETE(request, { params }) {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
-
   try {
+    // 1. 인증 확인
+    const session = await requireAuth()
+    if (session instanceof NextResponse) return session
+
+    // 2. 파라미터 파싱
     const { id } = await params
 
-    // 스터디 소유자 확인
+    // 3. 스터디 존재 및 소유자 확인
     const study = await prisma.study.findUnique({
       where: { id }
     })
 
     if (!study) {
-      return NextResponse.json(
-        { error: "스터디를 찾을 수 없습니다" },
-        { status: 404 }
-      )
+      const errorResponse = createStudyErrorResponse('STUDY_NOT_FOUND')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
     if (study.ownerId !== session.user.id) {
-      return NextResponse.json(
-        { error: "스터디 소유자만 삭제할 수 있습니다" },
-        { status: 403 }
-      )
+      const errorResponse = createStudyErrorResponse('STUDY_OWNER_ONLY')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 스터디 삭제 (CASCADE로 관련 데이터도 삭제됨)
-    await prisma.study.delete({
-      where: { id }
-    })
+    // 4. 트랜잭션으로 스터디 및 관련 데이터 삭제
+    const result = await deleteStudyWithCleanup(prisma, id)
+
+    if (!result.success) {
+      logStudyError('스터디 삭제 트랜잭션', new Error(result.error), {
+        studyId: id,
+        userId: session.user.id
+      })
+
+      const errorResponse = createStudyErrorResponse('STUDY_DELETE_FAILED', result.error)
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
+    }
 
     return NextResponse.json({
       success: true,
@@ -218,11 +251,16 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Delete study error:', error)
-    return NextResponse.json(
-      { error: "스터디 삭제 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+    // Prisma 에러 처리
+    if (error.code?.startsWith('P')) {
+      const studyError = handlePrismaError(error)
+      return NextResponse.json(studyError, { status: studyError.statusCode })
+    }
+
+    // 일반 에러
+    logStudyError('스터디 삭제', error)
+    const errorResponse = createStudyErrorResponse('STUDY_DELETE_FAILED')
+    return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
   }
 }
 

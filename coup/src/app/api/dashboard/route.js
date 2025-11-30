@@ -2,27 +2,43 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import {
+  logDashboardError,
+  logDashboardWarning,
+  handlePrismaError,
+  createPartialSuccessResponse
+} from "@/lib/exceptions/dashboard-errors"
+import { validateDashboardData } from "@/lib/validators/dashboard-validation"
 
 export async function GET() {
+  const startTime = Date.now()
   const session = await requireAuth()
   if (session instanceof NextResponse) return session
 
   try {
     const userId = session.user.id
+    console.log('🔐 [DASHBOARD] Fetching data for user:', userId)
 
-    // 통계 카드 데이터
+    // ============================================
+    // 2.1 Prisma 연결 실패 처리 + 부분 실패 허용
+    // ============================================
+
+    // 통계 카드 데이터 - Promise.allSettled로 부분 실패 허용
     const [
       activeStudyCount,
       taskCount,
       unreadNotificationCount,
       completedTaskCount
-    ] = await Promise.all([
+    ] = await Promise.allSettled([
       // 활성 스터디 수
       prisma.studyMember.count({
         where: {
           userId,
           status: 'ACTIVE'
         }
+      }).catch(error => {
+        logDashboardError('활성 스터디 수 조회', error, { userId })
+        throw error
       }),
 
       // 총 할일 수
@@ -31,6 +47,9 @@ export async function GET() {
           userId,
           completed: false
         }
+      }).catch(error => {
+        logDashboardError('할일 수 조회', error, { userId })
+        throw error
       }),
 
       // 읽지 않은 알림 수
@@ -39,6 +58,9 @@ export async function GET() {
           userId,
           isRead: false
         }
+      }).catch(error => {
+        logDashboardError('알림 수 조회', error, { userId })
+        throw error
       }),
 
       // 완료한 할일 수 (이번 달)
@@ -50,8 +72,49 @@ export async function GET() {
             gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
           }
         }
+      }).catch(error => {
+        logDashboardError('완료 할일 수 조회', error, { userId })
+        throw error
       })
     ])
+
+    // 각 결과 검증 및 기본값 설정
+    const failedQueries = []
+
+    const stats = {
+      activeStudies: activeStudyCount.status === 'fulfilled'
+        ? activeStudyCount.value
+        : (() => { failedQueries.push('activeStudies'); return 0; })(),
+      pendingTasks: taskCount.status === 'fulfilled'
+        ? taskCount.value
+        : (() => { failedQueries.push('pendingTasks'); return 0; })(),
+      unreadNotifications: unreadNotificationCount.status === 'fulfilled'
+        ? unreadNotificationCount.value
+        : (() => { failedQueries.push('unreadNotifications'); return 0; })(),
+      completedThisMonth: completedTaskCount.status === 'fulfilled'
+        ? completedTaskCount.value
+        : (() => { failedQueries.push('completedThisMonth'); return 0; })(),
+    }
+
+    // 실패 항목 로깅
+    if (failedQueries.length > 0) {
+      logDashboardWarning('통계 쿼리 부분 실패', '일부 통계 데이터를 불러오지 못했습니다', {
+        userId,
+        failedQueries,
+        errors: [
+          activeStudyCount,
+          taskCount,
+          unreadNotificationCount,
+          completedTaskCount
+        ]
+          .filter(r => r.status === 'rejected')
+          .map(r => r.reason?.message)
+      })
+    }
+
+    // ============================================
+    // 2.2 나머지 쿼리들 - 개별 에러 처리
+    // ============================================
 
     // 내 스터디 (최대 6개)
     const myStudies = await prisma.studyMember.findMany({
@@ -80,6 +143,10 @@ export async function GET() {
           }
         }
       }
+    }).catch(error => {
+      logDashboardError('내 스터디 조회', error, { userId })
+      failedQueries.push('myStudies')
+      return [] // 실패 시 빈 배열 반환
     })
 
     // 최근 활동 (최대 5개)
@@ -100,6 +167,10 @@ export async function GET() {
         isRead: true,
         createdAt: true
       }
+    }).catch(error => {
+      logDashboardError('최근 활동 조회', error, { userId })
+      failedQueries.push('recentActivities')
+      return [] // 실패 시 빈 배열 반환
     })
 
     // 다가오는 일정 (3일 이내)
@@ -130,51 +201,117 @@ export async function GET() {
           }
         }
       }
+    }).catch(error => {
+      logDashboardError('다가오는 일정 조회', error, { userId })
+      failedQueries.push('upcomingEvents')
+      return [] // 실패 시 빈 배열 반환
     })
 
+    // ============================================
+    // 2.3 응답 데이터 구성 및 검증
+    // ============================================
+
+    const responseData = {
+      stats,
+      myStudies: myStudies.map(sm => ({
+        id: sm.study.id,
+        name: sm.study.name,
+        emoji: sm.study.emoji,
+        category: sm.study.category,
+        role: sm.role,
+        memberCount: sm.study._count.members,
+        joinedAt: sm.joinedAt
+      })),
+      recentActivities: recentActivities.map(activity => ({
+        id: activity.id,
+        type: activity.type,
+        message: activity.message,
+        studyName: activity.studyName,
+        studyEmoji: activity.studyEmoji,
+        isRead: activity.isRead,
+        createdAt: activity.createdAt
+      })),
+      upcomingEvents: upcomingEvents.map(event => ({
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        studyName: event.study.name,
+        studyEmoji: event.study.emoji
+      }))
+    }
+
+    // 데이터 검증
+    const validation = validateDashboardData(responseData)
+    if (!validation.valid) {
+      logDashboardWarning('대시보드 데이터 검증 실패', '응답 데이터 검증 중 오류 발견', {
+        userId,
+        errors: validation.errors
+      })
+    }
+
+    const duration = Date.now() - startTime
+    console.log(`✅ [DASHBOARD] Data fetched successfully (${duration}ms)`)
+
+    // 부분 실패가 있는 경우 경고와 함께 응답
+    if (failedQueries.length > 0) {
+      logDashboardWarning('부분 데이터 로드', '일부 데이터를 불러오지 못했습니다', {
+        userId,
+        duration,
+        failedQueries,
+        loadedQueries: ['stats', 'myStudies', 'recentActivities', 'upcomingEvents']
+          .filter(q => !failedQueries.includes(q))
+      })
+
+      return NextResponse.json(
+        createPartialSuccessResponse(responseData, failedQueries),
+        { status: 207 } // Multi-Status
+      )
+    }
+
+    // 정상 응답
     return NextResponse.json({
       success: true,
-      data: {
-        stats: {
-          activeStudies: activeStudyCount,
-          pendingTasks: taskCount,
-          unreadNotifications: unreadNotificationCount,
-          completedThisMonth: completedTaskCount
-        },
-        myStudies: myStudies.map(sm => ({
-          id: sm.study.id,
-          name: sm.study.name,
-          emoji: sm.study.emoji,
-          category: sm.study.category,
-          role: sm.role,
-          memberCount: sm.study._count.members,
-          joinedAt: sm.joinedAt
-        })),
-        recentActivities: recentActivities.map(activity => ({
-          id: activity.id,
-          type: activity.type,
-          message: activity.message,
-          studyName: activity.studyName,
-          studyEmoji: activity.studyEmoji,
-          isRead: activity.isRead,
-          createdAt: activity.createdAt
-        })),
-        upcomingEvents: upcomingEvents.map(event => ({
-          id: event.id,
-          title: event.title,
-          date: event.date,
-          startTime: event.startTime,
-          endTime: event.endTime,
-          studyName: event.study.name,
-          studyEmoji: event.study.emoji
-        }))
+      data: responseData,
+      metadata: {
+        duration,
+        timestamp: new Date().toISOString()
       }
     })
 
   } catch (error) {
-    console.error('Dashboard error:', error)
+    const duration = Date.now() - startTime
+
+    // Prisma 에러 처리
+    if (error.code && error.code.startsWith('P')) {
+      const dashError = handlePrismaError(error)
+      logDashboardError('Prisma 에러', error, {
+        userId: session?.user?.id,
+        prismaCode: error.code,
+        duration
+      })
+
+      return NextResponse.json(dashError, { status: dashError.statusCode })
+    }
+
+    // 일반 에러 처리
+    logDashboardError('대시보드 데이터 로드', error, {
+      userId: session?.user?.id,
+      duration,
+      stack: error.stack
+    })
+
     return NextResponse.json(
-      { error: "대시보드 데이터를 가져오는 중 오류가 발생했습니다" },
+      {
+        success: false,
+        error: {
+          code: 'DASH-009',
+          message: "대시보드 데이터를 가져오는 중 오류가 발생했습니다",
+          category: 'API',
+          timestamp: new Date().toISOString()
+        }
+      },
       { status: 500 }
     )
   }

@@ -2,6 +2,9 @@
 import { NextResponse } from "next/server"
 import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import { validateAndSanitize } from "@/lib/utils/input-sanitizer"
+import { validateSecurityThreats, logSecurityEvent } from "@/lib/utils/xss-sanitizer"
+import { getCachedNotices, setCachedNotices, invalidateNoticesCache } from "@/lib/cache-helpers"
 
 export async function GET(request, { params }) {
   const { id: studyId } = await params
@@ -15,6 +18,22 @@ export async function GET(request, { params }) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
     const pinned = searchParams.get('pinned') // 'true' | 'false'
+
+    // 캐시 키 생성 (studyId + 쿼리 파라미터)
+    const cacheKey = `${studyId}_p${page}_l${limit}_pin${pinned || 'all'}`
+
+    // 1. 캐시 확인 (페이지네이션이 첫 페이지이고 필터가 없는 경우만)
+    if (page === 1 && !pinned) {
+      const cached = getCachedNotices(cacheKey)
+      if (cached) {
+        return NextResponse.json({
+          success: true,
+          data: cached.notices,
+          pagination: cached.pagination,
+          cached: true // 캐시에서 가져왔음을 표시
+        })
+      }
+    }
 
     let whereClause = { studyId }
 
@@ -43,15 +62,23 @@ export async function GET(request, { params }) {
       }
     })
 
+    const pagination = {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+
+    // 2. 첫 페이지 결과 캐싱
+    if (page === 1 && !pinned) {
+      setCachedNotices(cacheKey, { notices, pagination })
+    }
+
     return NextResponse.json({
       success: true,
       data: notices,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+      pagination,
+      cached: false
     })
 
   } catch (error) {
@@ -75,20 +102,90 @@ export async function POST(request, { params }) {
     const body = await request.json()
     const { title, content, isPinned, isImportant } = body
 
-    if (!title || !content) {
+    // 1. 보안 위협 검증
+    const titleThreats = validateSecurityThreats(title || '');
+    const contentThreats = validateSecurityThreats(content || '');
+
+    if (!titleThreats.safe) {
+      logSecurityEvent('XSS_ATTEMPT_DETECTED', {
+        userId: session.user.id,
+        studyId,
+        field: 'notice_title',
+        threats: titleThreats.threats,
+      });
       return NextResponse.json(
-        { error: "제목과 내용을 입력해주세요" },
+        { error: "제목에 허용되지 않는 콘텐츠가 포함되어 있습니다" },
         { status: 400 }
-      )
+      );
+    }
+
+    if (!contentThreats.safe) {
+      logSecurityEvent('XSS_ATTEMPT_DETECTED', {
+        userId: session.user.id,
+        studyId,
+        field: 'notice_content',
+        threats: contentThreats.threats,
+      });
+      return NextResponse.json(
+        { error: "내용에 허용되지 않는 콘텐츠가 포함되어 있습니다" },
+        { status: 400 }
+      );
+    }
+
+    // 2. 입력값 검증 및 정제
+    const validation = validateAndSanitize(body, 'NOTICE');
+
+    if (!validation.valid) {
+      return NextResponse.json(
+        {
+          error: "입력값이 유효하지 않습니다",
+          details: validation.errors
+        },
+        { status: 400 }
+      );
+    }
+
+    const sanitizedData = validation.sanitized;
+
+    // 3. 추가 검증
+    if (sanitizedData.title.length > 100) {
+      return NextResponse.json(
+        { error: "제목은 100자 이하여야 합니다" },
+        { status: 400 }
+      );
+    }
+
+    if (sanitizedData.content.length > 10000) {
+      return NextResponse.json(
+        { error: "내용은 10,000자 이하여야 합니다" },
+        { status: 400 }
+      );
+    }
+
+    // 4. 고정된 공지 개수 확인 (최대 3개)
+    if (sanitizedData.isPinned) {
+      const pinnedCount = await prisma.notice.count({
+        where: {
+          studyId,
+          isPinned: true,
+        },
+      });
+
+      if (pinnedCount >= 3) {
+        return NextResponse.json(
+          { error: "고정 공지사항은 최대 3개까지만 가능합니다" },
+          { status: 400 }
+        );
+      }
     }
 
     const notice = await prisma.notice.create({
       data: {
         studyId,
         authorId: session.user.id,
-        title,
-        content,
-        isPinned: isPinned || false,
+        title: sanitizedData.title,
+        content: sanitizedData.content,
+        isPinned: sanitizedData.isPinned || false,
         isImportant: isImportant || false
       },
       include: {
@@ -124,9 +221,14 @@ export async function POST(request, { params }) {
         studyId,
         studyName: study.name,
         studyEmoji: study.emoji,
-        message: `새 공지사항: ${title}`
+        message: `새 공지사항: ${sanitizedData.title}`
       }))
     })
+
+    // 캐시 무효화 (새 공지가 생성되었으므로 목록 캐시 갱신 필요)
+    invalidateNoticesCache(`${studyId}_p1_l10_pinall`)
+    invalidateNoticesCache(`${studyId}_p1_l20_pinall`)
+    // 다른 limit 크기도 무효화 (일반적으로 사용되는 크기들)
 
     return NextResponse.json({
       success: true,

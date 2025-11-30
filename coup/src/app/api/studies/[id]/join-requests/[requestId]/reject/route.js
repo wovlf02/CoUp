@@ -2,41 +2,92 @@
 import { NextResponse } from "next/server"
 import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import {
+  createStudyErrorResponse,
+  logStudyError,
+  handlePrismaError
+} from '@/lib/exceptions/study-errors'
+import { validateJoinReject } from '@/lib/validators/study-validation'
+import { rejectJoinRequest as rejectJoinRequestTransaction } from '@/lib/transaction-helpers'
 
 export async function POST(request, { params }) {
-  const { id: studyId, requestId } = await params
-
-  const result = await requireStudyMember(studyId, 'ADMIN')
-  if (result instanceof NextResponse) return result
-
-  const { user } = result
-
   try {
+    // 1. 파라미터 파싱
+    const { id: studyId, requestId } = await params
+
+    // 2. ADMIN 권한 확인
+    const result = await requireStudyMember(studyId, 'ADMIN')
+    if (result instanceof NextResponse) return result
+
+    const { session } = result
+
+    // 3. 요청 본문 파싱
     const body = await request.json()
     const { reason } = body
 
-    // 가입 신청 확인
+    // 4. 거절 사유 검증 (선택)
+    if (reason) {
+      const validation = validateJoinReject({ reason })
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: validation.error,
+            errors: validation.errors
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // 5. 가입 신청 확인
     const joinRequest = await prisma.studyMember.findFirst({
       where: {
         id: requestId,
         studyId,
         status: 'PENDING'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        study: {
+          select: {
+            name: true
+          }
+        }
       }
     })
 
     if (!joinRequest) {
-      return NextResponse.json(
-        { error: "가입 신청을 찾을 수 없습니다" },
-        { status: 404 }
-      )
+      const errorResponse = createStudyErrorResponse('JOIN_REQUEST_NOT_FOUND')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 거절 처리 - 레코드 삭제
-    await prisma.studyMember.delete({
-      where: { id: requestId }
-    })
+    // 6. 트랜잭션으로 거절 처리 (레코드 삭제 + 알림)
+    const rejectResult = await rejectJoinRequestTransaction(
+      prisma,
+      requestId,
+      studyId,
+      joinRequest.userId,
+      session.user.id,
+      session.user.name,
+      reason
+    )
 
-    // TODO: 거절 알림 전송 (reason 포함)
+    if (!rejectResult.success) {
+      logStudyError('가입 거절 트랜잭션', new Error(rejectResult.error), {
+        studyId,
+        requestId,
+        rejecterId: session.user.id
+      })
+
+      const errorResponse = createStudyErrorResponse('JOIN_REJECT_FAILED', rejectResult.error)
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
+    }
 
     return NextResponse.json({
       success: true,
@@ -44,11 +95,16 @@ export async function POST(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Reject join request error:', error)
-    return NextResponse.json(
-      { error: "가입 거절 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+    // Prisma 에러 처리
+    if (error.code?.startsWith('P')) {
+      const studyError = handlePrismaError(error)
+      return NextResponse.json(studyError, { status: studyError.statusCode })
+    }
+
+    // 일반 에러
+    logStudyError('가입 거절', error)
+    const errorResponse = createStudyErrorResponse('JOIN_REJECT_FAILED')
+    return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
   }
 }
 

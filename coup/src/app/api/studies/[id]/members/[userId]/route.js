@@ -2,27 +2,34 @@
 import { NextResponse } from "next/server"
 import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import {
+  createStudyErrorResponse,
+  logStudyError,
+  handlePrismaError
+} from '@/lib/exceptions/study-errors'
+import { canModifyMember } from '@/lib/study-helpers'
+import { kickMember as kickMemberTransaction } from '@/lib/transaction-helpers'
 
 // 강퇴
 export async function DELETE(request, { params }) {
-  const { id: studyId, userId } = await params
-
-  const result = await requireStudyMember(studyId, 'ADMIN')
-  if (result instanceof NextResponse) return result
-
-  const { session } = result
-
   try {
-    // 자기 자신 강퇴 불가
+    // 1. 파라미터 파싱
+    const { id: studyId, userId } = await params
+
+    // 2. ADMIN 권한 확인
+    const result = await requireStudyMember(studyId, 'ADMIN')
+    if (result instanceof NextResponse) return result
+
+    const { session, membership } = result
+
+    // 3. 자기 자신 강퇴 불가
     if (userId === session.user.id) {
-      return NextResponse.json(
-        { error: "자기 자신을 강퇴할 수 없습니다" },
-        { status: 400 }
-      )
+      const errorResponse = createStudyErrorResponse('CANNOT_KICK_SELF')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 멤버 확인
-    const member = await prisma.studyMember.findUnique({
+    // 4. 대상 멤버 확인
+    const targetMember = await prisma.studyMember.findUnique({
       where: {
         studyId_userId: {
           studyId,
@@ -39,45 +46,42 @@ export async function DELETE(request, { params }) {
       }
     })
 
-    if (!member) {
-      return NextResponse.json(
-        { error: "멤버를 찾을 수 없습니다" },
-        { status: 404 }
-      )
+    if (!targetMember) {
+      const errorResponse = createStudyErrorResponse('MEMBER_NOT_FOUND')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // OWNER는 강퇴 불가
-    if (member.role === 'OWNER') {
-      return NextResponse.json(
-        { error: "스터디장을 강퇴할 수 없습니다" },
-        { status: 400 }
-      )
+    // 5. OWNER는 강퇴 불가
+    if (targetMember.role === 'OWNER') {
+      const errorResponse = createStudyErrorResponse('CANNOT_KICK_OWNER')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 상태를 KICKED로 변경
-    await prisma.studyMember.update({
-      where: {
-        studyId_userId: {
-          studyId,
-          userId
-        }
-      },
-      data: {
-        status: 'KICKED'
-      }
-    })
+    // 6. 역할 계층 검증 - ADMIN이 ADMIN 강퇴 불가
+    if (!canModifyMember(membership.role, targetMember.role)) {
+      const errorResponse = createStudyErrorResponse('ROLE_HIERARCHY_VIOLATION')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
+    }
 
-    // 강퇴 알림 생성
-    await prisma.notification.create({
-      data: {
-        userId,
-        type: 'KICK',
+    // 7. 트랜잭션으로 강퇴 처리 (멤버 수 업데이트 + 알림 포함)
+    const kickResult = await kickMemberTransaction(
+      prisma,
+      studyId,
+      userId,
+      session.user.id,
+      session.user.name
+    )
+
+    if (!kickResult.success) {
+      logStudyError('멤버 강퇴 트랜잭션', new Error(kickResult.error), {
         studyId,
-        studyName: member.study.name,
-        studyEmoji: member.study.emoji,
-        message: `${member.study.name}에서 강퇴되었습니다`
-      }
-    })
+        targetUserId: userId,
+        kickerId: session.user.id
+      })
+
+      const errorResponse = createStudyErrorResponse('MEMBER_KICK_FAILED', kickResult.error)
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
+    }
 
     return NextResponse.json({
       success: true,
@@ -85,11 +89,16 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Kick member error:', error)
-    return NextResponse.json(
-      { error: "멤버 강퇴 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+    // Prisma 에러 처리
+    if (error.code?.startsWith('P')) {
+      const studyError = handlePrismaError(error)
+      return NextResponse.json(studyError, { status: studyError.statusCode })
+    }
+
+    // 일반 에러
+    logStudyError('멤버 강퇴', error)
+    const errorResponse = createStudyErrorResponse('MEMBER_KICK_FAILED')
+    return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
   }
 }
 

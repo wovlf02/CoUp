@@ -6,6 +6,10 @@ import DashboardSkeleton from './DashboardSkeleton'
 import EmptyState from './EmptyState'
 import { useDashboard, useMe } from '@/lib/hooks/useApi'
 
+// ErrorBoundary import
+import DashboardErrorBoundary from './ErrorBoundary'
+import WidgetErrorBoundary from './widgets/WidgetErrorBoundary'
+
 // 위젯 컴포넌트 import
 import StudyStatus from './widgets/StudyStatus'
 import OnlineMembers from './widgets/OnlineMembers'
@@ -67,10 +71,15 @@ export default function DashboardClient({ user: initialUser }) {
       value: stats.completedThisMonth,
       color: 'purple'
     }
-  ]
+  ], [
+    stats.activeStudies,
+    stats.pendingTasks,
+    stats.unreadNotifications,
+    stats.completedThisMonth
+  ])
 
-  // 위젯 데이터 준비 (API에서 아직 안 주면 임시 데이터)
-  const widgetStats = widgetData?.stats || {
+  // useMemo로 위젯 통계 데이터 최적화
+  const widgetStats = useMemo(() => widgetData?.stats || {
     attendanceRate: stats.attendanceRate || 0,
     attendedCount: stats.attendedCount || 0,
     totalAttendance: stats.totalAttendance || 0,
@@ -78,23 +87,27 @@ export default function DashboardClient({ user: initialUser }) {
     completedTasks: stats.completedTasks || 0,
     totalTasks: stats.totalTasks || stats.pendingTasks || 0,
     streakDays: stats.streakDays || 0
-  }
+  }, [widgetData?.stats, stats])
 
-  const nextEvent = widgetData?.nextEvent || (upcomingEvents && upcomingEvents.length > 0 ? {
-    dday: Math.ceil((new Date(upcomingEvents[0].date) - new Date()) / (1000 * 60 * 60 * 24)),
-    date: new Date(upcomingEvents[0].date).toLocaleDateString('ko-KR', {
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    }),
-    title: upcomingEvents[0].title
-  } : null)
+  // useMemo로 다음 이벤트 데이터 최적화
+  const nextEvent = useMemo(() => {
+    if (widgetData?.nextEvent) return widgetData.nextEvent
+
+    if (upcomingEvents && upcomingEvents.length > 0) {
+      return {
+        dday: calculateDday(upcomingEvents[0].date),
+        date: formatEventDate(upcomingEvents[0].date),
+        title: upcomingEvents[0].title
+      }
+    }
+
+    return null
+  }, [widgetData?.nextEvent, upcomingEvents])
 
   return (
-    <div className={styles.container}>
-      <div className={styles.mainContent}>
+    <DashboardErrorBoundary userId={user?.id}>
+      <div className={styles.container}>
+        <div className={styles.mainContent}>
         {/* 페이지 헤더 */}
         <header className={styles.header}>
           <div className={styles.headerContent}>
@@ -240,43 +253,120 @@ export default function DashboardClient({ user: initialUser }) {
       {/* 우측 사이드바 위젯 */}
       <aside className={styles.sidebar}>
         {/* 스터디 현황 */}
-        <StudyStatus stats={widgetStats} nextEvent={nextEvent} />
+        <WidgetErrorBoundary widgetName="스터디 현황">
+          <StudyStatus stats={widgetStats} nextEvent={nextEvent} />
+        </WidgetErrorBoundary>
 
         {/* 온라인 멤버 */}
-        <OnlineMembers
-          members={widgetData?.onlineMembers || []}
-          totalMembers={widgetData?.totalMembers || 0}
-        />
+        <WidgetErrorBoundary widgetName="온라인 멤버">
+          <OnlineMembers
+            members={widgetData?.onlineMembers || []}
+            totalMembers={widgetData?.totalMembers || 0}
+          />
+        </WidgetErrorBoundary>
 
         {/* 빠른 액션 */}
-        <QuickActions />
+        <WidgetErrorBoundary widgetName="빠른 액션">
+          <QuickActions />
+        </WidgetErrorBoundary>
 
         {/* 고정 공지 */}
         {widgetData?.pinnedNotice && (
-          <PinnedNotice notice={widgetData.pinnedNotice} />
+          <WidgetErrorBoundary widgetName="고정 공지">
+            <PinnedNotice notice={widgetData.pinnedNotice} />
+          </WidgetErrorBoundary>
         )}
 
         {/* 급한 할일 */}
-        <UrgentTasks tasks={widgetData?.urgentTasks || []} />
+        <WidgetErrorBoundary widgetName="급한 할일">
+          <UrgentTasks tasks={widgetData?.urgentTasks || []} />
+        </WidgetErrorBoundary>
       </aside>
     </div>
+    </DashboardErrorBoundary>
   )
 }
 
 // 상대 시간 포맷팅
 function formatRelativeTime(dateString) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now - date
+  try {
+    const date = new Date(dateString)
+    const now = new Date()
 
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
+    // Invalid Date 체크
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateString)
+      return '날짜 오류'
+    }
 
-  if (minutes < 1) return '방금 전'
-  if (minutes < 60) return `${minutes}분 전`
-  if (hours < 24) return `${hours}시간 전`
-  if (days < 7) return `${days}일 전`
+    const diff = now - date
 
-  return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+    // 음수 방지 (미래 날짜)
+    if (diff < 0) {
+      return '방금 전'
+    }
+
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return '방금 전'
+    if (minutes < 60) return `${minutes}분 전`
+    if (hours < 24) return `${hours}시간 전`
+    if (days < 7) return `${days}일 전`
+
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+  } catch (error) {
+    console.error('Error formatting relative time:', error)
+    return '날짜 오류'
+  }
+}
+
+// D-day 계산
+function calculateDday(dateString) {
+  try {
+    const eventDate = new Date(dateString)
+    const now = new Date()
+
+    // Invalid Date 체크
+    if (isNaN(eventDate.getTime())) {
+      console.error('Invalid event date:', dateString)
+      return 0
+    }
+
+    // 자정 기준으로 계산
+    eventDate.setHours(0, 0, 0, 0)
+    now.setHours(0, 0, 0, 0)
+
+    const diffTime = eventDate - now
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    // 음수 방지 (과거 일정)
+    return Math.max(0, diffDays)
+  } catch (error) {
+    console.error('Error calculating D-day:', error)
+    return 0
+  }
+}
+
+// 이벤트 날짜 포맷팅
+function formatEventDate(dateString) {
+  try {
+    const date = new Date(dateString)
+
+    if (isNaN(date.getTime())) {
+      return '날짜 오류'
+    }
+
+    return date.toLocaleDateString('ko-KR', {
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (error) {
+    console.error('Error formatting date:', error)
+    return '날짜 오류'
+  }
 }

@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server"
 import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import { validateAndSanitize } from "@/lib/utils/input-sanitizer"
+import { validateSecurityThreats, logSecurityEvent } from "@/lib/utils/xss-sanitizer"
 
 export async function GET(request, { params }) {
   const { id: studyId } = await params
@@ -85,13 +87,90 @@ export async function POST(request, { params }) {
       )
     }
 
-    // 메시지 생성
+    // 1. 보안 위협 검증 (content가 있는 경우만)
+    if (content) {
+      const threats = validateSecurityThreats(content);
+
+      if (!threats.safe) {
+        logSecurityEvent('XSS_ATTEMPT_DETECTED', {
+          userId: session.user.id,
+          studyId,
+          field: 'chat_message',
+          threats: threats.threats,
+        });
+
+        return NextResponse.json(
+          { error: "메시지에 허용되지 않는 콘텐츠가 포함되어 있습니다" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 2. 입력값 검증 및 정제
+    const validation = validateAndSanitize(
+      { content, fileId },
+      'CHAT_MESSAGE'
+    );
+
+    if (!validation.valid) {
+      return NextResponse.json(
+        {
+          error: "입력값이 유효하지 않습니다",
+          details: validation.errors
+        },
+        { status: 400 }
+      );
+    }
+
+    const sanitizedData = validation.sanitized;
+
+    // 3. 메시지 길이 제한 (2000자)
+    if (sanitizedData.content && sanitizedData.content.length > 2000) {
+      return NextResponse.json(
+        { error: "메시지는 2000자 이하여야 합니다" },
+        { status: 400 }
+      );
+    }
+
+    // 4. 스팸 감지 (최근 10초 내 5개 이상 메시지)
+    const recentMessages = await prisma.message.count({
+      where: {
+        studyId,
+        userId: session.user.id,
+        createdAt: {
+          gte: new Date(Date.now() - 10000), // 10초
+        },
+      },
+    });
+
+    if (recentMessages >= 5) {
+      return NextResponse.json(
+        { error: "메시지를 너무 빠르게 전송하고 있습니다. 잠시 후 다시 시도해주세요." },
+        { status: 429 }
+      );
+    }
+
+    // 5. 파일 ID 검증 (존재하는 경우)
+    if (sanitizedData.fileId) {
+      const file = await prisma.file.findUnique({
+        where: { id: sanitizedData.fileId },
+      });
+
+      if (!file || file.studyId !== studyId) {
+        return NextResponse.json(
+          { error: "유효하지 않은 파일입니다" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 6. 메시지 생성
     const message = await prisma.message.create({
       data: {
         studyId,
         userId: session.user.id,
-        content: content || '',
-        fileId,
+        content: sanitizedData.content || '',
+        fileId: sanitizedData.fileId,
         readers: [session.user.id] // 작성자는 자동으로 읽음
       },
       include: {
@@ -114,7 +193,7 @@ export async function POST(request, { params }) {
       }
     })
 
-    // 다른 멤버들에게 알림 (나중에 WebSocket으로 실시간 전송 가능)
+    // 7. 다른 멤버들에게 알림 (나중에 WebSocket으로 실시간 전송 가능)
     const members = await prisma.studyMember.findMany({
       where: {
         studyId,

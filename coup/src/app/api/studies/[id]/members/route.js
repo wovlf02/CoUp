@@ -11,21 +11,98 @@ export async function GET(request, { params }) {
 
   try {
     const { searchParams } = new URL(request.url)
-    const role = searchParams.get('role') // OWNER | ADMIN | MEMBER
-    const status = searchParams.get('status') || 'ACTIVE' // ACTIVE | PENDING
 
+    // 1. 페이지네이션 파라미터 검증
+    const pageParam = searchParams.get('page') || '1'
+    const limitParam = searchParams.get('limit') || '50'
+
+    const page = parseInt(pageParam)
+    const limit = parseInt(limitParam)
+
+    // 페이지네이션 범위 검증
+    if (isNaN(page) || page < 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: '페이지 번호는 1 이상이어야 합니다',
+          details: { page: pageParam }
+        },
+        { status: 400 }
+      )
+    }
+
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: '페이지 크기는 1-100 사이여야 합니다',
+          details: { limit: limitParam }
+        },
+        { status: 400 }
+      )
+    }
+
+    const skip = (page - 1) * limit
+
+    // 2. 필터 파라미터
+    const roleParam = searchParams.get('role') // OWNER | ADMIN | MEMBER | ALL
+    const statusParam = searchParams.get('status') || 'ACTIVE' // ACTIVE | PENDING | LEFT | KICKED | ALL
+
+    // 3. 역할 필터 검증
+    const allowedRoles = ['OWNER', 'ADMIN', 'MEMBER', 'ALL']
+    if (roleParam && !allowedRoles.includes(roleParam)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: '유효하지 않은 역할 필터입니다',
+          details: {
+            role: roleParam,
+            allowedValues: allowedRoles
+          }
+        },
+        { status: 400 }
+      )
+    }
+
+    // 4. 상태 필터 검증
+    const allowedStatuses = ['ACTIVE', 'PENDING', 'LEFT', 'KICKED', 'ALL']
+    if (!allowedStatuses.includes(statusParam)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: '유효하지 않은 상태 필터입니다',
+          details: {
+            status: statusParam,
+            allowedValues: allowedStatuses
+          }
+        },
+        { status: 400 }
+      )
+    }
+
+    // where 조건 생성
     let whereClause = {
-      studyId,
-      status
+      studyId
     }
 
-    if (role) {
-      whereClause.role = role
+    // 역할 필터 (ALL이 아닌 경우만 적용)
+    if (roleParam && roleParam !== 'ALL') {
+      whereClause.role = roleParam
     }
 
-    // 멤버 목록 조회
+    // 상태 필터 (ALL이 아닌 경우만 적용)
+    if (statusParam !== 'ALL') {
+      whereClause.status = statusParam
+    }
+
+    // 총 개수
+    const total = await prisma.studyMember.count({ where: whereClause })
+
+    // 멤버 목록 조회 (페이지네이션 적용)
     const members = await prisma.studyMember.findMany({
       where: whereClause,
+      skip,
+      take: limit,
       include: {
         user: {
           select: {
@@ -45,7 +122,7 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      members: members.map(m => ({
+      data: members.map(m => ({
         id: m.id,
         userId: m.userId,
         role: m.role,
@@ -53,7 +130,17 @@ export async function GET(request, { params }) {
         user: m.user,
         joinedAt: m.joinedAt,
         approvedAt: m.approvedAt
-      }))
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      },
+      filters: {
+        role: roleParam,
+        status: statusParam
+      }
     })
 
   } catch (error) {

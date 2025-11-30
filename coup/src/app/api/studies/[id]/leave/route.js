@@ -2,16 +2,24 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import {
+  createStudyErrorResponse,
+  logStudyError,
+  handlePrismaError
+} from '@/lib/exceptions/study-errors'
+import { leaveStudy as leaveStudyTransaction } from '@/lib/transaction-helpers'
 
 export async function DELETE(request, { params }) {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
-
   try {
+    // 1. 인증 확인
+    const session = await requireAuth()
+    if (session instanceof NextResponse) return session
+
+    // 2. 파라미터 파싱
     const { id: studyId } = await params
     const userId = session.user.id
 
-    // 멤버 확인
+    // 3. 멤버 확인
     const member = await prisma.studyMember.findUnique({
       where: {
         studyId_userId: {
@@ -22,32 +30,28 @@ export async function DELETE(request, { params }) {
     })
 
     if (!member) {
-      return NextResponse.json(
-        { error: "스터디 멤버가 아닙니다" },
-        { status: 404 }
-      )
+      const errorResponse = createStudyErrorResponse('MEMBER_NOT_FOUND')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // OWNER는 탈퇴 불가
+    // 4. OWNER는 탈퇴 불가
     if (member.role === 'OWNER') {
-      return NextResponse.json(
-        { error: "스터디장은 탈퇴할 수 없습니다. 스터디를 삭제하거나 소유권을 이전하세요" },
-        { status: 400 }
-      )
+      const errorResponse = createStudyErrorResponse('OWNER_CANNOT_LEAVE')
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 상태를 LEFT로 변경
-    await prisma.studyMember.update({
-      where: {
-        studyId_userId: {
-          studyId,
-          userId
-        }
-      },
-      data: {
-        status: 'LEFT'
-      }
-    })
+    // 5. 트랜잭션으로 탈퇴 처리 (멤버 수 업데이트 포함)
+    const result = await leaveStudyTransaction(prisma, studyId, userId)
+
+    if (!result.success) {
+      logStudyError('스터디 탈퇴 트랜잭션', new Error(result.error), {
+        studyId,
+        userId
+      })
+
+      const errorResponse = createStudyErrorResponse('STUDY_LEAVE_FAILED', result.error)
+      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
+    }
 
     return NextResponse.json({
       success: true,
@@ -55,11 +59,16 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Leave study error:', error)
-    return NextResponse.json(
-      { error: "스터디 탈퇴 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+    // Prisma 에러 처리
+    if (error.code?.startsWith('P')) {
+      const studyError = handlePrismaError(error)
+      return NextResponse.json(studyError, { status: studyError.statusCode })
+    }
+
+    // 일반 에러
+    logStudyError('스터디 탈퇴', error)
+    const errorResponse = createStudyErrorResponse('STUDY_LEAVE_FAILED')
+    return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
   }
 }
 

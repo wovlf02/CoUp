@@ -1,385 +1,553 @@
 /**
- * 알림 생성 유틸리티
+ * notification-helpers.js
+ *
+ * 알림 생성 및 관리 유틸리티 헬퍼 함수
+ *
+ * 사용 예시:
+ * ```js
+ * import { createNotification, createBulkNotifications } from '@/lib/notification-helpers'
+ *
+ * await createNotification(prisma, {
+ *   userId: targetUserId,
+ *   type: 'STUDY_INVITE',
+ *   message: '새로운 스터디 초대가 도착했습니다',
+ *   link: `/studies/${studyId}`
+ * })
+ * ```
+ *
  * @module lib/notification-helpers
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// ============================================
+// 알림 타입 정의
+// ============================================
 
 /**
- * 알림 타입 정의
+ * 알림 타입 목록
  */
 export const NOTIFICATION_TYPES = {
-  JOIN_APPROVED: 'JOIN_APPROVED',
-  NOTICE: 'NOTICE',
-  FILE: 'FILE',
-  EVENT: 'EVENT',
-  TASK: 'TASK',
-  MEMBER: 'MEMBER',
-  KICK: 'KICK',
-  CHAT: 'CHAT'
-};
+  // 스터디 관련
+  STUDY_INVITE: 'STUDY_INVITE',                   // 스터디 초대
+  STUDY_JOIN_REQUEST: 'STUDY_JOIN_REQUEST',       // 가입 신청
+  STUDY_JOIN_APPROVED: 'STUDY_JOIN_APPROVED',     // 가입 승인
+  STUDY_JOIN_REJECTED: 'STUDY_JOIN_REJECTED',     // 가입 거절
+  STUDY_MEMBER_KICKED: 'STUDY_MEMBER_KICKED',     // 멤버 강퇴
+  STUDY_ROLE_CHANGED: 'STUDY_ROLE_CHANGED',       // 역할 변경
+  STUDY_OWNER_TRANSFERRED: 'STUDY_OWNER_TRANSFERRED', // 소유권 이전
+
+  // 공지 관련
+  STUDY_NOTICE_NEW: 'STUDY_NOTICE_NEW',           // 새 공지
+  STUDY_NOTICE_PINNED: 'STUDY_NOTICE_PINNED',     // 공지 고정
+
+  // 할일 관련
+  STUDY_TASK_ASSIGNED: 'STUDY_TASK_ASSIGNED',     // 할일 배정
+  STUDY_TASK_UPDATED: 'STUDY_TASK_UPDATED',       // 할일 수정
+  STUDY_TASK_COMPLETED: 'STUDY_TASK_COMPLETED',   // 할일 완료
+  STUDY_TASK_DUE_SOON: 'STUDY_TASK_DUE_SOON',     // 마감 임박
+
+  // 파일 관련
+  STUDY_FILE_UPLOADED: 'STUDY_FILE_UPLOADED',     // 파일 업로드
+
+  // 채팅 관련
+  STUDY_MESSAGE_MENTION: 'STUDY_MESSAGE_MENTION', // 메시지 멘션
+
+  // 일정 관련
+  STUDY_EVENT_NEW: 'STUDY_EVENT_NEW',             // 새 일정
+  STUDY_EVENT_UPDATED: 'STUDY_EVENT_UPDATED',     // 일정 수정
+  STUDY_EVENT_REMINDER: 'STUDY_EVENT_REMINDER',   // 일정 알림
+
+  // 시스템
+  SYSTEM_ANNOUNCEMENT: 'SYSTEM_ANNOUNCEMENT'      // 시스템 공지
+}
 
 /**
- * 알림 템플릿
+ * 알림 우선순위
  */
-const NOTIFICATION_TEMPLATES = {
-  // 가입 승인
-  JOIN_APPROVED: (studyName) => `${studyName} 스터디 가입이 승인되었습니다`,
+export const NOTIFICATION_PRIORITY = {
+  LOW: 'LOW',
+  NORMAL: 'NORMAL',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT'
+}
 
-  // 공지
-  NOTICE_CREATED: (studyName, title) => `${studyName} - 새 공지: ${title}`,
-  NOTICE_UPDATED: (studyName, title) => `${studyName} - 공지 수정: ${title}`,
-  NOTICE_PINNED: (studyName, title) => `${studyName} - 중요 공지: ${title}`,
+// ============================================
+// 알림 템플릿
+// ============================================
 
-  // 파일
-  FILE_UPLOADED: (studyName, fileName) => `${studyName} - 새 파일: ${fileName}`,
+/**
+ * 알림 메시지 템플릿 생성
+ *
+ * @param {string} type - 알림 타입
+ * @param {Object} data - 템플릿 데이터
+ * @returns {string} 생성된 메시지
+ */
+export function createNotificationMessage(type, data) {
+  const templates = {
+    // 스터디 관련
+    STUDY_INVITE: `${data.inviterName}님이 "${data.studyName}" 스터디에 초대했습니다`,
+    STUDY_JOIN_REQUEST: `${data.userName}님이 "${data.studyName}" 스터디 가입을 신청했습니다`,
+    STUDY_JOIN_APPROVED: `"${data.studyName}" 스터디 가입이 승인되었습니다`,
+    STUDY_JOIN_REJECTED: `"${data.studyName}" 스터디 가입이 거절되었습니다${data.reason ? `: ${data.reason}` : ''}`,
+    STUDY_MEMBER_KICKED: `"${data.studyName}" 스터디에서 강퇴되었습니다${data.reason ? `: ${data.reason}` : ''}`,
+    STUDY_ROLE_CHANGED: `"${data.studyName}" 스터디에서 역할이 ${data.newRole}(으)로 변경되었습니다`,
+    STUDY_OWNER_TRANSFERRED: `"${data.studyName}" 스터디의 소유권이 이전되었습니다`,
 
-  // 일정
-  EVENT_CREATED: (studyName, title) => `${studyName} - 새 일정: ${title}`,
-  EVENT_UPDATED: (studyName, title) => `${studyName} - 일정 변경: ${title}`,
-  EVENT_REMINDER: (studyName, title, hours) => `${studyName} - ${title} (${hours}시간 후 시작)`,
+    // 공지 관련
+    STUDY_NOTICE_NEW: `"${data.studyName}"에 새 공지가 등록되었습니다: ${data.noticeTitle}`,
+    STUDY_NOTICE_PINNED: `"${data.studyName}"에 중요 공지가 고정되었습니다: ${data.noticeTitle}`,
 
-  // 할일
-  TASK_ASSIGNED: (studyName, title) => `${studyName} - 새 할일: ${title}`,
-  TASK_DUE_SOON: (studyName, title, hours) => `${studyName} - ${title} 마감 ${hours}시간 전`,
+    // 할일 관련
+    STUDY_TASK_ASSIGNED: `"${data.studyName}"에서 새로운 할일이 배정되었습니다: ${data.taskTitle}`,
+    STUDY_TASK_UPDATED: `"${data.studyName}"의 할일이 수정되었습니다: ${data.taskTitle}`,
+    STUDY_TASK_COMPLETED: `"${data.studyName}"의 할일이 완료되었습니다: ${data.taskTitle}`,
+    STUDY_TASK_DUE_SOON: `"${data.studyName}"의 할일 마감이 임박했습니다: ${data.taskTitle}`,
 
-  // 멤버
-  MEMBER_JOINED: (studyName, userName) => `${studyName} - ${userName}님이 가입했습니다`,
-  MEMBER_LEFT: (studyName, userName) => `${studyName} - ${userName}님이 탈퇴했습니다`,
-  ROLE_CHANGED: (studyName, newRole) => `${studyName} - 역할이 ${newRole}(으)로 변경되었습니다`,
+    // 파일 관련
+    STUDY_FILE_UPLOADED: `"${data.studyName}"에 새 파일이 업로드되었습니다: ${data.fileName}`,
 
-  // 강퇴
-  KICKED: (studyName, reason) => `${studyName}에서 강퇴되었습니다${reason ? `: ${reason}` : ''}`,
+    // 채팅 관련
+    STUDY_MESSAGE_MENTION: `"${data.studyName}"에서 ${data.senderName}님이 회원님을 언급했습니다`,
 
-  // 채팅
-  CHAT_MENTION: (studyName, userName) => `${studyName} - ${userName}님이 회원님을 언급했습니다`
-};
+    // 일정 관련
+    STUDY_EVENT_NEW: `"${data.studyName}"에 새 일정이 등록되었습니다: ${data.eventTitle}`,
+    STUDY_EVENT_UPDATED: `"${data.studyName}"의 일정이 변경되었습니다: ${data.eventTitle}`,
+    STUDY_EVENT_REMINDER: `"${data.studyName}"의 일정이 곧 시작됩니다: ${data.eventTitle}`,
+
+    // 시스템
+    SYSTEM_ANNOUNCEMENT: data.message || '시스템 공지사항이 있습니다'
+  }
+
+  return templates[type] || '새로운 알림이 도착했습니다'
+}
+
+/**
+ * 알림 링크 생성
+ *
+ * @param {string} type - 알림 타입
+ * @param {Object} data - 링크 데이터
+ * @returns {string|null} 생성된 링크
+ */
+export function createNotificationLink(type, data) {
+  const linkMap = {
+    // 스터디 관련
+    STUDY_INVITE: `/studies/${data.studyId}`,
+    STUDY_JOIN_REQUEST: `/studies/${data.studyId}/members`,
+    STUDY_JOIN_APPROVED: `/studies/${data.studyId}`,
+    STUDY_JOIN_REJECTED: '/studies',
+    STUDY_MEMBER_KICKED: '/studies',
+    STUDY_ROLE_CHANGED: `/studies/${data.studyId}`,
+    STUDY_OWNER_TRANSFERRED: `/studies/${data.studyId}`,
+
+    // 공지 관련
+    STUDY_NOTICE_NEW: `/studies/${data.studyId}/notices/${data.noticeId}`,
+    STUDY_NOTICE_PINNED: `/studies/${data.studyId}/notices/${data.noticeId}`,
+
+    // 할일 관련
+    STUDY_TASK_ASSIGNED: `/studies/${data.studyId}/tasks/${data.taskId}`,
+    STUDY_TASK_UPDATED: `/studies/${data.studyId}/tasks/${data.taskId}`,
+    STUDY_TASK_COMPLETED: `/studies/${data.studyId}/tasks/${data.taskId}`,
+    STUDY_TASK_DUE_SOON: `/studies/${data.studyId}/tasks/${data.taskId}`,
+
+    // 파일 관련
+    STUDY_FILE_UPLOADED: `/studies/${data.studyId}/files`,
+
+    // 채팅 관련
+    STUDY_MESSAGE_MENTION: `/studies/${data.studyId}/chat`,
+
+    // 일정 관련
+    STUDY_EVENT_NEW: `/studies/${data.studyId}/calendar/${data.eventId}`,
+    STUDY_EVENT_UPDATED: `/studies/${data.studyId}/calendar/${data.eventId}`,
+    STUDY_EVENT_REMINDER: `/studies/${data.studyId}/calendar/${data.eventId}`,
+
+    // 시스템
+    SYSTEM_ANNOUNCEMENT: data.link || null
+  }
+
+  return linkMap[type] || null
+}
+
+// ============================================
+// 알림 생성 함수
+// ============================================
 
 /**
  * 단일 알림 생성
- * @param {Object} data - 알림 데이터
- * @returns {Promise<Object>} 생성된 알림
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {Object} notificationData - 알림 데이터
+ * @returns {Promise<Object|null>} 생성된 알림 또는 null
+ *
+ * @example
+ * await createNotification(prisma, {
+ *   userId: 'user123',
+ *   type: 'STUDY_JOIN_APPROVED',
+ *   message: '가입이 승인되었습니다',
+ *   link: '/studies/study123',
+ *   priority: 'NORMAL'
+ * })
  */
-export async function createNotification(data) {
-  const {
-    userId,
-    type,
-    studyId = null,
-    studyName = null,
-    studyEmoji = null,
-    message,
-    additionalData = null
-  } = data;
-
+export async function createNotification(prisma, notificationData) {
   try {
+    const {
+      userId,
+      type,
+      message,
+      link = null,
+      priority = NOTIFICATION_PRIORITY.NORMAL,
+      metadata = {}
+    } = notificationData
+
+    // 필수 필드 확인
+    if (!userId || !type || !message) {
+      console.error('[NOTIFICATION] 필수 필드 누락:', { userId, type, message })
+      return null
+    }
+
+    // 알림 생성
     const notification = await prisma.notification.create({
       data: {
         userId,
         type,
-        studyId,
-        studyName,
-        studyEmoji,
         message,
-        data: additionalData
+        link,
+        priority,
+        metadata: metadata ? JSON.stringify(metadata) : null,
+        isRead: false
       }
-    });
+    })
 
-    return notification;
-  } catch (error) {
-    console.error('❌ [NOTIFICATION] 알림 생성 실패:', {
-      error: error.message,
+    console.log('[NOTIFICATION] 알림 생성 성공:', {
+      id: notification.id,
       userId,
       type
-    });
-    throw error;
+    })
+
+    return notification
+
+  } catch (error) {
+    console.error('[NOTIFICATION] 알림 생성 실패:', error)
+    return null
   }
 }
 
 /**
- * 일괄 알림 생성 (여러 사용자에게)
- * @param {Array<string>} userIds - 알림을 받을 사용자 ID 목록
- * @param {Object} notificationData - 알림 데이터
- * @returns {Promise<Object>} { success: number, failed: number }
+ * 템플릿 기반 알림 생성
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} userId - 수신자 ID
+ * @param {string} type - 알림 타입
+ * @param {Object} templateData - 템플릿 데이터
+ * @param {Object} options - 추가 옵션
+ * @returns {Promise<Object|null>} 생성된 알림
  */
-export async function createBulkNotifications(userIds, notificationData) {
-  const {
-    type,
-    studyId = null,
-    studyName = null,
-    studyEmoji = null,
-    message,
-    additionalData = null
-  } = notificationData;
+export async function createTemplatedNotification(prisma, userId, type, templateData, options = {}) {
+  const message = createNotificationMessage(type, templateData)
+  const link = createNotificationLink(type, templateData)
 
-  const notifications = userIds.map(userId => ({
+  return await createNotification(prisma, {
     userId,
     type,
-    studyId,
-    studyName,
-    studyEmoji,
     message,
-    data: additionalData
-  }));
+    link,
+    priority: options.priority || NOTIFICATION_PRIORITY.NORMAL,
+    metadata: options.metadata || {}
+  })
+}
+
+/**
+ * 일괄 알림 생성
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {Array<string>} userIds - 수신자 ID 배열
+ * @param {Object} notificationData - 공통 알림 데이터
+ * @returns {Promise<Object>} { success: number, failed: number, total: number }
+ *
+ * @example
+ * await createBulkNotifications(prisma, ['user1', 'user2', 'user3'], {
+ *   type: 'STUDY_NOTICE_NEW',
+ *   message: '새 공지가 등록되었습니다',
+ *   link: '/studies/study123/notices/notice456'
+ * })
+ */
+export async function createBulkNotifications(prisma, userIds, notificationData) {
+  const results = {
+    success: 0,
+    failed: 0,
+    total: userIds.length
+  }
 
   try {
+    const {
+      type,
+      message,
+      link = null,
+      priority = NOTIFICATION_PRIORITY.NORMAL,
+      metadata = {}
+    } = notificationData
+
+    // 필수 필드 확인
+    if (!type || !message) {
+      console.error('[NOTIFICATION] 일괄 알림 생성 실패: 필수 필드 누락')
+      results.failed = results.total
+      return results
+    }
+
+    // 알림 데이터 준비
+    const notifications = userIds.map(userId => ({
+      userId,
+      type,
+      message,
+      link,
+      priority,
+      metadata: metadata ? JSON.stringify(metadata) : null,
+      isRead: false
+    }))
+
+    // 일괄 생성
     const result = await prisma.notification.createMany({
       data: notifications,
       skipDuplicates: true
-    });
+    })
 
-    return {
-      success: result.count,
-      failed: 0,
-      total: userIds.length
-    };
+    results.success = result.count
+    results.failed = results.total - result.count
+
+    console.log('[NOTIFICATION] 일괄 알림 생성 완료:', results)
+
+    return results
+
   } catch (error) {
-    console.error('❌ [NOTIFICATION] 일괄 알림 생성 실패:', {
-      error: error.message,
-      userCount: userIds.length,
-      type
-    });
-
-    return {
-      success: 0,
-      failed: userIds.length,
-      total: userIds.length
-    };
+    console.error('[NOTIFICATION] 일괄 알림 생성 실패:', error)
+    results.failed = results.total
+    return results
   }
 }
 
 /**
- * 스터디 가입 승인 알림
- * @param {string} userId - 사용자 ID
- * @param {Object} study - 스터디 정보
- * @returns {Promise<Object>} 생성된 알림
- */
-export async function notifyJoinApproved(userId, study) {
-  return createNotification({
-    userId,
-    type: NOTIFICATION_TYPES.JOIN_APPROVED,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.JOIN_APPROVED(study.name)
-  });
-}
-
-/**
- * 새 공지 알림 (모든 멤버에게)
- * @param {Object} study - 스터디 정보
- * @param {string} noticeTitle - 공지 제목
- * @param {Array<string>} memberUserIds - 멤버 사용자 ID 목록
- * @param {boolean} isPinned - 고정 공지 여부
+ * 스터디 전체 멤버에게 알림 전송
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} studyId - 스터디 ID
+ * @param {Object} notificationData - 알림 데이터
+ * @param {Object} options - 옵션
  * @returns {Promise<Object>} 생성 결과
  */
-export async function notifyNewNotice(study, noticeTitle, memberUserIds, isPinned = false) {
-  const template = isPinned
-    ? NOTIFICATION_TEMPLATES.NOTICE_PINNED
-    : NOTIFICATION_TEMPLATES.NOTICE_CREATED;
+export async function notifyAllStudyMembers(prisma, studyId, notificationData, options = {}) {
+  try {
+    const {
+      excludeUserIds = [],
+      status = 'ACTIVE',
+      roles = null
+    } = options
 
-  return createBulkNotifications(memberUserIds, {
-    type: NOTIFICATION_TYPES.NOTICE,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: template(study.name, noticeTitle),
-    additionalData: { title: noticeTitle, isPinned }
-  });
+    // 스터디 멤버 조회
+    const members = await prisma.studyMember.findMany({
+      where: {
+        studyId,
+        status,
+        ...(roles && { role: { in: roles } }),
+        ...(excludeUserIds.length > 0 && { userId: { notIn: excludeUserIds } })
+      },
+      select: {
+        userId: true
+      }
+    })
+
+    const userIds = members.map(m => m.userId)
+
+    if (userIds.length === 0) {
+      console.log('[NOTIFICATION] 알림 대상 멤버 없음')
+      return { success: 0, failed: 0, total: 0 }
+    }
+
+    return await createBulkNotifications(prisma, userIds, notificationData)
+
+  } catch (error) {
+    console.error('[NOTIFICATION] 스터디 전체 알림 실패:', error)
+    return { success: 0, failed: 0, total: 0 }
+  }
 }
 
 /**
- * 새 파일 업로드 알림
- * @param {Object} study - 스터디 정보
- * @param {string} fileName - 파일 이름
- * @param {Array<string>} memberUserIds - 멤버 사용자 ID 목록
+ * 스터디 관리자에게만 알림 전송
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} studyId - 스터디 ID
+ * @param {Object} notificationData - 알림 데이터
  * @returns {Promise<Object>} 생성 결과
  */
-export async function notifyFileUploaded(study, fileName, memberUserIds) {
-  return createBulkNotifications(memberUserIds, {
-    type: NOTIFICATION_TYPES.FILE,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.FILE_UPLOADED(study.name, fileName),
-    additionalData: { fileName }
-  });
+export async function notifyStudyAdmins(prisma, studyId, notificationData) {
+  return await notifyAllStudyMembers(prisma, studyId, notificationData, {
+    roles: ['OWNER', 'ADMIN']
+  })
 }
 
-/**
- * 새 일정 생성 알림
- * @param {Object} study - 스터디 정보
- * @param {string} eventTitle - 일정 제목
- * @param {Array<string>} memberUserIds - 멤버 사용자 ID 목록
- * @returns {Promise<Object>} 생성 결과
- */
-export async function notifyEventCreated(study, eventTitle, memberUserIds) {
-  return createBulkNotifications(memberUserIds, {
-    type: NOTIFICATION_TYPES.EVENT,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.EVENT_CREATED(study.name, eventTitle),
-    additionalData: { title: eventTitle }
-  });
-}
+// ============================================
+// 알림 조회 함수
+// ============================================
 
 /**
- * 일정 리마인더 알림
- * @param {Object} study - 스터디 정보
- * @param {string} eventTitle - 일정 제목
- * @param {number} hoursUntil - 시작까지 남은 시간
- * @param {Array<string>} memberUserIds - 멤버 사용자 ID 목록
- * @returns {Promise<Object>} 생성 결과
- */
-export async function notifyEventReminder(study, eventTitle, hoursUntil, memberUserIds) {
-  return createBulkNotifications(memberUserIds, {
-    type: NOTIFICATION_TYPES.EVENT,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.EVENT_REMINDER(study.name, eventTitle, hoursUntil),
-    additionalData: { title: eventTitle, hoursUntil }
-  });
-}
-
-/**
- * 할일 배정 알림
+ * 사용자의 읽지 않은 알림 수 조회
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
  * @param {string} userId - 사용자 ID
- * @param {Object} study - 스터디 정보
- * @param {string} taskTitle - 할일 제목
- * @returns {Promise<Object>} 생성된 알림
+ * @returns {Promise<number>} 읽지 않은 알림 수
  */
-export async function notifyTaskAssigned(userId, study, taskTitle) {
-  return createNotification({
-    userId,
-    type: NOTIFICATION_TYPES.TASK,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.TASK_ASSIGNED(study.name, taskTitle),
-    additionalData: { title: taskTitle }
-  });
+export async function getUnreadNotificationCount(prisma, userId) {
+  try {
+    return await prisma.notification.count({
+      where: {
+        userId,
+        isRead: false
+      }
+    })
+  } catch (error) {
+    console.error('[NOTIFICATION] 읽지 않은 알림 수 조회 실패:', error)
+    return 0
+  }
 }
 
 /**
- * 할일 마감 임박 알림
+ * 사용자의 알림 목록 조회
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
  * @param {string} userId - 사용자 ID
- * @param {Object} study - 스터디 정보
- * @param {string} taskTitle - 할일 제목
- * @param {number} hoursUntil - 마감까지 남은 시간
- * @returns {Promise<Object>} 생성된 알림
+ * @param {Object} options - 조회 옵션
+ * @returns {Promise<Array>} 알림 목록
  */
-export async function notifyTaskDueSoon(userId, study, taskTitle, hoursUntil) {
-  return createNotification({
-    userId,
-    type: NOTIFICATION_TYPES.TASK,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.TASK_DUE_SOON(study.name, taskTitle, hoursUntil),
-    additionalData: { title: taskTitle, hoursUntil }
-  });
+export async function getUserNotifications(prisma, userId, options = {}) {
+  try {
+    const {
+      isRead = null,
+      type = null,
+      page = 1,
+      limit = 20
+    } = options
+
+    const where = {
+      userId,
+      ...(isRead !== null && { isRead }),
+      ...(type && { type })
+    }
+
+    return await prisma.notification.findMany({
+      where,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip: (page - 1) * limit,
+      take: limit
+    })
+
+  } catch (error) {
+    console.error('[NOTIFICATION] 알림 목록 조회 실패:', error)
+    return []
+  }
 }
 
-/**
- * 새 멤버 가입 알림 (관리자에게)
- * @param {Object} study - 스터디 정보
- * @param {string} newMemberName - 새 멤버 이름
- * @param {Array<string>} adminUserIds - 관리자 사용자 ID 목록
- * @returns {Promise<Object>} 생성 결과
- */
-export async function notifyMemberJoined(study, newMemberName, adminUserIds) {
-  return createBulkNotifications(adminUserIds, {
-    type: NOTIFICATION_TYPES.MEMBER,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.MEMBER_JOINED(study.name, newMemberName),
-    additionalData: { memberName: newMemberName }
-  });
-}
+// ============================================
+// 알림 업데이트 함수
+// ============================================
 
 /**
- * 역할 변경 알림
- * @param {string} userId - 사용자 ID
- * @param {Object} study - 스터디 정보
- * @param {string} newRole - 새 역할
- * @returns {Promise<Object>} 생성된 알림
- */
-export async function notifyRoleChanged(userId, study, newRole) {
-  const roleNames = {
-    OWNER: '스터디장',
-    ADMIN: '관리자',
-    MEMBER: '멤버'
-  };
-
-  return createNotification({
-    userId,
-    type: NOTIFICATION_TYPES.MEMBER,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.ROLE_CHANGED(study.name, roleNames[newRole] || newRole),
-    additionalData: { newRole }
-  });
-}
-
-/**
- * 강퇴 알림
- * @param {string} userId - 사용자 ID
- * @param {Object} study - 스터디 정보
- * @param {string} reason - 강퇴 사유
- * @returns {Promise<Object>} 생성된 알림
- */
-export async function notifyKicked(userId, study, reason = null) {
-  return createNotification({
-    userId,
-    type: NOTIFICATION_TYPES.KICK,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.KICKED(study.name, reason),
-    additionalData: { reason }
-  });
-}
-
-/**
- * 채팅 멘션 알림
- * @param {string} userId - 멘션된 사용자 ID
- * @param {Object} study - 스터디 정보
- * @param {string} mentionerName - 멘션한 사용자 이름
- * @returns {Promise<Object>} 생성된 알림
- */
-export async function notifyChatMention(userId, study, mentionerName) {
-  return createNotification({
-    userId,
-    type: NOTIFICATION_TYPES.CHAT,
-    studyId: study.id,
-    studyName: study.name,
-    studyEmoji: study.emoji,
-    message: NOTIFICATION_TEMPLATES.CHAT_MENTION(study.name, mentionerName),
-    additionalData: { mentionerName }
-  });
-}
-
-/**
- * 안전한 알림 생성 (실패해도 계속 진행)
- * @param {Function} notificationFn - 알림 생성 함수
- * @param {Array} args - 함수 인자
+ * 알림 읽음 처리
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} notificationId - 알림 ID
  * @returns {Promise<boolean>} 성공 여부
  */
-export async function safeNotify(notificationFn, ...args) {
+export async function markNotificationAsRead(prisma, notificationId) {
   try {
-    await notificationFn(...args);
-    return true;
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { isRead: true, readAt: new Date() }
+    })
+
+    return true
+
   } catch (error) {
-    console.error('❌ [NOTIFICATION] 알림 생성 실패 (무시):', {
-      error: error.message,
-      function: notificationFn.name
-    });
-    return false;
+    console.error('[NOTIFICATION] 알림 읽음 처리 실패:', error)
+    return false
+  }
+}
+
+/**
+ * 모든 알림 읽음 처리
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} userId - 사용자 ID
+ * @returns {Promise<number>} 업데이트된 알림 수
+ */
+export async function markAllNotificationsAsRead(prisma, userId) {
+  try {
+    const result = await prisma.notification.updateMany({
+      where: {
+        userId,
+        isRead: false
+      },
+      data: {
+        isRead: true,
+        readAt: new Date()
+      }
+    })
+
+    return result.count
+
+  } catch (error) {
+    console.error('[NOTIFICATION] 전체 알림 읽음 처리 실패:', error)
+    return 0
+  }
+}
+
+/**
+ * 알림 삭제
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {string} notificationId - 알림 ID
+ * @returns {Promise<boolean>} 성공 여부
+ */
+export async function deleteNotification(prisma, notificationId) {
+  try {
+    await prisma.notification.delete({
+      where: { id: notificationId }
+    })
+
+    return true
+
+  } catch (error) {
+    console.error('[NOTIFICATION] 알림 삭제 실패:', error)
+    return false
+  }
+}
+
+/**
+ * 오래된 알림 일괄 삭제
+ *
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @param {number} daysOld - 보관 기간 (일)
+ * @returns {Promise<number>} 삭제된 알림 수
+ */
+export async function deleteOldNotifications(prisma, daysOld = 30) {
+  try {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld)
+
+    const result = await prisma.notification.deleteMany({
+      where: {
+        createdAt: {
+          lt: cutoffDate
+        },
+        isRead: true
+      }
+    })
+
+    console.log(`[NOTIFICATION] ${daysOld}일 이상 된 알림 ${result.count}개 삭제`)
+
+    return result.count
+
+  } catch (error) {
+    console.error('[NOTIFICATION] 오래된 알림 삭제 실패:', error)
+    return 0
   }
 }
 
