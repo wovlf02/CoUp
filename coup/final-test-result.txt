@@ -1,0 +1,725 @@
+﻿
+> coup@0.1.0 test
+> jest
+
+node.exe : [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([baseline-brows...ping@latest -D`:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+PASS src/__tests__/api/users/me.test.js
+  ??Console
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.426Z - Profile fetched successfully { userId: '1', role: 'USER', status: 'ACTIVE' }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.468Z - Profile not found {
+        userId: '999',
+        action: 'fetch_profile',
+        code: 'PROFILE-015',
+        statusCode: 404,
+        stack: 'ProfileException: Profile not found\n' +
+          '    at ProfileException.notFound (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:286:12)\n' +
+          '    at notFound (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:52:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:94:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.470Z - Account deleted {
+        userId: '1',
+        action: 'fetch_profile',
+        code: 'PROFILE-019',
+        statusCode: 410,
+        stack: 'ProfileException: Account deleted\n' +
+          '    at ProfileException.accountDeleted (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:348:12)\n' +
+          '    at accountDeleted (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:56:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:113:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.472Z - Account suspended {
+        userId: '1',
+        action: 'fetch_profile',
+        code: 'PROFILE-018',
+        statusCode: 403,
+        stack: 'ProfileException: Account suspended\n' +
+          '    at ProfileException.accountSuspended (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:333:12)\n' +
+          '    at accountSuspended (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:60:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:132:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.475Z - Profile updated {
+        userId: '1',
+        fields: [ 'name', 'bio' ],
+        fieldCount: 2,
+        timestamp: '2025-12-01T11:56:44.475Z'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.477Z - Invalid name format {
+        userId: '1',
+        action: 'update_profile',
+        code: 'PROFILE-002',
+        statusCode: 400,
+        stack: 'ProfileException: Invalid name format\n' +
+          '    at ProfileException.invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:87:12)\n' +
+          '    at invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:127:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:195:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.478Z - Invalid name format {
+        userId: '1',
+        action: 'update_profile',
+        code: 'PROFILE-002',
+        statusCode: 400,
+        stack: 'ProfileException: Invalid name format\n' +
+          '    at ProfileException.invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:87:12)\n' +
+          '    at invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:127:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:212:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.480Z - Bio too long {
+        userId: '1',
+        action: 'update_profile',
+        code: 'PROFILE-005',
+        statusCode: 400,
+        stack: 'ProfileException: Bio too long\n' +
+          '    at ProfileException.bioTooLong (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:132:12)\n' +
+          '    at bioTooLong (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:169:34)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:230:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.483Z - Invalid name format {
+        userId: '1',
+        action: 'update_profile',
+        code: 'PROFILE-002',
+        statusCode: 400,
+        stack: 'ProfileException: Invalid name format\n' +
+          '    at ProfileException.invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:87:12)\n' +
+          '    at invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:127:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:247:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.484Z - Invalid name format {
+        userId: '1',
+        action: 'update_profile',
+        code: 'PROFILE-002',
+        statusCode: 400,
+        stack: 'ProfileException: Invalid name format\n' +
+          '    at ProfileException.invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:87:12)\n' +
+          '    at invalidNameFormat (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:127:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:264:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.486Z - Required field missing {
+        userId: '1',
+        action: 'update_profile',
+        code: 'PROFILE-001',
+        statusCode: 400,
+        stack: 'ProfileException: Required field missing\n' +
+          '    at ProfileException.requiredFieldMissing (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:72:12)\n' +
+          '    at requiredFieldMissing (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:231:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:279:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.487Z - Profile updated {
+        userId: '1',
+        fields: [ 'name', 'bio' ],
+        fieldCount: 2,
+        timestamp: '2025-12-01T11:56:44.487Z'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.488Z - Account deleted {
+        userId: '1',
+        reason: {
+          email: 'test@test.com',
+          timestamp: '2025-12-01T11:56:44.488Z',
+          reason: 'user_requested'
+        },
+        deletedAt: '2025-12-01T11:56:44.488Z'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.490Z - Required field missing {
+        userId: '1',
+        action: 'delete_account',
+        code: 'PROFILE-001',
+        statusCode: 400,
+        stack: 'ProfileException: Required field missing\n' +
+          '    at ProfileException.requiredFieldMissing (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:72:12)\n' +
+          '    at requiredFieldMissing (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:301:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:362:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.491Z - Confirmation mismatch {
+        userId: '1',
+        action: 'delete_account',
+        code: 'PROFILE-054',
+        statusCode: 400,
+        stack: 'ProfileException: Confirmation mismatch\n' +
+          '    at ProfileException.confirmationMismatch (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:899:12)\n' +
+          '    at confirmationMismatch (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:309:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:379:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.492Z - Owner study exists {
+        userId: '1',
+        action: 'delete_account',
+        code: 'PROFILE-051',
+        statusCode: 409,
+        stack: 'ProfileException: Owner study exists\n' +
+          '    at ProfileException.ownerStudyExists (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:854:12)\n' +
+          '    at ownerStudyExists (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\route.js:334:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\me.test.js:411:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+PASS src/__tests__/api/users/password.test.js
+  ??Console
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.443Z - Password changed successfully {
+        userId: '1',
+        success: { timestamp: '2025-12-01T11:56:44.442Z', ip: '127.0.0.1' }
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.478Z - Password required {
+        userId: '1',
+        action: 'change_password',
+        code: 'PROFILE-036',
+        statusCode: 400,
+        stack: 'ProfileException: Password required\n' +
+          '    at ProfileException.passwordRequired (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:619:12)\n' +
+          '    at passwordRequired (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:23:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:96:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.480Z - Password required {
+        userId: '1',
+        action: 'change_password',
+        code: 'PROFILE-036',
+        statusCode: 400,
+        stack: 'ProfileException: Password required\n' +
+          '    at ProfileException.passwordRequired (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:619:12)\n' +
+          '    at passwordRequired (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:30:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:113:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.486Z - Password too weak {
+        userId: '1',
+        action: 'change_password',
+        code: 'PROFILE-039',
+        statusCode: 400,
+        stack: 'ProfileException: Password too weak\n' +
+          '    at ProfileException.passwordTooWeak (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:664:12)\n' +
+          '    at passwordTooWeak (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:39:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:131:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.488Z - Password mismatch {
+        userId: '1',
+        action: 'change_password',
+        code: 'PROFILE-050',
+        statusCode: 400,
+        stack: 'ProfileException: Password mismatch\n' +
+          '    at ProfileException.passwordMismatch (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:833:12)\n' +
+          '    at passwordMismatch (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:50:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:150:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.489Z - Current password incorrect {
+        userId: '1',
+        action: 'change_password',
+        code: 'PROFILE-046',
+        statusCode: 401,
+        stack: 'ProfileException: Current password incorrect\n' +
+          '    at ProfileException.currentPasswordIncorrect (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:773:12)\n' +
+          '    at currentPasswordIncorrect (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:75:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:176:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.491Z - New password same as old {
+        userId: '1',
+        action: 'change_password',
+        code: 'PROFILE-049',
+        statusCode: 400,
+        stack: 'ProfileException: New password same as old\n' +
+          '    at ProfileException.newPasswordSameAsOld (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:818:12)\n' +
+          '    at newPasswordSameAsOld (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:83:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:204:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.492Z - Profile not found {
+        userId: '999',
+        action: 'change_password',
+        code: 'PROFILE-015',
+        statusCode: 404,
+        stack: 'ProfileException: Profile not found\n' +
+          '    at ProfileException.notFound (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:286:12)\n' +
+          '    at notFound (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:62:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:224:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.494Z - Password change failed {
+        userId: '1',
+        action: 'change_password',
+        code: 'PROFILE-048',
+        statusCode: 500,
+        stack: 'ProfileException: Password change failed\n' +
+          '    at ProfileException.passwordChangeFailed (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:803:12)\n' +
+          '    at passwordChangeFailed (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\me\\password\\route.js:66:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\password.test.js:248:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.495Z - Password changed successfully {
+        userId: '1',
+        success: { timestamp: '2025-12-01T11:56:44.495Z', ip: '127.0.0.1' }
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+PASS src/__tests__/api/users/avatar.test.js
+  ??Console
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.471Z - Avatar uploaded {
+        userId: '1',
+        fileSize: 1048576,
+        fileType: 'image/jpeg',
+        fileName: undefined
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.508Z - File not provided {
+        userId: '1',
+        action: 'upload_avatar',
+        code: 'PROFILE-021',
+        statusCode: 400,
+        stack: 'ProfileException: File not provided\n' +
+          '    at ProfileException.fileNotProvided (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:384:12)\n' +
+          '    at fileNotProvided (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:26:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:109:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.511Z - File too large {
+        userId: '1',
+        action: 'upload_avatar',
+        code: 'PROFILE-022',
+        statusCode: 413,
+        stack: 'ProfileException: File too large\n' +
+          '    at ProfileException.fileTooLarge (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:399:12)\n' +
+          '    at fileTooLarge (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:35:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:125:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.512Z - Invalid file type {
+        userId: '1',
+        action: 'upload_avatar',
+        code: 'PROFILE-023',
+        statusCode: 400,
+        stack: 'ProfileException: Invalid file type\n' +
+          '    at ProfileException.invalidFileType (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:414:12)\n' +
+          '    at invalidFileType (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:41:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:141:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.514Z - Avatar uploaded {
+        userId: '1',
+        fileSize: 1048576,
+        fileType: 'image/jpeg',
+        fileName: undefined
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.516Z - Upload failed {
+        userId: '1',
+        action: 'upload_avatar',
+        code: 'PROFILE-026',
+        statusCode: 500,
+        stack: 'ProfileException: Upload failed\n' +
+          '    at ProfileException.uploadFailed (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:461:12)\n' +
+          '    at uploadFailed (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:77:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:198:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [36m[PROFILE INFO][0m 2025-12-01T11:56:44.519Z - Avatar deleted successfully { userId: '1', timestamp: '2025-12-01T11:56:44.519Z' }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.521Z - Profile not found {
+        userId: '999',
+        action: 'delete_avatar',
+        code: 'PROFILE-015',
+        statusCode: 404,
+        stack: 'ProfileException: Profile not found\n' +
+          '    at ProfileException.notFound (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:286:12)\n' +
+          '    at notFound (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:177:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:255:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.522Z - Avatar not found {
+        userId: '1',
+        action: 'delete_avatar',
+        code: 'PROFILE-032',
+        statusCode: 404,
+        stack: 'ProfileException: Avatar not found\n' +
+          '    at ProfileException.avatarNotFound (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:553:12)\n' +
+          '    at avatarNotFound (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:181:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:273:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.523Z - Avatar not found {
+        userId: '1',
+        action: 'delete_avatar',
+        code: 'PROFILE-032',
+        statusCode: 404,
+        stack: 'ProfileException: Avatar not found\n' +
+          '    at ProfileException.avatarNotFound (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:553:12)\n' +
+          '    at avatarNotFound (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:181:30)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:291:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+    console.log
+      [31m[PROFILE ERROR][0m 2025-12-01T11:56:44.524Z - Avatar delete failed {
+        userId: '1',
+        action: 'delete_avatar',
+        code: 'PROFILE-030',
+        statusCode: 500,
+        stack: 'ProfileException: Avatar delete failed\n' +
+          '    at ProfileException.avatarDeleteFailed (C:\\Project\\CoUp\\coup\\src\\lib\\exceptions\\profile\\ProfileException.js:521:12)\n' +
+          '    at avatarDeleteFailed (C:\\Project\\CoUp\\coup\\src\\app\\api\\users\\avatar\\route.js:193:32)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+          '    at Object.<anonymous> (C:\\Project\\CoUp\\coup\\src\\__tests__\\api\\users\\avatar.test.js:312:22)',
+        name: 'ProfileException'
+      }
+
+      at log (src/lib/loggers/profile/profileLogger.js:74:13)
+
+PASS src/lib/helpers/__tests__/dashboard-helpers.test.js
+  ??Console
+
+    console.error
+      Error: Not implemented: navigation (except hash changes)
+          at Reflect.set (<anonymous>)
+          at Object.<anonymous> (C:\Project\CoUp\coup\jest.setup.js:70:18) {
+        type: 'not implemented'
+      }
+
+    [0m [90m 68 |[39m   [90m// Mock window.location.reload safely[39m
+     [90m 69 |[39m   [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m   window[33m.[39mlocation [33m=[39m { reload[33m:[39m jest[33m.[39mfn()[33m,[39m href[33m:[39m [32m''[39m }[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 71 |[39m }
+     [90m 72 |[39m
+     [90m 73 |[39m [90m// Mock console.error to avoid noisy test output[39m[0m
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:87:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at LocationImpl._locationObjectNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:30:5)
+      at LocationImpl._locationObjectSetterNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:24:17)
+      at LocationImpl.set href [as href] (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:46:10)
+      at Location.set href [as href] (node_modules/jsdom/lib/jsdom/living/generated/Location.js:125:37)
+          at Reflect.set (<anonymous>)
+      at Window.set location [as location] (node_modules/jsdom/lib/jsdom/browser/Window.js:424:15)
+      at Object.<anonymous> (jest.setup.js:70:18)
+
+    console.warn
+      [Dashboard] 怨꾩궛 ?ㅻ쪟: test
+
+    [0m [90m 81 |[39m     [36mreturn[39m result
+     [90m 82 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 83 |[39m     console[33m.[39mwarn([32m'[Dashboard] 怨꾩궛 ?ㅻ쪟:'[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 84 |[39m     [36mreturn[39m fallbackValue
+     [90m 85 |[39m   }
+     [90m 86 |[39m }[0m
+
+      at warn (src/lib/helpers/dashboard-helpers.js:83:13)
+      at Object.<anonymous> (src/lib/helpers/__tests__/dashboard-helpers.test.js:100:27)
+
+    console.warn
+      [Dashboard] 怨꾩궛 ?ㅻ쪟: Unexpected token 'i', "invalid" is not valid JSON
+
+    [0m [90m 81 |[39m     [36mreturn[39m result
+     [90m 82 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 83 |[39m     console[33m.[39mwarn([32m'[Dashboard] 怨꾩궛 ?ㅻ쪟:'[39m[33m,[39m error[33m.[39mmessage)
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 84 |[39m     [36mreturn[39m fallbackValue
+     [90m 85 |[39m   }
+     [90m 86 |[39m }[0m
+
+      at warn (src/lib/helpers/dashboard-helpers.js:83:13)
+      at Object.<anonymous> (src/lib/helpers/__tests__/dashboard-helpers.test.js:101:27)
+
+FAIL src/__tests__/components/user/settings/ProfileEdit.test.jsx
+  ??Console
+
+    console.error
+      Error: Not implemented: navigation (except hash changes)
+          at Reflect.set (<anonymous>)
+          at Object.<anonymous> (C:\Project\CoUp\coup\jest.setup.js:70:18) {
+        type: 'not implemented'
+      }
+
+    [0m [90m 68 |[39m   [90m// Mock window.location.reload safely[39m
+     [90m 69 |[39m   [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m   window[33m.[39mlocation [33m=[39m { reload[33m:[39m jest[33m.[39mfn()[33m,[39m href[33m:[39m [32m''[39m }[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 71 |[39m }
+     [90m 72 |[39m
+     [90m 73 |[39m [90m// Mock console.error to avoid noisy test output[39m[0m
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:87:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at LocationImpl._locationObjectNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:30:5)
+      at LocationImpl._locationObjectSetterNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:24:17)
+      at LocationImpl.set href [as href] (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:46:10)
+      at Location.set href [as href] (node_modules/jsdom/lib/jsdom/living/generated/Location.js:125:37)
+          at Reflect.set (<anonymous>)
+      at Window.set location [as location] (node_modules/jsdom/lib/jsdom/browser/Window.js:424:15)
+      at Object.<anonymous> (jest.setup.js:70:18)
+
+  ??ProfileEdit Component ???뚮뜑留??뚯뒪??????젣 踰꾪듉???꾨컮? ?덉쓣 ?뚮쭔 ?쒖떆
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 6
+    Received:   6
+
+    [0m [90m 80 |[39m       [36mconst[39m buttonsWithAvatar [33m=[39m screen[33m.[39mgetAllByRole([32m'button'[39m)[33m;[39m
+     [90m 81 |[39m       [90m// ?꾨컮? ?덉쑝硫?"?ъ쭊 蹂寃?怨?"??젣" 踰꾪듉 紐⑤몢 ?덉쓬 (踰꾪듉 ?섍? 利앷?)[39m
+    [31m[1m>[22m[39m[90m 82 |[39m       expect(buttonsWithAvatar[33m.[39mlength)[33m.[39mtoBeGreaterThan(buttonsWithoutAvatar[33m.[39mlength)[33m;[39m
+     [90m    |[39m                                        [31m[1m^[22m[39m
+     [90m 83 |[39m     })[33m;[39m
+     [90m 84 |[39m   })[33m;[39m
+     [90m 85 |[39m[0m
+
+      at Object.toBeGreaterThan (src/__tests__/components/user/settings/ProfileEdit.test.jsx:82:40)
+
+PASS src/__tests__/components/user/settings/PasswordChange.test.jsx
+  ??Console
+
+    console.error
+      Error: Not implemented: navigation (except hash changes)
+          at Reflect.set (<anonymous>)
+          at Object.<anonymous> (C:\Project\CoUp\coup\jest.setup.js:70:18) {
+        type: 'not implemented'
+      }
+
+    [0m [90m 68 |[39m   [90m// Mock window.location.reload safely[39m
+     [90m 69 |[39m   [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m   window[33m.[39mlocation [33m=[39m { reload[33m:[39m jest[33m.[39mfn()[33m,[39m href[33m:[39m [32m''[39m }[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 71 |[39m }
+     [90m 72 |[39m
+     [90m 73 |[39m [90m// Mock console.error to avoid noisy test output[39m[0m
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:87:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at LocationImpl._locationObjectNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:30:5)
+      at LocationImpl._locationObjectSetterNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:24:17)
+      at LocationImpl.set href [as href] (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:46:10)
+      at Location.set href [as href] (node_modules/jsdom/lib/jsdom/living/generated/Location.js:125:37)
+          at Reflect.set (<anonymous>)
+      at Window.set location [as location] (node_modules/jsdom/lib/jsdom/browser/Window.js:424:15)
+      at Object.<anonymous> (jest.setup.js:70:18)
+
+PASS src/__tests__/components/user/settings/AccountDeletion.test.jsx
+  ??Console
+
+    console.error
+      Error: Not implemented: navigation (except hash changes)
+          at Reflect.set (<anonymous>)
+          at Object.<anonymous> (C:\Project\CoUp\coup\jest.setup.js:70:18) {
+        type: 'not implemented'
+      }
+
+    [0m [90m 68 |[39m   [90m// Mock window.location.reload safely[39m
+     [90m 69 |[39m   [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m   window[33m.[39mlocation [33m=[39m { reload[33m:[39m jest[33m.[39mfn()[33m,[39m href[33m:[39m [32m''[39m }[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 71 |[39m }
+     [90m 72 |[39m
+     [90m 73 |[39m [90m// Mock console.error to avoid noisy test output[39m[0m
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:87:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at LocationImpl._locationObjectNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:30:5)
+      at LocationImpl._locationObjectSetterNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:24:17)
+      at LocationImpl.set href [as href] (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:46:10)
+      at Location.set href [as href] (node_modules/jsdom/lib/jsdom/living/generated/Location.js:125:37)
+          at Reflect.set (<anonymous>)
+      at Window.set location [as location] (node_modules/jsdom/lib/jsdom/browser/Window.js:424:15)
+      at Object.<anonymous> (jest.setup.js:70:18)
+
+
+Test Suites: 1 failed, 6 passed, 7 total
+Tests:       1 failed, 171 passed, 172 total
+Snapshots:   0 total
+Time:        5.061 s
+Ran all test suites.

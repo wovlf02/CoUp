@@ -1,0 +1,70 @@
+﻿
+> coup@0.1.0 test
+> jest --testPathPatterns=AccountDeletion
+
+node.exe : [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([baseline-brows...ping@latest -D`:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  console.error
+    Error: Not implemented: navigation (except hash changes)
+        at Reflect.set (<anonymous>)
+        at Object.<anonymous> (C:\Project\CoUp\coup\jest.setup.js:70:18) {
+      type: 'not implemented'
+    }
+
+    [0m [90m 68 |[39m   [90m// Mock window.location.reload safely[39m
+     [90m 69 |[39m   [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m   window[33m.[39mlocation [33m=[39m { reload[33m:[39m jest[33m.[39mfn()[33m,[39m href[33m:[39m [32m''[39m }[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 71 |[39m }
+     [90m 72 |[39m
+     [90m 73 |[39m [90m// Mock console.error to avoid noisy test output[39m[0m
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:87:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at LocationImpl._locationObjectNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:30:5)
+      at LocationImpl._locationObjectSetterNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:24:17)
+      at LocationImpl.set href [as href] (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:46:10)
+      at Location.set href [as href] (node_modules/jsdom/lib/jsdom/living/generated/Location.js:125:37)
+          at Reflect.set (<anonymous>)
+      at Window.set location [as location] (node_modules/jsdom/lib/jsdom/browser/Window.js:424:15)
+      at Object.<anonymous> (jest.setup.js:70:18)
+
+PASS src/__tests__/components/user/settings/AccountDeletion.test.jsx
+  AccountDeletion Component
+    ?뚮뜑留??뚯뒪??      ??而댄룷?뚰듃媛 ?щ컮瑜닿쾶 ?뚮뜑留곷맖 (18 ms)
+      ??寃쎄퀬 硫붿떆吏 ?쒖떆??(5 ms)
+      ????젣 踰꾪듉 ?쒖떆??(29 ms)
+      ???ㅼ씠?쇰줈洹?珥덇린???④꺼吏?(2 ms)
+      ??二쇱쓽?ы빆 紐⑸줉 ?쒖떆??(7 ms)
+    ?ㅼ씠?쇰줈洹??뚯뒪??      ????젣 踰꾪듉 ?대┃ ???ㅼ씠?쇰줈洹??대┝ (12 ms)
+      ??痍⑥냼 踰꾪듉 ?대┃ ???ㅼ씠?쇰줈洹??ロ옒 (25 ms)
+      ???ㅻ쾭?덉씠 ?대┃ ???ㅼ씠?쇰줈洹??ロ옒 (18 ms)
+      ???ㅼ씠?쇰줈洹??대? ?대┃ ???ロ엳吏 ?딆쓬 (17 ms)
+    ?뺤씤 ?낅젰 ?뚯뒪??      ???대찓???낅젰 寃利?(281 ms)
+      ??"DELETE" ?낅젰 寃利?(174 ms)
+      ???섎せ???낅젰 ???먮윭 (174 ms)
+      ???뺤씤 ?낅젰 ?놁쑝硫?踰꾪듉 鍮꾪솢?깊솕 (18 ms)
+      ???щ컮瑜??낅젰 ??踰꾪듉 ?쒖꽦??(174 ms)
+    怨꾩젙 ??젣 ?뚯뒪??      ??怨꾩젙 ??젣 ?깃났 (200 ms)
+      ????젣 以?濡쒕뵫 ?곹깭 (174 ms)
+      ???깃났 ?좎뒪???쒖떆 (205 ms)
+      ??濡쒓렇?꾩썐 泥섎━ (914 ms)
+      ??由щ떎?대젆???뺤씤 (175 ms)
+    ?먮윭 泥섎━ ?뚯뒪??      ???꾩닔 ??ぉ ?꾨씫 (PROFILE-001) (203 ms)
+      ???뺤씤 遺덉씪移?(PROFILE-067) (173 ms)
+      ??OWNER ?ㅽ꽣??議댁옱 (PROFILE-064) (207 ms)
+      ???ㅽ듃?뚰겕 ?ㅻ쪟 泥섎━ (205 ms)
+      ???쇰컲 ??젣 ?ㅽ뙣 (PROFILE-069) (190 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       24 passed, 24 total
+Snapshots:   0 total
+Time:        4.328 s, estimated 5 s
+Ran all test suites matching AccountDeletion.

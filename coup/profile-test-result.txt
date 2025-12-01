@@ -1,0 +1,86 @@
+﻿
+> coup@0.1.0 test
+> jest --testPathPatterns=ProfileEdit
+
+node.exe : [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([baseline-brows...ping@latest -D`:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  console.error
+    Error: Not implemented: navigation (except hash changes)
+        at Reflect.set (<anonymous>)
+        at Object.<anonymous> (C:\Project\CoUp\coup\jest.setup.js:70:18) {
+      type: 'not implemented'
+    }
+
+    [0m [90m 68 |[39m   [90m// Mock window.location.reload safely[39m
+     [90m 69 |[39m   [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m   window[33m.[39mlocation [33m=[39m { reload[33m:[39m jest[33m.[39mfn()[33m,[39m href[33m:[39m [32m''[39m }[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 71 |[39m }
+     [90m 72 |[39m
+     [90m 73 |[39m [90m// Mock console.error to avoid noisy test output[39m[0m
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:87:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at LocationImpl._locationObjectNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:30:5)
+      at LocationImpl._locationObjectSetterNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:24:17)
+      at LocationImpl.set href [as href] (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:46:10)
+      at Location.set href [as href] (node_modules/jsdom/lib/jsdom/living/generated/Location.js:125:37)
+          at Reflect.set (<anonymous>)
+      at Window.set location [as location] (node_modules/jsdom/lib/jsdom/browser/Window.js:424:15)
+      at Object.<anonymous> (jest.setup.js:70:18)
+
+FAIL src/__tests__/components/user/settings/ProfileEdit.test.jsx
+  ProfileEdit Component
+    ?뚮뜑留??뚯뒪??      ??而댄룷?뚰듃媛 ?щ컮瑜닿쾶 ?뚮뜑留곷맖 (35 ms)
+      ???ъ슜???뺣낫媛 ?쇱뿉 ?쒖떆??(5 ms)
+      ???꾨컮?媛 ?놁쓣 ???뚮젅?댁뒪????쒖떆 (4 ms)
+      ???꾨컮?媛 ?덉쓣 ???대?吏 ?쒖떆 (6 ms)
+      횞 ??젣 踰꾪듉???꾨컮? ?덉쓣 ?뚮쭔 ?쒖떆 (7 ms)
+    ?낅젰/?곹샇?묒슜 ?뚯뒪??      ???대쫫 ?낅젰 蹂寃?媛??(213 ms)
+      ???뚭컻 ?낅젰 蹂寃?媛??(270 ms)
+      ??湲????移댁슫???낅뜲?댄듃??(161 ms)
+      ?????踰꾪듉 ?대┃ ???쒖텧 (13 ms)
+      ??痍⑥냼 踰꾪듉 ?대┃ ???ㅻ줈 媛湲?(3 ms)
+    ?꾨줈??????뚯뒪??      ???꾨줈??????깃났 (12 ms)
+      ?????以?濡쒕뵫 ?곹깭 ?쒖떆 (6 ms)
+      ??????깃났 ???좎뒪???쒖떆 (40 ms)
+    ?먮윭 泥섎━ ?뚯뒪??      ???대쫫 ?뺤떇 ?ㅻ쪟 (PROFILE-002) (31 ms)
+      ???대쫫 ?덈Т 吏㏃쓬 (PROFILE-003) (31 ms)
+      ???대쫫 ?덈Т 源 (PROFILE-004) (32 ms)
+      ???뚭컻 ?덈Т 源 (PROFILE-005) (32 ms)
+      ??蹂댁븞 ?낅젰 媛먯? (PROFILE-012) (32 ms)
+      ???ㅽ듃?뚰겕 ?ㅻ쪟 泥섎━ (31 ms)
+    ?꾨컮? ?뚯뒪??      ???꾨컮? ?낅줈???깃났 (80 ms)
+      ???뚯씪 ?ш린 珥덇낵 ?ㅻ쪟 (190 ms)
+      ???뚯씪 ?뺤떇 ?ㅻ쪟 (3 ms)
+      ???꾨컮? ??젣 ?깃났 (27 ms)
+
+  ??ProfileEdit Component ???뚮뜑留??뚯뒪??????젣 踰꾪듉???꾨컮? ?덉쓣 ?뚮쭔 ?쒖떆
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    [0m [90m 77 |[39m       [36mconst[39m buttonsAfter [33m=[39m document[33m.[39mquerySelectorAll([32m'button[type="button"]'[39m)[33m;[39m
+     [90m 78 |[39m       [36mconst[39m deleteButtonExistsAfter [33m=[39m [33mArray[39m[33m.[39m[36mfrom[39m(buttonsAfter)[33m.[39msome(btn [33m=>[39m btn[33m.[39mtextContent[33m.[39mincludes([32m'??젣'[39m))[33m;[39m
+    [31m[1m>[22m[39m[90m 79 |[39m       expect(deleteButtonExistsAfter)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 80 |[39m     })[33m;[39m
+     [90m 81 |[39m   })[33m;[39m
+     [90m 82 |[39m[0m
+
+      at Object.toBe (src/__tests__/components/user/settings/ProfileEdit.test.jsx:79:39)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 22 passed, 23 total
+Snapshots:   0 total
+Time:        2.139 s
+Ran all test suites matching ProfileEdit.
