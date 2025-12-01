@@ -11,9 +11,9 @@
 ### 3단계 로드맵
 
 ```
-Phase A: 도메인별 예외 처리 시스템 구축 (완료율: 10%)
+Phase A: 도메인별 예외 처리 시스템 구축 (완료율: 15%)
   ├─ A1. Profile 도메인 ✅ 100% (172/172 테스트)
-  ├─ A2. Study 도메인 ⏳ 0%
+  ├─ A2. Study 도메인 ⏳ 50% (Step 3/6 완료)
   ├─ A3. Group 도메인 ⏳ 0%
   ├─ A4. Notification 도메인 ⏳ 0%
   ├─ A5. Chat 도메인 ⏳ 0%
@@ -90,31 +90,97 @@ src/app/api/studies/
 
 #### 구현 단계
 
-**Step 1: 도메인 분석 및 설계** (3-4시간)
-- [ ] 기존 Study API 코드 분석
-- [ ] 예외 케이스 식별 (80-100개)
-- [ ] StudyException 계층 구조 설계
-- [ ] 문서: `STUDY-ANALYSIS.md` 작성
+**Step 1: 도메인 분석 및 설계** (3-4시간) ✅ **완료 (2025-12-01)**
+- [x] 기존 Study API 코드 분석 (28개 API 라우트)
+- [x] 예외 케이스 식별 (115개 식별)
+- [x] StudyException 계층 구조 설계 (8개 서브 클래스)
+- [x] 문서: `STUDY-ANALYSIS.md` 작성 완료
 
-**Step 2: Exception 클래스 구현** (5-6시간)
-- [ ] `src/lib/exceptions/study/StudyException.js` 생성
-- [ ] 80-100개 에러 메서드 구현
-- [ ] 카테고리별 분류:
-  - Creation Errors (20개)
-  - Member Management Errors (25개)
-  - Application Errors (15개)
-  - Permission Errors (15개)
-  - Business Logic Errors (15-25개)
+**Step 2: Exception 클래스 구현** (5-6시간) ✅ **완료 (2025-12-01)**
+- [x] `src/lib/exceptions/study/StudyException.js` 생성
+- [x] 115개 에러 메서드 구현
+- [x] 8개 서브 클래스 구현
+- [x] index.js export 파일 생성
+- [x] 문서: `STUDY-EXCEPTION-COMPLETE.md` 작성 완료
 
-**Step 3: Validators 및 Logger 구현** (3-4시간)
-- [ ] `src/lib/validators/studyValidators.js` (15-20개 함수)
-- [ ] `src/lib/logging/studyLogger.js` (15-20개 함수)
-- [ ] 검증 로직:
-  - 스터디 정보 검증 (제목, 설명, 기간)
-  - 멤버 정보 검증 (역할, 권한)
-  - 신청 정보 검증 (메시지, 상태)
+**Step 3: Validators & Logger 구현** (3-4시간) ✅ **완료 (2025-12-01)**
+- [x] `src/lib/validators/study-validators.js` 생성 (12개 검증 함수)
+- [x] `src/lib/logging/studyLogger.js` 생성 (25개 로깅 함수)
+- [x] `src/lib/helpers/study-helpers.js` 개선 (30개 헬퍼 함수)
+- [x] `src/lib/utils/study-utils.js` 생성 (25개 유틸리티 함수)
 
-**Step 4: API 라우트 강화** (6-8시간)
+**Step 4: API 라우트 강화** (6-8시간) ✅ **완료 (2025-12-01)**
+
+**Phase 1 - 핵심 API (4개)** ✅ **완료**:
+- [x] `src/app/api/studies/route.js`
+  * GET: 스터디 목록 조회 ✅
+  * POST: 스터디 생성 ✅
+- [x] `src/app/api/studies/[id]/route.js`
+  * GET: 스터디 상세 조회 ✅
+  * PATCH: 스터디 수정 ✅
+  * DELETE: 스터디 삭제 ✅
+- [x] `src/app/api/studies/[id]/members/route.js`
+  * GET: 멤버 목록 조회 ✅
+  * POST: 멤버 추가 ✅
+  * DELETE: 멤버 제거 ✅
+- [x] `src/app/api/studies/[id]/join-requests/route.js`
+  * GET: 가입 신청 목록 ✅
+  * POST: 가입 신청 ✅
+  * PATCH: 신청 승인/거절 ✅
+
+**Phase 2 - 추가 API (2개)** ✅ **완료**:
+- [x] `src/app/api/studies/[id]/join/route.js` - 간편 가입 ✅
+- [x] `src/app/api/studies/[id]/leave/route.js` - 스터디 탈퇴 ✅
+
+**적용된 패턴**:
+- withStudyErrorHandler로 모든 API 래핑
+- extractStudyContext로 컨텍스트 추출
+- validators로 입력 검증
+- helpers로 권한 및 비즈니스 로직 검증
+- StudyException 적극 활용
+- StudyLogger로 모든 액션 로깅
+- 일관된 응답 포맷 (createSuccessResponse, createPaginatedResponse)
+- 트랜잭션 처리 (prisma.$transaction)
+
+**문서**: `C:\Project\CoUp\docs\study\STUDY-API-ROUTES-COMPLETE.md`
+
+**Step 5: 추가 API 강화** (4-6시간) ⏳ **다음 작업**
+- [ ] `/api/studies/[id]/notices/*` - 공지사항 CRUD (필수)
+- [ ] `/api/studies/[id]/files/*` - 파일 업로드/다운로드 (필수)
+- [ ] `/api/studies/[id]/tasks/*` - 할일 관리 (선택)
+- [ ] `/api/studies/[id]/invite/*` - 초대 관리 (선택)
+
+**Step 6: 테스트 작성** (6-8시간) ⏳ **대기**
+- [ ] API 라우트 테스트 (50개)
+- [ ] Validator 테스트 (20개)
+- [ ] Helper 테스트 (30개)
+- [ ] 통합 테스트 (10개)
+- **목표**: 110개 테스트, 80% 커버리지
+
+**Step 7: 프론트엔드 통합** (4-5시간) ⏳ **대기**
+- [x] 카테고리별 분류:
+  - Creation & Validation Errors (25개)
+  - Member Management Errors (28개)
+  - Application & Join Errors (18개)
+  - Business Logic Errors (20개)
+  - File Management Errors (12개)
+  - Additional Features Errors (12개)
+- [x] 문서: `STUDY-EXCEPTION-COMPLETE.md` 작성 완료
+
+**Step 3: Validators 및 Logger 구현** (3-4시간) ✅ **완료 (2025-12-01)**
+- [x] `src/lib/validators/study-validators.js` (12개 검증 함수)
+- [x] `src/lib/logging/studyLogger.js` (25개 로깅 함수)
+- [x] `src/lib/helpers/study-helpers.js` 개선 (30개 헬퍼 함수)
+- [x] `src/lib/utils/study-utils.js` 생성 (25개 유틸리티 함수)
+- [x] 검증 로직:
+  - 스터디 생성/수정 검증
+  - 멤버 액션 검증
+  - 가입 신청 검증
+  - 파일 업로드 검증
+  - 공지사항/할일/메시지/일정 검증
+  - 페이지네이션/정렬/검색 검증
+
+**Step 4: API 라우트 강화** (6-8시간) ⏳ **다음 작업**
 - [ ] 8개 API 엔드포인트에 예외 처리 적용
 - [ ] try-catch 블록 추가
 - [ ] 입력 검증 강화
@@ -489,41 +555,6 @@ src/app/api/studies/
 
 ---
 
-## 📞 다음 세션 시작 프롬프트
-
-### 🚀 Phase A2: Study 도메인 예외 처리 시작
-
-다음 세션에서 아래 내용을 복사하여 사용하세요:
-
-```
-CoUp 프로젝트 예외 처리 시스템 구축을 이어갑니다.
-
-현재 상태:
-- Phase A1: Profile 도메인 완료 ✅ (172/172 테스트 통과)
-- Phase A2: Study 도메인 시작 ⏳
-
-작업 내용:
-Study 도메인 예외 처리 시스템 구축 - Step 1: 도메인 분석 및 설계
-
-관련 파일:
-- C:\Project\CoUp\exception-implementation.md (전체 로드맵)
-- C:\Project\CoUp\next-session-prompt.md (현재 작업)
-
-지시사항:
-1. Study 도메인의 기존 API 코드 분석
-2. 예외 케이스 80-100개 식별
-3. StudyException 계층 구조 설계
-4. STUDY-ANALYSIS.md 문서 작성
-
-Profile 도메인과 동일한 패턴으로 진행하되, Study 도메인의 특성 
-(멤버 관리, 가입 신청, 권한 등)을 고려해주세요.
-
-작업 완료 후 next-session-prompt.md를 자동으로 업데이트하여 
-다음 단계(Step 2: Exception 클래스 구현)를 진행할 수 있도록 해주세요.
-```
-
----
-
 ## 📝 프롬프트 자동 업데이트 규칙
 
 **각 단계 완료 시 AI가 자동으로 수행할 작업:**
@@ -553,4 +584,3 @@ Profile 도메인과 동일한 패턴으로 진행하되, Study 도메인의 특
 **최종 업데이트**: 2025-12-01  
 **버전**: 1.0  
 **상태**: Phase A1 완료, Phase A2 준비 완료
-

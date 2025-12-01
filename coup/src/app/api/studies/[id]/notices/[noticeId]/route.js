@@ -1,157 +1,213 @@
 // src/app/api/studies/[id]/notices/[noticeId]/route.js
 import { NextResponse } from "next/server"
-import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import {
+  withStudyErrorHandler,
+  createSuccessResponse
+} from '@/lib/utils/study-utils'
+import { requireStudyMember } from "@/lib/auth-helpers"
+import { StudyFeatureException, StudyPermissionException } from '@/lib/exceptions/study'
+import { StudyLogger } from '@/lib/logging/studyLogger'
+import { invalidateNoticesCache } from "@/lib/cache-helpers"
 
-export async function GET(request, { params }) {
-  const { id: studyId, noticeId } = await params
+/**
+ * GET /api/studies/[id]/notices/[noticeId]
+ * 공지사항 상세 조회
+ */
+export const GET = withStudyErrorHandler(async (request, context) => {
+  const { params } = context;
+  const { id: studyId, noticeId } = await params;
 
-  const result = await requireStudyMember(studyId)
-  if (result instanceof NextResponse) return result
+  // 1. 멤버 권한 확인
+  const result = await requireStudyMember(studyId);
+  if (result instanceof NextResponse) return result;
 
-  try {
-    const notice = await prisma.notice.findUnique({
-      where: { id: noticeId },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true
-          }
+  // 2. 공지사항 조회
+  const notice = await prisma.notice.findUnique({
+    where: { id: noticeId },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true
         }
       }
-    })
-
-    if (!notice || notice.studyId !== studyId) {
-      return NextResponse.json(
-        { error: "공지사항을 찾을 수 없습니다" },
-        { status: 404 }
-      )
     }
+  });
 
-    // 조회수 증가
-    await prisma.notice.update({
-      where: { id: noticeId },
-      data: { views: { increment: 1 } }
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: notice
-    })
-
-  } catch (error) {
-    console.error('Get notice detail error:', error)
-    return NextResponse.json(
-      { error: "공지사항을 가져오는 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+  // 3. 존재 여부 및 스터디 일치 확인
+  if (!notice) {
+    throw StudyFeatureException.noticeTitleMissing({
+      noticeId,
+      studyId,
+      userMessage: '공지사항을 찾을 수 없습니다'
+    });
   }
-}
 
-export async function PATCH(request, { params }) {
-  const { id: studyId, noticeId } = await params
+  if (notice.studyId !== studyId) {
+    throw StudyPermissionException.notStudyMember(result.session.user.id, studyId);
+  }
 
-  const result = await requireStudyMember(studyId, 'ADMIN')
-  if (result instanceof NextResponse) return result
+  // 4. 조회수 증가
+  await prisma.notice.update({
+    where: { id: noticeId },
+    data: { views: { increment: 1 } }
+  });
 
-  const { session } = result
+  // 5. 로깅
+  StudyLogger.logNoticeView(noticeId, studyId, result.session.user.id);
 
-  try {
-    const body = await request.json()
+  // 6. 응답
+  return createSuccessResponse(notice);
+});
 
-    // 공지사항 확인
-    const notice = await prisma.notice.findUnique({
-      where: { id: noticeId }
-    })
+/**
+ * PATCH /api/studies/[id]/notices/[noticeId]
+ * 공지사항 수정
+ */
+export const PATCH = withStudyErrorHandler(async (request, context) => {
+  const { params } = context;
+  const { id: studyId, noticeId } = await params;
 
-    if (!notice || notice.studyId !== studyId) {
-      return NextResponse.json(
-        { error: "공지사항을 찾을 수 없습니다" },
-        { status: 404 }
-      )
+  // 1. ADMIN 권한 확인
+  const result = await requireStudyMember(studyId, 'ADMIN');
+  if (result instanceof NextResponse) return result;
+  const { session, member } = result;
+
+  // 2. 요청 본문 파싱
+  const body = await request.json();
+
+  // 3. 공지사항 확인
+  const notice = await prisma.notice.findUnique({
+    where: { id: noticeId }
+  });
+
+  if (!notice) {
+    throw StudyFeatureException.noticeTitleMissing({
+      noticeId,
+      studyId,
+      userMessage: '공지사항을 찾을 수 없습니다'
+    });
+  }
+
+  if (notice.studyId !== studyId) {
+    throw StudyPermissionException.notStudyMember(session.user.id, studyId);
+  }
+
+  // 4. 작성자 또는 ADMIN+ 권한 확인
+  if (notice.authorId !== session.user.id && member.role === 'MEMBER') {
+    throw StudyPermissionException.insufficientPermission(
+      session.user.id,
+      member.role,
+      'ADMIN',
+      { action: 'update_notice', noticeId }
+    );
+  }
+
+  // 5. 입력 검증
+  if (body.title !== undefined) {
+    if (!body.title || !body.title.trim()) {
+      throw StudyFeatureException.noticeTitleMissing({ studyId, noticeId });
     }
-
-    // 작성자 또는 ADMIN+ 권한 확인
-    if (notice.authorId !== session.user.id && result.member.role === 'MEMBER') {
-      return NextResponse.json(
-        { error: "수정 권한이 없습니다" },
-        { status: 403 }
-      )
+    if (body.title.length < 2 || body.title.length > 100) {
+      throw StudyFeatureException.invalidNoticeTitleLength(body.title, { min: 2, max: 100 });
     }
+  }
 
-    // 공지사항 수정
-    const updated = await prisma.notice.update({
-      where: { id: noticeId },
-      data: {
-        ...(body.title && { title: body.title }),
-        ...(body.content && { content: body.content }),
-        ...(body.isPinned !== undefined && { isPinned: body.isPinned }),
-        ...(body.isImportant !== undefined && { isImportant: body.isImportant })
+  if (body.content !== undefined) {
+    if (!body.content || !body.content.trim()) {
+      throw StudyFeatureException.noticeContentMissing({ studyId, noticeId });
+    }
+    if (body.content.length < 10 || body.content.length > 10000) {
+      throw StudyFeatureException.invalidNoticeContentLength(body.content, { min: 10, max: 10000 });
+    }
+  }
+
+  // 6. 비즈니스 로직 - 공지사항 수정
+  const updated = await prisma.notice.update({
+    where: { id: noticeId },
+    data: {
+      ...(body.title && { title: body.title }),
+      ...(body.content && { content: body.content }),
+      ...(body.isPinned !== undefined && { isPinned: body.isPinned }),
+      ...(body.isImportant !== undefined && { isImportant: body.isImportant })
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true
+        }
       }
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: "공지사항이 수정되었습니다",
-      data: updated
-    })
-
-  } catch (error) {
-    console.error('Update notice error:', error)
-    return NextResponse.json(
-      { error: "공지사항 수정 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(request, { params }) {
-  const { id: studyId, noticeId } = await params
-
-  const result = await requireStudyMember(studyId, 'ADMIN')
-  if (result instanceof NextResponse) return result
-
-  const { session } = result
-
-  try {
-    // 공지사항 확인
-    const notice = await prisma.notice.findUnique({
-      where: { id: noticeId }
-    })
-
-    if (!notice || notice.studyId !== studyId) {
-      return NextResponse.json(
-        { error: "공지사항을 찾을 수 없습니다" },
-        { status: 404 }
-      )
     }
+  });
 
-    // 작성자 또는 ADMIN+ 권한 확인
-    if (notice.authorId !== session.user.id && result.member.role === 'MEMBER') {
-      return NextResponse.json(
-        { error: "삭제 권한이 없습니다" },
-        { status: 403 }
-      )
-    }
+  // 7. 캐시 무효화
+  invalidateNoticesCache(`${studyId}_p1_l10_pinall`);
+  invalidateNoticesCache(`${studyId}_p1_l20_pinall`);
 
-    // 공지사항 삭제
-    await prisma.notice.delete({
-      where: { id: noticeId }
-    })
+  // 8. 로깅
+  StudyLogger.logNoticeUpdate(noticeId, studyId, session.user.id, body);
 
-    return NextResponse.json({
-      success: true,
-      message: "공지사항이 삭제되었습니다"
-    })
+  // 9. 응답
+  return createSuccessResponse(updated, '공지사항이 수정되었습니다');
+});
 
-  } catch (error) {
-    console.error('Delete notice error:', error)
-    return NextResponse.json(
-      { error: "공지사항 삭제 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+/**
+ * DELETE /api/studies/[id]/notices/[noticeId]
+ * 공지사항 삭제
+ */
+export const DELETE = withStudyErrorHandler(async (request, context) => {
+  const { params } = context;
+  const { id: studyId, noticeId } = await params;
+
+  // 1. ADMIN 권한 확인
+  const result = await requireStudyMember(studyId, 'ADMIN');
+  if (result instanceof NextResponse) return result;
+  const { session, member } = result;
+
+  // 2. 공지사항 확인
+  const notice = await prisma.notice.findUnique({
+    where: { id: noticeId }
+  });
+
+  if (!notice) {
+    throw StudyFeatureException.noticeTitleMissing({
+      noticeId,
+      studyId,
+      userMessage: '공지사항을 찾을 수 없습니다'
+    });
   }
-}
+
+  if (notice.studyId !== studyId) {
+    throw StudyPermissionException.notStudyMember(session.user.id, studyId);
+  }
+
+  // 3. 작성자 또는 ADMIN+ 권한 확인
+  if (notice.authorId !== session.user.id && member.role === 'MEMBER') {
+    throw StudyPermissionException.insufficientPermission(
+      session.user.id,
+      member.role,
+      'ADMIN',
+      { action: 'delete_notice', noticeId }
+    );
+  }
+
+  // 4. 비즈니스 로직 - 공지사항 삭제
+  await prisma.notice.delete({
+    where: { id: noticeId }
+  });
+
+  // 5. 캐시 무효화
+  invalidateNoticesCache(`${studyId}_p1_l10_pinall`);
+  invalidateNoticesCache(`${studyId}_p1_l20_pinall`);
+
+  // 6. 로깅
+  StudyLogger.logNoticeDelete(noticeId, studyId, session.user.id);
+
+  // 7. 응답
+  return createSuccessResponse(null, '공지사항이 삭제되었습니다');
+});
 

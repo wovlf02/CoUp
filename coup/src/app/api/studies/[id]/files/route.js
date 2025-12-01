@@ -1,7 +1,14 @@
 // src/app/api/studies/[id]/files/route.js
 import { NextResponse } from "next/server"
-import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
+import {
+  withStudyErrorHandler,
+  createSuccessResponse,
+  createPaginatedResponse
+} from '@/lib/utils/study-utils'
+import { requireStudyMember } from "@/lib/auth-helpers"
+import { StudyFileException } from '@/lib/exceptions/study'
+import { StudyLogger } from '@/lib/logging/studyLogger'
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
@@ -12,30 +19,37 @@ import {
 } from "@/lib/utils/file-security-validator"
 import { sanitizeFilename } from "@/lib/utils/xss-sanitizer"
 
-export async function GET(request, { params }) {
-  const { id: studyId } = await params
+/**
+ * GET /api/studies/[id]/files
+ * 스터디 파일 목록 조회
+ */
+export const GET = withStudyErrorHandler(async (request, context) => {
+  const { params } = context;
+  const { id: studyId } = await params;
 
-  const result = await requireStudyMember(studyId)
-  if (result instanceof NextResponse) return result
+  // 1. 멤버 권한 확인
+  const result = await requireStudyMember(studyId);
+  if (result instanceof NextResponse) return result;
 
-  try {
-    const { searchParams } = new URL(request.url)
-    const folderId = searchParams.get('folderId')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const skip = (page - 1) * limit
+  // 2. 쿼리 파라미터 추출 및 검증
+  const { searchParams } = new URL(request.url);
+  const folderId = searchParams.get('folderId');
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+  const skip = (page - 1) * limit;
 
-    let whereClause = { studyId }
+  // 3. where 조건 생성
+  let whereClause = { studyId };
+  if (folderId) {
+    whereClause.folderId = folderId;
+  } else {
+    whereClause.folderId = null; // 루트만
+  }
 
-    if (folderId) {
-      whereClause.folderId = folderId
-    } else {
-      whereClause.folderId = null // 루트만
-    }
-
-    const total = await prisma.file.count({ where: whereClause })
-
-    const files = await prisma.file.findMany({
+  // 4. 비즈니스 로직 - 데이터 조회
+  const [total, files] = await Promise.all([
+    prisma.file.count({ where: whereClause }),
+    prisma.file.findMany({
       where: whereClause,
       skip,
       take: limit,
@@ -52,202 +66,202 @@ export async function GET(request, { params }) {
         }
       }
     })
+  ]);
 
-    return NextResponse.json({
-      success: true,
-      data: files,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    })
+  // 5. 로깅
+  StudyLogger.logFileList(studyId, { page, limit, folderId, total });
 
-  } catch (error) {
-    console.error('Get files error:', error)
-    return NextResponse.json(
-      { error: "파일 목록을 가져오는 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
+  // 6. 응답
+  return createPaginatedResponse(files, total, page, limit);
+});
+
+/**
+ * POST /api/studies/[id]/files
+ * 스터디 파일 업로드
+ */
+export const POST = withStudyErrorHandler(async (request, context) => {
+  const { params } = context;
+  const { id: studyId } = await params;
+
+  // 1. 멤버 권한 확인
+  const result = await requireStudyMember(studyId);
+  if (result instanceof NextResponse) return result;
+  const { session } = result;
+
+  // 2. FormData 파싱
+  const formData = await request.formData();
+  const file = formData.get('file');
+  const folderId = formData.get('folderId');
+  const category = formData.get('category') || 'DOCUMENT'; // IMAGE, DOCUMENT, etc.
+
+  // 3. 파일 존재 확인
+  if (!file) {
+    throw StudyFileException.fileNotFound('', {
+      studyId,
+      userMessage: '파일을 선택해주세요'
+    });
   }
-}
 
-export async function POST(request, { params }) {
-  const { id: studyId } = await params
+  // 4. 파일 이름 정제
+  const sanitizedFilename = sanitizeFilename(file.name);
 
-  const result = await requireStudyMember(studyId)
-  if (result instanceof NextResponse) return result
+  if (!sanitizedFilename || sanitizedFilename === 'untitled') {
+    throw StudyFileException.fileNameTooLong(file.name, {
+      studyId,
+      userMessage: '유효하지 않은 파일명입니다'
+    });
+  }
 
-  const { session } = result
+  // 5. 파일 크기 검증 (50MB)
+  const maxFileSize = 50 * 1024 * 1024;
+  if (file.size > maxFileSize) {
+    throw StudyFileException.fileSizeExceeded(file.size, maxFileSize, { studyId });
+  }
 
-  try {
-    const formData = await request.formData()
-    const file = formData.get('file')
-    const folderId = formData.get('folderId')
-    const category = formData.get('category') || 'DOCUMENT' // IMAGE, DOCUMENT, etc.
+  // 6. 파일 버퍼 읽기
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
 
-    if (!file) {
-      return NextResponse.json(
-        { error: "파일을 선택해주세요" },
-        { status: 400 }
-      )
-    }
+  // 7. 파일 보안 검증 (통합)
+  const securityValidation = await validateFileSecurity({
+    filename: sanitizedFilename,
+    mimeType: file.type,
+    size: file.size,
+    buffer: buffer,
+  }, category);
 
-    // 1. 파일 이름 정제
-    const sanitizedFilename = sanitizeFilename(file.name);
-
-    if (!sanitizedFilename || sanitizedFilename === 'untitled') {
-      return NextResponse.json(
-        { error: "유효하지 않은 파일명입니다" },
-        { status: 400 }
-      );
-    }
-
-    // 2. 파일 버퍼 읽기
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    // 3. 파일 보안 검증 (통합)
-    const securityValidation = await validateFileSecurity({
+  if (!securityValidation.valid) {
+    console.warn('[File Security] Validation failed:', {
+      userId: session.user.id,
+      studyId,
       filename: sanitizedFilename,
-      mimeType: file.type,
-      size: file.size,
-      buffer: buffer,
-    }, category);
-
-    if (!securityValidation.valid) {
-      console.warn('[File Security] Validation failed:', {
-        userId: session.user.id,
-        studyId,
-        filename: sanitizedFilename,
-        errors: securityValidation.errors,
-      });
-
-      return NextResponse.json(
-        {
-          error: "파일 보안 검증에 실패했습니다",
-          details: securityValidation.errors.map(e => e.message),
-        },
-        { status: 400 }
-      );
-    }
-
-    // 경고가 있으면 로깅
-    if (securityValidation.warnings.length > 0) {
-      console.warn('[File Security] Warnings:', {
-        userId: session.user.id,
-        studyId,
-        filename: sanitizedFilename,
-        warnings: securityValidation.warnings,
-      });
-    }
-
-    // 4. 저장 공간 확인 (스터디당 1GB 제한)
-    const studyQuota = 1024 * 1024 * 1024; // 1GB
-    const studyUsed = await prisma.file.aggregate({
-      where: { studyId },
-      _sum: { size: true },
+      errors: securityValidation.errors,
     });
 
-    const currentUsage = studyUsed._sum.size || 0;
-    const quotaCheck = checkStudyStorageQuota(studyId, file.size, studyQuota, currentUsage);
+    throw StudyFileException.invalidFileType(file.type, [], {
+      studyId,
+      filename: sanitizedFilename,
+      errors: securityValidation.errors.map(e => e.message),
+      userMessage: '파일 보안 검증에 실패했습니다'
+    });
+  }
 
-    if (!quotaCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: "스터디 저장 공간이 부족합니다",
-          details: {
-            quota: `${quotaCheck.quotaInMB}MB`,
-            used: `${quotaCheck.usedInMB}MB`,
-            available: `${quotaCheck.availableInMB}MB`,
-            requested: `${quotaCheck.requestedInMB}MB`,
-          }
-        },
-        { status: 400 }
-      );
-    }
+  // 경고 로깅
+  if (securityValidation.warnings.length > 0) {
+    console.warn('[File Security] Warnings:', {
+      userId: session.user.id,
+      studyId,
+      filename: sanitizedFilename,
+      warnings: securityValidation.warnings,
+    });
+  }
 
-    // 5. uploads 폴더 생성
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', studyId)
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
+  // 8. 저장 공간 확인 (스터디당 1GB 제한)
+  const studyQuota = 1024 * 1024 * 1024; // 1GB
+  const studyUsed = await prisma.file.aggregate({
+    where: { studyId },
+    _sum: { size: true },
+  });
 
-    // 6. 안전한 파일명 생성
-    const safeFilename = generateSafeFilename(sanitizedFilename, session.user.id);
-    const filepath = join(uploadsDir, safeFilename)
+  const currentUsage = studyUsed._sum.size || 0;
+  const quotaCheck = checkStudyStorageQuota(studyId, file.size, studyQuota, currentUsage);
 
-    // 7. 파일 저장
-    await writeFile(filepath, buffer)
+  if (!quotaCheck.allowed) {
+    throw StudyFileException.storageQuotaExceeded(file.size, studyQuota - currentUsage, {
+      studyId,
+      quota: `${quotaCheck.quotaInMB}MB`,
+      used: `${quotaCheck.usedInMB}MB`,
+      available: `${quotaCheck.availableInMB}MB`,
+      requested: `${quotaCheck.requestedInMB}MB`,
+    });
+  }
 
-    // 8. DB에 파일 정보 저장
-    const fileUrl = `/uploads/${studyId}/${safeFilename}`
+  // 9. uploads 폴더 생성
+  const uploadsDir = join(process.cwd(), 'public', 'uploads', studyId);
+  if (!existsSync(uploadsDir)) {
+    await mkdir(uploadsDir, { recursive: true });
+  }
 
-    const savedFile = await prisma.file.create({
-      data: {
-        studyId,
-        uploaderId: session.user.id,
-        name: sanitizedFilename, // 원본 파일명 (정제된)
-        size: file.size,
-        type: file.type,
-        url: fileUrl,
-        folderId: folderId || null
-      },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true
-          }
+  // 10. 안전한 파일명 생성
+  const safeFilename = generateSafeFilename(sanitizedFilename, session.user.id);
+  const filepath = join(uploadsDir, safeFilename);
+
+  // 11. 파일 저장
+  try {
+    await writeFile(filepath, buffer);
+  } catch (error) {
+    throw StudyFileException.fileUploadFailed(sanitizedFilename, error.message, { studyId });
+  }
+
+  // 12. DB에 파일 정보 저장
+  const fileUrl = `/uploads/${studyId}/${safeFilename}`;
+
+  const savedFile = await prisma.file.create({
+    data: {
+      studyId,
+      uploaderId: session.user.id,
+      name: sanitizedFilename, // 원본 파일명 (정제된)
+      size: file.size,
+      type: file.type,
+      url: fileUrl,
+      folderId: folderId || null
+    },
+    include: {
+      uploader: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true
         }
       }
-    })
+    }
+  });
 
-    // 9. 파일 업로드 알림 (최대 10명)
-    const members = await prisma.studyMember.findMany({
-      where: {
-        studyId,
-        status: 'ACTIVE',
-        userId: { not: session.user.id }
-      },
-      take: 10
-    })
+  // 13. 파일 업로드 알림 (최대 10명)
+  const members = await prisma.studyMember.findMany({
+    where: {
+      studyId,
+      status: 'ACTIVE',
+      userId: { not: session.user.id }
+    },
+    take: 10
+  });
 
-    const study = await prisma.study.findUnique({
-      where: { id: studyId },
-      select: { name: true, emoji: true }
-    })
+  const study = await prisma.study.findUnique({
+    where: { id: studyId },
+    select: { name: true, emoji: true }
+  });
 
-    await prisma.notification.createMany({
-      data: members.map(member => ({
-        userId: member.userId,
-        type: 'FILE',
-        studyId,
-        studyName: study.name,
-        studyEmoji: study.emoji,
-        message: `새 파일: ${sanitizedFilename}`
-      }))
-    })
+  await prisma.notification.createMany({
+    data: members.map(member => ({
+      userId: member.userId,
+      type: 'FILE',
+      studyId,
+      studyName: study.name,
+      studyEmoji: study.emoji,
+      message: `새 파일: ${sanitizedFilename}`
+    }))
+  });
 
-    return NextResponse.json({
-      success: true,
-      message: "파일이 업로드되었습니다",
-      data: savedFile,
+  // 14. 로깅
+  StudyLogger.logFileUpload(savedFile.id, studyId, session.user.id, {
+    filename: sanitizedFilename,
+    size: file.size,
+    type: file.type
+  });
+
+  // 15. 응답
+  return createSuccessResponse(
+    {
+      ...savedFile,
       storage: {
         usagePercentage: quotaCheck.usagePercentage,
         used: `${(quotaCheck.afterUpload / (1024 * 1024)).toFixed(2)}MB`,
         quota: `${(studyQuota / (1024 * 1024)).toFixed(2)}MB`,
       }
-    }, { status: 201 })
-
-  } catch (error) {
-    console.error('Upload file error:', error)
-    return NextResponse.json(
-      { error: "파일 업로드 중 오류가 발생했습니다" },
-      { status: 500 }
-    )
-  }
-}
+    },
+    '파일이 업로드되었습니다',
+    201
+  );
+});
 
