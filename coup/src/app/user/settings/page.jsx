@@ -8,6 +8,7 @@ import ProfileEdit from './components/ProfileEdit';
 import PasswordChange from './components/PasswordChange';
 import NotificationSettings from './components/NotificationSettings';
 import ThemeSettings from './components/ThemeSettings';
+import AccountDeletion from './components/AccountDeletion';
 import styles from './page.module.css';
 
 export default function SettingsPage() {
@@ -37,6 +38,7 @@ export default function SettingsPage() {
       children: [
         { id: 'profile', label: '프로필 편집', icon: '👤' },
         { id: 'password', label: '비밀번호 변경', icon: '🔒' },
+        { id: 'deletion', label: '계정 삭제', icon: '🗑️' },
       ]
     },
     {
@@ -61,6 +63,8 @@ export default function SettingsPage() {
         return <ProfileEdit user={session?.user} />;
       case 'password':
         return <PasswordChange />;
+      case 'deletion':
+        return <AccountDeletion user={session?.user} />;
       case 'notification':
         return <NotificationSettings />;
       case 'theme':

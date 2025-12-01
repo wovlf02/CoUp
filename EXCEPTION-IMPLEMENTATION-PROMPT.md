@@ -907,9 +907,9 @@ export function validateManual(data, rules) {
 **이 프롬프트로 새 세션을 시작하세요:**
 
 ```
-안녕하세요! CoUp 예외 처리 구현 - profile 영역을 시작합니다.
+안녕하세요! CoUp 예외 처리 구현 - profile 영역 Phase 2를 시작합니다.
 
-**목표**: profile 영역 완전한 예외 처리 시스템 구축
+**목표**: profile 영역 예외 클래스 및 유틸리티 구현
 
 **프로젝트 정보**:
 - Next.js 16 App Router 기반
@@ -922,47 +922,471 @@ export function validateManual(data, rules) {
 - ✅ dashboard 영역 완료 (106개 예외 처리)
 - ✅ my-studies 영역 완료 (62개 에러 코드)
 - ✅ chat 영역 완료 (18종류 Exception, 32시간, 100%)
+- ✅ profile Phase 1 완료 (분석 및 계획, 6시간)
 
-**현재 작업**: profile 영역 Phase 1 - 분석 및 계획
+**Phase 1 완료 내역**:
+- ✅ 현재 코드 분석 완료 (12개 파일)
+- ✅ 예외 설계 완료 (90개 메서드, 7개 카테고리)
+- ✅ Phase 계획 수립 (6개 Phase, 30시간)
+- ✅ 문서화 완료 (CURRENT-STATE-ANALYSIS.md, EXCEPTION-DESIGN-COMPLETE.md, PROFILE-PHASE-PLAN.md)
+
+**현재 작업**: profile 영역 Phase 2 - 예외 클래스 및 유틸리티 구현
 
 **진행 순서**: profile → admin → notifications → search → settings (총 5개 남음)
 
-**예상 난이도**: ⭐⭐⭐ (중간-높음)
-- 프로필 정보 수정 (유효성 검증)
-- 아바타 업로드 (이미지 처리, 크기 제한)
-- 비밀번호 변경 (보안, 현재 비밀번호 확인)
-- 계정 삭제 (확인 절차, 데이터 정리)
-- 프라이버시 설정 (권한 관리)
+**Phase 2 목표**: 🔴 높음 우선순위 (8시간)
+- ProfileException 클래스 구현 (90개 메서드)
+- 유효성 검증 함수 구현 (7개 함수)
+- 에러 로거 구현 (4개 함수)
+- 의존성 설치 및 테스트
 
 **참조 문서**:
-- `docs/exception/profile/` - profile 영역 예외 문서 (13개 파일)
-- `docs/exception/implement/chat/CHAT-EXCEPTION-COMPLETE.md` - 참고용 완료 보고서
-- `docs/exception/implement/chat/INTEGRATION-TEST-SCENARIOS.md` - 테스트 패턴 참고
-- `docs/exception/implement/PROGRESS-TRACKER.md` - 전체 진행 상황
+- `docs/exception/implement/profile/EXCEPTION-DESIGN-COMPLETE.md` - 예외 설계 완전판
+- `docs/exception/implement/profile/PROFILE-PHASE-PLAN.md` - Phase 상세 계획
+- `docs/exception/implement/profile/CURRENT-STATE-ANALYSIS.md` - 현재 상태 분석
+- `coup/src/lib/exceptions/chat/ChatException.js` - Exception 클래스 구조 참고
+- `coup/src/lib/utils/chat/validators.js` - 검증 함수 패턴 참고
 
 ---
 
-## 📋 작업 내용
+## 📋 Phase 2 작업 내용 (8시간)
 
-### Phase 1: 분석 및 계획 (6시간)
+### 2.1 ProfileException 클래스 구현 (4시간)
 
-profile 영역의 현재 코드를 분석하고, 예외 처리 구현 계획을 수립합니다.
+**목표**: 90개 예외 메서드를 가진 ProfileException 클래스 작성
 
----
+**파일 생성**: `coup/src/lib/exceptions/profile/ProfileException.js`
 
-### 1.1 폴더 구조 확인 및 생성 (30분)
+**작업 단계**:
 
-**확인할 폴더**:
-- `docs/exception/implement/profile/` - 이미 존재하는지 확인
+#### 1단계: 폴더 및 기본 구조 생성 (30분)
 
-**생성할 폴더** (없는 경우):
+**폴더 생성**:
 ```bash
-docs/exception/implement/profile/
+coup/src/lib/exceptions/profile/
+```
+
+**기본 클래스 구조**:
+```javascript
+/**
+ * Profile 영역 예외 처리 클래스
+ * 90개의 예외 메서드를 제공합니다.
+ * 
+ * 카테고리:
+ * - A. PROFILE_INFO (PROFILE-001 ~ PROFILE-020): 프로필 정보 관련
+ * - B. AVATAR (PROFILE-021 ~ PROFILE-035): 아바타 관련
+ * - C. PASSWORD (PROFILE-036 ~ PROFILE-050): 비밀번호 관련
+ * - D. ACCOUNT_DELETE (PROFILE-051 ~ PROFILE-060): 계정 삭제 관련
+ * - E. PRIVACY (PROFILE-061 ~ PROFILE-070): 프라이버시 관련
+ * - F. VERIFICATION (PROFILE-071 ~ PROFILE-080): 인증 관련
+ * - G. SOCIAL (PROFILE-081 ~ PROFILE-090): 소셜 연동 관련
+ */
+class ProfileException extends Error {
+  constructor(code, message, statusCode = 400, context = {}) {
+    super(message);
+    this.name = 'ProfileException';
+    this.code = code;
+    this.message = message;
+    this.statusCode = statusCode;
+    this.context = context;
+    this.timestamp = new Date().toISOString();
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      code: this.code,
+      message: this.message,
+      statusCode: this.statusCode,
+      context: this.context,
+      timestamp: this.timestamp,
+    };
+  }
+
+  toResponse() {
+    return {
+      success: false,
+      error: {
+        code: this.code,
+        message: this.message,
+        ...(this.context.field && { field: this.context.field }),
+        ...(this.context.details && { details: this.context.details }),
+      },
+    };
+  }
+}
+```
+
+#### 2단계: A. PROFILE_INFO 메서드 구현 (1시간)
+
+**20개 메서드 구현** - PROFILE-001 ~ PROFILE-020
+
+참조: `docs/exception/implement/profile/EXCEPTION-DESIGN-COMPLETE.md`의 A 섹션
+
+예시:
+```javascript
+// A. PROFILE_INFO (프로필 정보)
+static requiredFieldMissing(field, context = {}) {
+  return new ProfileException(
+    'PROFILE-001',
+    `필수 필드가 누락되었습니다: ${field}`,
+    400,
+    { field, ...context }
+  );
+}
+
+static invalidNameFormat(context = {}) {
+  return new ProfileException(
+    'PROFILE-002',
+    '이름 형식이 올바르지 않습니다. 한글, 영문, 숫자만 사용 가능합니다.',
+    400,
+    context
+  );
+}
+
+// ... 나머지 18개 메서드
+```
+
+#### 3단계: B. AVATAR 메서드 구현 (45분)
+
+**15개 메서드 구현** - PROFILE-021 ~ PROFILE-035
+
+#### 4단계: C. PASSWORD 메서드 구현 (45분)
+
+**15개 메서드 구현** - PROFILE-036 ~ PROFILE-050
+
+#### 5단계: D. ACCOUNT_DELETE 메서드 구현 (30분)
+
+**10개 메서드 구현** - PROFILE-051 ~ PROFILE-060
+
+#### 6단계: E. PRIVACY 메서드 구현 (30분)
+
+**10개 메서드 구현** - PROFILE-061 ~ PROFILE-070
+
+#### 7단계: F. VERIFICATION 메서드 구현 (30분)
+
+**10개 메서드 구현** - PROFILE-071 ~ PROFILE-080
+
+#### 8단계: G. SOCIAL 메서드 구현 (30분)
+
+**10개 메서드 구현** - PROFILE-081 ~ PROFILE-090
+
+**체크리스트**:
+- [ ] 폴더 생성: `coup/src/lib/exceptions/profile/`
+- [ ] ProfileException.js 파일 생성
+- [ ] 기본 클래스 구조 (constructor, toJSON, toResponse)
+- [ ] A. PROFILE_INFO 메서드 20개 구현
+- [ ] B. AVATAR 메서드 15개 구현
+- [ ] C. PASSWORD 메서드 15개 구현
+- [ ] D. ACCOUNT_DELETE 메서드 10개 구현
+- [ ] E. PRIVACY 메서드 10개 구현
+- [ ] F. VERIFICATION 메서드 10개 구현
+- [ ] G. SOCIAL 메서드 10개 구현
+- [ ] JSDoc 주석 작성
+- [ ] export default ProfileException 추가
+
+**예상 코드량**: ~500줄
+
+---
+
+### 2.2 유효성 검증 함수 구현 (2시간)
+
+**목표**: 7개 유효성 검증 함수 작성
+
+**파일 생성**: `coup/src/lib/utils/profile/validators.js`
+
+**작업 단계**:
+
+#### 1단계: 폴더 및 기본 구조 (15분)
+
+**폴더 생성**:
+```bash
+coup/src/lib/utils/profile/
+```
+
+#### 2단계: 함수 구현 (1시간 45분)
+
+**1. validateProfileName(name)** (20분)
+```javascript
+/**
+ * 프로필 이름 유효성 검증
+ * @param {string} name - 검증할 이름
+ * @returns {{valid: boolean, error?: string}}
+ */
+export function validateProfileName(name) {
+  if (!name || name.trim().length === 0) {
+    return { valid: false, error: '이름을 입력해주세요.' };
+  }
+  
+  if (name.length < 2 || name.length > 50) {
+    return { valid: false, error: '이름은 2-50자 사이여야 합니다.' };
+  }
+  
+  // 한글, 영문, 숫자, 공백만 허용
+  const namePattern = /^[가-힣a-zA-Z0-9\s]+$/;
+  if (!namePattern.test(name)) {
+    return { valid: false, error: '이름에는 한글, 영문, 숫자만 사용할 수 있습니다.' };
+  }
+  
+  // XSS 체크
+  if (checkXSS(name).hasXSS) {
+    return { valid: false, error: '허용되지 않는 문자가 포함되어 있습니다.' };
+  }
+  
+  return { valid: true };
+}
+```
+
+**2. validateBio(bio)** (15분)
+- 최대 500자 검증
+- XSS 패턴 체크
+
+**3. validatePasswordStrength(password)** (30분)
+- zxcvbn 라이브러리 사용
+- 최소 점수 3 이상 요구
+- 피드백 메시지 반환
+
+**4. checkXSS(input)** (20분)
+- 정규식 기반 XSS 패턴 검사
+- <script>, onerror, javascript: 등 차단
+
+**5. validateAvatarFile(file)** (20분)
+- 파일 크기 검증 (최대 5MB)
+- MIME 타입 검증
+- 확장자 검증
+
+**6. validateEmail(email)** (15min)
+- 이메일 형식 정규식 검증
+- 도메인 검증
+
+**7. isForbiddenNickname(name)** (20분)
+- 금지된 닉네임 목록 확인
+- 관리자 예약어 체크
+
+**체크리스트**:
+- [ ] 폴더 생성: `coup/src/lib/utils/profile/`
+- [ ] validators.js 파일 생성
+- [ ] validateProfileName() 구현
+- [ ] validateBio() 구현
+- [ ] validatePasswordStrength() 구현
+- [ ] checkXSS() 구현
+- [ ] validateAvatarFile() 구현
+- [ ] validateEmail() 구현
+- [ ] isForbiddenNickname() 구현
+- [ ] JSDoc 주석 작성
+- [ ] export 문 추가
+
+**예상 코드량**: ~300줄
+
+---
+
+### 2.3 에러 로거 구현 (1시간)
+
+**목표**: profile 전용 로거 함수 4개 작성
+
+**파일 생성**: `coup/src/lib/loggers/profile/profileLogger.js`
+
+**작업 단계**:
+
+#### 1단계: 폴더 및 기본 구조 (15분)
+
+**폴더 생성**:
+```bash
+coup/src/lib/loggers/profile/
+```
+
+#### 2단계: 함수 구현 (45분)
+
+**1. createLog(level, message, context)** (15분)
+```javascript
+/**
+ * 구조화된 로그 객체 생성
+ */
+function createLog(level, message, context = {}) {
+  return {
+    timestamp: new Date().toISOString(),
+    level,
+    area: 'profile',
+    message,
+    userId: context.userId,
+    action: context.action,
+    ...context,
+  };
+}
+```
+
+**2. logProfileError(exception, context)** (15분)
+- ProfileException 로깅
+- 콘솔 출력 (개발 환경)
+- 외부 서비스 연동 준비 (Sentry 등)
+
+**3. logProfileInfo(message, context)** (10분)
+- 정보성 로그
+- 프로필 수정, 아바타 업로드 등
+
+**4. logProfileSecurity(event, context)** (10분)
+- 보안 이벤트 로깅
+- 비밀번호 변경, 계정 삭제 등
+- 높은 우선순위
+
+**체크리스트**:
+- [ ] 폴더 생성: `coup/src/lib/loggers/profile/`
+- [ ] profileLogger.js 파일 생성
+- [ ] createLog() 구현
+- [ ] logProfileError() 구현
+- [ ] logProfileInfo() 구현
+- [ ] logProfileSecurity() 구현
+- [ ] 로그 레벨 구분 (DEBUG, INFO, WARN, ERROR)
+- [ ] 환경별 분기 (개발/프로덕션)
+- [ ] export 문 추가
+
+**예상 코드량**: ~150줄
+
+---
+
+### 2.4 의존성 설치 및 테스트 (1시간)
+
+**목표**: 필요한 패키지 설치 및 기본 테스트 작성
+
+#### 1단계: 패키지 설치 (15분)
+
+```bash
+cd coup
+npm install zxcvbn react-easy-crop sharp
+```
+
+**패키지 설명**:
+- `zxcvbn`: 비밀번호 강도 측정
+- `react-easy-crop`: 아바타 크롭 UI
+- `sharp`: 서버사이드 이미지 처리
+
+#### 2단계: 단위 테스트 작성 (45분)
+
+**1. validators.test.js** (20분)
+- validateProfileName() 테스트
+- validatePasswordStrength() 테스트
+- checkXSS() 테스트
+
+**2. ProfileException.test.js** (15분)
+- 각 카테고리별 대표 메서드 테스트
+- toJSON(), toResponse() 테스트
+
+**3. profileLogger.test.js** (10분)
+- createLog() 테스트
+- 로그 출력 확인
+
+**체크리스트**:
+- [ ] npm install 실행
+- [ ] package.json 확인
+- [ ] validators.test.js 작성
+- [ ] ProfileException.test.js 작성
+- [ ] profileLogger.test.js 작성
+- [ ] npm test 실행 (선택)
+
+---
+
+## ✅ Phase 2 완료 기준
+
+### 필수 항목
+- [ ] ProfileException.js 작성 완료 (90개 메서드, ~500줄)
+- [ ] validators.js 작성 완료 (7개 함수, ~300줄)
+- [ ] profileLogger.js 작성 완료 (4개 함수, ~150줄)
+- [ ] 의존성 설치 완료 (zxcvbn, react-easy-crop, sharp)
+- [ ] 단위 테스트 작성 (3개 파일)
+
+### 검증 방법
+1. **파일 존재 확인**:
+   ```bash
+   ls coup/src/lib/exceptions/profile/ProfileException.js
+   ls coup/src/lib/utils/profile/validators.js
+   ls coup/src/lib/loggers/profile/profileLogger.js
+   ```
+
+2. **코드 품질 확인**:
+   - JSDoc 주석 작성 완료
+   - export 문 추가 완료
+   - 에러 처리 추가 완료
+
+3. **import 테스트**:
+   ```javascript
+   // 임포트가 정상 작동하는지 확인
+   import ProfileException from '@/lib/exceptions/profile/ProfileException';
+   import { validateProfileName } from '@/lib/utils/profile/validators';
+   import { logProfileError } from '@/lib/loggers/profile/profileLogger';
+   ```
+
+### 완료 문서
+- [ ] `docs/exception/implement/profile/PHASE-2-SUMMARY.md` 작성
+- [ ] `docs/exception/implement/PROGRESS-TRACKER.md` 업데이트 (20% → 46%)
+
+---
+
+## ➡️ Phase 2 완료 후 작업
+
+1. **진행 상황 업데이트**:
+   - PROGRESS-TRACKER.md에 Phase 2 완료 체크
+   - 예상 시간 vs 실제 시간 기록
+   - 진행률: 20% → 46% (26% 증가)
+
+2. **완료 요약 문서 작성**:
+   - PHASE-2-SUMMARY.md 작성
+   - 생성된 파일 목록
+   - 구현된 메서드/함수 목록
+   - 발견된 이슈 및 해결 방법
+
+3. **다음 프롬프트 자동 업데이트**:
+   - 이 파일의 "실행 명령" 섹션을 Phase 3 프롬프트로 교체
+   - Phase 3: API 라우트 강화 (6시간)
+
+---
+
+## 📚 참고 자료
+
+### chat 영역 참조 파일 (구조 참고)
+- `coup/src/lib/exceptions/chat/ChatException.js` - Exception 클래스 구조
+- `coup/src/lib/utils/chat/validators.js` - 검증 함수 패턴
+- `coup/src/lib/loggers/chat/chatLogger.js` - 로거 구조
+
+### 설계 문서
+- `docs/exception/implement/profile/EXCEPTION-DESIGN-COMPLETE.md` - 전체 90개 메서드 명세
+- `docs/exception/implement/profile/PROFILE-PHASE-PLAN.md` - Phase 2 상세 계획
+
+### 코딩 컨벤션
+- JavaScript (ES6+) 전용, TypeScript 사용 금지
+- JSDoc 주석 필수
+- 에러 메시지는 사용자 친화적으로 (한글 + 영문 병기)
+- async/await 적극 활용
+- 에러 체이닝 고려
+- 보안 (XSS, SQL Injection) 주의
+
+---
+
+## 💡 구현 팁
+
+### ProfileException 클래스
+- chat 영역의 ChatException.js 구조를 참고하세요
+- static 메서드로 구현 (new 키워드 없이 사용 가능)
+- context 파라미터로 추가 정보 전달
+- toJSON(), toResponse() 메서드로 응답 형식 통일
+
+### validators.js
+- 각 함수는 {valid: boolean, error?: string} 형식 반환
+- 유효한 경우: {valid: true}
+- 유효하지 않은 경우: {valid: false, error: '에러 메시지'}
+- XSS 검증은 모든 사용자 입력에 적용
+
+### profileLogger.js
+- 환경 변수로 로그 레벨 제어 (process.env.NODE_ENV)
+- 개발 환경: console.log 사용
+- 프로덕션: 외부 서비스 연동 준비 (향후)
+- 민감한 정보 (비밀번호 등) 로깅 금지
+
+---
+
+**실행 명령**: 이 프롬프트를 복사하여 새 세션에 붙여넣으면, Phase 2 작업이 시작됩니다.
 ```
 
 ---
-
-### 1.2 README.md 작성 (2시간)
 
 **파일**: `docs/exception/implement/profile/README.md`
 
