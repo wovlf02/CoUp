@@ -31,20 +31,20 @@ export default function MyStudySettingsPage({ params }) {
   const study = studyData?.data;
 
   const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    subCategory: '',
-    description: '',
-    tags: [],
-    isPublic: true,
-    autoApprove: false,
-    maxMembers: 50
+    name: study?.name || '',
+    category: study?.category || '',
+    subCategory: study?.subCategory || '',
+    description: study?.description || '',
+    tags: study?.tags || [],
+    isPublic: study?.isPublic !== undefined ? study.isPublic : true,
+    autoApprove: study?.autoApprove || false,
+    maxMembers: study?.maxMembers || 50
   });
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (study) {
+    if (study && Object.keys(formData).some(key => formData[key] !== study[key])) {
       setFormData({
         name: study.name || '',
         category: study.category || '',
@@ -56,7 +56,7 @@ export default function MyStudySettingsPage({ params }) {
         maxMembers: study.maxMembers || 50
       });
     }
-  }, [study]);
+  }, [study, formData]);
 
 
   // 유효성 검사

@@ -4,17 +4,38 @@ import { requireStudyMember } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { validateAndSanitize } from "@/lib/utils/input-sanitizer"
 import { validateSecurityThreats, logSecurityEvent } from "@/lib/utils/xss-sanitizer"
+import { ChatMessageException } from "@/lib/exceptions/chat"
+import { logChatError, logChatInfo, logChatWarning } from "@/lib/utils/chat/errorLogger"
 
 export async function GET(request, { params }) {
-  const { id: studyId } = await params
-
-  const result = await requireStudyMember(studyId)
-  if (result instanceof NextResponse) return result
-
   try {
+    const { id: studyId } = await params
+
+    // 권한 검증
+    const result = await requireStudyMember(studyId)
+    if (result instanceof NextResponse) {
+      logChatWarning('Unauthorized access attempt', { studyId })
+      return result
+    }
+
     const { searchParams } = new URL(request.url)
     const cursor = searchParams.get('cursor') // 마지막 메시지 ID
     const limit = parseInt(searchParams.get('limit') || '50')
+
+    // limit 검증
+    if (limit < 1 || limit > 100) {
+      logChatWarning('Invalid limit parameter', { studyId, limit })
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_LIMIT',
+            message: 'limit은 1-100 사이의 값이어야 합니다'
+          }
+        },
+        { status: 400 }
+      )
+    }
 
     let whereClause = { studyId }
 
@@ -52,6 +73,12 @@ export async function GET(request, { params }) {
     // 역순으로 반환 (최신 메시지가 아래로)
     const reversedMessages = messages.reverse()
 
+    logChatInfo('Messages fetched successfully', {
+      studyId,
+      count: messages.length,
+      hasMore: messages.length === limit
+    })
+
     return NextResponse.json({
       success: true,
       data: reversedMessages,
@@ -60,34 +87,59 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Get messages error:', error)
+    const studyId = (await params)?.id
+    logChatError(error, { studyId, action: 'fetch_messages' })
+
+    // ChatMessageException인 경우
+    if (error instanceof ChatMessageException) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.userMessage
+          }
+        },
+        { status: error.statusCode || 500 }
+      )
+    }
+
+    // 일반 에러
     return NextResponse.json(
-      { error: "메시지를 가져오는 중 오류가 발생했습니다" },
+      {
+        success: false,
+        error: {
+          code: 'FETCH_MESSAGES_FAILED',
+          message: "메시지를 가져오는 중 오류가 발생했습니다"
+        }
+      },
       { status: 500 }
     )
   }
 }
 
 export async function POST(request, { params }) {
-  const { id: studyId } = await params
-
-  const result = await requireStudyMember(studyId)
-  if (result instanceof NextResponse) return result
-
-  const { session } = result
-
   try {
+    const { id: studyId } = await params
+
+    // 권한 검증
+    const result = await requireStudyMember(studyId)
+    if (result instanceof NextResponse) {
+      logChatWarning('Unauthorized message send attempt', { studyId })
+      return result
+    }
+
+    const { session } = result
+
     const body = await request.json()
     const { content, fileId } = body
 
+    // 1. 기본 검증
     if (!content && !fileId) {
-      return NextResponse.json(
-        { error: "메시지 내용 또는 파일을 입력해주세요" },
-        { status: 400 }
-      )
+      throw ChatMessageException.emptyContent({ studyId, userId: session.user.id })
     }
 
-    // 1. 보안 위협 검증 (content가 있는 경우만)
+    // 2. 보안 위협 검증 (content가 있는 경우만)
     if (content) {
       const threats = validateSecurityThreats(content);
 
@@ -99,24 +151,34 @@ export async function POST(request, { params }) {
           threats: threats.threats,
         });
 
-        return NextResponse.json(
-          { error: "메시지에 허용되지 않는 콘텐츠가 포함되어 있습니다" },
-          { status: 400 }
-        );
+        throw ChatMessageException.xssDetected(threats.threats, {
+          studyId,
+          userId: session.user.id
+        })
       }
     }
 
-    // 2. 입력값 검증 및 정제
+    // 3. 입력값 검증 및 정제
     const validation = validateAndSanitize(
       { content, fileId },
       'CHAT_MESSAGE'
     );
 
     if (!validation.valid) {
+      logChatWarning('Message validation failed', {
+        studyId,
+        userId: session.user.id,
+        errors: validation.errors
+      })
+
       return NextResponse.json(
         {
-          error: "입력값이 유효하지 않습니다",
-          details: validation.errors
+          success: false,
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: "입력값이 유효하지 않습니다",
+            details: validation.errors
+          }
         },
         { status: 400 }
       );
@@ -124,47 +186,62 @@ export async function POST(request, { params }) {
 
     const sanitizedData = validation.sanitized;
 
-    // 3. 메시지 길이 제한 (2000자)
+    // 4. 메시지 길이 제한 (2000자)
     if (sanitizedData.content && sanitizedData.content.length > 2000) {
-      return NextResponse.json(
-        { error: "메시지는 2000자 이하여야 합니다" },
-        { status: 400 }
-      );
+      throw ChatMessageException.contentTooLong(
+        sanitizedData.content.length,
+        2000,
+        { studyId, userId: session.user.id }
+      )
     }
 
-    // 4. 스팸 감지 (최근 10초 내 5개 이상 메시지)
+    // 5. 스팸 감지 (최근 10초 내 5개 이상 메시지)
+    const timeWindow = 10; // seconds
+    const maxMessages = 5;
     const recentMessages = await prisma.message.count({
       where: {
         studyId,
         userId: session.user.id,
         createdAt: {
-          gte: new Date(Date.now() - 10000), // 10초
+          gte: new Date(Date.now() - timeWindow * 1000),
         },
       },
     });
 
-    if (recentMessages >= 5) {
-      return NextResponse.json(
-        { error: "메시지를 너무 빠르게 전송하고 있습니다. 잠시 후 다시 시도해주세요." },
-        { status: 429 }
-      );
+    if (recentMessages >= maxMessages) {
+      throw ChatMessageException.spamDetected(recentMessages, timeWindow, {
+        studyId,
+        userId: session.user.id
+      })
     }
 
-    // 5. 파일 ID 검증 (존재하는 경우)
+    // 6. 파일 ID 검증 (존재하는 경우)
     if (sanitizedData.fileId) {
       const file = await prisma.file.findUnique({
         where: { id: sanitizedData.fileId },
       });
 
       if (!file || file.studyId !== studyId) {
+        logChatWarning('Invalid file ID', {
+          studyId,
+          userId: session.user.id,
+          fileId: sanitizedData.fileId
+        })
+
         return NextResponse.json(
-          { error: "유효하지 않은 파일입니다" },
+          {
+            success: false,
+            error: {
+              code: 'INVALID_FILE',
+              message: "유효하지 않은 파일입니다"
+            }
+          },
           { status: 400 }
         );
       }
     }
 
-    // 6. 메시지 생성
+    // 7. 메시지 생성
     const message = await prisma.message.create({
       data: {
         studyId,
@@ -193,7 +270,7 @@ export async function POST(request, { params }) {
       }
     })
 
-    // 7. 다른 멤버들에게 알림 (나중에 WebSocket으로 실시간 전송 가능)
+    // 8. 다른 멤버들에게 알림
     const members = await prisma.studyMember.findMany({
       where: {
         studyId,
@@ -209,15 +286,24 @@ export async function POST(request, { params }) {
     })
 
     // 채팅 알림 생성 (선택적)
-    await prisma.notification.createMany({
-      data: members.map(member => ({
-        userId: member.userId,
-        type: 'CHAT',
-        studyId,
-        studyName: study.name,
-        studyEmoji: study.emoji,
-        message: `${session.user.name}님이 메시지를 보냈습니다`
-      }))
+    if (members.length > 0 && study) {
+      await prisma.notification.createMany({
+        data: members.map(member => ({
+          userId: member.userId,
+          type: 'CHAT',
+          studyId,
+          studyName: study.name,
+          studyEmoji: study.emoji,
+          message: `${session.user.name}님이 메시지를 보냈습니다`
+        }))
+      })
+    }
+
+    logChatInfo('Message created successfully', {
+      studyId,
+      messageId: message.id,
+      userId: session.user.id,
+      hasFile: !!sanitizedData.fileId
     })
 
     return NextResponse.json({
@@ -227,9 +313,32 @@ export async function POST(request, { params }) {
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Send message error:', error)
+    const studyId = (await params)?.id
+    logChatError(error, { studyId, action: 'send_message' })
+
+    // ChatMessageException인 경우
+    if (error instanceof ChatMessageException) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: error.code,
+            message: error.userMessage
+          }
+        },
+        { status: error.statusCode || 500 }
+      )
+    }
+
+    // 일반 에러
     return NextResponse.json(
-      { error: "메시지 전송 중 오류가 발생했습니다" },
+      {
+        success: false,
+        error: {
+          code: 'SEND_MESSAGE_FAILED',
+          message: "메시지 전송 중 오류가 발생했습니다"
+        }
+      },
       { status: 500 }
     )
   }

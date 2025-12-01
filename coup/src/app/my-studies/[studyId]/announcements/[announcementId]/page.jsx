@@ -1,13 +1,18 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { formatDateTimeKST } from '@/utils/time';
 import { formatBytes } from '@/utils/file'; // formatBytes 유틸리티 함수 임포트
 import { useSession } from 'next-auth/react'; // useSession 임포트
+import { useStudy } from '@/hooks/useStudy';
+import { useNotice } from '@/hooks/useNotice';
 import styles from './page.module.css';
 
 export default function AnnouncementDetailPage({ params }) {
   const router = useRouter();
   const { studyId, announcementId } = params;
+  const { data: session } = useSession();
 
   // 스터디 정보 가져오기 (브레드크럼에 스터디 이름 표시용)
   const { data: studyData, isLoading: isStudyLoading, error: studyError } = useStudy(studyId);
@@ -48,7 +53,6 @@ export default function AnnouncementDetailPage({ params }) {
 
   const hasAttachments = notice.attachments && notice.attachments.length > 0;
 
-  const { data: session } = useSession();
   const userId = session?.user?.id;
   const userRoleInStudy = study?.myRole; // useStudy 훅에서 이미 가져온 스터디 내 사용자 역할
 

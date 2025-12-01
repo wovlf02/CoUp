@@ -798,47 +798,91 @@ export function handlePrismaError(error) {
  *   // UI에 에러 표시
  * }
  */
-export function handleReactQueryError(error) {
-  // Fetch 에러
-  if (error.name === 'TypeError' && error.message.includes('fetch')) {
+/**
+ * React Query 에러 처리 헬퍼 (콜백 지원)
+ *
+ * @param {Error} error - React Query 에러 객체
+ * @param {Object} [callbacks] - 에러 타입별 콜백
+ * @param {Function} [callbacks.onNetworkError] - 네트워크 에러 콜백
+ * @param {Function} [callbacks.onAuthError] - 인증 에러 콜백
+ * @param {Function} [callbacks.onServerError] - 서버 에러 콜백
+ * @param {Function} [callbacks.onTimeoutError] - 타임아웃 에러 콜백
+ * @returns {Object} 처리된 에러 정보
+ *
+ * @example
+ * handleReactQueryError(error, {
+ *   onNetworkError: () => showToast('네트워크 에러'),
+ *   onAuthError: () => router.push('/login')
+ * })
+ */
+export function handleReactQueryError(error, callbacks = {}) {
+  const {
+    onNetworkError,
+    onAuthError,
+    onServerError,
+    onTimeoutError
+  } = callbacks
+
+  // 1. 네트워크 에러
+  if (!window.navigator?.onLine || error.message?.includes('Network') || error.name === 'TypeError' && error.message.includes('fetch')) {
+    onNetworkError?.()
     return createMyStudiesError('NETWORK_ERROR', null, {
-      originalError: error.message
+      originalError: error.message,
+      category: 'NETWORK',
+      shouldRetry: true
     })
   }
 
-  // 타임아웃 에러
-  if (error.name === 'AbortError' || error.message.includes('timeout')) {
+  // 2. 타임아웃
+  if (error.name === 'AbortError' || error.message?.includes('timeout')) {
+    onTimeoutError?.()
     return createMyStudiesError('TIMEOUT', null, {
-      originalError: error.message
+      originalError: error.message,
+      category: 'TIMEOUT',
+      shouldRetry: true
     })
   }
 
-  // HTTP 에러
+  // 3. HTTP 에러
   if (error.response) {
     const status = error.response.status
 
-    if (status === 401) {
-      return createMyStudiesError('UNAUTHORIZED')
+    // 인증 에러
+    if (status === 401 || status === 403) {
+      onAuthError?.()
+      return createMyStudiesError(status === 401 ? 'UNAUTHORIZED' : 'NO_PERMISSION', null, {
+        category: 'AUTH',
+        shouldRetry: false
+      })
     }
 
-    if (status === 403) {
-      return createMyStudiesError('NO_PERMISSION')
+    // 서버 에러
+    if (status >= 500) {
+      onServerError?.()
+      return createMyStudiesError('INTERNAL_ERROR', null, {
+        category: 'SERVER',
+        shouldRetry: true,
+        statusCode: status
+      })
     }
 
+    // 404
     if (status === 404) {
       return createMyStudiesError('STUDY_NOT_FOUND')
     }
 
+    // Rate Limit
     if (status === 429) {
       return createMyStudiesError('RATE_LIMIT_EXCEEDED')
     }
-
-    if (status >= 500) {
-      return createMyStudiesError('INTERNAL_ERROR')
-    }
   }
 
-  return createMyStudiesError('UNKNOWN_ERROR')
+  // 4. 일반 에러
+  return createMyStudiesError('UNKNOWN_ERROR', null, {
+    category: 'GENERAL',
+    shouldRetry: true,
+    originalError: error.message
+  })
 }
 
 /**
