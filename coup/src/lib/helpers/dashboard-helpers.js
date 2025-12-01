@@ -99,8 +99,12 @@ export function safeCalculate(calculation, fallbackValue = 0) {
 export function calculateAverage(numbers, decimals = 1) {
   if (!Array.isArray(numbers) || numbers.length === 0) return 0
 
-  const sum = numbers.reduce((acc, num) => acc + (Number(num) || 0), 0)
-  const avg = sum / numbers.length
+  // 유효한 숫자만 필터링
+  const validNumbers = numbers.filter(num => typeof num === 'number' && !isNaN(num))
+  if (validNumbers.length === 0) return 0
+
+  const sum = validNumbers.reduce((acc, num) => acc + num, 0)
+  const avg = sum / validNumbers.length
 
   return Number(avg.toFixed(decimals))
 }
