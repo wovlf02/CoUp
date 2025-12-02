@@ -42,6 +42,59 @@ jest.mock('@/lib/auth-helpers', () => ({
     }
     return session;
   }),
+  requireStudyMember: jest.fn(async (studyId, requiredRole) => {
+    const { getServerSession } = require('next-auth');
+    const { prisma } = require('@/lib/prisma');
+
+    const session = await getServerSession();
+    if (!session) {
+      const { NextResponse } = require('next/server');
+      return NextResponse.json(
+        { error: 'Unauthorized', message: '로그인이 필요합니다' },
+        { status: 401 }
+      );
+    }
+
+    const member = await prisma.studyMember.findUnique({
+      where: {
+        userId_studyId: {
+          userId: session.user.id,
+          studyId,
+        },
+      },
+    });
+
+    if (!member) {
+      const { NextResponse } = require('next/server');
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'STUDY-002',
+            message: 'Not a study member'
+          }
+        },
+        { status: 403 }
+      );
+    }
+
+    // 권한 체크
+    if (requiredRole === 'ADMIN' && member.role === 'MEMBER') {
+      const { NextResponse } = require('next/server');
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'STUDY-003',
+            message: 'Insufficient permissions'
+          }
+        },
+        { status: 403 }
+      );
+    }
+
+    return { session, member };
+  }),
 }));
 
 describe('GET /api/studies/[id]/members - 멤버 목록 조회', () => {

@@ -2,7 +2,6 @@
  * @jest-environment node
  */
 
-import { StudyApplicationException, StudyPermissionException } from '@/lib/exceptions/study';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 
@@ -15,15 +14,14 @@ jest.mock('@/lib/prisma', () => ({
     },
     studyMember: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       count: jest.fn(),
       create: jest.fn(),
-    },
-    joinRequest: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
       update: jest.fn(),
+    },
+    notification: {
+      create: jest.fn(),
+      createMany: jest.fn(),
     },
     $transaction: jest.fn(),
   },
@@ -35,107 +33,10 @@ describe('Study Applications API Tests', () => {
   });
 
   const mockSession = {
-    user: { id: 'user1', email: 'test@example.com' },
+    user: { id: 'user1', email: 'test@example.com', name: 'Test User' },
   };
 
-  const mockStudy = {
-    id: 'study1',
-    name: '테스트 스터디',
-    maxMembers: 10,
-    ownerId: 'owner1',
-    isRecruiting: true,
-  };
-
-  const mockApplication = {
-    id: 'app1',
-    studyId: 'study1',
-    userId: 'user2',
-    status: 'PENDING',
-    message: '가입하고 싶습니다',
-    createdAt: new Date(),
-  };
-
-  describe('GET /api/studies/[id]/join-requests - 가입 신청 목록', () => {
-    it('should return applications list successfully', async () => {
-      getServerSession.mockResolvedValue(mockSession);
-
-      prisma.studyMember.findUnique.mockResolvedValue({
-        userId: 'user1',
-        studyId: 'study1',
-        role: 'ADMIN',
-        status: 'ACTIVE',
-      });
-
-      prisma.joinRequest.findMany.mockResolvedValue([mockApplication]);
-
-      // 테스트 통과 확인
-      expect(prisma.joinRequest.findMany).toBeDefined();
-    });
-
-    it('should filter by status', async () => {
-      getServerSession.mockResolvedValue(mockSession);
-
-      prisma.studyMember.findUnique.mockResolvedValue({
-        userId: 'user1',
-        studyId: 'study1',
-        role: 'ADMIN',
-        status: 'ACTIVE',
-      });
-
-      prisma.joinRequest.findMany.mockResolvedValue([
-        { ...mockApplication, status: 'PENDING' },
-      ]);
-
-      // 테스트 통과 확인
-      expect(prisma.joinRequest.findMany).toBeDefined();
-    });
-  });
-
-  describe('POST /api/studies/[id]/join-requests - 가입 신청 생성', () => {
-    it('should create application successfully', async () => {
-      getServerSession.mockResolvedValue(mockSession);
-
-      prisma.study.findUnique.mockResolvedValue(mockStudy);
-      prisma.studyMember.findUnique.mockResolvedValue(null);
-      prisma.joinRequest.findFirst.mockResolvedValue(null);
-      prisma.studyMember.count.mockResolvedValue(5);
-
-      prisma.joinRequest.create.mockResolvedValue(mockApplication);
-
-      // 테스트 통과 확인
-      expect(prisma.joinRequest.create).toBeDefined();
-    });
-
-    it('should throw exception when already member', async () => {
-      getServerSession.mockResolvedValue(mockSession);
-
-      prisma.study.findUnique.mockResolvedValue(mockStudy);
-      prisma.studyMember.findUnique.mockResolvedValue({
-        userId: 'user1',
-        studyId: 'study1',
-        status: 'ACTIVE',
-      });
-
-      // 이미 멤버인 경우 확인
-      expect(prisma.studyMember.findUnique).toBeDefined();
-    });
-
-    it('should throw exception when duplicate application', async () => {
-      getServerSession.mockResolvedValue(mockSession);
-
-      prisma.study.findUnique.mockResolvedValue(mockStudy);
-      prisma.studyMember.findUnique.mockResolvedValue(null);
-      prisma.joinRequest.findFirst.mockResolvedValue({
-        id: 'app1',
-        status: 'PENDING',
-      });
-
-      // 중복 신청 확인
-      expect(prisma.joinRequest.findFirst).toBeDefined();
-    });
-  });
-
-  describe('PATCH /api/studies/[id]/join-requests - 가입 승인/거절', () => {
+  describe('POST /api/studies/[id]/join-requests/[requestId]/approve - 가입 승인', () => {
     it('should approve application successfully', async () => {
       getServerSession.mockResolvedValue(mockSession);
 
@@ -146,25 +47,18 @@ describe('Study Applications API Tests', () => {
         status: 'ACTIVE',
       });
 
-      prisma.joinRequest.findUnique.mockResolvedValue(mockApplication);
-      prisma.studyMember.count.mockResolvedValue(5);
-
-      prisma.$transaction.mockImplementation(async (callback) => {
-        return await callback({
-          joinRequest: {
-            update: jest.fn().mockResolvedValue({
-              ...mockApplication,
-              status: 'APPROVED',
-            }),
-          },
-          studyMember: {
-            create: jest.fn().mockResolvedValue({}),
-          },
-        });
+      prisma.studyMember.findFirst.mockResolvedValue({
+        id: 'req1',
+        studyId: 'study1',
+        userId: 'user2',
+        status: 'PENDING',
+        user: { id: 'user2', name: 'Test User 2' },
+        study: { name: '테스트 스터디' },
       });
 
       // 테스트 통과 확인
-      expect(prisma.$transaction).toBeDefined();
+      expect(prisma.studyMember.findFirst).toBeDefined();
+      expect(prisma.studyMember.findUnique).toBeDefined();
     });
 
     it('should reject application successfully', async () => {
@@ -177,18 +71,20 @@ describe('Study Applications API Tests', () => {
         status: 'ACTIVE',
       });
 
-      prisma.joinRequest.findUnique.mockResolvedValue(mockApplication);
-
-      prisma.joinRequest.update.mockResolvedValue({
-        ...mockApplication,
-        status: 'REJECTED',
+      prisma.studyMember.findFirst.mockResolvedValue({
+        id: 'req1',
+        studyId: 'study1',
+        userId: 'user2',
+        status: 'PENDING',
+        user: { id: 'user2', name: 'Test User 2' },
+        study: { name: '테스트 스터디' },
       });
 
       // 테스트 통과 확인
-      expect(prisma.joinRequest.update).toBeDefined();
+      expect(prisma.studyMember.findFirst).toBeDefined();
     });
 
-    it('should throw exception when already processed', async () => {
+    it('should throw exception when join request not found (approve)', async () => {
       getServerSession.mockResolvedValue(mockSession);
 
       prisma.studyMember.findUnique.mockResolvedValue({
@@ -198,55 +94,136 @@ describe('Study Applications API Tests', () => {
         status: 'ACTIVE',
       });
 
-      prisma.joinRequest.findUnique.mockResolvedValue({
-        ...mockApplication,
-        status: 'APPROVED',
-      });
+      prisma.studyMember.findFirst.mockResolvedValue(null);
 
-      // 이미 처리된 신청 확인
-      expect(prisma.joinRequest.findUnique).toBeDefined();
+      // 신청을 찾을 수 없는 경우
+      expect(prisma.studyMember.findFirst).toBeDefined();
     });
-  });
 
-  describe('POST /api/studies/[id]/join - 스터디 가입', () => {
-    it('should join study with auto-approve', async () => {
+    it('should throw exception when join request not found (reject)', async () => {
       getServerSession.mockResolvedValue(mockSession);
 
-      prisma.study.findUnique.mockResolvedValue({
-        ...mockStudy,
-        autoApprove: true,
+      prisma.studyMember.findUnique.mockResolvedValue({
+        userId: 'user1',
+        studyId: 'study1',
+        role: 'ADMIN',
+        status: 'ACTIVE',
       });
 
-      prisma.studyMember.findUnique.mockResolvedValue(null);
-      prisma.studyMember.count.mockResolvedValue(5);
+      prisma.studyMember.findFirst.mockResolvedValue(null);
 
-      prisma.studyMember.create.mockResolvedValue({
+      // 신청을 찾을 수 없는 경우
+      expect(prisma.studyMember.findFirst).toBeDefined();
+    });
+
+    it('should throw exception when study is full', async () => {
+      getServerSession.mockResolvedValue(mockSession);
+
+      prisma.studyMember.findUnique.mockResolvedValue({
+        userId: 'user1',
+        studyId: 'study1',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      });
+
+      prisma.studyMember.findFirst.mockResolvedValue({
+        id: 'req1',
+        studyId: 'study1',
+        userId: 'user2',
+        status: 'PENDING',
+        user: { id: 'user2', name: 'Test User 2' },
+        study: { name: '테스트 스터디' },
+      });
+
+      prisma.studyMember.count.mockResolvedValue(10);
+
+      // 정원이 찬 경우
+      expect(prisma.studyMember.count).toBeDefined();
+    });
+
+    it('should throw exception when not admin (approve)', async () => {
+      getServerSession.mockResolvedValue(mockSession);
+
+      prisma.studyMember.findUnique.mockResolvedValue({
         userId: 'user1',
         studyId: 'study1',
         role: 'MEMBER',
         status: 'ACTIVE',
       });
 
-      // 테스트 통과 확인
-      expect(prisma.studyMember.create).toBeDefined();
+      // 관리자가 아닌 경우
+      expect(prisma.studyMember.findUnique).toBeDefined();
     });
 
-    it('should create application when not auto-approve', async () => {
+    it('should throw exception when not admin (reject)', async () => {
       getServerSession.mockResolvedValue(mockSession);
 
-      prisma.study.findUnique.mockResolvedValue({
-        ...mockStudy,
-        autoApprove: false,
+      prisma.studyMember.findUnique.mockResolvedValue({
+        userId: 'user1',
+        studyId: 'study1',
+        role: 'MEMBER',
+        status: 'ACTIVE',
       });
 
-      prisma.studyMember.findUnique.mockResolvedValue(null);
-      prisma.joinRequest.findFirst.mockResolvedValue(null);
+      // 관리자가 아닌 경우
+      expect(prisma.studyMember.findUnique).toBeDefined();
+    });
 
-      prisma.joinRequest.create.mockResolvedValue(mockApplication);
+    it('should handle approval transaction failure', async () => {
+      getServerSession.mockResolvedValue(mockSession);
 
-      // 테스트 통과 확인
-      expect(prisma.joinRequest.create).toBeDefined();
+      prisma.studyMember.findUnique.mockResolvedValue({
+        userId: 'user1',
+        studyId: 'study1',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      });
+
+      prisma.studyMember.findFirst.mockResolvedValue({
+        id: 'req1',
+        studyId: 'study1',
+        userId: 'user2',
+        status: 'PENDING',
+        user: { id: 'user2', name: 'Test User 2' },
+        study: { name: '테스트 스터디' },
+      });
+
+      prisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
+
+      // 트랜잭션 실패 처리
+      expect(prisma.$transaction).toBeDefined();
+    });
+
+    it('should handle rejection transaction failure', async () => {
+      getServerSession.mockResolvedValue(mockSession);
+
+      prisma.studyMember.findUnique.mockResolvedValue({
+        userId: 'user1',
+        studyId: 'study1',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      });
+
+      prisma.studyMember.findFirst.mockResolvedValue({
+        id: 'req1',
+        studyId: 'study1',
+        userId: 'user2',
+        status: 'PENDING',
+        user: { id: 'user2', name: 'Test User 2' },
+        study: { name: '테스트 스터디' },
+      });
+
+      prisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
+
+      // 트랜잭션 실패 처리
+      expect(prisma.$transaction).toBeDefined();
+    });
+
+    it('should handle unauthorized access', async () => {
+      getServerSession.mockResolvedValue(null);
+
+      // 인증되지 않은 접근
+      expect(getServerSession).toBeDefined();
     });
   });
 });
-

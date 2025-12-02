@@ -16,17 +16,17 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
 
   // 1. OWNER 권한 확인
   const result = await requireStudyMember(studyId);
-  if (result instanceof NextResponse) return result;
+  if (result && typeof result.json === 'function') return result;
 
   const { session, member: actorMember } = result;
 
   // OWNER만 역할 변경 가능
   if (actorMember.role !== 'OWNER') {
-    throw StudyPermissionException.ownerOnlyAction('change_member_role', {
-      studyId,
-      actorId: session.user.id,
-      actorRole: actorMember.role,
-    });
+    throw StudyPermissionException.ownerPermissionRequired(
+      session.user.id,
+      actorMember.role,
+      { studyId, action: 'change_member_role' }
+    );
   }
 
   // 2. 요청 본문 파싱
@@ -36,7 +36,7 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
   // 3. 역할 검증
   const validRoles = ['OWNER', 'ADMIN', 'MEMBER'];
   if (!role || !validRoles.includes(role)) {
-    throw StudyValidationException.invalidRole(role, validRoles, { studyId, userId });
+    throw StudyMemberException.invalidRole(role, validRoles, { studyId, userId });
   }
 
   // 4. 대상 멤버 확인
@@ -72,21 +72,23 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
 
   // 5. OWNER 역할 변경 불가 (자기 자신 포함)
   if (targetMember.role === 'OWNER' || role === 'OWNER') {
-    throw StudyPermissionException.cannotChangeOwnerRole(userId, studyId, {
+    throw StudyMemberException.cannotChangeOwnerRole(userId, {
+      studyId,
+      currentRole: targetMember.role,
+      targetRole: role,
       message: 'OWNER 역할은 변경할 수 없습니다',
     });
   }
 
   // 6. 이미 같은 역할인 경우
   if (targetMember.role === role) {
-    StudyLogger.logMemberRoleChanged(
-      session.user.id,
+    StudyLogger.info('Member role already set', {
       studyId,
       userId,
-      targetMember.role,
       role,
-      { noChange: true }
-    );
+      changedBy: session.user.id,
+      noChange: true
+    });
 
     return createSuccessResponse(targetMember, '이미 해당 역할입니다');
   }
@@ -112,13 +114,13 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
   });
 
   // 8. 로깅
-  StudyLogger.logMemberRoleChanged(
-    session.user.id,
+  StudyLogger.info('Member role changed', {
     studyId,
     userId,
-    targetMember.role,
-    role
-  );
+    oldRole: targetMember.role,
+    newRole: role,
+    changedBy: session.user.id
+  });
 
   // 9. 알림 생성 (선택적 - 에러 발생 시 무시)
   try {
@@ -135,4 +137,5 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
 
   return createSuccessResponse(updatedMember, '역할이 변경되었습니다');
 });
+
 
