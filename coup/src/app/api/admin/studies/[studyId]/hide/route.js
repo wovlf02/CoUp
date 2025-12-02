@@ -5,31 +5,45 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminBusinessException,
+  AdminDatabaseException,
+  AdminValidationException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function POST(request, { params }) {
+async function hideStudyHandler(request, { params }) {
+  const startTime = Date.now()
+
   // 권한 확인
-  const auth = await requireAdmin(request, PERMISSIONS.USER_SUSPEND)
-  if (auth instanceof NextResponse) return auth
+  const auth = await requireAdmin(request, PERMISSIONS.STUDY_MANAGE)
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.STUDY_MANAGE, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
+  const { studyId } = params
+
+  // studyId 검증
+  if (!studyId) {
+    throw AdminValidationException.missingField('studyId')
+  }
+
+  AdminLogger.info('Admin study hide request', { adminId, studyId })
 
   try {
-    const { studyId } = params
     const body = await request.json()
 
     // 유효성 검사
     if (!body.reason || body.reason.trim().length < 10) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '숨김 사유는 최소 10자 이상이어야 합니다',
-        },
-        { status: 400 }
-      )
+      throw AdminValidationException.invalidFieldFormat('reason', body.reason, '최소 10자 이상')
     }
 
     // 스터디 존재 확인
@@ -42,27 +56,22 @@ export async function POST(request, { params }) {
           include: { user: true },
         },
       },
+    }).catch(error => {
+      AdminLogger.error('Database query failed for study hide', {
+        adminId,
+        studyId,
+        error: error.message
+      })
+      throw AdminDatabaseException.queryFailed('study.findUnique', error.message)
     })
 
     if (!study) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '스터디를 찾을 수 없습니다',
-        },
-        { status: 404 }
-      )
+      throw AdminBusinessException.studyNotFound(studyId, { adminId })
     }
 
     // 이미 숨김 처리된 스터디인지 확인
     if (!study.isPublic && study.isRecruiting === false) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '이미 숨김 처리된 스터디입니다',
-        },
-        { status: 400 }
-      )
+      throw AdminBusinessException.studyHideFailed(studyId, '이미 숨김 처리된 스터디', { adminId })
     }
 
     // 트랜잭션으로 처리
@@ -74,12 +83,14 @@ export async function POST(request, { params }) {
           isPublic: false,
           isRecruiting: false,
         },
+      }).catch(error => {
+        throw AdminBusinessException.studyHideFailed(studyId, error.message, { adminId })
       })
 
       // 관리자 로그 기록
       await tx.adminLog.create({
         data: {
-          adminId: adminRole.userId,
+          adminId,
           action: 'STUDY_HIDE',
           targetType: 'Study',
           targetId: studyId,
@@ -92,30 +103,33 @@ export async function POST(request, { params }) {
             notifyMembers: body.notifyMembers === true,
           },
         },
+      }).catch(error => {
+        AdminLogger.warn('Failed to create admin log', { adminId, studyId, error: error.message })
       })
 
       return updatedStudy
+    }).catch(error => {
+      if (error.name?.includes('Admin')) throw error
+      throw AdminDatabaseException.transactionFailed('study hide', error.message)
     })
 
     // 알림 발송 (트랜잭션 외부에서)
     let notificationsSent = 0
-
-    // 스터디장에게 알림 (기본적으로 발송)
     if (body.notifyOwner !== false) {
-      // TODO: 알림 시스템 구현 후 활성화
-      // await sendNotification(study.owner.id, {
-      //   type: 'STUDY_HIDDEN',
-      //   title: '스터디 숨김 처리',
-      //   message: `${study.name} 스터디가 숨김 처리되었습니다.\n사유: ${body.reason}`,
-      // })
       notificationsSent++
     }
-
-    // 멤버들에게 알림 (옵션)
     if (body.notifyMembers === true) {
-      // TODO: 대량 알림 시스템 구현 후 활성화
       notificationsSent += study.members.length
     }
+
+    // 로그 기록
+    const duration = Date.now() - startTime
+    AdminLogger.logStudyHide(adminId, studyId, body.reason, {
+      studyName: study.name,
+      memberCount: study.members.length,
+      notificationsSent,
+      duration
+    })
 
     return NextResponse.json({
       success: true,
@@ -126,28 +140,37 @@ export async function POST(request, { params }) {
       },
     })
   } catch (error) {
-    console.error('스터디 숨김 처리 실패:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: '스터디 숨김 처리에 실패했습니다',
-      },
-      { status: 500 }
-    )
+    if (error.name?.includes('Admin')) throw error
+
+    AdminLogger.critical('Unknown error in study hide', {
+      adminId,
+      studyId,
+      error: error.message,
+      stack: error.stack
+    })
+    throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 // 숨김 해제
-export async function DELETE(request, { params }) {
+async function unhideStudyHandler(request, { params }) {
+  const startTime = Date.now()
+
   // 권한 확인
-  const auth = await requireAdmin(request, PERMISSIONS.USER_SUSPEND)
-  if (auth instanceof NextResponse) return auth
+  const auth = await requireAdmin(request, PERMISSIONS.STUDY_MANAGE)
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.STUDY_MANAGE, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
+  const { studyId } = params
+
+  AdminLogger.info('Admin study unhide request', { adminId, studyId })
 
   try {
-    const { studyId } = params
-
     // 스터디 존재 확인
     const study = await prisma.study.findUnique({
       where: { id: studyId },
@@ -155,18 +178,11 @@ export async function DELETE(request, { params }) {
     })
 
     if (!study) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '스터디를 찾을 수 없습니다',
-        },
-        { status: 404 }
-      )
+      throw AdminBusinessException.studyNotFound(studyId, { adminId })
     }
 
     // 트랜잭션으로 처리
     const result = await prisma.$transaction(async (tx) => {
-      // 스터디 상태 복구
       const updatedStudy = await tx.study.update({
         where: { id: studyId },
         data: {
@@ -175,10 +191,9 @@ export async function DELETE(request, { params }) {
         },
       })
 
-      // 관리자 로그 기록
       await tx.adminLog.create({
         data: {
-          adminId: adminRole.userId,
+          adminId,
           action: 'STUDY_UNHIDE',
           targetType: 'Study',
           targetId: studyId,
@@ -190,6 +205,16 @@ export async function DELETE(request, { params }) {
       })
 
       return updatedStudy
+    }).catch(error => {
+      if (error.name?.includes('Admin')) throw error
+      throw AdminDatabaseException.transactionFailed('study unhide', error.message)
+    })
+
+    const duration = Date.now() - startTime
+    AdminLogger.logAdminAction(adminId, 'STUDY_UNHIDE', {
+      studyId,
+      studyName: study.name,
+      duration
     })
 
     return NextResponse.json({
@@ -198,14 +223,19 @@ export async function DELETE(request, { params }) {
       data: result,
     })
   } catch (error) {
-    console.error('스터디 숨김 해제 실패:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: '스터디 숨김 해제에 실패했습니다',
-      },
-      { status: 500 }
-    )
+    if (error.name?.includes('Admin')) throw error
+
+    AdminLogger.critical('Unknown error in study unhide', {
+      adminId,
+      studyId,
+      error: error.message
+    })
+    throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }
+
+export const POST = withAdminErrorHandler(hideStudyHandler)
+export const DELETE = withAdminErrorHandler(unhideStudyHandler)
 

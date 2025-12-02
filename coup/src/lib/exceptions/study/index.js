@@ -18,6 +18,7 @@ export {
   StudyApplicationException,
   StudyBusinessException,
   StudyFileException,
+  StudyNoticeException,
   StudyFeatureException,
   StudyDatabaseException,
   SEVERITY_LEVELS,

@@ -170,8 +170,24 @@ export class StudyFileException extends StudyException {
 }
 
 /**
+ * 스터디 공지사항 예외
+ * 공지사항 생성, 수정, 삭제, 권한 에러
+ */
+export class StudyNoticeException extends StudyException {
+  constructor(code, message, details = {}) {
+    super(code, message, {
+      ...details,
+      category: 'notice',
+      severity: details.severity || 'low',
+      statusCode: details.statusCode || 400
+    });
+    this.name = 'StudyNoticeException';
+  }
+}
+
+/**
  * 스터디 추가 기능 예외
- * 공지, 할일, 채팅, 일정 에러
+ * 할일, 채팅, 일정 에러
  */
 export class StudyFeatureException extends StudyException {
   constructor(code, message, details = {}) {
@@ -1331,6 +1347,63 @@ StudyApplicationException.introductionTooLong = function(introduction, maxLength
 };
 
 /**
+ * STUDY-057: 가입 신청 메시지 누락
+ */
+StudyApplicationException.applicationMessageMissing = function(context = {}) {
+  return new StudyApplicationException(
+    'STUDY-057',
+    '가입 신청 메시지가 누락되었습니다',
+    {
+      userMessage: '가입 신청 메시지를 입력해주세요',
+      devMessage: 'Application message is required',
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context,
+      category: 'application'
+    }
+  );
+};
+
+/**
+ * STUDY-058: 가입 신청 메시지 너무 짧음
+ */
+StudyApplicationException.applicationMessageTooShort = function(message, minLength, context = {}) {
+  return new StudyApplicationException(
+    'STUDY-058',
+    '가입 신청 메시지가 너무 짧습니다',
+    {
+      userMessage: `가입 신청 메시지는 최소 ${minLength}자 이상 입력해주세요`,
+      devMessage: `Application message too short: ${message?.length} < ${minLength}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { message, minLength, actualLength: message?.length, ...context },
+      category: 'application'
+    }
+  );
+};
+
+/**
+ * STUDY-059: 가입 신청 메시지 너무 김
+ */
+StudyApplicationException.applicationMessageTooLong = function(message, maxLength, context = {}) {
+  return new StudyApplicationException(
+    'STUDY-059',
+    '가입 신청 메시지가 너무 깁니다',
+    {
+      userMessage: `가입 신청 메시지는 최대 ${maxLength}자까지 입력할 수 있습니다`,
+      devMessage: `Application message too long: ${message?.length} > ${maxLength}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { message, maxLength, actualLength: message?.length, ...context },
+      category: 'application'
+    }
+  );
+};
+
+/**
  * STUDY-060: 지원 동기 너무 김
  */
 StudyApplicationException.motivationTooLong = function(motivation, maxLength = 500, context = {}) {
@@ -2412,6 +2485,435 @@ StudyFeatureException.eventAttendeeLimitExceeded = function(eventId, currentAtte
       severity: 'medium',
       context: { eventId, currentAttendees, maxAttendees, ...context },
       category: 'feature'
+    }
+  );
+};
+
+// F5. Notice Errors (116-121) - Extended
+
+/**
+ * STUDY-116: 공지사항 제목 필수
+ */
+StudyNoticeException.titleRequired = function(context = {}) {
+  return new StudyNoticeException(
+    'STUDY-116',
+    '공지사항 제목이 필요합니다',
+    {
+      userMessage: '공지사항 제목을 입력해주세요',
+      devMessage: 'Notice title is required',
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context,
+      category: 'notice'
+    }
+  );
+};
+
+/**
+ * STUDY-117: 공지사항 제목 길이 초과
+ */
+StudyNoticeException.titleTooLong = function(length, maxLength = 100, context = {}) {
+  return new StudyNoticeException(
+    'STUDY-117',
+    '공지사항 제목이 너무 깁니다',
+    {
+      userMessage: `공지사항 제목은 최대 ${maxLength}자까지 입력할 수 있습니다`,
+      devMessage: `Notice title too long: ${length} > ${maxLength}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { length, maxLength, ...context },
+      category: 'notice'
+    }
+  );
+};
+
+/**
+ * STUDY-118: 공지사항 내용 필수
+ */
+StudyNoticeException.contentRequired = function(context = {}) {
+  return new StudyNoticeException(
+    'STUDY-118',
+    '공지사항 내용이 필요합니다',
+    {
+      userMessage: '공지사항 내용을 입력해주세요',
+      devMessage: 'Notice content is required',
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context,
+      category: 'notice'
+    }
+  );
+};
+
+/**
+ * STUDY-119: 공지사항을 찾을 수 없음
+ */
+StudyNoticeException.noticeNotFound = function(noticeId, context = {}) {
+  return new StudyNoticeException(
+    'STUDY-119',
+    '공지사항을 찾을 수 없습니다',
+    {
+      userMessage: '존재하지 않는 공지사항입니다',
+      devMessage: `Notice ${noticeId} not found`,
+      statusCode: 404,
+      retryable: false,
+      severity: 'medium',
+      context: { noticeId, ...context },
+      category: 'notice'
+    }
+  );
+};
+
+/**
+ * STUDY-120: 공지사항 수정 권한 없음
+ */
+StudyNoticeException.noticeAccessDenied = function(userId, noticeId, context = {}) {
+  return new StudyNoticeException(
+    'STUDY-120',
+    '공지사항을 수정할 권한이 없습니다',
+    {
+      userMessage: '작성자 또는 리더만 공지사항을 수정할 수 있습니다',
+      devMessage: `User ${userId} cannot access notice ${noticeId}`,
+      statusCode: 403,
+      retryable: false,
+      severity: 'medium',
+      context: { userId, noticeId, ...context },
+      category: 'notice'
+    }
+  );
+};
+
+/**
+ * STUDY-121: 고정 공지사항 개수 초과
+ */
+StudyNoticeException.pinnedNoticeLimitExceeded = function(currentCount, maxCount = 5, context = {}) {
+  return new StudyNoticeException(
+    'STUDY-121',
+    '고정 공지사항 개수를 초과했습니다',
+    {
+      userMessage: `최대 ${maxCount}개의 공지사항만 고정할 수 있습니다`,
+      devMessage: `Pinned notice limit exceeded: ${currentCount}/${maxCount}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { currentCount, maxCount, ...context },
+      category: 'notice'
+    }
+  );
+};
+
+// F6. File Errors (122-127) - Extended
+
+/**
+ * STUDY-122: 파일 필수
+ */
+StudyFileException.fileRequired = function(context = {}) {
+  return new StudyFileException(
+    'STUDY-122',
+    '파일이 필요합니다',
+    {
+      userMessage: '파일을 선택해주세요',
+      devMessage: 'File is required for upload',
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context,
+      category: 'file'
+    }
+  );
+};
+
+/**
+ * STUDY-123: 파일 크기 초과
+ */
+StudyFileException.fileSizeTooLarge = function(size, maxSize = 10 * 1024 * 1024, context = {}) {
+  const sizeMB = (size / (1024 * 1024)).toFixed(2);
+  const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(0);
+
+  return new StudyFileException(
+    'STUDY-123',
+    '파일 크기가 너무 큽니다',
+    {
+      userMessage: `파일 크기는 최대 ${maxSizeMB}MB까지 업로드할 수 있습니다 (현재: ${sizeMB}MB)`,
+      devMessage: `File size ${size} exceeds maximum ${maxSize} bytes`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'medium',
+      context: { size, maxSize, sizeMB, maxSizeMB, ...context },
+      category: 'file'
+    }
+  );
+};
+
+/**
+ * STUDY-124: 잘못된 파일 형식
+ */
+StudyFileException.invalidFileType = function(type, allowedTypes = [], context = {}) {
+  return new StudyFileException(
+    'STUDY-124',
+    '지원하지 않는 파일 형식입니다',
+    {
+      userMessage: `허용된 파일 형식: ${allowedTypes.join(', ')}`,
+      devMessage: `Invalid file type: ${type}, allowed: ${allowedTypes.join(', ')}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'medium',
+      context: { type, allowedTypes, ...context },
+      category: 'file'
+    }
+  );
+};
+
+/**
+ * STUDY-125: 파일 접근 권한 없음
+ */
+StudyFileException.fileAccessDenied = function(userId, fileId, context = {}) {
+  return new StudyFileException(
+    'STUDY-125',
+    '파일 접근 권한이 없습니다',
+    {
+      userMessage: '이 파일에 접근할 권한이 없습니다',
+      devMessage: `User ${userId} cannot access file ${fileId}`,
+      statusCode: 403,
+      retryable: false,
+      severity: 'medium',
+      context: { userId, fileId, ...context },
+      category: 'file'
+    }
+  );
+};
+
+/**
+ * STUDY-126: 파일 업로드 실패
+ */
+StudyFileException.uploadFailed = function(reason, context = {}) {
+  return new StudyFileException(
+    'STUDY-126',
+    '파일 업로드에 실패했습니다',
+    {
+      userMessage: '파일 업로드 중 오류가 발생했습니다. 다시 시도해주세요',
+      devMessage: `File upload failed: ${reason}`,
+      statusCode: 500,
+      retryable: true,
+      severity: 'high',
+      context: { reason, ...context },
+      category: 'file'
+    }
+  );
+};
+
+/**
+ * STUDY-127: 파일 다운로드 실패
+ */
+StudyFileException.downloadFailed = function(reason, context = {}) {
+  return new StudyFileException(
+    'STUDY-127',
+    '파일 다운로드에 실패했습니다',
+    {
+      userMessage: '파일 다운로드 중 오류가 발생했습니다. 다시 시도해주세요',
+      devMessage: `File download failed: ${reason}`,
+      statusCode: 500,
+      retryable: true,
+      severity: 'high',
+      context: { reason, ...context },
+      category: 'file'
+    }
+  );
+};
+
+// ========================================
+// ADDITIONAL VALIDATION EXCEPTIONS
+// ========================================
+
+/**
+ * 수정할 필드가 없음
+ */
+StudyValidationException.noFieldsToUpdate = function(context = {}) {
+  return new StudyValidationException(
+    'STUDY-128',
+    '수정할 필드가 없습니다',
+    {
+      userMessage: '수정할 내용을 입력해주세요',
+      devMessage: 'No fields provided for update',
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context,
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 스터디 ID 누락
+ */
+StudyValidationException.studyIdMissing = function(context = {}) {
+  return new StudyValidationException(
+    'STUDY-129',
+    '스터디 ID가 누락되었습니다',
+    {
+      userMessage: '올바른 스터디를 선택해주세요',
+      devMessage: 'Study ID is required but was not provided',
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context,
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 검색어 누락
+ */
+StudyValidationException.searchQueryMissing = function(context = {}) {
+  return new StudyValidationException(
+    'STUDY-130',
+    '검색어가 누락되었습니다',
+    {
+      userMessage: '검색어를 입력해주세요',
+      devMessage: 'Search query is required but was not provided',
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context,
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 검색어 너무 짧음
+ */
+StudyValidationException.searchQueryTooShort = function(query, minLength, context = {}) {
+  return new StudyValidationException(
+    'STUDY-131',
+    '검색어가 너무 짧습니다',
+    {
+      userMessage: `검색어는 최소 ${minLength}자 이상 입력해주세요`,
+      devMessage: `Search query too short: ${query?.length} < ${minLength}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { query, minLength, actualLength: query?.length, ...context },
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 검색어 너무 김
+ */
+StudyValidationException.searchQueryTooLong = function(query, maxLength, context = {}) {
+  return new StudyValidationException(
+    'STUDY-132',
+    '검색어가 너무 깁니다',
+    {
+      userMessage: `검색어는 최대 ${maxLength}자까지 입력할 수 있습니다`,
+      devMessage: `Search query too long: ${query?.length} > ${maxLength}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { query, maxLength, actualLength: query?.length, ...context },
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 사용자 ID 누락
+ */
+StudyValidationException.userIdMissing = function(context = {}) {
+  return new StudyValidationException(
+    'STUDY-133',
+    '사용자 ID가 누락되었습니다',
+    {
+      userMessage: '로그인이 필요합니다',
+      devMessage: 'User ID is required but was not provided',
+      statusCode: 401,
+      retryable: false,
+      severity: 'medium',
+      context,
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 잘못된 페이지 번호
+ */
+StudyValidationException.invalidPageNumber = function(page, context = {}) {
+  return new StudyValidationException(
+    'STUDY-134',
+    '잘못된 페이지 번호입니다',
+    {
+      userMessage: '올바른 페이지 번호를 입력해주세요',
+      devMessage: `Invalid page number: ${page}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { page, ...context },
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 잘못된 페이지 제한
+ */
+StudyValidationException.invalidPageLimit = function(limit, constraints = { min: 1, max: 100 }, context = {}) {
+  return new StudyValidationException(
+    'STUDY-135',
+    '잘못된 페이지 크기입니다',
+    {
+      userMessage: `페이지당 항목 수는 ${constraints.min}개 이상 ${constraints.max}개 이하로 설정해주세요`,
+      devMessage: `Invalid page limit: ${limit}. Valid range: ${constraints.min}-${constraints.max}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { limit, constraints, ...context },
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 잘못된 정렬 필드
+ */
+StudyValidationException.invalidSortField = function(field, validFields = [], context = {}) {
+  return new StudyValidationException(
+    'STUDY-136',
+    '잘못된 정렬 필드입니다',
+    {
+      userMessage: '올바른 정렬 기준을 선택해주세요',
+      devMessage: `Invalid sort field: ${field}. Valid fields: ${validFields.join(', ')}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { field, validFields, ...context },
+      category: 'validation'
+    }
+  );
+};
+
+/**
+ * 잘못된 정렬 순서
+ */
+StudyValidationException.invalidSortOrder = function(order, validOrders = ['asc', 'desc'], context = {}) {
+  return new StudyValidationException(
+    'STUDY-137',
+    '잘못된 정렬 순서입니다',
+    {
+      userMessage: '올바른 정렬 순서를 선택해주세요',
+      devMessage: `Invalid sort order: ${order}. Valid orders: ${validOrders.join(', ')}`,
+      statusCode: 400,
+      retryable: false,
+      severity: 'low',
+      context: { order, validOrders, ...context },
+      category: 'validation'
     }
   );
 };

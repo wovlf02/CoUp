@@ -7,7 +7,7 @@ import {
   createPaginatedResponse
 } from '@/lib/utils/study-utils'
 import { requireStudyMember } from "@/lib/auth-helpers"
-import { StudyFeatureException } from '@/lib/exceptions/study'
+import { StudyNoticeException } from '@/lib/exceptions/study'
 import { StudyLogger } from '@/lib/logging/studyLogger'
 import { validateAndSanitize } from "@/lib/utils/input-sanitizer"
 import { validateSecurityThreats, logSecurityEvent } from "@/lib/utils/xss-sanitizer"
@@ -23,7 +23,7 @@ export const GET = withStudyErrorHandler(async (request, context) => {
 
   // 1. 멤버 권한 확인
   const result = await requireStudyMember(studyId);
-  if (result instanceof NextResponse) return result;
+  if (result && typeof result.json === 'function') return result;
 
   // 2. 쿼리 파라미터 추출 및 검증
   const { searchParams } = new URL(request.url);
@@ -107,7 +107,7 @@ export const POST = withStudyErrorHandler(async (request, context) => {
 
   // 1. ADMIN 권한 확인
   const result = await requireStudyMember(studyId, 'ADMIN');
-  if (result instanceof NextResponse) return result;
+  if (result && typeof result.json === 'function') return result;
   const { session } = result;
 
   // 2. 요청 본문 파싱
@@ -116,20 +116,23 @@ export const POST = withStudyErrorHandler(async (request, context) => {
 
   // 3. 입력 검증 - 제목
   if (!title || !title.trim()) {
-    throw StudyFeatureException.noticeTitleMissing({ studyId });
+    throw StudyNoticeException.titleRequired({ studyId });
   }
 
   if (title.length < 2 || title.length > 100) {
-    throw StudyFeatureException.invalidNoticeTitleLength(title, { min: 2, max: 100 });
+    throw StudyNoticeException.titleTooLong(title.length, 100);
   }
 
   // 4. 입력 검증 - 내용
   if (!content || !content.trim()) {
-    throw StudyFeatureException.noticeContentMissing({ studyId });
+    throw StudyNoticeException.contentRequired({ studyId });
   }
 
   if (content.length < 10 || content.length > 10000) {
-    throw StudyFeatureException.invalidNoticeContentLength(content, { min: 10, max: 10000 });
+    throw StudyNoticeException.contentRequired({
+      studyId,
+      userMessage: '공지사항 내용은 10자 이상 10000자 이하로 입력해주세요'
+    });
   }
 
   // 5. 보안 위협 검증
@@ -141,7 +144,7 @@ export const POST = withStudyErrorHandler(async (request, context) => {
       field: 'notice_title',
       threats: titleThreats.threats,
     });
-    throw StudyFeatureException.invalidNoticeTitleLength(title, {
+    throw StudyNoticeException.titleRequired({
       userMessage: '제목에 허용되지 않는 콘텐츠가 포함되어 있습니다'
     });
   }
@@ -154,7 +157,7 @@ export const POST = withStudyErrorHandler(async (request, context) => {
       field: 'notice_content',
       threats: contentThreats.threats,
     });
-    throw StudyFeatureException.invalidNoticeContentLength(content, {
+    throw StudyNoticeException.contentRequired({
       userMessage: '내용에 허용되지 않는 콘텐츠가 포함되어 있습니다'
     });
   }
@@ -162,7 +165,7 @@ export const POST = withStudyErrorHandler(async (request, context) => {
   // 6. 입력값 정제
   const validation = validateAndSanitize(body, 'NOTICE');
   if (!validation.valid) {
-    throw StudyFeatureException.noticeTitleMissing({
+    throw StudyNoticeException.titleRequired({
       errors: validation.errors,
       userMessage: '입력값이 유효하지 않습니다'
     });
@@ -180,11 +183,7 @@ export const POST = withStudyErrorHandler(async (request, context) => {
     });
 
     if (pinnedCount >= 3) {
-      throw StudyFeatureException.noticeTitleMissing({
-        studyId,
-        pinnedCount,
-        userMessage: '고정 공지사항은 최대 3개까지만 가능합니다'
-      });
+      throw StudyNoticeException.pinnedNoticeLimitExceeded(pinnedCount, 3, { studyId });
     }
   }
 

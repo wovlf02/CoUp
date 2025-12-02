@@ -1,332 +1,268 @@
-# Next Session Prompt - Study 도메인 예외 처리 (Phase A2)
+# 다음 세션 작업: Study 도메인 다음 API 테스트 진행
 
-## 📋 현재 진행 상황
-
-### ✅ 완료된 단계
-- **Step 1**: 도메인 분석 및 설계 ✅ (28개 API, 115개 예외 케이스)
-- **Step 2**: Exception 클래스 구현 ✅ (8개 서브클래스, 115개 에러 메서드)
-- **Step 3**: Validators & Logger 구현 ✅ (12개 검증, 25개 로깅, 30개 헬퍼)
-- **Step 4**: 핵심 API 강화 ✅ (6개 API 라우트, ~1,200 라인)
-- **Step 5**: 공지사항 & 파일 API 강화 ✅ (4개 API 라우트, ~500 라인)
-
-### 🚀 다음 단계: Step 6 - Task & Calendar API 예외 처리
-
-**목표**: Task(할일) 및 Calendar(일정) API에 예외 처리 패턴 적용
+**작업일**: 2025-12-02  
+**최종 업데이트**: 2025-12-02 22:59  
+**문서 참조**: `exception-implementation.md`  
+**현재 진행**: ✅ Study Notices API 테스트 100% 완료 (11/11)
 
 ---
 
-## 📝 Step 6 작업 내용
+## 📊 Study 도메인 전체 진행 상황
 
-### 1. Task (할일) API 강화 (3개 라우트)
+### exception-implementation.md 기준
 
-#### A. `/api/studies/[id]/tasks` (GET, POST)
-```javascript
-// GET - 할일 목록 조회
-export const GET = withStudyErrorHandler(async (request, context) => {
-  // 1. 멤버 권한 확인
-  // 2. 쿼리 파라미터 검증 (page, limit, status, assignee)
-  // 3. where 조건 생성
-  // 4. 할일 목록 조회
-  // 5. 로깅: StudyLogger.logTaskList()
-  // 6. 페이지네이션 응답
-})
+**Step 1-4: 완료** ✅
+- Step 1: 도메인 분석 및 설계 (완료 2025-12-01)
+- Step 2: Exception 클래스 구현 (완료 2025-12-01)
+- Step 3: Validators & Logger 구현 (완료 2025-12-01)
+- Step 4: API 라우트 강화 (완료 2025-12-01)
 
-// POST - 할일 생성
-export const POST = withStudyErrorHandler(async (request, context) => {
-  // 1. ADMIN 권한 확인
-  // 2. 입력 검증
-  //    - 제목 (필수, 2-100자)
-  //    - 설명 (선택, max 1000자)
-  //    - 마감일 (미래 날짜)
-  //    - 담당자 (멤버 확인)
-  // 3. 할일 생성
-  // 4. 담당자에게 알림
-  // 5. 로깅: StudyLogger.logTaskCreate()
-  // 6. 응답
-})
-```
+**Step 5: 추가 API 강화** ⏳ **진행 중**
+- [x] `/api/studies/[id]/notices/*` - Notices API (완료 2025-12-02)
+  * GET /api/studies/[id]/notices ✅
+  * POST /api/studies/[id]/notices ✅
+  * GET /api/studies/[id]/notices/[noticeId] ✅
+  * PATCH /api/studies/[id]/notices/[noticeId] ✅
+  * DELETE /api/studies/[id]/notices/[noticeId] ✅
+- [ ] `/api/studies/[id]/files/*` - 파일 업로드/다운로드 (필수)
+- [ ] `/api/studies/[id]/tasks/*` - 할일 관리 (선택)
+- [ ] `/api/studies/[id]/invite/*` - 초대 관리 (선택)
 
-**예외 케이스**:
-- `STUDY-102`: 할일 제목 누락
-- `STUDY-103`: 마감일이 과거
-- `STUDY-104`: 담당자가 멤버가 아님
-
-#### B. `/api/studies/[id]/tasks/[taskId]` (GET, PATCH, DELETE)
-```javascript
-// GET - 할일 상세 조회
-export const GET = withStudyErrorHandler(async (request, context) => {
-  // 1. 멤버 권한 확인
-  // 2. 할일 조회
-  // 3. 스터디 일치 확인
-  // 4. 로깅: StudyLogger.logTaskView()
-  // 5. 응답
-})
-
-// PATCH - 할일 수정
-export const PATCH = withStudyErrorHandler(async (request, context) => {
-  // 1. ADMIN 권한 확인
-  // 2. 할일 존재 확인
-  // 3. 입력 검증
-  // 4. 담당자 변경 시 멤버 확인
-  // 5. 할일 수정
-  // 6. 로깅: StudyLogger.logTaskUpdate()
-  // 7. 응답
-})
-
-// DELETE - 할일 삭제
-export const DELETE = withStudyErrorHandler(async (request, context) => {
-  // 1. ADMIN 권한 확인
-  // 2. 할일 존재 확인
-  // 3. 할일 삭제
-  // 4. 로깅: StudyLogger.logTaskDelete()
-  // 5. 응답
-})
-```
-
-#### C. `/api/studies/[id]/tasks/[taskId]/status` (PATCH)
-```javascript
-// PATCH - 할일 상태 변경
-export const PATCH = withStudyErrorHandler(async (request, context) => {
-  // 1. 멤버 권한 확인 (담당자 또는 ADMIN)
-  // 2. 할일 존재 확인
-  // 3. 상태 검증 (TODO, IN_PROGRESS, DONE)
-  // 4. 상태 업데이트
-  // 5. 로깅: StudyLogger.logTaskStatusChange()
-  // 6. 응답
-})
-```
-
-### 2. Calendar (일정) API 강화 (2개 라우트)
-
-#### A. `/api/studies/[id]/calendar` (GET, POST)
-```javascript
-// GET - 일정 목록 조회
-export const GET = withStudyErrorHandler(async (request, context) => {
-  // 1. 멤버 권한 확인
-  // 2. 쿼리 파라미터 검증 (startDate, endDate)
-  // 3. 날짜 범위 검증
-  // 4. 일정 목록 조회
-  // 5. 로깅: StudyLogger.logEventList()
-  // 6. 응답
-})
-
-// POST - 일정 생성
-export const POST = withStudyErrorHandler(async (request, context) => {
-  // 1. ADMIN 권한 확인
-  // 2. 입력 검증
-  //    - 제목 (필수, 2-100자)
-  //    - 시작 시간 (미래)
-  //    - 종료 시간 (시작 시간 이후)
-  //    - 설명 (선택, max 1000자)
-  // 3. 일정 중복 확인 (선택)
-  // 4. 일정 생성
-  // 5. 멤버들에게 알림
-  // 6. 로깅: StudyLogger.logEventCreate()
-  // 7. 응답
-})
-```
-
-**예외 케이스**:
-- `STUDY-108`: 일정 제목 누락
-- `STUDY-109`: 종료 시간이 시작 시간보다 이름
-- `STUDY-110`: 일정 시작 시간이 과거
-- `STUDY-111`: 일정 설명 길이 초과
-- `STUDY-112`: 일정 중복
-
-#### B. `/api/studies/[id]/calendar/[eventId]` (GET, PATCH, DELETE)
-```javascript
-// GET - 일정 상세 조회
-export const GET = withStudyErrorHandler(async (request, context) => {
-  // 1. 멤버 권한 확인
-  // 2. 일정 조회
-  // 3. 스터디 일치 확인
-  // 4. 로깅: StudyLogger.logEventView()
-  // 5. 응답
-})
-
-// PATCH - 일정 수정
-export const PATCH = withStudyErrorHandler(async (request, context) => {
-  // 1. ADMIN 권한 확인
-  // 2. 일정 존재 확인
-  // 3. 입력 검증
-  // 4. 시간 검증 (종료 > 시작)
-  // 5. 일정 수정
-  // 6. 로깅: StudyLogger.logEventUpdate()
-  // 7. 응답
-})
-
-// DELETE - 일정 삭제
-export const DELETE = withStudyErrorHandler(async (request, context) => {
-  // 1. ADMIN 권한 확인
-  // 2. 일정 존재 확인
-  // 3. 일정 삭제
-  // 4. 로깅: StudyLogger.logEventDelete()
-  // 5. 응답
-})
-```
-
-### 3. StudyLogger 메서드 추가
-
-```javascript
-// Task 로깅 (6개)
-static logTaskList(studyId, context)
-static logTaskCreate(taskId, studyId, userId, taskData)
-static logTaskView(taskId, studyId, userId)
-static logTaskUpdate(taskId, studyId, userId, changes)
-static logTaskDelete(taskId, studyId, userId)
-static logTaskStatusChange(taskId, studyId, userId, oldStatus, newStatus)
-
-// Calendar 로깅 (5개)
-static logEventList(studyId, context)
-static logEventCreate(eventId, studyId, userId, eventData)
-static logEventView(eventId, studyId, userId)
-static logEventUpdate(eventId, studyId, userId, changes)
-static logEventDelete(eventId, studyId, userId)
-```
+**Step 6: 테스트 작성** ⏳ **진행 중 (1/6 완료)**
+- [x] **Notices API 테스트** - 11/11 통과 (100%) ✅
+- [ ] Members API 테스트 - 대기
+- [ ] Applications API 테스트 - 대기
+- [ ] Tasks API 테스트 - 대기
+- [ ] Files API 테스트 - 대기
+- [ ] Studies API 테스트 - 대기
 
 ---
 
-## 📂 파일 경로
+## ✅ 최근 완료 작업 (2025-12-02)
 
-### Task API
+### Study Notices API 테스트 100% 완료 (11/11)
+
+**테스트 결과**:
 ```
-coup/src/app/api/studies/[id]/
-└── tasks/
-    ├── route.js (GET, POST)
-    ├── [taskId]/
-    │   └── route.js (GET, PATCH, DELETE)
-    └── [taskId]/status/
-        └── route.js (PATCH)
+Test Suites: 1 passed, 1 total
+Tests:       11 passed, 11 total
+Time:        0.257 s
 ```
 
-### Calendar API
-```
-coup/src/app/api/studies/[id]/
-└── calendar/
-    ├── route.js (GET, POST)
-    └── [eventId]/
-        └── route.js (GET, PATCH, DELETE)
-```
+**테스트 케이스**:
+- GET /api/studies/[id]/notices - 3개 ✅
+- POST /api/studies/[id]/notices - 3개 ✅
+- GET /api/studies/[id]/notices/[noticeId] - 2개 ✅
+- PATCH /api/studies/[id]/notices/[noticeId] - 1개 ✅
+- DELETE /api/studies/[id]/notices/[noticeId] - 2개 ✅
+
+**주요 수정 사항**:
+1. requireStudyMember mock의 403 응답 형식 통일
+   - `{ success: false, error: { code, message } }` 형식 적용
+2. instanceof NextResponse → duck typing으로 변경
+   - `if (result && typeof result.json === 'function') return result;`
 
 ---
 
-## 🎯 구현 패턴 (참고)
+## 📋 완료된 수정 사항
 
-### 1. 공통 패턴
+### 1. requireStudyMember Mock 개선 (테스트 파일)
+
+**위치**: `src/__tests__/api/study/study-notices.test.js` (Line 68-76)
+
 ```javascript
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { 
-  withStudyErrorHandler, 
-  createSuccessResponse,
-  createPaginatedResponse 
-} from '@/lib/utils/study-utils'
-import { requireStudyMember } from "@/lib/auth-helpers"
-import { StudyFeatureException, StudyPermissionException } from '@/lib/exceptions/study'
-import { StudyLogger } from '@/lib/logging/studyLogger'
-
-export const GET = withStudyErrorHandler(async (request, context) => {
-  const { params } = context
-  const { id: studyId } = await params
-  
-  // 1. 권한 확인
-  const result = await requireStudyMember(studyId)
-  if (result instanceof NextResponse) return result
-  
-  // 2. 입력 검증
-  // 3. 비즈니스 로직
-  // 4. 로깅
-  // 5. 응답
-  
-  return createSuccessResponse(data, message)
-})
-```
-
-### 2. 예외 발생 패턴
-```javascript
-// 제목 누락
-if (!title || !title.trim()) {
-  throw StudyFeatureException.taskTitleMissing({ studyId, taskId })
-}
-
-// 마감일 과거
-if (new Date(deadline) < new Date()) {
-  throw StudyFeatureException.taskDeadlineInPast(deadline, { studyId, taskId })
-}
-
-// 담당자가 멤버가 아님
-const member = await prisma.studyMember.findFirst({ ... })
-if (!member) {
-  throw StudyFeatureException.assigneeNotMember(assigneeId, studyId, { taskId })
+if (requiredRole && requiredRole === 'ADMIN' && member.role === 'MEMBER') {
+  const { NextResponse } = require('next/server');
+  return NextResponse.json(
+    { 
+      success: false,
+      error: { 
+        code: 'STUDY-003',
+        message: 'Insufficient permissions'
+      }
+    },
+    { status: 403 }
+  );
 }
 ```
 
----
+**변경 내용**:
+- ❌ 이전: `{ error: 'Insufficient permissions' }`
+- ✅ 수정: `{ success: false, error: { code, message } }`
 
-## ✅ 완료 기준
+### 2. API 파일 수정 완료 (이전 세션)
 
-1. **5개 API 파일 강화**
-   - 3개 Task API 라우트
-   - 2개 Calendar API 라우트
+**notices/route.js**:
+- Line 26: GET 핸들러 - instanceof NextResponse 수정 ✅
+- Line 110: POST 핸들러 - instanceof NextResponse 수정 ✅
 
-2. **예외 처리 적용**
-   - Task: STUDY-102 ~ STUDY-104
-   - Calendar: STUDY-108 ~ STUDY-112
-
-3. **로깅 메서드 추가**
-   - Task 로깅: 6개 메서드
-   - Calendar 로깅: 5개 메서드
-
-4. **문서 작성**
-   - `STUDY-STEP6-COMPLETE.md` 생성
-   - `STUDY-FINAL-COMPLETE.md` 생성 (전체 요약)
-
-5. **에러 확인**
-   - 모든 파일 컴파일 에러 없음
-   - Import 정리 완료
+**notices/[noticeId]/route.js**:
+- Line 23: GET 핸들러 - instanceof NextResponse 수정 ✅
+- Line 71: PATCH 핸들러 - instanceof NextResponse 수정 ✅
+- Line 161: DELETE 핸들러 - instanceof NextResponse 수정 ✅
+- Line 183: noticeAccessDenied로 변경 ✅
 
 ---
 
-## 📊 예상 통계
+## 🎯 다음 작업: Study 도메인 Step 6 테스트 계속
 
-### 수정/추가 예상
-- Task API: ~400 라인
-- Calendar API: ~350 라인
-- StudyLogger: ~150 라인
-- **총 예상**: ~900 라인
+### 우선순위 1: Study API 테스트 작성
 
-### 예상 작업 시간
-- Task API: ~1.5시간
-- Calendar API: ~1.5시간
-- **총 예상 시간**: ~3시간
+**exception-implementation.md 목표**:
+- API 라우트 테스트: 50개
+- Validator 테스트: 20개
+- Helper 테스트: 30개
+- 통합 테스트: 10개
+- **전체 목표**: 110개 테스트, 80% 커버리지
+
+**현재 진행**:
+- ✅ Notices API: 11/11 테스트 완료
+- ⏳ 나머지 API 테스트 진행 필요
+
+### 다음 테스트 대상 API (우선순위 순)
+
+#### 1. Study Members API (추천) 
+**파일**: `src/__tests__/api/study/study-members.test.js`  
+**API**: `/api/studies/[id]/members`  
+**예상 테스트**: 8-10개  
+**기능**:
+- GET: 멤버 목록 조회
+- POST: 멤버 추가
+- DELETE: 멤버 제거
+- PATCH: 역할 변경
+
+#### 2. Study Applications API
+**파일**: `src/__tests__/api/study/study-applications.test.js`  
+**API**: `/api/studies/[id]/applications`  
+**예상 테스트**: 8-10개  
+**기능**:
+- GET: 지원자 목록
+- POST: 지원 신청
+- PATCH: 승인/거절
+
+#### 3. Study Tasks API
+**파일**: `src/__tests__/api/study/study-tasks.test.js`  
+**API**: `/api/studies/[id]/tasks`  
+**예상 테스트**: 10-12개  
+**기능**:
+- 과제 CRUD
+- 과제 제출
+- 과제 평가
+
+#### 4. Study Files API
+**파일**: `src/__tests__/api/study/study-files.test.js`  
+**API**: `/api/studies/[id]/files`  
+**예상 테스트**: 8-10개  
+**기능**:
+- 파일 업로드
+- 파일 다운로드
+- 파일 삭제
+
+#### 5. Studies API
+**파일**: `src/__tests__/api/study/studies.test.js`  
+**API**: `/api/studies`  
+**예상 테스트**: 10-12개  
+**기능**:
+- 스터디 목록 조회
+- 스터디 생성
+- 스터디 수정
+- 스터디 삭제
 
 ---
 
-## 📌 참고 문서
-- [STUDY-STEP5-COMPLETE.md](./docs/study/STUDY-STEP5-COMPLETE.md) - 공지사항 & 파일 완료
-- [STUDY-STEP4-COMPLETE.md](./docs/study/STUDY-STEP4-COMPLETE.md) - 핵심 API 완료
-- [StudyException.js](./coup/src/lib/exceptions/study/StudyException.js) - 예외 클래스 (STUDY-102~112)
-- [studyLogger.js](./coup/src/lib/logging/studyLogger.js) - 로깅 시스템
-
----
-
-## 🚀 시작 명령어
+## 🚀 다음 세션 시작 프롬프트
 
 ```
-다음 작업을 진행해:
-Step 6 - Task & Calendar API 예외 처리
+Study 도메인 Step 6 테스트 계속 진행!
 
-1. Task API 3개 라우트 강화
-2. Calendar API 2개 라우트 강화
-3. StudyLogger에 Task & Calendar 로깅 메서드 추가
-4. 완료 문서 작성
+✅ 완료:
+- Step 1-4: 도메인 분석, Exception 구현, API 강화 완료
+- Step 5: Notices API 강화 완료
+- Step 6: Notices API 테스트 11/11 완료 (100%)
 
-완료되면 next-session-prompt를 최종 완료 상태로 업데이트해
+📋 다음 작업:
+Study Members API 테스트 작성
+- 파일: src/__tests__/api/study/study-members.test.js
+- API: /api/studies/[id]/members
+- 목표: 8-10개 테스트 작성 및 100% 통과
+
+작업 절차:
+1. 테스트 파일 확인 및 현재 상태 파악
+2. 테스트 실행하여 실패 원인 분석
+3. Notices API 패턴 참조하여 수정:
+   - instanceof NextResponse → duck typing
+   - requireStudyMember mock 응답 형식 확인
+   - Prisma mock 완전성 검증
+4. 모든 테스트 통과 확인
+
+참고 문서:
+- exception-implementation.md (Phase A > A2 > Step 6)
+- STUDY-NOTICES-TEST-COMPLETE.md (성공 패턴)
+- next-session-prompt.md (Mock 패턴)
+
+목표: Study Members API 테스트 100% 통과!
+시작해줘!
 ```
 
 ---
 
-**현재 Phase**: A2 (예외 처리 시스템 구축)  
-**진행률**: 83% (5/6 단계 완료)  
-**마지막 업데이트**: 2025-12-01  
-**다음 세션 시작점**: Step 6 - Task & Calendar API
+## 📚 참고: 성공적인 Mock 패턴 (Notices API)
+
+```javascript
+// 1. Prisma Mock
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    notice: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    studyMember: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+    },
+    study: {
+      findUnique: jest.fn(),
+    },
+    notification: {
+      createMany: jest.fn(),
+    },
+  },
+}));
+
+// 2. Validation Mocks
+jest.mock('@/lib/utils/input-sanitizer', () => ({
+  validateAndSanitize: jest.fn((data) => ({
+    valid: true,
+    sanitized: data,
+    errors: []
+  }))
+}));
+
+jest.mock('@/lib/utils/xss-sanitizer', () => ({
+  validateSecurityThreats: jest.fn(() => ({ safe: true, threats: [] })),
+  logSecurityEvent: jest.fn()
+}));
+
+// 3. Auth Helper Mock
+jest.mock('@/lib/auth-helpers', () => ({
+  requireStudyMember: jest.fn(async (studyId, requiredRole) => {
+    // Session 확인
+    // Member 확인
+    // 권한 확인 - 403 응답에 success: false 포함!
+    return { member, session };
+  })
+}));
+```
+
+---
+
+**작성일**: 2025-12-02 23:05  
+**다음 작업**: Study Members API 테스트
+**예상 소요**: 30분-1시간 (API당)
+**참고 문서**: 
+- `exception-implementation.md` (Phase A > A2 > Step 6)
+- `STUDY-NOTICES-TEST-COMPLETE.md` (성공 패턴 참조)

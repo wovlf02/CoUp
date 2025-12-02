@@ -1,8 +1,7 @@
 /**
  * 관리자 - 개별 사용자 조회 API
  * GET /api/admin/users/[id]
- * POST /api/admin/users/[id]/suspend
- * POST /api/admin/users/[id]/activate
+ * PATCH /api/admin/users/[id]
  * DELETE /api/admin/users/[id]
  */
 
@@ -10,20 +9,36 @@ import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminUserException,
+  AdminBusinessException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import {
+  withAdminErrorHandler,
+  createSuccessResponse,
+  sanitizeUserData
+} from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
 /**
  * GET - 사용자 상세 조회
  */
-export async function GET(request, { params }) {
+async function getUserHandler(request, { params }) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_VIEW)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.USER_VIEW, 'unknown')
+  }
+
+  const adminId = auth.adminRole.userId
+  const { id: userId } = await params
+
+  AdminLogger.info('Admin user detail request', { adminId, userId })
 
   try {
-    const { id: userId } = await params
-
     // 사용자 조회
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -37,7 +52,6 @@ export async function GET(request, { params }) {
           orderBy: { createdAt: 'desc' },
           take: 10,
         },
-        // 통계 정보
         _count: {
           select: {
             ownedStudies: true,
@@ -51,32 +65,32 @@ export async function GET(request, { params }) {
     })
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: '사용자를 찾을 수 없습니다' },
-        { status: 404 }
-      )
+      throw AdminUserException.userNotFound(userId, { adminId })
     }
 
     // 관리자 로그
+    AdminLogger.logUserManagement(adminId, userId, 'VIEW', {
+      userStatus: user.status
+    })
+
     await logAdminAction({
-      adminId: auth.adminRole.userId,
+      adminId: adminId,
       action: 'USER_VIEW',
       targetType: 'USER',
       targetId: userId,
       details: { userId },
     })
 
-    // 응답 데이터 - 프론트엔드가 기대하는 구조 그대로 반환
-    return NextResponse.json({
-      success: true,
-      data: user, // Prisma 결과를 그대로 반환 (_count, sanctions, receivedWarnings 포함)
+    // 민감 정보 제거하여 응답
+    const sanitized = sanitizeUserData(user)
+
+    return createSuccessResponse({
+      ...sanitized,
+      _count: user._count,
+      sanctions: user.sanctions,
+      receivedWarnings: user.receivedWarnings,
+      adminRole: user.adminRole
     })
-  } catch (error) {
-    console.error('사용자 조회 실패:', error)
-    return NextResponse.json(
-      { success: false, error: '사용자 정보 조회 실패' },
-      { status: 500 }
-    )
   } finally {
     await prisma.$disconnect()
   }
@@ -85,16 +99,47 @@ export async function GET(request, { params }) {
 /**
  * PATCH - 사용자 정보 수정
  */
-export async function PATCH(request, { params }) {
+async function patchUserHandler(request, { params }) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_EDIT)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.USER_EDIT, 'unknown')
+  }
+
+  const adminId = auth.adminRole.userId
+  const { id: userId } = await params
+  const body = await request.json()
+
+  AdminLogger.info('Admin user update request', { adminId, userId, updates: Object.keys(body) })
+
+  // 자기 자신 수정 불가
+  if (adminId === userId) {
+    throw AdminBusinessException.cannotSuspendSelf(adminId, {
+      action: 'update',
+      message: 'Cannot modify own account'
+    })
+  }
 
   try {
-    const { id: userId } = await params
-    const body = await request.json()
-
     const { name, email, role, status } = body
+
+    // 사용자 존재 확인
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { adminRole: true }
+    })
+
+    if (!existingUser) {
+      throw AdminUserException.userNotFound(userId, { adminId })
+    }
+
+    // 다른 관리자 수정 불가
+    if (existingUser.adminRole && existingUser.id !== adminId) {
+      throw AdminPermissionException.cannotSuspendAdmin(userId, {
+        adminId,
+        action: 'update'
+      })
+    }
 
     // 사용자 수정
     const user = await prisma.user.update({
@@ -108,24 +153,20 @@ export async function PATCH(request, { params }) {
     })
 
     // 관리자 로그
+    AdminLogger.logUserManagement(adminId, userId, 'UPDATE', {
+      changes: body,
+      updatedFields: Object.keys(body)
+    })
+
     await logAdminAction({
-      adminId: auth.adminRole.userId,
+      adminId: adminId,
       action: 'USER_UPDATE',
       targetType: 'USER',
       targetId: userId,
       details: { changes: body },
     })
 
-    return NextResponse.json({
-      success: true,
-      data: user,
-    })
-  } catch (error) {
-    console.error('사용자 수정 실패:', error)
-    return NextResponse.json(
-      { success: false, error: '사용자 정보 수정 실패' },
-      { status: 500 }
-    )
+    return createSuccessResponse(sanitizeUserData(user), '사용자 정보가 수정되었습니다')
   } finally {
     await prisma.$disconnect()
   }
@@ -134,13 +175,60 @@ export async function PATCH(request, { params }) {
 /**
  * DELETE - 사용자 삭제
  */
-export async function DELETE(request, { params }) {
+async function deleteUserHandler(request, { params }) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_DELETE)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.USER_DELETE, 'unknown')
+  }
+
+  const adminId = auth.adminRole.userId
+  const { id: userId } = await params
+
+  AdminLogger.warn('Admin user deletion request', { adminId, userId })
+
+  // 자기 자신 삭제 불가
+  if (adminId === userId) {
+    throw AdminBusinessException.cannotSuspendSelf(adminId, {
+      action: 'delete',
+      message: 'Cannot delete own account'
+    })
+  }
 
   try {
-    const { id: userId } = await params
+    // 사용자 존재 확인
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        adminRole: true,
+        _count: {
+          select: {
+            ownedStudies: true,
+            studyMembers: true
+          }
+        }
+      }
+    })
+
+    if (!existingUser) {
+      throw AdminUserException.userNotFound(userId, { adminId })
+    }
+
+    // 다른 관리자 삭제 불가
+    if (existingUser.adminRole) {
+      throw AdminPermissionException.cannotSuspendAdmin(userId, {
+        adminId,
+        action: 'delete'
+      })
+    }
+
+    // 활동 중인 스터디가 있으면 삭제 불가
+    if (existingUser._count.ownedStudies > 0) {
+      throw AdminBusinessException.userDeletionNotAllowed(userId, 'User owns active studies', {
+        adminId,
+        ownedStudies: existingUser._count.ownedStudies
+      })
+    }
 
     // 사용자 삭제 (soft delete)
     const user = await prisma.user.update({
@@ -151,26 +239,30 @@ export async function DELETE(request, { params }) {
     })
 
     // 관리자 로그
+    AdminLogger.logUserManagement(adminId, userId, 'DELETE', {
+      previousStatus: existingUser.status,
+      studyMemberships: existingUser._count.studyMembers
+    })
+
     await logAdminAction({
-      adminId: auth.adminRole.userId,
+      adminId: adminId,
       action: 'USER_DELETE',
       targetType: 'USER',
       targetId: userId,
-      details: { userId, email: user.email },
+      details: { reason: 'Admin deletion', previousStatus: existingUser.status },
     })
 
-    return NextResponse.json({
-      success: true,
-      message: '사용자가 삭제되었습니다',
-    })
-  } catch (error) {
-    console.error('사용자 삭제 실패:', error)
-    return NextResponse.json(
-      { success: false, error: '사용자 삭제 실패' },
-      { status: 500 }
+    return createSuccessResponse(
+      { id: user.id, status: user.status },
+      '사용자가 삭제되었습니다'
     )
   } finally {
     await prisma.$disconnect()
   }
 }
+
+// Export with error handler wrapper
+export const GET = withAdminErrorHandler(getUserHandler)
+export const PATCH = withAdminErrorHandler(patchUserHandler)
+export const DELETE = withAdminErrorHandler(deleteUserHandler)
 

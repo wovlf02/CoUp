@@ -135,7 +135,11 @@ export const POST = withStudyErrorHandler(async (request, context) => {
 
   // 1. 인증 확인
   const session = await requireAuth();
-  if (session instanceof NextResponse) return session;
+
+  // requireAuth가 NextResponse를 반환하면 에러 응답이므로 그대로 반환
+  if (session && typeof session.json === 'function') {
+    return session;
+  }
 
   // 2. 입력 검증
   const validated = validateStudyCreate(body, userId || session.user.id);

@@ -5,32 +5,45 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminBusinessException,
+  AdminDatabaseException,
+  AdminValidationException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function DELETE(request, { params }) {
+async function deleteStudyHandler(request, { params }) {
+  const startTime = Date.now()
+
   // 권한 확인 (삭제는 최고 권한 필요)
-  const auth = await requireAdmin(request, PERMISSIONS.USER_DELETE)
-  if (auth instanceof NextResponse) return auth
+  const auth = await requireAdmin(request, PERMISSIONS.STUDY_DELETE)
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.STUDY_DELETE, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
+  const { studyId } = params
+
+  if (!studyId) {
+    throw AdminValidationException.missingField('studyId')
+  }
+
+  AdminLogger.warn('Admin study delete request', { adminId, studyId }, 'high')
 
   try {
-    const { studyId } = params
     const { searchParams } = new URL(request.url)
     const reason = searchParams.get('reason')
 
     // 유효성 검사
     if (!reason || reason.trim().length < 10) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '삭제 사유는 최소 10자 이상이어야 합니다',
-        },
-        { status: 400 }
-      )
+      throw AdminValidationException.invalidFieldFormat('reason', reason, '최소 10자 이상')
     }
 
     // 스터디 존재 확인
@@ -51,16 +64,26 @@ export async function DELETE(request, { params }) {
           },
         },
       },
+    }).catch(error => {
+      AdminLogger.error('Database query failed for study delete', {
+        adminId,
+        studyId,
+        error: error.message
+      })
+      throw AdminDatabaseException.queryFailed('study.findUnique', error.message)
     })
 
     if (!study) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '스터디를 찾을 수 없습니다',
-        },
-        { status: 404 }
-      )
+      throw AdminBusinessException.studyNotFound(studyId, { adminId })
+    }
+
+    // 활성 멤버가 많은 경우 경고
+    if (study.members.length > 10) {
+      AdminLogger.warn('Attempting to delete study with many active members', {
+        adminId,
+        studyId,
+        memberCount: study.members.length
+      }, 'high')
     }
 
     // 삭제 전 로그 저장
@@ -79,14 +102,14 @@ export async function DELETE(request, { params }) {
       // 관리자 로그 기록 (삭제 전에 기록)
       await tx.adminLog.create({
         data: {
-          adminId: adminRole.userId,
+          adminId,
           action: 'STUDY_DELETE',
           targetType: 'Study',
           targetId: studyId,
           reason,
           metadata: {
             ...studySnapshot,
-            deletedBy: adminRole.userId,
+            deletedBy: adminId,
             deletedAt: new Date(),
           },
         },
@@ -95,7 +118,28 @@ export async function DELETE(request, { params }) {
       // 스터디 삭제 (CASCADE로 관련 데이터 자동 삭제)
       await tx.study.delete({
         where: { id: studyId },
+      }).catch(error => {
+        // Prisma constraint 에러 체크
+        if (error.code === 'P2003' || error.code === 'P2014') {
+          throw AdminBusinessException.studyDeletionNotAllowed(
+            studyId,
+            '연관된 데이터가 있어 삭제할 수 없습니다',
+            { adminId, error: error.message }
+          )
+        }
+        throw AdminBusinessException.studyDeletionNotAllowed(studyId, error.message, { adminId })
       })
+    }).catch(error => {
+      if (error.name?.includes('Admin')) throw error
+      throw AdminDatabaseException.transactionFailed('study delete', error.message)
+    })
+
+    const duration = Date.now() - startTime
+    AdminLogger.logStudyDelete(adminId, studyId, reason, {
+      studyName: study.name,
+      memberCount: study.members.length,
+      stats: study._count,
+      duration
     })
 
     return NextResponse.json({
@@ -106,14 +150,19 @@ export async function DELETE(request, { params }) {
       },
     })
   } catch (error) {
-    console.error('스터디 삭제 실패:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: '스터디 삭제에 실패했습니다',
-      },
-      { status: 500 }
-    )
+    if (error.name?.includes('Admin')) throw error
+
+    AdminLogger.critical('Unknown error in study delete', {
+      adminId,
+      studyId,
+      error: error.message,
+      stack: error.stack
+    })
+    throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }
+
+export const DELETE = withAdminErrorHandler(deleteStudyHandler)
 

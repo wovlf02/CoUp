@@ -5,18 +5,38 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminReportException,
+  AdminDatabaseException,
+  AdminValidationException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function GET(request, { params }) {
+async function getReportDetailHandler(request, { params }) {
+  const startTime = Date.now()
+
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.REPORT_VIEW)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.REPORT_VIEW, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
   const { reportId } = params
+
+  // reportId 검증
+  if (!reportId || typeof reportId !== 'string') {
+    throw AdminValidationException.missingField('reportId')
+  }
+
+  AdminLogger.info('Admin report detail request', { adminId, reportId })
 
   try {
     // 신고 상세 조회
@@ -34,13 +54,17 @@ export async function GET(request, { params }) {
           },
         },
       },
+    }).catch(error => {
+      AdminLogger.error('Database query failed for report detail', {
+        adminId,
+        reportId,
+        error: error.message
+      })
+      throw AdminDatabaseException.queryFailed('report.findUnique', error.message)
     })
 
     if (!report) {
-      return NextResponse.json(
-        { success: false, message: '신고를 찾을 수 없습니다.' },
-        { status: 404 }
-      )
+      throw AdminReportException.reportNotFound(reportId, { adminId })
     }
 
     // 신고 대상 정보 가져오기
@@ -176,13 +200,13 @@ export async function GET(request, { params }) {
       })
     }
 
-    // 관리자 로그 기록
-    await logAdminAction({
-      adminId: adminRole.userId,
-      action: 'REPORT_VIEW',
-      targetType: 'Report',
-      targetId: reportId,
-      request,
+    // 로그 기록
+    const duration = Date.now() - startTime
+    AdminLogger.logReportView(adminId, reportId, {
+      targetType: report.targetType,
+      targetId: report.targetId,
+      status: report.status,
+      duration
     })
 
     return NextResponse.json({
@@ -201,13 +225,34 @@ export async function GET(request, { params }) {
       },
     })
   } catch (error) {
-    console.error('신고 상세 조회 실패:', error)
-    return NextResponse.json(
-      { success: false, message: '신고 정보를 불러오는데 실패했습니다.' },
-      { status: 500 }
-    )
+    // 예외가 이미 AdminException인 경우 그대로 전달
+    if (error.name?.includes('Admin')) {
+      throw error
+    }
+
+    // 데이터베이스 에러
+    if (error.code?.startsWith('P')) {
+      AdminLogger.error('Database error in report detail', {
+        adminId,
+        reportId,
+        error: error.message,
+        code: error.code
+      })
+      throw AdminDatabaseException.queryFailed('report detail', error.message)
+    }
+
+    // 알 수 없는 에러
+    AdminLogger.critical('Unknown error in report detail', {
+      adminId,
+      reportId,
+      error: error.message,
+      stack: error.stack
+    })
+    throw error
   } finally {
     await prisma.$disconnect()
   }
 }
+
+export const GET = withAdminErrorHandler(getReportDetailHandler)
 

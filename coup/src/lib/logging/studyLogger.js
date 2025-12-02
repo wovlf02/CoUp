@@ -459,93 +459,6 @@ export class StudyLogger {
     });
   }
 
-  /**
-   * 할일 생성 로그
-   *
-   * @param {string} studyId - 스터디 ID
-   * @param {string} taskId - 할일 ID
-   * @param {string} userId - 작성자 ID
-   */
-  static logTaskCreate(studyId, taskId, userId) {
-    this.info('Task created', {
-      action: 'task_create',
-      studyId,
-      taskId,
-      userId
-    });
-  }
-
-  /**
-   * 할일 상태 변경 로그
-   *
-   * @param {string} studyId - 스터디 ID
-   * @param {string} taskId - 할일 ID
-   * @param {string} oldStatus - 이전 상태
-   * @param {string} newStatus - 새 상태
-   * @param {string} userId - 변경자 ID
-   */
-  static logTaskStatusChange(studyId, taskId, oldStatus, newStatus, userId) {
-    this.info('Task status changed', {
-      action: 'task_status_change',
-      studyId,
-      taskId,
-      oldStatus,
-      newStatus,
-      userId
-    });
-  }
-
-  /**
-   * 파일 업로드 로그
-   *
-   * @param {string} studyId - 스터디 ID
-   * @param {string} userId - 업로더 ID
-   * @param {string} fileName - 파일 이름
-   * @param {number} fileSize - 파일 크기
-   */
-  static logFileUpload(studyId, userId, fileName, fileSize) {
-    this.info('File uploaded', {
-      action: 'file_upload',
-      studyId,
-      userId,
-      fileName,
-      fileSize
-    });
-  }
-
-  /**
-   * 파일 삭제 로그
-   *
-   * @param {string} studyId - 스터디 ID
-   * @param {string} userId - 삭제자 ID
-   * @param {string} fileName - 파일 이름
-   */
-  static logFileDelete(studyId, userId, fileName) {
-    this.info('File deleted', {
-      action: 'file_delete',
-      studyId,
-      userId,
-      fileName
-    });
-  }
-
-  /**
-   * 일정 생성 로그
-   *
-   * @param {string} studyId - 스터디 ID
-   * @param {string} eventId - 일정 ID
-   * @param {string} userId - 작성자 ID
-   * @param {Date} startDate - 시작일
-   */
-  static logEventCreate(studyId, eventId, userId, startDate) {
-    this.info('Event created', {
-      action: 'event_create',
-      studyId,
-      eventId,
-      userId,
-      startDate: startDate.toISOString()
-    });
-  }
 
   /**
    * 메시지 전송 로그
@@ -688,6 +601,211 @@ export class StudyLogger {
     this.info('Notice deleted', {
       action: 'notice_delete',
       noticeId,
+      studyId,
+      userId
+    });
+  }
+
+  // ============================================
+  // Task (할일) 로깅
+  // ============================================
+
+  /**
+   * 할일 목록 조회 로그
+   *
+   * @param {string} studyId - 스터디 ID
+   * @param {Object} context - 조회 컨텍스트
+   */
+  static logTaskList(studyId, context) {
+    this.debug('Task list retrieved', {
+      action: 'task_list',
+      studyId,
+      page: context.page,
+      limit: context.limit,
+      status: context.status,
+      total: context.total,
+      cached: context.cached
+    });
+  }
+
+  /**
+   * 할일 생성 로그
+   *
+   * @param {string} taskId - 할일 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 작성자 ID
+   * @param {Object} taskData - 할일 데이터
+   */
+  static logTaskCreate(taskId, studyId, userId, taskData) {
+    this.info('Task created', {
+      action: 'task_create',
+      taskId,
+      studyId,
+      userId,
+      title: taskData.title,
+      priority: taskData.priority,
+      status: taskData.status,
+      dueDate: taskData.dueDate,
+      assigneeCount: taskData.assigneeIds?.length || 0
+    });
+  }
+
+  /**
+   * 할일 조회 로그
+   *
+   * @param {string} taskId - 할일 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 조회자 ID
+   */
+  static logTaskView(taskId, studyId, userId) {
+    this.debug('Task viewed', {
+      action: 'task_view',
+      taskId,
+      studyId,
+      userId
+    });
+  }
+
+  /**
+   * 할일 수정 로그
+   *
+   * @param {string} taskId - 할일 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 수정자 ID
+   * @param {Object} changes - 변경 내용
+   */
+  static logTaskUpdate(taskId, studyId, userId, changes) {
+    this.info('Task updated', {
+      action: 'task_update',
+      taskId,
+      studyId,
+      userId,
+      changes: Object.keys(changes)
+    });
+  }
+
+  /**
+   * 할일 삭제 로그
+   *
+   * @param {string} taskId - 할일 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 삭제자 ID
+   */
+  static logTaskDelete(taskId, studyId, userId) {
+    this.info('Task deleted', {
+      action: 'task_delete',
+      taskId,
+      studyId,
+      userId
+    });
+  }
+
+  /**
+   * 할일 상태 변경 로그
+   *
+   * @param {string} taskId - 할일 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 변경자 ID
+   * @param {string} oldStatus - 이전 상태
+   * @param {string} newStatus - 새 상태
+   */
+  static logTaskStatusChange(taskId, studyId, userId, oldStatus, newStatus) {
+    this.info('Task status changed', {
+      action: 'task_status_change',
+      taskId,
+      studyId,
+      userId,
+      oldStatus,
+      newStatus
+    });
+  }
+
+  // ============================================
+  // Calendar (일정) 로깅
+  // ============================================
+
+  /**
+   * 일정 목록 조회 로그
+   *
+   * @param {string} studyId - 스터디 ID
+   * @param {Object} context - 조회 컨텍스트
+   */
+  static logEventList(studyId, context) {
+    this.debug('Event list retrieved', {
+      action: 'event_list',
+      studyId,
+      startDate: context.startDate,
+      endDate: context.endDate,
+      total: context.total
+    });
+  }
+
+  /**
+   * 일정 생성 로그
+   *
+   * @param {string} eventId - 일정 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 작성자 ID
+   * @param {Object} eventData - 일정 데이터
+   */
+  static logEventCreate(eventId, studyId, userId, eventData) {
+    this.info('Event created', {
+      action: 'event_create',
+      eventId,
+      studyId,
+      userId,
+      title: eventData.title,
+      date: eventData.date,
+      startTime: eventData.startTime,
+      endTime: eventData.endTime
+    });
+  }
+
+  /**
+   * 일정 조회 로그
+   *
+   * @param {string} eventId - 일정 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 조회자 ID
+   */
+  static logEventView(eventId, studyId, userId) {
+    this.debug('Event viewed', {
+      action: 'event_view',
+      eventId,
+      studyId,
+      userId
+    });
+  }
+
+  /**
+   * 일정 수정 로그
+   *
+   * @param {string} eventId - 일정 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 수정자 ID
+   * @param {Object} changes - 변경 내용
+   */
+  static logEventUpdate(eventId, studyId, userId, changes) {
+    this.info('Event updated', {
+      action: 'event_update',
+      eventId,
+      studyId,
+      userId,
+      changes: Object.keys(changes)
+    });
+  }
+
+  /**
+   * 일정 삭제 로그
+   *
+   * @param {string} eventId - 일정 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} userId - 삭제자 ID
+   */
+  static logEventDelete(eventId, studyId, userId) {
+    this.info('Event deleted', {
+      action: 'event_delete',
+      eventId,
       studyId,
       userId
     });

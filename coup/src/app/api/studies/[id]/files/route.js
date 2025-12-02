@@ -96,26 +96,23 @@ export const POST = withStudyErrorHandler(async (request, context) => {
 
   // 3. 파일 존재 확인
   if (!file) {
-    throw StudyFileException.fileNotFound('', {
-      studyId,
-      userMessage: '파일을 선택해주세요'
-    });
+    throw StudyFileException.fileRequired({ studyId });
   }
 
   // 4. 파일 이름 정제
   const sanitizedFilename = sanitizeFilename(file.name);
 
   if (!sanitizedFilename || sanitizedFilename === 'untitled') {
-    throw StudyFileException.fileNameTooLong(file.name, {
+    throw StudyFileException.invalidFileType(file.name, [], {
       studyId,
       userMessage: '유효하지 않은 파일명입니다'
     });
   }
 
-  // 5. 파일 크기 검증 (50MB)
-  const maxFileSize = 50 * 1024 * 1024;
+  // 5. 파일 크기 검증 (10MB for safety)
+  const maxFileSize = 10 * 1024 * 1024;
   if (file.size > maxFileSize) {
-    throw StudyFileException.fileSizeExceeded(file.size, maxFileSize, { studyId });
+    throw StudyFileException.fileSizeTooLarge(file.size, maxFileSize, { studyId });
   }
 
   // 6. 파일 버퍼 읽기
@@ -138,11 +135,11 @@ export const POST = withStudyErrorHandler(async (request, context) => {
       errors: securityValidation.errors,
     });
 
-    throw StudyFileException.invalidFileType(file.type, [], {
+    const allowedTypes = ['pdf', 'docx', 'xlsx', 'pptx', 'txt', 'md', 'zip'];
+    throw StudyFileException.invalidFileType(file.type, allowedTypes, {
       studyId,
       filename: sanitizedFilename,
-      errors: securityValidation.errors.map(e => e.message),
-      userMessage: '파일 보안 검증에 실패했습니다'
+      errors: securityValidation.errors.map(e => e.message)
     });
   }
 

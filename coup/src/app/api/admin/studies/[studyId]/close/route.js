@@ -5,31 +5,44 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminBusinessException,
+  AdminDatabaseException,
+  AdminValidationException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function POST(request, { params }) {
+async function closeStudyHandler(request, { params }) {
+  const startTime = Date.now()
+
   // 권한 확인
-  const auth = await requireAdmin(request, PERMISSIONS.USER_DELETE)
-  if (auth instanceof NextResponse) return auth
+  const auth = await requireAdmin(request, PERMISSIONS.STUDY_MANAGE)
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.STUDY_MANAGE, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
+  const { studyId } = params
+
+  if (!studyId) {
+    throw AdminValidationException.missingField('studyId')
+  }
+
+  AdminLogger.info('Admin study close request', { adminId, studyId })
 
   try {
-    const { studyId } = params
     const body = await request.json()
 
     // 유효성 검사
     if (!body.reason || body.reason.trim().length < 10) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '종료 사유는 최소 10자 이상이어야 합니다',
-        },
-        { status: 400 }
-      )
+      throw AdminValidationException.invalidFieldFormat('reason', body.reason, '최소 10자 이상')
     }
 
     // 스터디 존재 확인
@@ -45,30 +58,24 @@ export async function POST(request, { params }) {
     })
 
     if (!study) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '스터디를 찾을 수 없습니다',
-        },
-        { status: 404 }
-      )
+      throw AdminBusinessException.studyNotFound(studyId, { adminId })
     }
 
     // 트랜잭션으로 처리
     const result = await prisma.$transaction(async (tx) => {
-      // 스터디 상태 업데이트 (읽기 전용 상태)
       const updatedStudy = await tx.study.update({
         where: { id: studyId },
         data: {
           isPublic: false,
           isRecruiting: false,
         },
+      }).catch(error => {
+        throw AdminBusinessException.studyClosureFailed(studyId, error.message, { adminId })
       })
 
-      // 관리자 로그 기록
       await tx.adminLog.create({
         data: {
-          adminId: adminRole.userId,
+          adminId,
           action: 'STUDY_CLOSE',
           targetType: 'Study',
           targetId: studyId,
@@ -84,21 +91,23 @@ export async function POST(request, { params }) {
       })
 
       return updatedStudy
+    }).catch(error => {
+      if (error.name?.includes('Admin')) throw error
+      throw AdminDatabaseException.transactionFailed('study close', error.message)
     })
 
     // 알림 발송
     let notificationsSent = 0
+    if (body.notifyOwner !== false) notificationsSent++
+    if (body.notifyMembers === true) notificationsSent += study.members.length
 
-    // 스터디장에게 알림
-    if (body.notifyOwner !== false) {
-      // TODO: 알림 시스템 구현
-      notificationsSent++
-    }
-
-    // 멤버들에게 알림
-    if (body.notifyMembers === true) {
-      notificationsSent += study.members.length
-    }
+    const duration = Date.now() - startTime
+    AdminLogger.logStudyClose(adminId, studyId, body.reason, {
+      studyName: study.name,
+      memberCount: study.members.length,
+      notificationsSent,
+      duration
+    })
 
     return NextResponse.json({
       success: true,
@@ -109,47 +118,44 @@ export async function POST(request, { params }) {
       },
     })
   } catch (error) {
-    console.error('스터디 종료 실패:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: '스터디 종료에 실패했습니다',
-      },
-      { status: 500 }
-    )
+    if (error.name?.includes('Admin')) throw error
+    AdminLogger.critical('Unknown error in study close', {
+      adminId,
+      studyId,
+      error: error.message
+    })
+    throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 // 종료 해제 (재개)
-export async function DELETE(request, { params }) {
-  // 권한 확인
-  const auth = await requireAdmin(request, PERMISSIONS.USER_DELETE)
-  if (auth instanceof NextResponse) return auth
+async function reopenStudyHandler(request, { params }) {
+  const startTime = Date.now()
+
+  const auth = await requireAdmin(request, PERMISSIONS.STUDY_MANAGE)
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.STUDY_MANAGE, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
+  const { studyId } = params
+
+  AdminLogger.info('Admin study reopen request', { adminId, studyId })
 
   try {
-    const { studyId } = params
-
-    // 스터디 존재 확인
     const study = await prisma.study.findUnique({
       where: { id: studyId },
       include: { owner: true },
     })
 
     if (!study) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '스터디를 찾을 수 없습니다',
-        },
-        { status: 404 }
-      )
+      throw AdminBusinessException.studyNotFound(studyId, { adminId })
     }
 
-    // 트랜잭션으로 처리
     const result = await prisma.$transaction(async (tx) => {
-      // 스터디 상태 복구
       const updatedStudy = await tx.study.update({
         where: { id: studyId },
         data: {
@@ -158,10 +164,9 @@ export async function DELETE(request, { params }) {
         },
       })
 
-      // 관리자 로그 기록
       await tx.adminLog.create({
         data: {
-          adminId: adminRole.userId,
+          adminId,
           action: 'STUDY_REOPEN',
           targetType: 'Study',
           targetId: studyId,
@@ -175,20 +180,31 @@ export async function DELETE(request, { params }) {
       return updatedStudy
     })
 
+    const duration = Date.now() - startTime
+    AdminLogger.logAdminAction(adminId, 'STUDY_REOPEN', {
+      studyId,
+      studyName: study.name,
+      duration
+    })
+
     return NextResponse.json({
       success: true,
       message: '스터디가 재개되었습니다',
       data: result,
     })
   } catch (error) {
-    console.error('스터디 재개 실패:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: '스터디 재개에 실패했습니다',
-      },
-      { status: 500 }
-    )
+    if (error.name?.includes('Admin')) throw error
+    AdminLogger.critical('Unknown error in study reopen', {
+      adminId,
+      studyId,
+      error: error.message
+    })
+    throw error
+  } finally {
+    await prisma.$disconnect()
   }
 }
+
+export const POST = withAdminErrorHandler(closeStudyHandler)
+export const DELETE = withAdminErrorHandler(reopenStudyHandler)
 

@@ -143,29 +143,44 @@ export function createErrorResponse(code, message, status = 400, additionalData 
  * 페이지네이션 응답 생성
  *
  * @param {Array} data - 데이터 배열
- * @param {number} total - 전체 항목 수
- * @param {number} page - 현재 페이지
- * @param {number} limit - 페이지당 항목 수
+ * @param {number|Object} totalOrOptions - 전체 항목 수 또는 옵션 객체
+ * @param {number} [page] - 현재 페이지
+ * @param {number} [limit] - 페이지당 항목 수
  * @returns {NextResponse}
  *
  * @example
- * const studies = await prisma.study.findMany({ skip, take: limit });
- * const total = await prisma.study.count();
+ * // 방법 1: 개별 매개변수
  * return createPaginatedResponse(studies, total, page, limit);
+ *
+ * // 방법 2: 객체로 전달
+ * return createPaginatedResponse(studies, { page, limit, total });
  */
-export function createPaginatedResponse(data, total, page, limit) {
-  const totalPages = Math.ceil(total / limit);
+export function createPaginatedResponse(data, totalOrOptions, page, limit) {
+  // 두 가지 호출 방식 지원
+  let total, actualPage, actualLimit;
+
+  if (typeof totalOrOptions === 'object') {
+    // 방법 2: createPaginatedResponse(data, { page, limit, total })
+    ({ total, page: actualPage, limit: actualLimit } = totalOrOptions);
+  } else {
+    // 방법 1: createPaginatedResponse(data, total, page, limit)
+    total = totalOrOptions;
+    actualPage = page;
+    actualLimit = limit;
+  }
+
+  const totalPages = Math.ceil(total / actualLimit);
 
   return NextResponse.json({
     success: true,
     data,
     pagination: {
-      page,
-      limit,
+      page: actualPage,
+      limit: actualLimit,
       total,
       totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1
+      hasNext: actualPage < totalPages,
+      hasPrev: actualPage > 1
     }
   });
 }

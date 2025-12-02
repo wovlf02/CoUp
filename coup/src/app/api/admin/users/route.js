@@ -7,23 +7,36 @@ import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import { AdminPermissionException, AdminValidationException, AdminDatabaseException } from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import {
+  withAdminErrorHandler,
+  validatePagination,
+  createPaginatedResponse,
+  sanitizeUserData
+} from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function GET(request) {
+async function getUsersHandler(request) {
+  const startTime = Date.now()
+
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_VIEW)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.USER_VIEW, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
+
+  AdminLogger.info('Admin users list request', { adminId })
 
   try {
     const { searchParams } = new URL(request.url)
 
-    // 페이지네이션
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
-    const skip = (page - 1) * limit
+    // 페이지네이션 검증
+    const { page, limit, skip } = validatePagination(searchParams)
 
     // 필터
     const search = searchParams.get('search')
@@ -46,13 +59,19 @@ export async function GET(request) {
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
+    // 정렬 필드 검증
+    const validSortFields = ['createdAt', 'lastLoginAt', 'email', 'name', 'status']
+    if (!validSortFields.includes(sortBy)) {
+      throw AdminValidationException.invalidSorting(sortBy, validSortFields)
+    }
+
     // Where 조건 구성
     const where = {}
 
-    console.log('📝 [Admin Users API] Query params:', {
+    AdminLogger.debug('Building query filters', {
+      adminId,
       search,
       status,
-      statusParam,
       provider,
       hasWarnings,
       isSuspended
@@ -103,97 +122,109 @@ export async function GET(request) {
     }
 
     // 사용자 조회
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: {
-          [sortBy]: sortOrder,
-        },
-        include: {
-          _count: {
-            select: {
-              ownedStudies: true,
-              studyMembers: true,
-              messages: true,
-              receivedWarnings: true,
-              sanctions: {
-                where: { isActive: true },
+    AdminLogger.debug('Querying database', { adminId, where, page, limit })
+
+    let users, total
+    try {
+      [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: {
+            [sortBy]: sortOrder,
+          },
+          include: {
+            _count: {
+              select: {
+                ownedStudies: true,
+                studyMembers: true,
+                messages: true,
+                receivedWarnings: true,
+                sanctions: {
+                  where: { isActive: true },
+                },
+              },
+            },
+            receivedWarnings: {
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true,
+                severity: true,
+                createdAt: true,
+              },
+            },
+            sanctions: {
+              where: { isActive: true },
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true,
+                type: true,
+                expiresAt: true,
               },
             },
           },
-          receivedWarnings: {
-            take: 1,
-            orderBy: { createdAt: 'desc' },
-            select: {
-              id: true,
-              severity: true,
-              createdAt: true,
-            },
-          },
-          sanctions: {
-            where: { isActive: true },
-            take: 1,
-            orderBy: { createdAt: 'desc' },
-            select: {
-              id: true,
-              type: true,
-              expiresAt: true,
-            },
-          },
+        }),
+        prisma.user.count({ where }),
+      ])
+    } catch (dbError) {
+      AdminLogger.logDatabaseError('user query', dbError, { adminId, where })
+      throw AdminDatabaseException.queryTimeout('getUsersList', 30000, {
+        adminId,
+        filters: { search, status, provider }
+      })
+    }
+
+    // 데이터 가공 및 민감 정보 제거
+    const userData = users.map(user => {
+      const sanitized = sanitizeUserData(user)
+      return {
+        ...sanitized,
+        // 통계
+        stats: {
+          studiesOwned: user._count.ownedStudies,
+          studiesJoined: user._count.studyMembers,
+          messagesCount: user._count.messages,
+          warningsCount: user._count.receivedWarnings,
+          activeSanctions: user._count.sanctions,
         },
-      }),
-      prisma.user.count({ where }),
-    ])
-
-    // 데이터 가공
-    const userData = users.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar,
-      status: user.status,
-      provider: user.provider,
-      createdAt: user.createdAt,
-      lastLoginAt: user.lastLoginAt,
-      suspendedUntil: user.suspendedUntil,
-      suspendReason: user.suspendReason,
-
-      // 통계
-      stats: {
-        studiesOwned: user._count.ownedStudies,
-        studiesJoined: user._count.studyMembers,
-        messagesCount: user._count.messages,
-        warningsCount: user._count.receivedWarnings,
-        activeSanctions: user._count.sanctions,
-      },
-
-      // 최근 경고
-      lastWarning: user.receivedWarnings[0] || null,
-
-      // 활성 제재
-      activeSanction: user.sanctions[0] || null,
-    }))
+        // 최근 경고
+        lastWarning: user.receivedWarnings[0] || null,
+        // 활성 제재
+        activeSanction: user.sanctions[0] || null,
+      }
+    })
 
     // 활동 로그
+    AdminLogger.logAdminAction(adminId, 'USER_LIST_VIEW', {
+      search,
+      status,
+      provider,
+      resultCount: users.length,
+      totalCount: total
+    })
+
     await logAdminAction({
-      adminId: adminRole.userId,
+      adminId: adminId,
       action: 'USER_SEARCH',
       reason: `Searched users: ${search || 'all'}`,
       request,
     })
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        users: userData,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
+    const duration = Date.now() - startTime
+    AdminLogger.logPerformance('getUsersList', duration, {
+      adminId,
+      userCount: users.length
+    })
+
+    return createPaginatedResponse(
+      userData,
+      total,
+      page,
+      limit,
+      {
         filters: {
           search,
           status,
@@ -201,18 +232,13 @@ export async function GET(request) {
           hasWarnings,
           isSuspended,
         },
-      },
-    })
-  } catch (error) {
-    console.error('❌ [Admin Users API] Error:', error)
-    console.error('❌ [Admin Users API] Stack:', error.stack)
-    console.error('❌ [Admin Users API] Message:', error.message)
-    return NextResponse.json(
-      { success: false, error: '사용자 목록 조회 실패', details: error.message },
-      { status: 500 }
+      }
     )
   } finally {
     await prisma.$disconnect()
   }
 }
+
+// Export with error handler wrapper
+export const GET = withAdminErrorHandler(getUsersHandler)
 

@@ -5,25 +5,41 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminValidationException,
+  AdminDatabaseException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import {
+  withAdminErrorHandler,
+  validatePagination,
+  createPaginatedResponse
+} from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function GET(request) {
+async function getReportsHandler(request) {
+  const startTime = Date.now()
+
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.REPORT_VIEW)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.REPORT_VIEW, 'unknown')
+  }
 
   const { adminRole } = auth
+  const adminId = adminRole.userId
+
+  AdminLogger.info('Admin reports list request', { adminId })
 
   try {
     const { searchParams } = new URL(request.url)
 
-    // 페이지네이션
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
-    const skip = (page - 1) * limit
+    // 페이지네이션 검증
+    const { page, limit, skip } = validatePagination(searchParams)
 
     // 필터
     const search = searchParams.get('search')
@@ -40,6 +56,17 @@ export async function GET(request) {
     // 정렬
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+
+    // 유효한 정렬 필드 검증
+    const validSortFields = ['createdAt', 'updatedAt', 'priority', 'status']
+    if (!validSortFields.includes(sortBy)) {
+      throw AdminValidationException.invalidSorting(sortBy, validSortFields)
+    }
+
+    // 날짜 범위 검증
+    if (createdFrom && createdTo && new Date(createdFrom) > new Date(createdTo)) {
+      throw AdminValidationException.invalidDateRange(createdFrom, createdTo)
+    }
 
     // Where 조건 구성
     const where = {}
@@ -62,6 +89,10 @@ export async function GET(request) {
 
     // 상태 필터
     if (status && status !== 'all') {
+      const validStatuses = ['PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED']
+      if (!validStatuses.includes(status)) {
+        throw AdminValidationException.invalidReportStatus(status, validStatuses)
+      }
       where.status = status
     }
 
@@ -82,7 +113,7 @@ export async function GET(request) {
 
     // 담당자 필터
     if (assignedTo === 'me') {
-      where.processedBy = adminRole.userId
+      where.processedBy = adminId
     } else if (assignedTo === 'unassigned') {
       where.processedBy = null
     } else if (assignedTo && assignedTo !== 'all') {
@@ -119,8 +150,17 @@ export async function GET(request) {
             },
           },
         },
+      }).catch(error => {
+        AdminLogger.error('Database query failed for reports list', {
+          adminId,
+          error: error.message,
+          where
+        })
+        throw AdminDatabaseException.queryFailed('report.findMany', error.message)
       }),
-      prisma.report.count({ where }),
+      prisma.report.count({ where }).catch(error => {
+        throw AdminDatabaseException.queryFailed('report.count', error.message)
+      }),
     ])
 
     // 통계 계산
@@ -146,36 +186,46 @@ export async function GET(request) {
       }
     })
 
-    // 관리자 로그 기록
-    await logAdminAction({
-      adminId: adminRole.userId,
-      action: 'REPORT_VIEW',
-      targetType: null,
-      targetId: null,
-      request,
+    // 로그 기록
+    const duration = Date.now() - startTime
+    AdminLogger.logReportView(adminId, {
+      filters: { status, type, priority, targetType, assignedTo },
+      resultCount: reports.length,
+      total,
+      duration
     })
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        reports,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-        stats: statsMap,
-      },
+    return createPaginatedResponse(reports, total, page, limit, {
+      stats: statsMap,
     })
+
   } catch (error) {
-    console.error('신고 목록 조회 실패:', error)
-    return NextResponse.json(
-      { success: false, message: '신고 목록을 불러오는데 실패했습니다.' },
-      { status: 500 }
-    )
+    // 예외가 이미 AdminException인 경우 그대로 전달
+    if (error.name?.includes('Admin')) {
+      throw error
+    }
+
+    // 데이터베이스 에러
+    if (error.code?.startsWith('P')) {
+      AdminLogger.error('Database error in reports list', {
+        adminId,
+        error: error.message,
+        code: error.code
+      })
+      throw AdminDatabaseException.queryFailed('reports', error.message)
+    }
+
+    // 알 수 없는 에러
+    AdminLogger.critical('Unknown error in reports list', {
+      adminId,
+      error: error.message,
+      stack: error.stack
+    })
+    throw error
   } finally {
     await prisma.$disconnect()
   }
 }
+
+export const GET = withAdminErrorHandler(getReportsHandler)
 

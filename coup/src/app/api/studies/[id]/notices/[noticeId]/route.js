@@ -6,7 +6,7 @@ import {
   createSuccessResponse
 } from '@/lib/utils/study-utils'
 import { requireStudyMember } from "@/lib/auth-helpers"
-import { StudyFeatureException, StudyPermissionException } from '@/lib/exceptions/study'
+import { StudyNoticeException, StudyPermissionException } from '@/lib/exceptions/study'
 import { StudyLogger } from '@/lib/logging/studyLogger'
 import { invalidateNoticesCache } from "@/lib/cache-helpers"
 
@@ -20,7 +20,7 @@ export const GET = withStudyErrorHandler(async (request, context) => {
 
   // 1. 멤버 권한 확인
   const result = await requireStudyMember(studyId);
-  if (result instanceof NextResponse) return result;
+  if (result && typeof result.json === 'function') return result;
 
   // 2. 공지사항 조회
   const notice = await prisma.notice.findUnique({
@@ -38,11 +38,7 @@ export const GET = withStudyErrorHandler(async (request, context) => {
 
   // 3. 존재 여부 및 스터디 일치 확인
   if (!notice) {
-    throw StudyFeatureException.noticeTitleMissing({
-      noticeId,
-      studyId,
-      userMessage: '공지사항을 찾을 수 없습니다'
-    });
+    throw StudyNoticeException.noticeNotFound(noticeId, { studyId });
   }
 
   if (notice.studyId !== studyId) {
@@ -72,7 +68,7 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
 
   // 1. ADMIN 권한 확인
   const result = await requireStudyMember(studyId, 'ADMIN');
-  if (result instanceof NextResponse) return result;
+  if (result && typeof result.json === 'function') return result;
   const { session, member } = result;
 
   // 2. 요청 본문 파싱
@@ -84,11 +80,7 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
   });
 
   if (!notice) {
-    throw StudyFeatureException.noticeTitleMissing({
-      noticeId,
-      studyId,
-      userMessage: '공지사항을 찾을 수 없습니다'
-    });
+    throw StudyNoticeException.noticeNotFound(noticeId, { studyId });
   }
 
   if (notice.studyId !== studyId) {
@@ -97,30 +89,31 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
 
   // 4. 작성자 또는 ADMIN+ 권한 확인
   if (notice.authorId !== session.user.id && member.role === 'MEMBER') {
-    throw StudyPermissionException.insufficientPermission(
-      session.user.id,
-      member.role,
-      'ADMIN',
-      { action: 'update_notice', noticeId }
-    );
+    throw StudyNoticeException.noticeAccessDenied(session.user.id, noticeId, {
+      action: 'update_notice'
+    });
   }
 
   // 5. 입력 검증
   if (body.title !== undefined) {
     if (!body.title || !body.title.trim()) {
-      throw StudyFeatureException.noticeTitleMissing({ studyId, noticeId });
+      throw StudyNoticeException.titleRequired({ studyId, noticeId });
     }
     if (body.title.length < 2 || body.title.length > 100) {
-      throw StudyFeatureException.invalidNoticeTitleLength(body.title, { min: 2, max: 100 });
+      throw StudyNoticeException.titleTooLong(body.title.length, 100);
     }
   }
 
   if (body.content !== undefined) {
     if (!body.content || !body.content.trim()) {
-      throw StudyFeatureException.noticeContentMissing({ studyId, noticeId });
+      throw StudyNoticeException.contentRequired({ studyId, noticeId });
     }
     if (body.content.length < 10 || body.content.length > 10000) {
-      throw StudyFeatureException.invalidNoticeContentLength(body.content, { min: 10, max: 10000 });
+      throw StudyNoticeException.contentRequired({
+        studyId,
+        noticeId,
+        userMessage: '공지사항 내용은 10자 이상 10000자 이하로 입력해주세요'
+      });
     }
   }
 
@@ -165,7 +158,7 @@ export const DELETE = withStudyErrorHandler(async (request, context) => {
 
   // 1. ADMIN 권한 확인
   const result = await requireStudyMember(studyId, 'ADMIN');
-  if (result instanceof NextResponse) return result;
+  if (result && typeof result.json === 'function') return result;
   const { session, member } = result;
 
   // 2. 공지사항 확인
@@ -187,12 +180,9 @@ export const DELETE = withStudyErrorHandler(async (request, context) => {
 
   // 3. 작성자 또는 ADMIN+ 권한 확인
   if (notice.authorId !== session.user.id && member.role === 'MEMBER') {
-    throw StudyPermissionException.insufficientPermission(
-      session.user.id,
-      member.role,
-      'ADMIN',
-      { action: 'delete_notice', noticeId }
-    );
+    throw StudyNoticeException.noticeAccessDenied(session.user.id, noticeId, {
+      action: 'delete_notice'
+    });
   }
 
   // 4. 비즈니스 로직 - 공지사항 삭제

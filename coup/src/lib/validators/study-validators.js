@@ -378,46 +378,6 @@ export function validateApplicationAction({ studyId, userId, message, action, ap
 // 5. 파일 업로드 검증
 // ============================================
 
-/**
- * 파일 업로드 검증
- *
- * @param {Object} file - 업로드할 파일 객체
- * @param {string} fileType - 파일 타입 (image, document)
- * @throws {StudyFileException}
- *
- * @example
- * validateFileUpload(file, 'image');
- */
-export function validateFileUpload(file, fileType = 'document') {
-  // 파일 존재 검증
-  if (!file) {
-    throw StudyFileException.fileNotProvided();
-  }
-
-  // 파일 크기 검증
-  if (file.size > FILE_SIZE_LIMIT) {
-    throw StudyFileException.fileSizeExceeded(file.name, file.size, FILE_SIZE_LIMIT);
-  }
-
-  // 파일 타입 검증
-  if (fileType === 'image') {
-    if (!VALID_IMAGE_TYPES.includes(file.type)) {
-      throw StudyFileException.invalidFileType(file.name, file.type, VALID_IMAGE_TYPES);
-    }
-  } else {
-    if (!VALID_FILE_TYPES.includes(file.type)) {
-      throw StudyFileException.invalidFileType(file.name, file.type, VALID_FILE_TYPES);
-    }
-  }
-
-  // 파일 이름 검증
-  if (file.name.length > 255) {
-    throw StudyFileException.fileNameTooLong(file.name, 255);
-  }
-
-  return true;
-}
-
 // ============================================
 // 6. 공지사항 검증
 // ============================================
@@ -756,28 +716,143 @@ export function validateSortOptions({ sortBy = 'createdAt', order = 'desc' } = {
 }
 
 /**
- * 검색 쿼리 검증
+ * 검색 및 필터 파라미터 검증
  *
- * @param {string} query - 검색 쿼리
- * @returns {string} 검증된 검색 쿼리
+ * @param {Object} query - 쿼리 파라미터 객체
+ * @returns {Object} 검증된 필터 파라미터
  * @throws {StudyValidationException}
  */
-export function validateSearchQuery(query) {
-  if (!query || typeof query !== 'string') {
-    throw StudyValidationException.searchQueryMissing();
+export function validateSearchQuery(query = {}) {
+  const result = {
+    category: query.category || null,
+    search: null,
+    isRecruiting: query.isRecruiting === 'true',
+    sortBy: query.sortBy || 'latest',
+    isPublic: query.isPublic !== 'false'
+  };
+
+  // 검색어 검증 (선택사항)
+  if (query.search) {
+    const trimmedQuery = query.search.trim();
+
+    if (trimmedQuery.length < 2) {
+      throw StudyValidationException.searchQueryTooShort(trimmedQuery, 2);
+    }
+
+    if (trimmedQuery.length > 100) {
+      throw StudyValidationException.searchQueryTooLong(trimmedQuery, 100);
+    }
+
+    result.search = trimmedQuery;
   }
 
-  const trimmedQuery = query.trim();
-
-  if (trimmedQuery.length < 2) {
-    throw StudyValidationException.searchQueryTooShort(trimmedQuery, 2);
+  // 카테고리 검증 (선택사항)
+  if (result.category && result.category !== 'all' && !VALID_CATEGORIES.includes(result.category)) {
+    throw StudyValidationException.invalidCategory(result.category, VALID_CATEGORIES);
   }
 
-  if (trimmedQuery.length > 100) {
-    throw StudyValidationException.searchQueryTooLong(trimmedQuery, 100);
+  return result;
+}
+
+/**
+ * 가입 신청 데이터 검증
+ *
+ * @param {Object} data - 가입 신청 데이터
+ * @param {string} data.message - 신청 메시지
+ * @returns {Object} 검증된 데이터
+ * @throws {StudyApplicationException}
+ */
+export function validateApplicationData(data) {
+  if (!data.message || typeof data.message !== 'string') {
+    throw StudyApplicationException.applicationMessageMissing();
   }
 
-  return trimmedQuery;
+  const trimmedMessage = data.message.trim();
+
+  if (trimmedMessage.length < 10) {
+    throw StudyApplicationException.applicationMessageTooShort(trimmedMessage, 10);
+  }
+
+  if (trimmedMessage.length > 500) {
+    throw StudyApplicationException.applicationMessageTooLong(trimmedMessage, 500);
+  }
+
+  return {
+    message: trimmedMessage
+  };
+}
+
+/**
+ * 공지사항 데이터 검증
+ *
+ * @param {Object} data - 공지사항 데이터
+ * @param {string} data.title - 제목
+ * @param {string} data.content - 내용
+ * @returns {Object} 검증된 데이터
+ * @throws {StudyNoticeException}
+ */
+export function validateNoticeData(data) {
+  if (!data.title || typeof data.title !== 'string') {
+    throw StudyNoticeException.titleRequired();
+  }
+
+  const trimmedTitle = data.title.trim();
+  if (trimmedTitle.length === 0) {
+    throw StudyNoticeException.titleRequired();
+  }
+
+  if (trimmedTitle.length > 100) {
+    throw StudyNoticeException.titleTooLong(trimmedTitle.length, 100);
+  }
+
+  if (!data.content || typeof data.content !== 'string') {
+    throw StudyNoticeException.contentRequired();
+  }
+
+  const trimmedContent = data.content.trim();
+  if (trimmedContent.length === 0) {
+    throw StudyNoticeException.contentRequired();
+  }
+
+  return {
+    title: trimmedTitle,
+    content: trimmedContent,
+    isPinned: data.isPinned || false
+  };
+}
+
+/**
+ * 파일 업로드 데이터 검증
+ *
+ * @param {Object} file - 파일 객체
+ * @param {number} file.size - 파일 크기
+ * @param {string} file.type - 파일 타입
+ * @param {string} file.name - 파일명
+ * @returns {Object} 검증된 데이터
+ * @throws {StudyFileException}
+ */
+export function validateFileUpload(file) {
+  if (!file) {
+    throw StudyFileException.fileRequired();
+  }
+
+  if (!file.name) {
+    throw StudyFileException.fileRequired();
+  }
+
+  if (file.size > FILE_SIZE_LIMIT) {
+    throw StudyFileException.fileSizeTooLarge(file.size, FILE_SIZE_LIMIT);
+  }
+
+  if (file.type && !VALID_FILE_TYPES.includes(file.type)) {
+    throw StudyFileException.invalidFileType(file.type, VALID_FILE_TYPES);
+  }
+
+  return {
+    name: file.name,
+    size: file.size,
+    type: file.type
+  };
 }
 
 // Export 상수
@@ -792,4 +867,8 @@ export {
   VALID_IMAGE_TYPES,
   VALID_FILE_TYPES
 };
+
+// Export function aliases for backward compatibility
+// validateNoticeData는 파일 중간에 이미 export된 함수 사용
+// validateApplicationData는 파일 중간에 이미 export된 함수 사용
 

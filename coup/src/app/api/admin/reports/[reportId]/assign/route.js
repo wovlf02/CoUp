@@ -5,18 +5,39 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminReportException,
+  AdminDatabaseException,
+  AdminValidationException,
+  AdminBusinessException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function POST(request, { params }) {
+async function assignReportHandler(request, { params }) {
+  const startTime = Date.now()
+
   // 권한 확인
-  const auth = await requireAdmin(request, PERMISSIONS.REPORT_ASSIGN)
-  if (auth instanceof NextResponse) return auth
+  const auth = await requireAdmin(request, PERMISSIONS.REPORT_MANAGE)
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.REPORT_MANAGE, 'unknown')
+  }
 
   const { adminRole } = auth
+  const currentAdminId = adminRole.userId
   const { reportId } = params
+
+  // reportId 검증
+  if (!reportId) {
+    throw AdminValidationException.missingField('reportId')
+  }
+
+  AdminLogger.info('Admin report assign request', { currentAdminId, reportId })
 
   try {
     const body = await request.json()
@@ -33,13 +54,22 @@ export async function POST(request, { params }) {
           },
         },
       },
+    }).catch(error => {
+      AdminLogger.error('Database query failed for report assign', {
+        currentAdminId,
+        reportId,
+        error: error.message
+      })
+      throw AdminDatabaseException.queryFailed('report.findUnique', error.message)
     })
 
     if (!report) {
-      return NextResponse.json(
-        { success: false, message: '신고를 찾을 수 없습니다.' },
-        { status: 404 }
-      )
+      throw AdminReportException.reportNotFound(reportId, { currentAdminId })
+    }
+
+    // 이미 처리된 신고인지 확인
+    if (report.status === 'RESOLVED' || report.status === 'REJECTED') {
+      throw AdminReportException.reportAlreadyProcessed(reportId, report.status, { currentAdminId })
     }
 
     // 자동 배정인 경우
@@ -56,10 +86,7 @@ export async function POST(request, { params }) {
       })
 
       if (admins.length === 0) {
-        return NextResponse.json(
-          { success: false, message: '배정 가능한 관리자가 없습니다.' },
-          { status: 400 }
-        )
+        throw AdminReportException.assignmentFailed(reportId, 'auto', '배정 가능한 관리자가 없습니다', { currentAdminId })
       }
 
       // 각 관리자의 처리 중인 신고 수 조회
@@ -87,10 +114,7 @@ export async function POST(request, { params }) {
       })
 
       if (!admin) {
-        return NextResponse.json(
-          { success: false, message: '해당 관리자를 찾을 수 없습니다.' },
-          { status: 404 }
-        )
+        throw AdminBusinessException.userNotFound(targetAdminId, '관리자')
       }
     }
 
@@ -112,23 +136,39 @@ export async function POST(request, { params }) {
             },
           },
         },
+      }).catch(error => {
+        throw AdminReportException.assignmentFailed(reportId, targetAdminId || 'null', error.message, { currentAdminId })
       })
 
       // 관리자 로그 기록
-      await logAdminAction({
-        adminId: adminRole.userId,
-        action: 'REPORT_ASSIGN',
-        targetType: 'Report',
-        targetId: reportId,
-        before: { processedBy: report.processedBy },
-        after: { processedBy: targetAdminId },
-        request,
+      await tx.adminLog.create({
+        data: {
+          adminId: currentAdminId,
+          action: 'REPORT_ASSIGN',
+          targetType: 'Report',
+          targetId: reportId,
+          metadata: {
+            previousAssignee: report.processedBy,
+            newAssignee: targetAdminId,
+            autoAssign: !!autoAssign,
+          },
+        },
       })
 
       return updated
+    }).catch(error => {
+      if (error.name?.includes('Admin')) throw error
+      throw AdminDatabaseException.transactionFailed('report assign', error.message)
     })
 
-    // TODO: 배정된 관리자에게 알림 전송 (추후 구현)
+    // 로그 기록
+    const duration = Date.now() - startTime
+    AdminLogger.logReportProcessing(currentAdminId, reportId, 'ASSIGN', {
+      previousAssignee: report.processedBy,
+      newAssignee: targetAdminId,
+      autoAssign: !!autoAssign,
+      duration
+    })
 
     return NextResponse.json({
       success: true,
@@ -140,13 +180,19 @@ export async function POST(request, { params }) {
         : '담당자 배정이 해제되었습니다.',
     })
   } catch (error) {
-    console.error('신고 담당자 배정 실패:', error)
-    return NextResponse.json(
-      { success: false, message: '담당자 배정에 실패했습니다.' },
-      { status: 500 }
-    )
+    if (error.name?.includes('Admin')) throw error
+
+    AdminLogger.critical('Unknown error in report assign', {
+      currentAdminId,
+      reportId,
+      error: error.message,
+      stack: error.stack
+    })
+    throw error
   } finally {
     await prisma.$disconnect()
   }
 }
+
+export const POST = withAdminErrorHandler(assignReportHandler)
 

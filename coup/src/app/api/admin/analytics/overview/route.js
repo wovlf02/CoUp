@@ -5,15 +5,29 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminDatabaseException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function GET(request) {
+async function getAnalyticsOverviewHandler(request) {
+  const startTime = Date.now()
+
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.ANALYTICS_VIEW)
-  if (auth instanceof NextResponse) return auth
+  if (auth instanceof NextResponse) {
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.ANALYTICS_VIEW, 'unknown')
+  }
+
+  const adminId = auth.adminRole.userId
+
+  AdminLogger.info('Admin analytics overview request', { adminId })
 
   try {
     // 날짜 범위 설정
@@ -81,12 +95,12 @@ export async function GET(request) {
     const dailyReports = await getDailyReports(thirtyDaysAgo, now)
 
     // 관리자 로그 기록
-    await logAdminAction({
-      adminId: auth.adminRole.userId,
-      action: 'ANALYTICS_VIEW',
-      targetType: 'Analytics',
-      targetId: 'overview',
-      request,
+    const duration = Date.now() - startTime
+    AdminLogger.logAnalyticsView(adminId, 'overview', {
+      duration,
+      userCount: totalUsers,
+      studyCount: totalStudies,
+      reportCount: totalReports
     })
 
     return NextResponse.json({
@@ -124,18 +138,28 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('❌ 전체 통계 조회 실패:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: '전체 통계를 조회하는 중 오류가 발생했습니다.'
-      },
-      { status: 500 }
-    )
+    if (error.name?.includes('Admin')) throw error
+
+    if (error.code?.startsWith('P')) {
+      AdminLogger.error('Database error in analytics overview', {
+        adminId,
+        error: error.message,
+        code: error.code
+      })
+      throw AdminDatabaseException.queryFailed('analytics overview', error.message)
+    }
+
+    AdminLogger.critical('Unknown error in analytics overview', {
+      adminId,
+      error: error.message
+    })
+    throw error
   } finally {
     await prisma.$disconnect()
   }
 }
+
+export const GET = withAdminErrorHandler(getAnalyticsOverviewHandler)
 
 /**
  * 일일 가입자 수 추이 조회

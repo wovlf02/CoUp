@@ -5,39 +5,47 @@
 
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAdmin, logAdminAction } from '@/lib/admin/auth'
+import { requireAdmin } from '@/lib/admin/auth'
 import { PERMISSIONS } from '@/lib/admin/permissions'
+import {
+  AdminPermissionException,
+  AdminValidationException,
+  AdminDatabaseException
+} from '@/lib/exceptions/admin'
+import { AdminLogger } from '@/lib/logging/adminLogger'
+import {
+  withAdminErrorHandler,
+  validatePagination,
+  createPaginatedResponse
+} from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-export async function GET(request) {
-  console.log('🔍 [Admin Studies API] Starting request...')
+async function getStudiesHandler(request) {
+  const startTime = Date.now()
 
   // 권한 확인
-  const auth = await requireAdmin(request, PERMISSIONS.USER_VIEW)
+  const auth = await requireAdmin(request, PERMISSIONS.STUDY_VIEW)
   if (auth instanceof NextResponse) {
-    console.log('❌ [Admin Studies API] Auth failed')
-    return auth
+    throw AdminPermissionException.insufficientPermission(PERMISSIONS.STUDY_VIEW, 'unknown')
   }
 
   const { adminRole } = auth
-  console.log('✅ [Admin Studies API] Auth successful:', adminRole.userId)
+  const adminId = adminRole.userId
+
+  AdminLogger.info('Admin studies list request', { adminId })
 
   try {
     const { searchParams } = new URL(request.url)
-    console.log('📝 [Admin Studies API] Query params:', Object.fromEntries(searchParams))
 
-    // 페이지네이션
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
-    const skip = (page - 1) * limit
+    // 페이지네이션 검증
+    const { page, limit, skip } = validatePagination(searchParams)
 
     // 필터
     const search = searchParams.get('search')
     const category = searchParams.get('category')
     const isPublic = searchParams.get('isPublic')
     const isRecruiting = searchParams.get('isRecruiting')
-    const hasReports = searchParams.get('hasReports') === 'true'
 
     // 멤버 수 범위
     const minMembers = searchParams.get('minMembers')
@@ -50,6 +58,17 @@ export async function GET(request) {
     // 정렬
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+
+    // 유효한 정렬 필드 검증
+    const validSortFields = ['createdAt', 'updatedAt', 'name', 'memberCount', 'rating']
+    if (!validSortFields.includes(sortBy)) {
+      throw AdminValidationException.invalidSorting(sortBy, validSortFields)
+    }
+
+    // 날짜 범위 검증
+    if (createdFrom && createdTo && new Date(createdFrom) > new Date(createdTo)) {
+      throw AdminValidationException.invalidDateRange(createdFrom, createdTo)
+    }
 
     // Where 조건 구성
     const where = {}
@@ -115,8 +134,17 @@ export async function GET(request) {
             },
           },
         },
+      }).catch(error => {
+        AdminLogger.error('Database query failed for studies list', {
+          adminId,
+          error: error.message,
+          where
+        })
+        throw AdminDatabaseException.queryFailed('study.findMany', error.message)
       }),
-      prisma.study.count({ where }),
+      prisma.study.count({ where }).catch(error => {
+        throw AdminDatabaseException.queryFailed('study.count', error.message)
+      }),
     ])
 
     // 멤버 수 필터 (후처리)
@@ -148,16 +176,13 @@ export async function GET(request) {
           category: study.category,
           subCategory: study.subCategory,
           tags: study.tags,
-
           owner: study.owner,
-
           settings: {
             maxMembers: study.maxMembers,
             isPublic: study.isPublic,
             autoApprove: study.autoApprove,
             isRecruiting: study.isRecruiting,
           },
-
           stats: {
             memberCount: study._count.members,
             messageCount: study._count.messages,
@@ -166,7 +191,6 @@ export async function GET(request) {
             rating: study.rating || 0,
             reviewCount: study.reviewCount || 0,
           },
-
           lastActivityAt: lastMessage?.createdAt || study.updatedAt,
           createdAt: study.createdAt,
           updatedAt: study.updatedAt,
@@ -175,12 +199,6 @@ export async function GET(request) {
     )
 
     // 전체 통계
-    const stats = await prisma.study.aggregate({
-      where,
-      _count: true,
-    })
-
-    // 추가 통계
     const publicCount = await prisma.study.count({
       where: { ...where, isPublic: true },
     })
@@ -189,64 +207,49 @@ export async function GET(request) {
     })
 
     // 로그 기록
-    try {
-      await logAdminAction({
-        adminId: adminRole.userId,
-        action: 'STUDY_VIEW',
-        targetType: 'Study',
-        reason: `Viewed studies list with filters: ${JSON.stringify({ search, category, isPublic, isRecruiting })}`,
-        after: {
-          filters: {
-            search,
-            category,
-            isPublic,
-            isRecruiting,
-          },
-          resultCount: transformedStudies.length,
-        },
-      })
-    } catch (logError) {
-      console.warn('⚠️ [Admin Studies API] Failed to log action:', logError.message)
-      // 로그 실패는 무시하고 계속 진행
-    }
+    const duration = Date.now() - startTime
+    AdminLogger.logAdminAction(adminId, 'STUDY_LIST_VIEW', {
+      filters: { search, category, isPublic, isRecruiting },
+      resultCount: transformedStudies.length,
+      total,
+      duration
+    })
 
-    console.log('✅ [Admin Studies API] Success, returning', transformedStudies.length, 'studies')
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        studies: transformedStudies,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-          hasNext: page < Math.ceil(total / limit),
-          hasPrev: page > 1,
-        },
-        stats: {
-          total: stats._count,
-          public: publicCount,
-          recruiting: recruitingCount,
-        },
+    return createPaginatedResponse(transformedStudies, total, page, limit, {
+      stats: {
+        total,
+        public: publicCount,
+        recruiting: recruitingCount,
       },
     })
-  } catch (error) {
-    console.error('❌ [Admin Studies API] Error:', error)
-    console.error('❌ [Admin Studies API] Error name:', error.name)
-    console.error('❌ [Admin Studies API] Error message:', error.message)
-    console.error('❌ [Admin Studies API] Error stack:', error.stack)
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: '스터디 목록 조회에 실패했습니다',
-        details: error.message,
-      },
-      { status: 500 }
-    )
+  } catch (error) {
+    // 예외가 이미 AdminException인 경우 그대로 전달
+    if (error.name?.includes('Admin')) {
+      throw error
+    }
+
+    // 데이터베이스 에러
+    if (error.code?.startsWith('P')) {
+      AdminLogger.error('Database error in studies list', {
+        adminId,
+        error: error.message,
+        code: error.code
+      })
+      throw AdminDatabaseException.queryFailed('studies', error.message)
+    }
+
+    // 알 수 없는 에러
+    AdminLogger.critical('Unknown error in studies list', {
+      adminId,
+      error: error.message,
+      stack: error.stack
+    })
+    throw error
   } finally {
     await prisma.$disconnect()
   }
 }
+
+export const GET = withAdminErrorHandler(getStudiesHandler)
 
