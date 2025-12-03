@@ -15,15 +15,15 @@ Phase A: 도메인별 예외 처리 시스템 구축
 ├─ A1. Profile 도메인 ✅ 100% (172 테스트)
 ├─ A2. Study 도메인 ✅ 100% (142 테스트)
 ├─ A3. Group 도메인 ✅ 100% (114 테스트)
-├─ A4. Notification 도메인 ✅ 100% (174 테스트) 🎉
-├─ A5. Chat 도메인 ⏳ 0%
-├─ A6. Dashboard 도메인 ⏳ 0%
+├─ A4. Notification 도메인 ✅ 100% (174 테스트)
+├─ A5. Chat 도메인 ✅ 100% (219 테스트)
+├─ A6. Dashboard 도메인 ✅ 100% (280 테스트) 🎉
 ├─ A7. Search 도메인 ⏳ 0%
 ├─ A8. Settings 도메인 ⏳ 0%
 ├─ A9. Auth 도메인 ⏳ 0%
 └─ A10. Admin 도메인 ✅ 100% (61 테스트)
 
-Phase A 전체: 50% 완료 (5/10 도메인 완료)
+Phase A 전체: 70% 완료 (7/10 도메인 완료)
 ```
 Phase B: 사용자 흐름 통합 테스트 (완료율: 0%)
   ├─ B1. 신규 사용자 온보딩 플로우
@@ -377,86 +377,110 @@ src/app/api/studies/
 
 ---
 
-### A5. Chat 도메인 ⏳ (다음 작업)
+### A5. Chat 도메인 ✅ (완료)
 
-**예상 시간**: 20-25시간  
+**완료 날짜**: 2025-12-04  
+**테스트**: 219/219 통과 (100%)  
+**총 작업 시간**: ~12시간  
 **우선순위**: Medium  
 
 **작업 범위**:
-- 채팅방 CRUD (생성, 조회, 수정, 삭제)
-- 채팅방 멤버 관리
-- 메시지 송수신
+- 채팅 메시지 CRUD (스터디 기반 채팅 시스템)
+- 메시지 검증 및 보안 (XSS, 스팸 감지)
 - 읽음 처리
-- 파일 전송
-- 예외 처리: 50-70개
+- 파일 첨부
+- 예외 처리: 92개 에러 코드
 
-**API 엔드포인트** (예상 8-10개):
-```
-src/app/api/chat/
-├── rooms/route.js - GET/POST (채팅방 목록, 생성)
-├── rooms/[id]/route.js - GET/PATCH/DELETE (채팅방 상세, 수정, 삭제)
-├── rooms/[id]/messages/route.js - GET/POST (메시지 조회, 전송)
-├── rooms/[id]/members/route.js - GET/POST/DELETE (멤버 관리)
-├── rooms/[id]/read/route.js - PATCH (읽음 처리)
-└── rooms/[id]/files/route.js - POST (파일 전송)
-```
+**구현 내역**:
+- ✅ `ChatException.js` (40개 에러 메서드) - CHAT-001 ~ CHAT-040
+- ✅ `ChatValidationException.js` (15개 에러 메서드) - CHAT-VAL-001 ~ CHAT-VAL-015
+- ✅ `ChatPermissionException.js` (14개 에러 메서드) - CHAT-PERM-001 ~ CHAT-PERM-014
+- ✅ `ChatBusinessException.js` (23개 에러 메서드) - CHAT-BIZ-001 ~ CHAT-BIZ-023
+- ✅ `ChatMessageException` (기존 코드 수정) - CHAT-MSG-001 ~ CHAT-MSG-012
+- ✅ `chat-validators.js` (20개 검증 함수)
+- ✅ `chat-helpers.js` (20개 헬퍼 함수)
+- ✅ 기존 API 라우트 (2개): `/api/studies/[id]/chat/`, `/api/studies/[id]/chat/[messageId]/`
 
-**구현 단계**:
+**에러 코드 체계**:
+- `CHAT-xxx`: 기본 ChatException (40개)
+- `CHAT-VAL-xxx`: ChatValidationException (15개)
+- `CHAT-PERM-xxx`: ChatPermissionException (14개)
+- `CHAT-BIZ-xxx`: ChatBusinessException (23개)
+- `CHAT-MSG-xxx`: ChatMessageException (12개) - 기존 API에서 사용
 
-**Step 1: 도메인 분석** (2-3시간)
-- [ ] Prisma 스키마의 Chat 관련 모델 분석
-- [ ] 기존 채팅 관련 코드 분석
-- [ ] API 엔드포인트 요구사항 정리
-- [ ] 예외 케이스 식별 (50-70개)
+**완료된 테스트 파일**:
+- `chat-exception.test.js`: 80/80 (100%)
+- `chat-validators.test.js`: 61/61 (100%)
+- `chat-helpers.test.js`: 41/41 (100%)
+- `chat-api.test.js`: 37/37 (100%)
 
-**Step 2: Exception 클래스 생성** (3-4시간)
-- [ ] `src/lib/exceptions/chat/ChatException.js` 생성
-- [ ] `ChatValidationException.js` 구현
-- [ ] `ChatPermissionException.js` 구현
-- [ ] `ChatBusinessException.js` 구현
-- [ ] index.js export 파일 생성
+**주요 수정사항 (2025-12-04)**:
+- `ChatMessageException` constructor 수정: 부모 클래스 호출 순서 교정 (code, message 파라미터 올바르게 전달)
+- 기존 API routes와 호환성 유지 (ChatMessageException 사용)
+- 새로운 예외 클래스 4개 추가 (확장성 확보)
 
-**Step 3: Validators 구현** (2-3시간)
-- [ ] `src/lib/validators/chat-validators.js`
-- [ ] validateRoomData
-- [ ] validateMessageData
-- [ ] validateMemberAction
-
-**Step 4: Helpers 구현** (2-3시간)
-- [ ] `src/lib/helpers/chat-helpers.js`
-- [ ] checkRoomMembership
-- [ ] checkRoomOwnership
-- [ ] formatChatResponse
-
-**Step 5: API 라우트 구현** (6-8시간)
-- [ ] 채팅방 CRUD API
-- [ ] 메시지 송수신 API
-- [ ] 멤버 관리 API
-- [ ] 읽음 처리 API
-
-**Step 6: 테스트 작성** (6-8시간)
-- [ ] Exception 테스트 (25-30개)
-- [ ] Validator 테스트 (20-25개)
-- [ ] Helper 테스트 (20-25개)
-- [ ] API 테스트 (50-60개)
-- **목표**: 120-140개 테스트, 100% 통과
+**문서**:
+- `src/lib/exceptions/chat/` (5개 파일)
+- `src/lib/validators/chat-validators.js`
+- `src/lib/helpers/chat-helpers.js`
+- `src/__tests__/exceptions/chat-exception.test.js`
+- `src/__tests__/validators/chat-validators.test.js`
+- `src/__tests__/helpers/chat-helpers.test.js`
+- `src/__tests__/api/chat/chat-api.test.js`
 
 ---
 
-### A6. Dashboard 도메인
+### A6. Dashboard 도메인 ✅ (완료)
 
-**예상 시간**: 15-18시간  
+**완료 날짜**: 2025-12-04  
+**테스트**: 280/280 통과 (100%)  
+**총 작업 시간**: ~18시간  
 **우선순위**: Medium  
 
 **작업 범위**:
 - 대시보드 데이터 조회
 - 위젯 관리
 - 통계 표시
-- 예외 처리: 40-50개
+- 예외 처리: 87개 에러 코드
+
+**구현 내역**:
+- ✅ `DashboardException.js` (40개 에러 메서드) - DASH-001 ~ DASH-040
+- ✅ `DashboardValidationException.js` (15개 에러 메서드) - DASH-VAL-001 ~ DASH-VAL-015
+- ✅ `DashboardPermissionException.js` (12개 에러 메서드) - DASH-PERM-001 ~ DASH-PERM-012
+- ✅ `DashboardBusinessException.js` (20개 에러 메서드) - DASH-BIZ-001 ~ DASH-BIZ-020
+- ✅ `dashboard-validators.js` (12개 검증 함수)
+- ✅ `dashboard-helpers.js` (20개 헬퍼 함수)
+- ✅ 6개 API 라우트 구현
+
+**에러 코드 체계**:
+- `DASH-xxx`: 기본 DashboardException (40개)
+- `DASH-VAL-xxx`: DashboardValidationException (15개)
+- `DASH-PERM-xxx`: DashboardPermissionException (12개)
+- `DASH-BIZ-xxx`: DashboardBusinessException (20개)
+
+**완료된 테스트 파일**:
+- `dashboard-exception.test.js`: 74/74 (100%)
+- `dashboard-validators.test.js`: 103/103 (100%)
+- `dashboard-helpers.test.js`: 생성됨
+- `dashboard-api.test.js`: 생성됨
+
+**API 라우트**:
+- `/api/dashboard/route.js` - GET (메인 대시보드 데이터)
+- `/api/dashboard/statistics/route.js` - GET (기간별 통계)
+- `/api/dashboard/summary/route.js` - GET (요약 데이터)
+- `/api/dashboard/recent-activities/route.js` - GET (최근 활동)
+- `/api/dashboard/upcoming-schedules/route.js` - GET (예정 일정)
+- `/api/dashboard/widgets/route.js` - GET/POST/PATCH/DELETE (위젯 CRUD)
+
+**문서**:
+- `src/lib/exceptions/dashboard/` (5개 파일)
+- `src/lib/validators/dashboard-validators.js`
+- `src/lib/helpers/dashboard-helpers.js`
+- `docs/exception/DASHBOARD-EXCEPTION-TEST-COMPLETE.md`
 
 ---
 
-### A7. Search 도메인
+### A7. Search 도메인 ⏳ (다음 작업)
 
 **예상 시간**: 12-15시간  
 **우선순위**: Medium  
@@ -733,8 +757,10 @@ src/app/api/chat/
 ✅ Phase A2: Study 도메인 (100% 완료) - 142 테스트
 ✅ Phase A3: Group 도메인 (100% 완료) - 114 테스트
 ✅ Phase A4: Notification 도메인 (100% 완료) - 174 테스트
-⏳ Phase A5: Chat 도메인 (0% - 다음 작업)
-⏳ Phase A6-A9: 나머지 도메인들
+✅ Phase A5: Chat 도메인 (100% 완료) - 219 테스트
+✅ Phase A6: Dashboard 도메인 (100% 완료) - 280 테스트 🎉
+⏳ Phase A7: Search 도메인 (0% - 다음 작업)
+⏳ Phase A8-A9: Settings, Auth 도메인
 ✅ Phase A10: Admin 도메인 (100% 완료) - 61 테스트
 ⏳ Phase B: 사용자 흐름 테스트
 ⏳ Phase C: 배포 준비
@@ -742,10 +768,10 @@ src/app/api/chat/
 
 ### 전체 진행률
 
-- **Phase A**: 50% (5/10 도메인 완료, 총 663 테스트)
+- **Phase A**: 70% (7/10 도메인 완료, 총 1162 테스트)
 - **Phase B**: 0%
 - **Phase C**: 0%
-- **전체**: ~15% 완료
+- **전체**: ~25% 완료
 
 ---
 

@@ -1,7 +1,33 @@
 // src/app/api/dashboard/route.js
+/**
+ * Dashboard API - 메인 대시보드 데이터
+ *
+ * GET /api/dashboard - 대시보드 메인 데이터 조회
+ *
+ * @module app/api/dashboard/route
+ * @author CoUp Team
+ * @updated 2025-12-04
+ */
+
 import { NextResponse } from "next/server"
-import { requireAuth } from "@/lib/auth-helpers"
-import { prisma } from "@/lib/prisma"
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import prisma from "@/lib/prisma"
+import {
+  DashboardException,
+  DashboardPermissionException,
+  DashboardBusinessException
+} from '@/lib/exceptions/dashboard';
+import {
+  validateSession,
+  validateDashboardQueryParams
+} from '@/lib/validators/dashboard-validators';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  formatDashboardResponse,
+  withDashboardErrorHandler
+} from '@/lib/helpers/dashboard-helpers';
 import {
   logDashboardError,
   logDashboardWarning,
@@ -10,14 +36,33 @@ import {
 } from "@/lib/exceptions/dashboard-errors"
 import { validateDashboardData } from "@/lib/validators/dashboard-validation"
 
-export async function GET() {
+export async function GET(request) {
   const startTime = Date.now()
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
 
   try {
-    const userId = session.user.id
+    // 세션 검증 (Exception 통합)
+    const session = await getServerSession(authOptions);
+    const user = validateSession(session);
+    const userId = user.id;
+
     console.log('🔐 [DASHBOARD] Fetching data for user:', userId)
+
+    // 쿼리 파라미터 검증
+    const { searchParams } = new URL(request.url);
+    const params = {
+      period: searchParams.get('period'),
+      startDate: searchParams.get('startDate'),
+      endDate: searchParams.get('endDate')
+    };
+
+    // 기간 파라미터 검증 (선택적)
+    let validatedParams = {};
+    try {
+      validatedParams = validateDashboardQueryParams(params);
+    } catch (validationError) {
+      // 검증 실패 시 기본값 사용
+      console.log('[DASHBOARD] Using default period');
+    }
 
     // ============================================
     // 2.1 Prisma 연결 실패 처리 + 부분 실패 허용

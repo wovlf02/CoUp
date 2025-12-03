@@ -3,6 +3,7 @@
  *
  * 대시보드 관련 헬퍼 함수 모음
  * 데이터 변환, 계산, 포맷팅 등의 유틸리티 함수
+ * DashboardException과 통합된 에러 처리
  *
  * 사용 예시:
  * ```js
@@ -13,7 +14,14 @@
  * ```
  *
  * @module lib/helpers/dashboard-helpers
+ * @author CoUp Team
+ * @updated 2025-12-04
  */
+
+import {
+  DashboardBusinessException,
+  DashboardPermissionException
+} from '@/lib/exceptions/dashboard';
 
 // ============================================
 // 통계 계산 함수
@@ -648,3 +656,737 @@ export function debounce(func, wait = 300) {
   }
 }
 
+// ============================================
+// 서버사이드 헬퍼 함수 (API용)
+// ============================================
+
+/**
+ * 대시보드 응답 포맷팅
+ *
+ * @param {Object} data - 대시보드 데이터
+ * @returns {Object} 포맷된 데이터
+ *
+ * @example
+ * const formatted = formatDashboardResponse(dashboardData);
+ */
+export function formatDashboardResponse(data) {
+  if (!data) return null;
+
+  return {
+    summary: data.summary || {},
+    studyStats: data.studyStats || {},
+    taskStats: data.taskStats || {},
+    recentActivities: data.recentActivities || [],
+    upcomingSchedules: data.upcomingSchedules || [],
+    notificationCount: data.notificationCount || 0,
+    widgets: data.widgets || []
+  };
+}
+
+/**
+ * 통계 응답 포맷팅
+ *
+ * @param {Object} stats - 통계 데이터
+ * @param {string} type - 통계 타입
+ * @returns {Object} 포맷된 통계 데이터
+ *
+ * @example
+ * const formatted = formatStatisticsResponse(stats, 'STUDY');
+ */
+export function formatStatisticsResponse(stats, type) {
+  if (!stats) return null;
+
+  return {
+    type,
+    data: stats.data || [],
+    summary: stats.summary || {},
+    period: stats.period || {},
+    generatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * 위젯 응답 포맷팅
+ *
+ * @param {Object} widget - 위젯 객체
+ * @returns {Object} 포맷된 위젯
+ *
+ * @example
+ * const formatted = formatWidgetResponse(widget);
+ */
+export function formatWidgetResponse(widget) {
+  if (!widget) return null;
+
+  return {
+    id: widget.id,
+    type: widget.type,
+    config: widget.config || {},
+    position: widget.position || 0,
+    visible: widget.visible !== false,
+    createdAt: widget.createdAt,
+    updatedAt: widget.updatedAt
+  };
+}
+
+/**
+ * 위젯 목록 응답 포맷팅
+ *
+ * @param {Array} widgets - 위젯 배열
+ * @returns {Array} 포맷된 위젯 배열
+ *
+ * @example
+ * const formatted = formatWidgetsListResponse(widgets);
+ */
+export function formatWidgetsListResponse(widgets) {
+  if (!widgets || !Array.isArray(widgets)) return [];
+
+  return widgets.map(formatWidgetResponse);
+}
+
+/**
+ * 페이지네이션 응답 생성
+ *
+ * @param {Array} data - 데이터 배열
+ * @param {number} page - 현재 페이지
+ * @param {number} limit - 페이지당 항목 수
+ * @param {number} total - 전체 항목 수
+ * @returns {Object} 페이지네이션 응답
+ *
+ * @example
+ * const response = createPaginatedResponse(activities, 1, 20, 100);
+ */
+export function createPaginatedResponse(data, page, limit, total) {
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1
+    }
+  };
+}
+
+/**
+ * 성공 응답 생성
+ *
+ * @param {Object} data - 응답 데이터
+ * @param {string} message - 성공 메시지
+ * @returns {Object} 성공 응답
+ *
+ * @example
+ * const response = createSuccessResponse({ dashboard }, '대시보드 조회 성공');
+ */
+export function createSuccessResponse(data, message = '성공') {
+  return {
+    success: true,
+    message,
+    ...data
+  };
+}
+
+/**
+ * 에러 응답 생성 (Exception 통합)
+ *
+ * @param {Error} error - 에러 객체
+ * @returns {Object} 에러 응답
+ *
+ * @example
+ * const response = createErrorResponse(error);
+ */
+export function createErrorResponse(error) {
+  if (error.code && error.statusCode) {
+    // DashboardException 계열
+    return {
+      success: false,
+      error: error.userMessage || error.message,
+      code: error.code,
+      statusCode: error.statusCode
+    };
+  }
+
+  // 일반 에러
+  return {
+    success: false,
+    error: error.message || '알 수 없는 오류가 발생했습니다.',
+    statusCode: 500
+  };
+}
+
+// ============================================
+// 서버사이드 데이터 조회 함수
+// ============================================
+
+/**
+ * 대시보드 메인 데이터 조회
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 조회 옵션
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<Object>} 대시보드 데이터
+ * @throws {DashboardBusinessException}
+ *
+ * @example
+ * const dashboard = await getDashboardData('user-123', { period: 'THIS_WEEK' }, prisma);
+ */
+export async function getDashboardData(userId, options, prisma) {
+  try {
+    const { startDate, endDate } = options;
+
+    const [
+      studyStats,
+      taskStats,
+      recentActivities,
+      upcomingSchedules,
+      notificationCount
+    ] = await Promise.all([
+      getStudyStatistics(userId, options, prisma),
+      getTaskStatistics(userId, options, prisma),
+      getRecentActivities(userId, { limit: 10 }, prisma),
+      getUpcomingSchedules(userId, { limit: 5, days: 7 }, prisma),
+      getUnreadNotificationCount(userId, prisma)
+    ]);
+
+    const summary = {
+      totalStudies: studyStats.totalStudies || 0,
+      activeStudies: studyStats.activeStudies || 0,
+      totalTasks: taskStats.totalTasks || 0,
+      completedTasks: taskStats.completedTasks || 0,
+      taskCompletionRate: taskStats.completionRate || 0,
+      unreadNotifications: notificationCount,
+      period: { startDate, endDate }
+    };
+
+    return {
+      summary,
+      studyStats,
+      taskStats,
+      recentActivities,
+      upcomingSchedules,
+      notificationCount
+    };
+  } catch (error) {
+    if (error.code?.startsWith('DASH-')) {
+      throw error;
+    }
+    throw DashboardBusinessException.dashboardDataNotFound(userId);
+  }
+}
+
+/**
+ * 스터디 통계 조회
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 조회 옵션
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<Object>} 스터디 통계
+ * @throws {DashboardBusinessException}
+ *
+ * @example
+ * const stats = await getStudyStatistics('user-123', {}, prisma);
+ */
+export async function getStudyStatistics(userId, options, prisma) {
+  try {
+    // 사용자가 참여중인 스터디 조회
+    const studyMembers = await prisma.studyMember.findMany({
+      where: {
+        userId,
+        status: 'ACTIVE'
+      },
+      include: {
+        study: {
+          select: {
+            id: true,
+            name: true,
+            emoji: true,
+            category: true,
+            isRecruiting: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    // 소유한 스터디 조회
+    const ownedStudies = await prisma.study.findMany({
+      where: { ownerId: userId },
+      select: {
+        id: true,
+        name: true,
+        emoji: true,
+        category: true,
+        isRecruiting: true,
+        _count: {
+          select: { members: true }
+        }
+      }
+    });
+
+    const totalStudies = studyMembers.length;
+    const activeStudies = studyMembers.filter(m => m.study.isRecruiting).length;
+    const categoryCount = {};
+
+    studyMembers.forEach(m => {
+      const category = m.study.category || 'etc';
+      categoryCount[category] = (categoryCount[category] || 0) + 1;
+    });
+
+    return {
+      totalStudies,
+      activeStudies,
+      ownedStudies: ownedStudies.length,
+      categoryBreakdown: categoryCount,
+      studies: studyMembers.map(m => ({
+        id: m.study.id,
+        name: m.study.name,
+        emoji: m.study.emoji,
+        category: m.study.category,
+        role: m.role,
+        joinedAt: m.joinedAt
+      }))
+    };
+  } catch (error) {
+    if (error.code?.startsWith('DASH-')) {
+      throw error;
+    }
+    throw DashboardBusinessException.studyStatisticsNotFound(userId);
+  }
+}
+
+/**
+ * 할일 통계 조회
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 조회 옵션
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<Object>} 할일 통계
+ * @throws {DashboardBusinessException}
+ *
+ * @example
+ * const stats = await getTaskStatistics('user-123', {}, prisma);
+ */
+export async function getTaskStatistics(userId, options, prisma) {
+  try {
+    const { startDate, endDate } = options;
+
+    const dateFilter = startDate && endDate ? {
+      createdAt: {
+        gte: startDate,
+        lte: endDate
+      }
+    } : {};
+
+    const tasks = await prisma.task.findMany({
+      where: {
+        userId,
+        ...dateFilter
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        priority: true,
+        completed: true,
+        completedAt: true,
+        dueDate: true,
+        createdAt: true
+      }
+    });
+
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.completed).length;
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // 상태별 분류
+    const statusCount = {
+      TODO: 0,
+      IN_PROGRESS: 0,
+      REVIEW: 0,
+      DONE: 0
+    };
+
+    // 우선순위별 분류
+    const priorityCount = {
+      LOW: 0,
+      MEDIUM: 0,
+      HIGH: 0,
+      URGENT: 0
+    };
+
+    tasks.forEach(task => {
+      statusCount[task.status] = (statusCount[task.status] || 0) + 1;
+      priorityCount[task.priority] = (priorityCount[task.priority] || 0) + 1;
+    });
+
+    // 마감 임박 할일
+    const now = new Date();
+    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const upcomingTasks = tasks
+      .filter(t => !t.completed && t.dueDate && new Date(t.dueDate) <= threeDaysLater)
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 5);
+
+    // 지난 할일
+    const overdueTasks = tasks.filter(t => 
+      !t.completed && t.dueDate && new Date(t.dueDate) < now
+    ).length;
+
+    return {
+      totalTasks,
+      completedTasks,
+      completionRate,
+      statusBreakdown: statusCount,
+      priorityBreakdown: priorityCount,
+      upcomingTasks: upcomingTasks.map(t => ({
+        id: t.id,
+        title: t.title,
+        priority: t.priority,
+        dueDate: t.dueDate
+      })),
+      overdueTasks
+    };
+  } catch (error) {
+    if (error.code?.startsWith('DASH-')) {
+      throw error;
+    }
+    throw DashboardBusinessException.taskStatisticsNotFound(userId);
+  }
+}
+
+/**
+ * 최근 활동 조회
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 조회 옵션
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<Array>} 최근 활동 목록
+ * @throws {DashboardBusinessException}
+ *
+ * @example
+ * const activities = await getRecentActivities('user-123', { limit: 10 }, prisma);
+ */
+export async function getRecentActivities(userId, options, prisma) {
+  try {
+    const { limit = 10, page = 1 } = options;
+    const skip = (page - 1) * limit;
+
+    // 알림을 활동 내역으로 사용
+    const notifications = await prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        type: true,
+        message: true,
+        studyId: true,
+        studyName: true,
+        studyEmoji: true,
+        isRead: true,
+        createdAt: true
+      }
+    });
+
+    return notifications.map(n => ({
+      id: n.id,
+      type: n.type,
+      message: n.message,
+      study: n.studyId ? {
+        id: n.studyId,
+        name: n.studyName,
+        emoji: n.studyEmoji
+      } : null,
+      isRead: n.isRead,
+      createdAt: n.createdAt
+    }));
+  } catch (error) {
+    if (error.code?.startsWith('DASH-')) {
+      throw error;
+    }
+    throw DashboardBusinessException.noRecentActivities();
+  }
+}
+
+/**
+ * 예정 일정 조회
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 조회 옵션
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<Array>} 예정 일정 목록
+ * @throws {DashboardBusinessException}
+ *
+ * @example
+ * const schedules = await getUpcomingSchedules('user-123', { limit: 5, days: 7 }, prisma);
+ */
+export async function getUpcomingSchedules(userId, options, prisma) {
+  try {
+    const { limit = 5, days = 7 } = options;
+
+    const now = new Date();
+    const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+    // 사용자가 참여중인 스터디의 일정 조회
+    const studyMembers = await prisma.studyMember.findMany({
+      where: {
+        userId,
+        status: 'ACTIVE'
+      },
+      select: { studyId: true }
+    });
+
+    const studyIds = studyMembers.map(m => m.studyId);
+
+    if (studyIds.length === 0) {
+      return [];
+    }
+
+    const events = await prisma.event.findMany({
+      where: {
+        studyId: { in: studyIds },
+        date: {
+          gte: now,
+          lte: futureDate
+        }
+      },
+      include: {
+        study: {
+          select: {
+            id: true,
+            name: true,
+            emoji: true
+          }
+        }
+      },
+      orderBy: { date: 'asc' },
+      take: limit
+    });
+
+    return events.map(e => ({
+      id: e.id,
+      title: e.title,
+      date: e.date,
+      startTime: e.startTime,
+      endTime: e.endTime,
+      location: e.location,
+      color: e.color,
+      study: {
+        id: e.study.id,
+        name: e.study.name,
+        emoji: e.study.emoji
+      }
+    }));
+  } catch (error) {
+    if (error.code?.startsWith('DASH-')) {
+      throw error;
+    }
+    throw DashboardBusinessException.noUpcomingSchedules();
+  }
+}
+
+/**
+ * 읽지 않은 알림 수 조회
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<number>} 읽지 않은 알림 수
+ *
+ * @example
+ * const count = await getUnreadNotificationCount('user-123', prisma);
+ */
+export async function getUnreadNotificationCount(userId, prisma) {
+  try {
+    const count = await prisma.notification.count({
+      where: {
+        userId,
+        isRead: false
+      }
+    });
+
+    return count;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * 대시보드 요약 데이터 조회
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {Object} options - 조회 옵션
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<Object>} 요약 데이터
+ * @throws {DashboardBusinessException}
+ *
+ * @example
+ * const summary = await getDashboardSummary('user-123', {}, prisma);
+ */
+export async function getDashboardSummary(userId, options, prisma) {
+  try {
+    const [studyCount, taskCount, unreadCount] = await Promise.all([
+      prisma.studyMember.count({
+        where: { userId, status: 'ACTIVE' }
+      }),
+      prisma.task.count({
+        where: { userId, completed: false }
+      }),
+      prisma.notification.count({
+        where: { userId, isRead: false }
+      })
+    ]);
+
+    // 완료한 할일 수
+    const completedTasks = await prisma.task.count({
+      where: { userId, completed: true }
+    });
+
+    const totalTasks = taskCount + completedTasks;
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    return {
+      studies: {
+        active: studyCount,
+        total: studyCount
+      },
+      tasks: {
+        pending: taskCount,
+        completed: completedTasks,
+        total: totalTasks,
+        completionRate
+      },
+      notifications: {
+        unread: unreadCount
+      }
+    };
+  } catch (error) {
+    if (error.code?.startsWith('DASH-')) {
+      throw error;
+    }
+    throw DashboardBusinessException.dashboardDataNotFound(userId);
+  }
+}
+
+// ============================================
+// 사용자/권한 확인 함수
+// ============================================
+
+/**
+ * 사용자 존재 확인
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<Object>} 사용자 정보
+ * @throws {DashboardBusinessException}
+ *
+ * @example
+ * const user = await checkUserExists('user-123', prisma);
+ */
+export async function checkUserExists(userId, prisma) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true
+      }
+    });
+
+    if (!user) {
+      throw DashboardBusinessException.userNotFound(userId);
+    }
+
+    return user;
+  } catch (error) {
+    if (error.code?.startsWith('DASH-')) {
+      throw error;
+    }
+    throw DashboardBusinessException.databaseError('checkUserExists', error.message);
+  }
+}
+
+/**
+ * 스터디 멤버십 확인
+ *
+ * @param {string} userId - 사용자 ID
+ * @param {string} studyId - 스터디 ID
+ * @param {PrismaClient} prisma - Prisma 클라이언트
+ * @returns {Promise<boolean>} 멤버 여부
+ *
+ * @example
+ * const isMember = await checkStudyMembership('user-123', 'study-456', prisma);
+ */
+export async function checkStudyMembership(userId, studyId, prisma) {
+  try {
+    const member = await prisma.studyMember.findUnique({
+      where: {
+        studyId_userId: { studyId, userId }
+      }
+    });
+
+    return member?.status === 'ACTIVE';
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * 대시보드 접근 권한 확인
+ *
+ * @param {string} requestUserId - 요청 사용자 ID
+ * @param {string} targetUserId - 대상 사용자 ID
+ * @returns {boolean} 접근 가능 여부
+ * @throws {DashboardPermissionException}
+ *
+ * @example
+ * checkDashboardAccess('user-123', 'user-123'); // true
+ */
+export function checkDashboardAccess(requestUserId, targetUserId) {
+  if (requestUserId !== targetUserId) {
+    throw DashboardPermissionException.otherUserDataAccessDenied(targetUserId);
+  }
+
+  return true;
+}
+
+// ============================================
+// 에러 핸들링
+// ============================================
+
+/**
+ * Dashboard 에러 핸들러 래퍼
+ *
+ * @param {Function} handler - 핸들러 함수
+ * @returns {Function} 래핑된 핸들러
+ *
+ * @example
+ * export const GET = withDashboardErrorHandler(async (request) => { ... });
+ */
+export function withDashboardErrorHandler(handler) {
+  return async (request, context) => {
+    try {
+      return await handler(request, context);
+    } catch (error) {
+      console.error('[DASHBOARD ERROR]', error);
+
+      const response = createErrorResponse(error);
+
+      return new Response(JSON.stringify(response), {
+        status: response.statusCode || 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  };
+}
+
+// ============================================
+// 상수 Export
+// ============================================
+
+export const DASHBOARD_HELPER_VERSION = '1.0.0';

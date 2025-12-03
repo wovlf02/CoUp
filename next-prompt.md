@@ -1,34 +1,39 @@
-# 다음 작업: Chat 도메인 Exception 구현
+# 다음 작업: Search 도메인 Exception 구현
 
 **작성일**: 2025-12-04  
 **최종 업데이트**: 2025-12-04  
-**현재 상태**: ✅ Notification 도메인 100% 완료!
-**다음 작업**: Chat 도메인 시작
+**현재 상태**: ✅ Dashboard 도메인 100% 완료!
+**다음 작업**: Search 도메인 시작
 
 ---
 
-## 🎉 Notification 도메인 완료!
+## 🎉 Dashboard 도메인 완료!
 
 ### 테스트 결과 (최종)
 ```
-Test Suites: 6 passed, 6 total
-Tests:       174 passed, 174 total
-Time:        1.122 s
+Test Suites: 4 passed, 4 total
+Tests:       280 passed, 280 total
 ```
 
 ### 완료된 테스트 파일
-- ✅ **notification-exception.test.js**: 27/27 (100%)
-- ✅ **notification-validators.test.js**: 31/31 (100%)
-- ✅ **notification-helpers.test.js**: 27/27 (100%)
-- ✅ **notifications.test.js**: 33/33 (100%)
-- ✅ **notification-actions.test.js**: 28/28 (100%)
-- ✅ **notification-read.test.js**: 28/28 (100%)
+- ✅ **dashboard-exception.test.js**: 74/74 (100%)
+- ✅ **dashboard-validators.test.js**: 103/103 (100%)
+- ✅ **dashboard-helpers.test.js**: 생성됨
+- ✅ **dashboard-api.test.js**: 생성됨
 
-### Notification 에러 코드 체계 (참고용)
-- `NOTI-001` ~ `NOTI-040`: 기본 NotificationException
-- `NOTI-VAL-xxx`: NotificationValidationException (유효성 검증)
-- `NOTI-PERM-xxx`: NotificationPermissionException (권한)
-- `NOTI-BIZ-xxx`: NotificationBusinessException (비즈니스 로직)
+### Dashboard 에러 코드 체계 (참고용)
+- `DASH-001` ~ `DASH-040`: 기본 DashboardException
+- `DASH-VAL-xxx`: DashboardValidationException (유효성 검증)
+- `DASH-PERM-xxx`: DashboardPermissionException (권한)
+- `DASH-BIZ-xxx`: DashboardBusinessException (비즈니스 로직)
+
+### 주요 파일
+- `src/lib/exceptions/dashboard/DashboardException.js` (40개 메서드)
+- `src/lib/exceptions/dashboard/DashboardValidationException.js` (15개 메서드)
+- `src/lib/exceptions/dashboard/DashboardPermissionException.js` (12개 메서드)
+- `src/lib/exceptions/dashboard/DashboardBusinessException.js` (20개 메서드)
+- `src/lib/validators/dashboard-validators.js` (12개 함수)
+- `src/lib/helpers/dashboard-helpers.js` (20개 함수)
 
 ---
 
@@ -39,119 +44,122 @@ Phase A: 도메인별 예외 처리 시스템 구축
 ├─ A1. Profile 도메인 ✅ 100% (172 테스트)
 ├─ A2. Study 도메인 ✅ 100% (142 테스트)
 ├─ A3. Group 도메인 ✅ 100% (114 테스트)
-├─ A4. Notification 도메인 ✅ 100% (174 테스트) 🎉
-├─ A5. Chat 도메인 ⏳ 0% ← 다음 작업
-├─ A6. Dashboard 도메인 ⏳ 0%
-├─ A7. Search 도메인 ⏳ 0%
+├─ A4. Notification 도메인 ✅ 100% (174 테스트)
+├─ A5. Chat 도메인 ✅ 100% (219 테스트)
+├─ A6. Dashboard 도메인 ✅ 100% (280 테스트) 🎉
+├─ A7. Search 도메인 ⏳ 0% ← 다음 작업
 ├─ A8. Settings 도메인 ⏳ 0%
 ├─ A9. Auth 도메인 ⏳ 0%
 └─ A10. Admin 도메인 ✅ 100% (61 테스트)
 
-Phase A 전체: 50% 완료 (5/10 도메인 완료, 총 663 테스트)
+Phase A 전체: 70% 완료 (7/10 도메인 완료, 총 1162 테스트)
 ```
 
 ---
 
-## 🎯 다음 작업: Chat 도메인
+## 🎯 다음 작업: Search 도메인
 
-### Phase A5: Chat 도메인
-**예상 시간**: 20-25시간  
+### Phase A7: Search 도메인
+**예상 시간**: 12-15시간  
 **우선순위**: Medium
 
 ### 작업 범위
-- 50-70개 Exception 메서드
-- 8-10개 API 엔드포인트
-- 120-140개 테스트 작성
+- 통합 검색 기능
+- 스터디, 그룹, 사용자 검색
+- 필터링 (카테고리, 태그, 상태)
+- 정렬 (최신순, 인기순, 관련도순)
+- 페이지네이션
+- 검색 히스토리/추천
+- 30-40개 Exception 메서드
+- 60-80개 테스트 작성
 - 100% 테스트 통과 목표
 
-### 참고할 Notification 패턴
+### 참고할 기존 패턴
 1. Helper 함수 mock 필수
 2. `params: Promise.resolve({ id: '...' })` 패턴 (Next.js 15)
 3. Logger 함수 개별 import
 4. `jest.resetAllMocks()` 전역 beforeEach
 5. `prisma.$transaction.mockImplementation` 패턴
-6. 에러 코드 체계: `CHAT-VAL-xxx`, `CHAT-PERM-xxx`, `CHAT-BIZ-xxx`
+6. 에러 코드 체계: `SRCH-VAL-xxx`, `SRCH-PERM-xxx`, `SRCH-BIZ-xxx`
 
 ---
 
-## 📋 Chat 도메인 구현 순서
+## 📋 Search 도메인 구현 순서
 
-### Step 1: 도메인 분석 (2-3시간)
-- Prisma 스키마의 Chat 관련 모델 분석 (ChatRoom, ChatMessage, ChatMember 등)
-- 기존 채팅 관련 코드 분석
+### Step 1: 도메인 분석 (2시간)
+- 기존 검색 관련 코드 분석
 - API 엔드포인트 요구사항 정리
-- 예외 케이스 식별 (50-70개)
+- 검색 대상 모델 분석 (Study, Group, User)
+- 예외 케이스 식별 (30-40개)
 
-### Step 2: Exception 클래스 생성 (3-4시간)
+### Step 2: Exception 클래스 생성 (2-3시간)
 ```
-src/lib/exceptions/chat/
-├── ChatException.js (Base)
-├── ChatValidationException.js (CHAT-VAL-xxx)
-├── ChatPermissionException.js (CHAT-PERM-xxx)
-├── ChatBusinessException.js (CHAT-BIZ-xxx)
+src/lib/exceptions/search/
+├── SearchException.js (Base)
+├── SearchValidationException.js (SRCH-VAL-xxx)
+├── SearchPermissionException.js (SRCH-PERM-xxx)
+├── SearchBusinessException.js (SRCH-BIZ-xxx)
 └── index.js
 ```
 
 예상 에러 메서드:
-- 채팅방 생성/수정/삭제 관련 (15개)
-- 멤버 관리 관련 (15개)
-- 메시지 송수신 관련 (15개)
-- 권한 검증 관련 (15개)
-- 기타 비즈니스 로직 (10개)
+- 검색어 검증 관련 (8-10개)
+- 필터 검증 관련 (8-10개)
+- 권한 검증 관련 (5-8개)
+- 비즈니스 로직 관련 (10-12개)
 
-### Step 3: Validators 구현 (2-3시간)
+### Step 3: Validators 구현 (2시간)
 ```
-src/lib/validators/chat-validators.js
-- validateRoomName
-- validateRoomDescription
-- validateRoomType
-- validateMessageContent
-- validateMemberRole
-- validateReadStatus
-```
-
-### Step 4: Helpers 구현 (2-3시간)
-```
-src/lib/helpers/chat-helpers.js
-- checkRoomMembership
-- checkRoomOwnership
-- checkRoomPermission
-- formatRoomResponse
-- formatMessageResponse
-- createChatRoom
-- addRoomMember
+src/lib/validators/search-validators.js
+- validateSearchQuery
+- validateSearchFilters
+- validateSortOption
+- validatePageParams
+- validateSearchType
+- validateSearchScope
 ```
 
-### Step 5: API 라우트 구현 (6-8시간)
+### Step 4: Helpers 구현 (2시간)
 ```
-src/app/api/chat/
-├── rooms/route.js                    - GET/POST (채팅방 목록, 생성)
-├── rooms/[id]/route.js               - GET/PATCH/DELETE (채팅방 상세, 수정, 삭제)
-├── rooms/[id]/messages/route.js      - GET/POST (메시지 조회, 전송)
-├── rooms/[id]/messages/[msgId]/route.js - DELETE (메시지 삭제)
-├── rooms/[id]/members/route.js       - GET/POST/DELETE (멤버 관리)
-├── rooms/[id]/read/route.js          - PATCH (읽음 처리)
-└── rooms/[id]/leave/route.js         - POST (채팅방 나가기)
+src/lib/helpers/search-helpers.js
+- buildSearchQuery
+- applyFilters
+- applySorting
+- formatSearchResults
+- getSearchHistory
+- getSuggestions
+- highlightMatches
 ```
 
-### Step 6: 테스트 작성 (6-8시간)
+### Step 5: API 라우트 구현 (3-4시간)
 ```
-src/__tests__/exceptions/chat-exception.test.js
-src/__tests__/validators/chat-validators.test.js
-src/__tests__/helpers/chat-helpers.test.js
-src/__tests__/api/chat/
-├── chat-rooms.test.js
-├── chat-messages.test.js
-├── chat-members.test.js
-└── chat-actions.test.js
+src/app/api/search/
+├── route.js                  - GET (통합 검색)
+├── studies/route.js          - GET (스터디 검색)
+├── groups/route.js           - GET (그룹 검색)
+├── users/route.js            - GET (사용자 검색)
+├── history/route.js          - GET/DELETE (검색 히스토리)
+└── suggestions/route.js      - GET (검색어 추천)
+```
+
+### Step 6: 테스트 작성 (3-4시간)
+```
+src/__tests__/exceptions/search-exception.test.js
+src/__tests__/validators/search-validators.test.js
+src/__tests__/helpers/search-helpers.test.js
+src/__tests__/api/search/
+├── search.test.js
+├── search-studies.test.js
+├── search-groups.test.js
+└── search-users.test.js
 ```
 
 목표:
-- Exception 테스트 (25-30개)
-- Validator 테스트 (20-25개)
-- Helper 테스트 (20-25개)
-- API 테스트 (50-60개)
-- **총 120-140개 테스트, 100% 통과**
+- Exception 테스트 (15-20개)
+- Validator 테스트 (15-20개)
+- Helper 테스트 (15-20개)
+- API 테스트 (20-25개)
+- **총 65-85개 테스트, 100% 통과**
 
 ---
 
@@ -161,75 +169,94 @@ src/__tests__/api/chat/
 # 작업 디렉토리
 cd C:\Project\CoUp\coup
 
-# Prisma 스키마에서 Chat 관련 모델 확인
-Get-Content prisma/schema.prisma | Select-String -Pattern "model (Chat|Message)" -Context 0,20
+# 기존 검색 관련 코드 확인
+Get-ChildItem -Recurse -Filter "*search*" | Select-Object FullName
 
-# 기존 채팅 코드 확인
-Get-ChildItem -Recurse -Filter "*chat*" | Select-Object FullName
-
-# 기존 메시지 코드 확인
-Get-ChildItem -Recurse -Filter "*message*" | Select-Object FullName
+# Prisma 스키마에서 검색 대상 모델 확인
+Get-Content prisma/schema.prisma | Select-String -Pattern "model (Study|Group|User)"
 ```
 
 ---
 
 ## 📚 참고 문서
 
-### 완료된 도메인 문서
-- `docs/group/GROUP-EXCEPTION-COMPLETE.md`
-- `docs/group/GROUP-VALIDATORS-COMPLETE.md`
-- `docs/group/GROUP-API-ROUTES-COMPLETE.md`
-- `docs/group/GROUP-TEST-COMPLETE-GUIDE.md`
-
-### 참고할 파일 패턴
-```
-src/lib/exceptions/notification/NotificationException.js      → ChatException.js
-src/lib/validators/notification-validators.js                 → chat-validators.js
-src/lib/helpers/notification-helpers.js                       → chat-helpers.js
-src/__tests__/api/notifications/notifications.test.js         → chat-rooms.test.js
-```
+### 완료된 도메인 패턴 참고
+- `src/lib/exceptions/dashboard/DashboardException.js`
+- `src/lib/exceptions/chat/ChatException.js`
+- `src/lib/validators/dashboard-validators.js`
+- `src/lib/helpers/dashboard-helpers.js`
 
 ---
 
-## 💡 Chat 도메인 특이사항
+## 💡 Search 도메인 특이사항
 
-### 실시간 기능 고려
-- WebSocket 연동 고려 (signaling-server 참고)
-- 메시지 전송 시 실시간 업데이트
-- 읽음 상태 실시간 반영
-
-### 멤버 역할 체계
+### 검색 타입
 ```javascript
-const CHAT_ROLES = {
-  OWNER: 'OWNER',      // 채팅방 생성자
-  ADMIN: 'ADMIN',      // 관리자 권한
-  MEMBER: 'MEMBER'     // 일반 멤버
+const SEARCH_TYPES = {
+  ALL: 'ALL',           // 통합 검색
+  STUDY: 'STUDY',       // 스터디 검색
+  GROUP: 'GROUP',       // 그룹 검색
+  USER: 'USER'          // 사용자 검색
 };
 ```
 
-### 채팅방 유형
+### 필터 옵션
 ```javascript
-const ROOM_TYPES = {
-  DIRECT: 'DIRECT',    // 1:1 채팅
-  GROUP: 'GROUP',      // 그룹 채팅
-  STUDY: 'STUDY'       // 스터디 채팅방
+const FILTER_OPTIONS = {
+  category: ['개발', '어학', '취업', '자격증', '기타'],
+  status: ['RECRUITING', 'IN_PROGRESS', 'COMPLETED'],
+  isPublic: [true, false],
+  memberCount: { min: 1, max: 50 }
 };
+```
+
+### 정렬 옵션
+```javascript
+const SORT_OPTIONS = {
+  RELEVANCE: 'RELEVANCE',      // 관련도순
+  LATEST: 'LATEST',            // 최신순
+  POPULAR: 'POPULAR',          // 인기순 (멤버수)
+  NAME: 'NAME'                 // 이름순
+};
+```
+
+### 검색 결과 구조
+```javascript
+{
+  results: {
+    studies: [...],
+    groups: [...],
+    users: [...]
+  },
+  pagination: {
+    page: 1,
+    limit: 10,
+    total: 100,
+    totalPages: 10
+  },
+  meta: {
+    query: '검색어',
+    filters: {...},
+    sort: 'RELEVANCE',
+    executionTime: 120
+  }
+}
 ```
 
 ---
 
 **프롬프트 예시**:
 ```
-Chat 도메인 구현을 시작해줘.
+Search 도메인 구현을 시작해줘.
 
-Notification 도메인이 100% 완료되었고 (174/174 테스트 통과), 
-이제 Chat 도메인을 같은 패턴으로 구현해야 해.
+Dashboard 도메인이 100% 완료되었고 (280/280 테스트 통과), 
+이제 Search 도메인을 같은 패턴으로 구현해야 해.
 
 작업 순서:
-1. Prisma 스키마의 Chat 관련 모델 분석
-2. ChatException 클래스 생성 (ChatValidationException, ChatPermissionException, ChatBusinessException)
-3. chat-validators.js 구현
-4. chat-helpers.js 구현
+1. 기존 검색 관련 코드 분석
+2. SearchException 클래스 생성 (SearchValidationException, SearchPermissionException, SearchBusinessException)
+3. search-validators.js 구현
+4. search-helpers.js 구현
 5. API 라우트 구현
 6. 테스트 작성
 
@@ -239,4 +266,4 @@ Step 1부터 시작해줘!
 ---
 
 **작성일**: 2025-12-04  
-**상태**: Chat 도메인 준비 완료
+**상태**: Search 도메인 준비 완료

@@ -1,4 +1,4 @@
-import { ChatException } from './ChatException.js';
+import ChatException from './ChatException.js';
 
 /**
  * Chat UI 예외 클래스
