@@ -5,6 +5,8 @@ import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStudy, useStudyMembers, useJoinRequests, useChangeMemberRole, useKickMember, useApproveJoinRequest, useRejectJoinRequest } from '@/lib/hooks/useApi';
+import { handleStudyError } from '@/lib/error-handlers/study-error-handler';
+import { showSuccessToast, showStudyErrorToast, showErrorToast, showWarningToast } from '@/lib/error-handlers/toast-helper';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import styles from './page.module.css';
 
@@ -126,7 +128,7 @@ export default function MyStudyMembersPage({ params }) {
   // 역할 변경 (OWNER만 가능)
   const handleChangeRole = async (member, newRole) => {
     if (!isOwner) {
-      alert('오너만 역할을 변경할 수 있습니다.');
+      showErrorToast('오너만 역할을 변경할 수 있습니다.');
       return;
     }
 
@@ -142,23 +144,33 @@ export default function MyStudyMembersPage({ params }) {
         memberId: member.userId,
         role: newRole
       });
-      alert('역할이 변경되었습니다.');
+      showSuccessToast('역할이 변경되었습니다.');
       await refetchMembers();
     } catch (error) {
       console.error('역할 변경 실패:', error);
-      alert('역할 변경에 실패했습니다.');
+      const { type } = handleStudyError(error);
+
+      if (type === 'OWNER_PERMISSION_REQUIRED') {
+        showErrorToast('이 작업은 스터디장만 수행할 수 있습니다.');
+      } else if (type === 'CANNOT_MODIFY_SELF_ROLE') {
+        showErrorToast('본인의 역할은 변경할 수 없습니다.');
+      } else if (type === 'ONLY_ONE_OWNER_ALLOWED') {
+        showErrorToast('스터디장은 1명만 지정할 수 있습니다.');
+      } else {
+        showStudyErrorToast(error);
+      }
     }
   };
 
   // 멤버 강퇴
   const handleKickMember = async (member) => {
     if (member.role === 'OWNER') {
-      alert('오너는 강퇴할 수 없습니다.');
+      showErrorToast('오너는 강퇴할 수 없습니다.');
       return;
     }
 
     if (member.role === 'ADMIN' && !isOwner) {
-      alert('관리자는 오너만 강퇴할 수 있습니다.');
+      showErrorToast('관리자는 오너만 강퇴할 수 있습니다.');
       return;
     }
 
@@ -176,14 +188,24 @@ export default function MyStudyMembersPage({ params }) {
         memberId: selectedMember.userId,
         reason: kickReason || undefined
       });
-      alert('멤버가 강퇴되었습니다.');
+      showSuccessToast('멤버가 강퇴되었습니다.');
       setShowConfirmModal(false);
       setKickReason('');
       setSelectedMember(null);
       await refetchMembers();
     } catch (error) {
       console.error('멤버 강퇴 실패:', error);
-      alert('멤버 강퇴에 실패했습니다.');
+      const { type } = handleStudyError(error);
+
+      if (type === 'CANNOT_REMOVE_OWNER') {
+        showErrorToast('스터디장은 제거할 수 없습니다.');
+      } else if (type === 'ADMIN_PERMISSION_REQUIRED') {
+        showErrorToast('이 작업은 관리자 권한이 필요합니다.');
+      } else if (type === 'MEMBER_NOT_FOUND') {
+        showErrorToast('멤버를 찾을 수 없습니다.');
+      } else {
+        showStudyErrorToast(error);
+      }
     }
   };
 
@@ -196,11 +218,22 @@ export default function MyStudyMembersPage({ params }) {
         studyId,
         requestId: request.id
       });
-      alert('가입 신청이 승인되었습니다.');
+      showSuccessToast('가입 신청이 승인되었습니다.');
       await Promise.all([refetchRequests(), refetchMembers()]);
     } catch (error) {
-      console.error('승인 실패:', error);
-      alert('승인에 실패했습니다.');
+      console.error('가입 신청 승인 실패:', error);
+      const { type } = handleStudyError(error);
+
+      if (type === 'STUDY_FULL') {
+        showErrorToast('스터디 정원이 가득 찼습니다.');
+      } else if (type === 'APPLICATION_NOT_FOUND') {
+        showErrorToast('가입 신청을 찾을 수 없습니다.');
+      } else if (type === 'APPLICATION_ALREADY_PROCESSED') {
+        showWarningToast('이미 처리된 가입 신청입니다.');
+        await Promise.all([refetchRequests(), refetchMembers()]);
+      } else {
+        showStudyErrorToast(error);
+      }
     }
   };
 

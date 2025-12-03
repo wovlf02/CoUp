@@ -333,6 +333,24 @@
   background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
 }
 
+/* 에러 스타일 */
+.inputError {
+  border-color: var(--error-500, #ef4444);
+}
+
+.inputError:focus {
+  border-color: var(--error-500, #ef4444);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.errorText {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--error-500, #ef4444);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .container {
@@ -370,4 +388,3 @@
     width: 100%;
   }
 }
-

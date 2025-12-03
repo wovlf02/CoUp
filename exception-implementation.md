@@ -11,18 +11,20 @@
 ### 3단계 로드맵
 
 ```
-Phase A: 도메인별 예외 처리 시스템 구축 (완료율: 15%)
-  ├─ A1. Profile 도메인 ✅ 100% (172/172 테스트)
-  ├─ A2. Study 도메인 ⏳ 50% (Step 3/6 완료)
-  ├─ A3. Group 도메인 ⏳ 0%
-  ├─ A4. Notification 도메인 ⏳ 0%
-  ├─ A5. Chat 도메인 ⏳ 0%
-  ├─ A6. Dashboard 도메인 ⏳ 0%
-  ├─ A7. Search 도메인 ⏳ 0%
-  ├─ A8. Settings 도메인 ⏳ 0%
-  ├─ A9. Auth 도메인 ⏳ 0%
-  └─ A10. Admin 도메인 ⏳ 0%
+Phase A: 도메인별 예외 처리 시스템 구축
+├─ A1. Profile 도메인 ✅ 100% (172 테스트)
+├─ A2. Study 도메인 ✅ 100% (142 테스트)
+├─ A3. Group 도메인 ⏳ 14% (Step 1/7 완료)
+├─ A4. Notification 도메인 ⏳ 0%
+├─ A5. Chat 도메인 ⏳ 0%
+├─ A6. Dashboard 도메인 ⏳ 0%
+├─ A7. Search 도메인 ⏳ 0%
+├─ A8. Settings 도메인 ⏳ 0%
+├─ A9. Auth 도메인 ⏳ 0%
+└─ A10. Admin 도메인 ✅ 100% (61 테스트)
 
+Phase A 전체: 32% 완료 (3/10 도메인 완료, 1개 진행 중)
+```
 Phase B: 사용자 흐름 통합 테스트 (완료율: 0%)
   ├─ B1. 신규 사용자 온보딩 플로우
   ├─ B2. 스터디 생성 및 참여 플로우
@@ -203,16 +205,61 @@ src/app/api/studies/
 
 ### A3. Group 도메인
 
-**예상 시간**: 20-25시간  
+**예상 시간**: 28-36시간  
 **우선순위**: High  
+**완료율**: 14% (Step 1/7 완료)
 
 **작업 범위**:
-- Group CRUD API
-- 멤버십 관리
-- 초대 시스템
-- 예외 처리: 60-80개
+- Group CRUD API (8개 엔드포인트)
+- 멤버십 관리 (OWNER, ADMIN, MEMBER)
+- 초대 시스템 (코드 기반, 이메일)
+- 가입/탈퇴 관리
+- 예외 처리: 76개
 
-**구현 단계**: Study 도메인과 동일한 6단계
+**구현 단계**:
+
+**Step 1: 도메인 분석 및 설계** (3-4시간) ✅ **완료 (2025-12-03)**
+- [x] Group API 구조 설계 (8개 엔드포인트)
+- [x] 예외 케이스 76개 식별
+- [x] GroupException 계층 구조 설계 (5개 서브 클래스)
+- [x] 문서: `docs/group/GROUP-ANALYSIS.md` 작성 완료
+
+**Step 2: Exception 클래스 구현** (5-6시간) ⏳ **다음 작업**
+- [ ] `src/lib/exceptions/group/GroupException.js` 생성
+- [ ] 76개 에러 메서드 구현
+- [ ] 5개 서브 클래스 구현
+- [ ] index.js export 파일 생성
+
+**Step 3: Validators & Logger 구현** (3-4시간)
+- [ ] `src/lib/validators/group-validators.js` (15개 검증 함수)
+- [ ] `src/lib/logging/groupLogger.js` (20개 로깅 함수)
+- [ ] `src/lib/helpers/group-helpers.js` (25개 헬퍼 함수)
+
+**Step 4: API 라우트 강화 - 핵심** (6-8시간)
+- [ ] `/api/groups/route.js` (GET/POST)
+- [ ] `/api/groups/[id]/route.js` (GET/PATCH/DELETE)
+- [ ] `/api/groups/[id]/members/route.js` (GET/POST/DELETE)
+- [ ] `/api/groups/[id]/invites/route.js` (GET/POST/DELETE)
+
+**Step 5: API 라우트 강화 - 추가** (3-4시간)
+- [ ] `/api/groups/[id]/join/route.js`
+- [ ] `/api/groups/[id]/leave/route.js`
+- [ ] `/api/groups/search/route.js`
+
+**Step 6: 테스트 작성** (5-6시간)
+- [ ] group.test.js (40개)
+- [ ] group-members.test.js (30개)
+- [ ] group-invites.test.js (25개)
+- [ ] group-helpers.test.js (25개)
+- [ ] 예상 총 테스트: 120개
+
+**Step 7: 프론트엔드 통합** (3-4시간)
+- [ ] GroupCard 컴포넌트
+- [ ] GroupForm 컴포넌트
+- [ ] GroupMemberList 컴포넌트
+- [ ] GroupInviteModal 컴포넌트
+
+**문서**: `C:\Project\CoUp\docs\group\GROUP-ANALYSIS.md`
 
 ---
 
@@ -295,16 +342,32 @@ src/app/api/studies/
 
 ---
 
-### A10. Admin 도메인
+### A10. Admin 도메인 ✅ (완료)
 
+**완료 날짜**: 2025-12-02  
+**테스트**: 61/61 통과 (100%)  
 **예상 시간**: 25-30시간  
-**우선순위**: Low  
+**우선순위**: Low (운영 기능)  
+
+**구현 내역**:
+- ✅ AdminException.js (100개 에러 코드)
+- ✅ 8개 서브클래스 구현
+- ✅ adminLogger.js (14개 로깅 함수)
+- ✅ admin-utils.js (18개 유틸리티 함수)
+- ✅ API 라우트 16개 강화
+- ✅ 테스트 61개 (admin.test.js + admin-simplified.test.js)
 
 **작업 범위**:
-- 사용자 관리
-- 컨텐츠 관리
+- 사용자 관리 (CRUD, 상태 변경, 정지/활성화)
+- 스터디 관리 (승인/거부, 삭제)
+- 신고 관리 (처리, 할당)
+- 설정 관리
 - 통계 및 리포트
-- 예외 처리: 80-100개
+- 예외 처리: 100개 에러 코드
+
+**문서**:
+- `C:\Project\CoUp\docs\admin\ADMIN-FINAL-COMPLETE.md`
+- `C:\Project\CoUp\docs\admin\ADMIN-STEP6-COMPLETE.md`
 
 ---
 
@@ -521,10 +584,10 @@ src/app/api/studies/
 
 ### 전체 진행률
 
-- **Phase A**: 10% (1/10 도메인 완료)
+- **Phase A**: 30% (3/10 도메인 완료)
 - **Phase B**: 0%
 - **Phase C**: 0%
-- **전체**: ~3% 완료
+- **전체**: ~9% 완료
 
 ---
 

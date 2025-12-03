@@ -4,12 +4,15 @@
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStudy, useJoinStudy } from '@/lib/hooks/useApi';
+import { handleStudyError } from '@/lib/error-handlers/study-error-handler';
+import { showSuccessToast, showStudyErrorToast, showErrorToast, showWarningToast } from '@/lib/error-handlers/toast-helper';
 import styles from './page.module.css';
 
 export default function StudyJoinPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     agreeToRules: false,
     introduction: '',
@@ -42,7 +45,7 @@ export default function StudyJoinPage({ params }) {
 
   const handleNext = () => {
     if (currentStep === 1 && !formData.agreeToRules) {
-      alert('스터디 규칙에 동의해주세요.');
+      showWarningToast('스터디 규칙에 동의해주세요.');
       return;
     }
     setCurrentStep((prev) => prev + 1);
@@ -53,6 +56,9 @@ export default function StudyJoinPage({ params }) {
   };
 
   const handleSubmit = async () => {
+    setErrors({});
+    setIsSubmitting(true);
+
     try {
       await joinStudy.mutateAsync({
         id: studyId,
@@ -65,15 +71,32 @@ export default function StudyJoinPage({ params }) {
 
       // 자동 승인 여부에 따라 다른 메시지
       if (study.autoApprove) {
-        alert('🎉 가입이 완료되었습니다!');
+        showSuccessToast('🎉 가입이 완료되었습니다!');
         router.push(`/my-studies/${studyId}`);
       } else {
-        alert('가입 신청이 완료되었습니다. 승인을 기다려주세요.');
+        showSuccessToast('가입 신청이 완료되었습니다. 승인을 기다려주세요.');
         router.push('/studies');
       }
     } catch (error) {
       console.error('가입 신청 실패:', error);
-      alert('가입 신청 중 오류가 발생했습니다. 다시 시도해주세요.');
+
+      const { message, type } = handleStudyError(error);
+
+      // 특정 에러 케이스 처리
+      if (type === 'ALREADY_MEMBER') {
+        showErrorToast(message);
+        setTimeout(() => router.push(`/my-studies/${studyId}`), 2000);
+      } else if (type === 'STUDY_FULL') {
+        showErrorToast(message);
+        setTimeout(() => router.push(`/studies/${studyId}`), 2000);
+      } else if (type === 'APPLICATION_ALREADY_EXISTS') {
+        showWarningToast(message);
+        setTimeout(() => router.push('/studies'), 2000);
+      } else {
+        showStudyErrorToast(error);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -306,9 +329,9 @@ export default function StudyJoinPage({ params }) {
                 <button
                   onClick={handleSubmit}
                   className={styles.submitBtn}
-                  disabled={joinStudy.isPending}
+                  disabled={isSubmitting}
                 >
-                  {joinStudy.isPending ? '가입 중...' : '🎉 가입하기'}
+                  {isSubmitting ? '가입 중...' : '🎉 가입하기'}
                 </button>
               </div>
             </div>

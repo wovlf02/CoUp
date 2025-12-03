@@ -1,7 +1,9 @@
 import "./globals.css";
+import "react-toastify/dist/ReactToastify.css";
 import ConditionalLayout from '@/components/layout/ConditionalLayout'
 import { Providers } from '@/components/Providers'
 import ScrollToTop from '@/components/ScrollToTop'
+import { ToastContainer } from 'react-toastify'
 
 export const metadata = {
   title: "CoUp - 함께, 더 높이",
@@ -18,6 +20,18 @@ export default function RootLayout({ children }) {
           <ConditionalLayout>
             {children}
           </ConditionalLayout>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={true}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
         </Providers>
       </body>
     </html>

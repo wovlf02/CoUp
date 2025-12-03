@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateStudy } from '@/lib/hooks/useApi';
+import { handleStudyError, isUserInputError } from '@/lib/error-handlers/study-error-handler';
+import { showSuccessToast, showStudyErrorToast, showErrorToast } from '@/lib/error-handlers/toast-helper';
 import styles from './page.module.css';
 
 // 카테고리 상수 (정적 데이터)
@@ -19,6 +21,8 @@ export default function StudyCreatePage() {
   const router = useRouter();
   const createStudy = useCreateStudy();
   const [step, setStep] = useState(1);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     emoji: '💻',
@@ -35,14 +39,68 @@ export default function StudyCreatePage() {
 
   const categories = STUDY_CATEGORIES;
 
+  // 실시간 필드 검증
+  const validateField = (fieldName, value) => {
+    const newErrors = { ...errors };
+
+    switch (fieldName) {
+      case 'name':
+        if (!value) {
+          newErrors.name = '스터디 이름을 입력해주세요';
+        } else if (value.length < 2) {
+          newErrors.name = '스터디 이름은 최소 2자 이상이어야 합니다';
+        } else if (value.length > 50) {
+          newErrors.name = '스터디 이름은 최대 50자까지 가능합니다';
+        } else {
+          delete newErrors.name;
+        }
+        break;
+
+      case 'description':
+        if (!value) {
+          newErrors.description = '스터디 설명을 입력해주세요';
+        } else if (value.length < 10) {
+          newErrors.description = '스터디 설명은 최소 10자 이상 입력해주세요';
+        } else if (value.length > 2000) {
+          newErrors.description = '스터디 설명은 최대 2000자까지 가능합니다';
+        } else {
+          delete newErrors.description;
+        }
+        break;
+
+      case 'maxMembers':
+        if (value < 2) {
+          newErrors.maxMembers = '최소 2명 이상으로 설정해주세요';
+        } else if (value > 100) {
+          newErrors.maxMembers = '최대 100명까지 설정할 수 있습니다';
+        } else {
+          delete newErrors.maxMembers;
+        }
+        break;
+
+      case 'tags':
+        if (value.length > 10) {
+          newErrors.tags = '태그는 최대 10개까지 추가할 수 있습니다';
+        } else {
+          delete newErrors.tags;
+        }
+        break;
+    }
+
+    setErrors(newErrors);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors({});
 
     // 폼 검증
     if (!formData.name || !formData.category || !formData.subCategory || !formData.description) {
-      alert('필수 항목을 모두 입력해주세요');
+      showErrorToast('필수 항목을 모두 입력해주세요');
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const studyData = {
@@ -58,11 +116,28 @@ export default function StudyCreatePage() {
       };
 
       const result = await createStudy.mutateAsync(studyData);
-      alert('🎉 스터디가 생성되었습니다!');
+      showSuccessToast('🎉 스터디가 생성되었습니다!');
       router.push(`/my-studies/${result.data.id}`);
     } catch (error) {
       console.error('스터디 생성 실패:', error);
-      alert('스터디 생성에 실패했습니다. 다시 시도해주세요.');
+
+      const { message, field, type } = handleStudyError(error);
+
+      // 필드별 에러인 경우
+      if (field) {
+        setErrors({ [field]: message });
+        showErrorToast(message);
+      }
+      // 사용자 입력 에러인 경우
+      else if (isUserInputError(type)) {
+        showErrorToast(message);
+      }
+      // 기타 에러
+      else {
+        showStudyErrorToast(error);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -130,12 +205,21 @@ export default function StudyCreatePage() {
                 type="text"
                 placeholder="예: 알고리즘 마스터 스터디"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={styles.input}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({ ...formData, name: value });
+                  validateField('name', value);
+                }}
+                onBlur={(e) => validateField('name', e.target.value)}
+                className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
                 maxLength={50}
                 required
               />
-              <span className={styles.hint}>2-50자 사이로 입력해주세요</span>
+              {errors.name ? (
+                <span className={styles.errorText}>{errors.name}</span>
+              ) : (
+                <span className={styles.hint}>2-50자 사이로 입력해주세요</span>
+              )}
             </div>
 
             <div className={styles.formGroup}>
@@ -205,48 +289,75 @@ export default function StudyCreatePage() {
                 스터디 소개 <span className={styles.required}>*</span>
               </label>
               <textarea
-                placeholder="스터디에 대해 자세히 설명해주세요"
+                placeholder="스터디에 대해 자세히 설명해주세요 (최소 10자)"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className={styles.textarea}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({ ...formData, description: value });
+                  validateField('description', value);
+                }}
+                onBlur={(e) => validateField('description', e.target.value)}
+                className={`${styles.textarea} ${errors.description ? styles.inputError : ''}`}
                 rows={5}
-                maxLength={500}
+                maxLength={2000}
                 required
               />
-              <span className={styles.hint}>
-                {formData.description.length}/500자
-              </span>
+              {errors.description ? (
+                <span className={styles.errorText}>{errors.description}</span>
+              ) : (
+                <span className={styles.hint}>
+                  {formData.description.length}/2000자 (최소 10자)
+                </span>
+              )}
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>태그 (최대 5개)</label>
+              <label className={styles.label}>태그 (최대 10개)</label>
               <input
                 type="text"
-                placeholder="엔터로 태그 추가"
-                className={styles.input}
+                placeholder="엔터로 태그 추가 (최대 20자)"
+                className={`${styles.input} ${errors.tags ? styles.inputError : ''}`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     const tag = e.target.value.trim();
-                    if (tag && formData.tags.length < 5 && !formData.tags.includes(tag)) {
-                      setFormData({ ...formData, tags: [...formData.tags, tag] });
-                      e.target.value = '';
+
+                    if (!tag) return;
+
+                    if (formData.tags.length >= 10) {
+                      showErrorToast('태그는 최대 10개까지 추가할 수 있습니다');
+                      return;
                     }
+
+                    if (tag.length > 20) {
+                      showErrorToast('태그는 최대 20자까지 가능합니다');
+                      return;
+                    }
+
+                    if (formData.tags.includes(tag)) {
+                      showErrorToast('이미 추가된 태그입니다');
+                      return;
+                    }
+
+                    const newTags = [...formData.tags, tag];
+                    setFormData({ ...formData, tags: newTags });
+                    validateField('tags', newTags);
+                    e.target.value = '';
                   }
                 }}
               />
+              {errors.tags && <span className={styles.errorText}>{errors.tags}</span>}
               <div className={styles.tags}>
                 {formData.tags.map((tag) => (
                   <span key={tag} className={styles.tag}>
                     #{tag}
                     <button
                       type="button"
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          tags: formData.tags.filter((t) => t !== tag),
-                        })
-                      }
+                      onClick={() => {
+                        const newTags = formData.tags.filter((t) => t !== tag);
+                        setFormData({ ...formData, tags: newTags });
+                        validateField('tags', newTags);
+                      }}
                       className={styles.tagRemove}
                     >
                       ×
@@ -307,13 +418,20 @@ export default function StudyCreatePage() {
                 min="2"
                 max="100"
                 value={formData.maxMembers}
-                onChange={(e) =>
-                  setFormData({ ...formData, maxMembers: parseInt(e.target.value) || 2 })
-                }
-                className={styles.input}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 2;
+                  setFormData({ ...formData, maxMembers: value });
+                  validateField('maxMembers', value);
+                }}
+                onBlur={(e) => validateField('maxMembers', parseInt(e.target.value))}
+                className={`${styles.input} ${errors.maxMembers ? styles.inputError : ''}`}
                 required
               />
-              <span className={styles.hint}>2-100명 사이로 설정해주세요</span>
+              {errors.maxMembers ? (
+                <span className={styles.errorText}>{errors.maxMembers}</span>
+              ) : (
+                <span className={styles.hint}>2-100명 사이로 설정해주세요</span>
+              )}
             </div>
 
             <div className={styles.formGroup}>
@@ -375,9 +493,9 @@ export default function StudyCreatePage() {
               <button
                 type="submit"
                 className={styles.submitButton}
-                disabled={createStudy.isPending}
+                disabled={isSubmitting || Object.keys(errors).length > 0}
               >
-                {createStudy.isPending ? '생성 중...' : '🎉 스터디 만들기'}
+                {isSubmitting ? '생성 중...' : '🎉 스터디 만들기'}
               </button>
             </div>
           </div>

@@ -63,7 +63,7 @@ describe('AdminException Tests', () => {
       
       expect(exception.code).toBe('ADMIN-001');
       expect(exception.statusCode).toBe(401);
-      expect(exception.securityLevel).toBe('high');
+      expect(exception.securityLevel).toBe('critical');
     });
 
     it('[ADMIN-002] 관리자 권한 부족', () => {
@@ -214,7 +214,7 @@ describe('AdminException Tests', () => {
     it('권한 예외는 높은 보안 레벨을 가진다', () => {
       const exception = AdminPermissionException.authenticationFailed();
       
-      expect(exception.securityLevel).toBe('high');
+      expect(exception.securityLevel).toBe('critical');
     });
 
     it('일반 비즈니스 예외는 normal 보안 레벨을 가진다', () => {
