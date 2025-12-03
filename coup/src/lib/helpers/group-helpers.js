@@ -19,6 +19,88 @@ import {
 import { GroupLogger } from '@/lib/logging/groupLogger';
 
 // ============================================
+// 응답 포맷팅
+// ============================================
+
+/**
+ * 그룹 정보를 클라이언트 응답 형식으로 변환
+ *
+ * @param {Object} group - 그룹 객체
+ * @returns {Object} 포맷된 그룹 정보
+ *
+ * @example
+ * const formatted = formatGroupResponse(group);
+ */
+export function formatGroupResponse(group) {
+  if (!group) return null;
+
+  return {
+    id: group.id,
+    name: group.name,
+    description: group.description,
+    category: group.category,
+    isPublic: group.isPublic,
+    isRecruiting: group.isRecruiting,
+    maxMembers: group.maxMembers,
+    imageUrl: group.imageUrl,
+    createdBy: group.createdBy,
+    createdAt: group.createdAt,
+    updatedAt: group.updatedAt,
+    memberCount: group._count?.members || 0
+  };
+}
+
+/**
+ * 멤버 정보를 클라이언트 응답 형식으로 변환
+ *
+ * @param {Object} member - 멤버 객체
+ * @returns {Object} 포맷된 멤버 정보
+ *
+ * @example
+ * const formatted = formatMemberResponse(member);
+ */
+export function formatMemberResponse(member) {
+  if (!member) return null;
+
+  return {
+    id: member.id,
+    role: member.role,
+    status: member.status,
+    joinedAt: member.joinedAt,
+    user: member.user ? {
+      id: member.user.id,
+      name: member.user.name,
+      email: member.user.email,
+      avatar: member.user.avatar
+    } : null
+  };
+}
+
+/**
+ * 초대 정보를 클라이언트 응답 형식으로 변환
+ *
+ * @param {Object} invite - 초대 객체
+ * @returns {Object} 포맷된 초대 정보
+ *
+ * @example
+ * const formatted = formatInviteResponse(invite);
+ */
+export function formatInviteResponse(invite) {
+  if (!invite) return null;
+
+  return {
+    id: invite.id,
+    code: invite.code,
+    status: invite.status,
+    expiresAt: invite.expiresAt,
+    maxUses: invite.maxUses,
+    usedCount: invite.usedCount,
+    createdBy: invite.createdBy,
+    createdAt: invite.createdAt
+  };
+}
+
+// ============================================
 // 역할 계층 관리
 // ============================================
 
@@ -679,82 +761,9 @@ export function canRemoveMember(memberRole, targetRole) {
 }
 
 // ============================================
-// 5. 기타 유틸리티 (5개)
+// 5. 기타 유틸리티 (2개)
 // ============================================
 
-/**
- * 그룹 응답 데이터 포맷팅
- *
- * @param {Object} group - 그룹 정보
- * @returns {Object} 포맷된 그룹 데이터
- *
- * @example
- * const formatted = await formatGroupResponse(group);
- */
-export async function formatGroupResponse(group) {
-  return {
-    id: group.id,
-    name: group.name,
-    description: group.description,
-    category: group.category,
-    isPublic: group.isPublic,
-    maxMembers: group.maxMembers,
-    currentMembers: group.members?.length || 0,
-    isRecruiting: group.isRecruiting,
-    imageUrl: group.imageUrl,
-    createdAt: group.createdAt,
-    updatedAt: group.updatedAt
-  };
-}
-
-/**
- * 멤버 응답 데이터 포맷팅
- *
- * @param {Object} member - 멤버 정보
- * @returns {Object} 포맷된 멤버 데이터
- *
- * @example
- * const formatted = await formatMemberResponse(member);
- */
-export async function formatMemberResponse(member) {
-  return {
-    id: member.id,
-    userId: member.userId,
-    groupId: member.groupId,
-    role: member.role,
-    status: member.status,
-    joinedAt: member.joinedAt,
-    user: member.user ? {
-      id: member.user.id,
-      name: member.user.name,
-      email: member.user.email,
-      avatar: member.user.avatar
-    } : null
-  };
-}
-
-/**
- * 초대 응답 데이터 포맷팅
- *
- * @param {Object} invite - 초대 정보
- * @returns {Object} 포맷된 초대 데이터
- *
- * @example
- * const formatted = await formatInviteResponse(invite);
- */
-export async function formatInviteResponse(invite) {
-  return {
-    id: invite.id,
-    code: invite.code,
-    groupId: invite.groupId,
-    createdBy: invite.createdBy,
-    targetEmail: invite.targetEmail,
-    maxUses: invite.maxUses,
-    usedCount: invite.usedCount,
-    expiresAt: invite.expiresAt,
-    createdAt: invite.createdAt
-  };
-}
 
 /**
  * 그룹 이름 중복 확인
@@ -871,4 +880,34 @@ export async function checkGroupPermission(groupId, userId, minimumRole, prisma)
  */
 export function canManageMember(managerRole, targetRole) {
   return canRemoveMember(managerRole, targetRole);
+}
+
+// ============================================
+// Alias 함수들 (API 라우트 호환성)
+// ============================================
+
+/**
+ * 그룹 멤버십 확인 (alias for checkMemberExists)
+ *
+ * @param {string} groupId - 그룹 ID
+ * @param {string} userId - 사용자 ID
+ * @param {PrismaClient} [prisma] - Prisma 클라이언트
+ * @returns {Promise<Object>} 멤버 정보
+ * @throws {GroupMemberException}
+ */
+export async function checkGroupMembership(groupId, userId, prisma) {
+  return await checkMemberExists(groupId, userId, prisma);
+}
+
+/**
+ * 강퇴 이력 확인 (alias for checkMemberKicked)
+ *
+ * @param {string} groupId - 그룹 ID
+ * @param {string} userId - 사용자 ID
+ * @param {PrismaClient} [prisma] - Prisma 클라이언트
+ * @returns {Promise<void>}
+ * @throws {GroupMemberException}
+ */
+export async function checkKickedHistory(groupId, userId, prisma) {
+  return await checkMemberKicked(groupId, userId, prisma);
 }

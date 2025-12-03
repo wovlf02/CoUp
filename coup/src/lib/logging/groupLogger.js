@@ -152,6 +152,76 @@ export class GroupLogger {
   static error(message, context = {}) {
     this.log(LOG_LEVELS.ERROR, message, context);
   }
+
+  /**
+   * 그룹 생성 로그
+   */
+  static logGroupCreated(groupId, createdBy, groupData) {
+    this.info('Group created', {
+      action: 'group_created',
+      groupId,
+      createdBy,
+      name: groupData.name,
+      category: groupData.category,
+      isPublic: groupData.isPublic,
+      maxMembers: groupData.maxMembers,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * 그룹 수정 로그
+   */
+  static logGroupUpdated(groupId, updatedBy, changes) {
+    this.info('Group updated', {
+      action: 'group_updated',
+      groupId,
+      updatedBy,
+      changes: Object.keys(changes),
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * 그룹 삭제 로그
+   */
+  static logGroupDeleted(groupId, deletedBy, reason = '') {
+    this.warn('Group deleted', {
+      action: 'group_deleted',
+      groupId,
+      deletedBy,
+      reason,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * 멤버 추가 로그
+   */
+  static logMemberAdded(groupId, userId, addedBy, role) {
+    this.info('Member added', {
+      action: 'member_added',
+      groupId,
+      userId,
+      addedBy,
+      role,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * 멤버 제거 로그
+   */
+  static logMemberRemoved(groupId, userId, removedBy, reason = '') {
+    this.warn('Member removed', {
+      action: 'member_removed',
+      groupId,
+      userId,
+      removedBy,
+      reason,
+      timestamp: new Date().toISOString()
+    });
+  }
 }
 
 // ============================================

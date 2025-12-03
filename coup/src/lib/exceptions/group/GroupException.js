@@ -194,7 +194,7 @@ export default class GroupException extends Error {
     );
   }
 
-  static capacityTooLarge(maxCapacity = 100) {
+  static capacityTooLarge(maxCapacity = 200) {
     return new GroupException(
       `그룹 정원은 최대 ${maxCapacity}명까지 가능합니다.`,
       'GROUP-014',
@@ -262,6 +262,48 @@ export default class GroupException extends Error {
       400,
       'medium',
       { field: 'image', type: 'size', size, maxSize }
+    );
+  }
+
+  // 초대 코드 검증 (2개)
+  static inviteCodeRequired() {
+    return new GroupException(
+      '초대 코드를 입력해주세요.',
+      'GROUP-020-1',
+      400,
+      'medium',
+      { field: 'inviteCode', type: 'required' }
+    );
+  }
+
+  static invalidInviteCodeFormat(code) {
+    return new GroupException(
+      `유효하지 않은 초대 코드 형식입니다: ${code}`,
+      'GROUP-020-2',
+      400,
+      'medium',
+      { field: 'inviteCode', type: 'format', code }
+    );
+  }
+
+  // 이메일 검증 (2개)
+  static emailRequired() {
+    return new GroupException(
+      '이메일을 입력해주세요.',
+      'GROUP-020-3',
+      400,
+      'medium',
+      { field: 'email', type: 'required' }
+    );
+  }
+
+  static invalidEmailFormat(email) {
+    return new GroupException(
+      `유효하지 않은 이메일 형식입니다: ${email}`,
+      'GROUP-020-4',
+      400,
+      'medium',
+      { field: 'email', type: 'format', email }
     );
   }
 
@@ -448,6 +490,16 @@ export default class GroupException extends Error {
   }
 
   // 역할 관리 (4개)
+  static roleRequired() {
+    return new GroupException(
+      '역할을 입력해주세요.',
+      'GROUP-033-1',
+      400,
+      'medium',
+      { type: 'role', subtype: 'required' }
+    );
+  }
+
   static invalidRole(role) {
     return new GroupException(
       `'${role}'은 유효하지 않은 역할입니다.`,
@@ -455,6 +507,16 @@ export default class GroupException extends Error {
       400,
       'high',
       { type: 'role', subtype: 'invalid', role }
+    );
+  }
+
+  static invalidStatus(status, validStatuses = []) {
+    return new GroupException(
+      `'${status}'는 유효하지 않은 상태입니다. 가능한 값: ${validStatuses.join(', ')}`,
+      'GROUP-034-1',
+      400,
+      'medium',
+      { type: 'status', subtype: 'invalid', status, validStatuses }
     );
   }
 
@@ -853,6 +915,46 @@ export default class GroupException extends Error {
       500,
       'low',
       { type: 'system', subtype: 'database_error', operation, details }
+    );
+  }
+
+  static groupNameExists(name) {
+    return new GroupException(
+      `이미 존재하는 그룹 이름입니다: ${name}`,
+      'GROUP-077',
+      409,
+      'low',
+      { type: 'validation', subtype: 'duplicate_name', name }
+    );
+  }
+
+  static noUpdateData() {
+    return new GroupException(
+      '수정할 데이터가 없습니다.',
+      'GROUP-078',
+      400,
+      'low',
+      { type: 'validation', subtype: 'no_update_data' }
+    );
+  }
+
+  static groupHasActiveMembers(message) {
+    return new GroupException(
+      message || '활성 멤버가 있어 작업을 진행할 수 없습니다.',
+      'GROUP-062',
+      400,
+      'high',
+      { type: 'group', subtype: 'has_active_members' }
+    );
+  }
+
+  static invalidCapacity(message) {
+    return new GroupException(
+      message || '유효하지 않은 정원입니다.',
+      'GROUP-079',
+      400,
+      'low',
+      { type: 'validation', subtype: 'invalid_capacity' }
     );
   }
 }

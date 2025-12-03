@@ -70,5 +70,84 @@ export default class GroupPermissionException extends GroupException {
   static insufficientPermissionToCancelInvite() {
     return GroupException.insufficientPermissionToCancelInvite();
   }
+
+  // ========================================
+  // 추가 권한 체크 메서드
+  // ========================================
+
+  static ownerPermissionRequired(userId, currentRole) {
+    return new GroupException(
+      'OWNER 권한이 필요합니다.',
+      'GROUP-021',
+      403,
+      'critical',
+      { userId, currentRole, requiredRole: 'OWNER' }
+    );
+  }
+
+  static adminPermissionRequired(userId, currentRole) {
+    return new GroupException(
+      'ADMIN 이상의 권한이 필요합니다.',
+      'GROUP-022',
+      403,
+      'critical',
+      { userId, currentRole, requiredRole: 'ADMIN' }
+    );
+  }
+
+  static notActiveMember(userId, status) {
+    return new GroupException(
+      '활성화된 멤버가 아닙니다.',
+      'GROUP-027',
+      403,
+      'high',
+      { userId, status }
+    );
+  }
+
+  static insufficientRole(message) {
+    return new GroupException(
+      message || '권한이 부족합니다.',
+      'GROUP-023',
+      403,
+      'critical'
+    );
+  }
+
+  static cannotChangeOwnerRole() {
+    return new GroupException(
+      'OWNER의 역할을 변경할 수 없습니다.',
+      'GROUP-041',
+      403,
+      'critical'
+    );
+  }
+
+  static cannotModifyOwner() {
+    return new GroupException(
+      'OWNER는 제거할 수 없습니다.',
+      'GROUP-060',
+      403,
+      'critical'
+    );
+  }
+
+  static cannotModifySelf() {
+    return new GroupException(
+      '자기 자신을 제거할 수 없습니다.',
+      'GROUP-061',
+      403,
+      'critical'
+    );
+  }
+
+  static insufficientPermission(message) {
+    return new GroupException(
+      message || '권한이 부족합니다.',
+      'GROUP-023',
+      403,
+      'critical'
+    );
+  }
 }
 

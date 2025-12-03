@@ -36,6 +36,20 @@ export default class GroupBusinessException extends GroupException {
   }
 
   // ========================================
+  // 입력 검증 (1개)
+  // ========================================
+
+  static invalidInput(message = '잘못된 입력 값입니다.') {
+    return new GroupBusinessException(
+      message,
+      'GROUP-INVALID-INPUT',
+      400,
+      'low',
+      { category: 'validation' }
+    );
+  }
+
+  // ========================================
   // 그룹 삭제 (4개)
   // ========================================
 
@@ -65,6 +79,20 @@ export default class GroupBusinessException extends GroupException {
 
   static groupRecruitingClosed(groupId) {
     return GroupException.groupRecruitingClosed(groupId);
+  }
+
+  static recruitmentClosed(groupId) {
+    return GroupException.groupRecruitingClosed(groupId);
+  }
+
+  static capacityFull(current, max) {
+    return new GroupException(
+      `그룹 정원이 가득 찼습니다. (현재: ${current}/${max})`,
+      'GROUP-064',
+      400,
+      'low',
+      { current, max }
+    );
   }
 
   // ========================================
@@ -113,6 +141,22 @@ export default class GroupBusinessException extends GroupException {
 
   static databaseError(operation, details) {
     return GroupException.databaseError(operation, details);
+  }
+
+  static groupNameExists(name) {
+    return GroupException.groupNameExists(name);
+  }
+
+  static noUpdateData() {
+    return GroupException.noUpdateData();
+  }
+
+  static groupHasActiveMembers(message) {
+    return GroupException.groupHasActiveMembers(message);
+  }
+
+  static invalidCapacity(message) {
+    return GroupException.invalidCapacity(message);
   }
 }
 

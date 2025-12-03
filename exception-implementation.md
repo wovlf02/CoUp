@@ -14,8 +14,8 @@
 Phase A: 도메인별 예외 처리 시스템 구축
 ├─ A1. Profile 도메인 ✅ 100% (172 테스트)
 ├─ A2. Study 도메인 ✅ 100% (142 테스트)
-├─ A3. Group 도메인 ⏳ 43% (Step 3/7 완료)
-├─ A4. Notification 도메인 ⏳ 0%
+├─ A3. Group 도메인 ✅ 100% (114 테스트)
+├─ A4. Notification 도메인 ✅ 100% (174 테스트) 🎉
 ├─ A5. Chat 도메인 ⏳ 0%
 ├─ A6. Dashboard 도메인 ⏳ 0%
 ├─ A7. Search 도메인 ⏳ 0%
@@ -23,7 +23,7 @@ Phase A: 도메인별 예외 처리 시스템 구축
 ├─ A9. Auth 도메인 ⏳ 0%
 └─ A10. Admin 도메인 ✅ 100% (61 테스트)
 
-Phase A 전체: 36% 완료 (3/10 도메인 완료, 1개 진행 중)
+Phase A 전체: 50% 완료 (5/10 도메인 완료)
 ```
 Phase B: 사용자 흐름 통합 테스트 (완료율: 0%)
   ├─ B1. 신규 사용자 온보딩 플로우
@@ -203,11 +203,12 @@ src/app/api/studies/
 
 ---
 
-### A3. Group 도메인
+### A3. Group 도메인 ✅ (완료)
 
-**예상 시간**: 28-36시간  
-**우선순위**: High  
-**완료율**: 43% (Step 3/7 완료)
+**완료 날짜**: 2025-12-03  
+**테스트**: 114/114 통과 (100%)  
+**총 작업 시간**: ~28시간  
+**우선순위**: High
 
 **작업 범위**:
 - Group CRUD API (8개 엔드포인트)
@@ -227,17 +228,19 @@ src/app/api/studies/
 **Step 2: Exception 클래스 구현** (5-6시간) ✅ **완료 (2025-12-03)**
 - [x] `src/lib/exceptions/group/GroupException.js` 생성 (76개 메서드)
 - [x] `GroupValidationException.js` 구현 (20개 에러)
-- [x] `GroupPermissionException.js` 구현 (10개 에러)
-- [x] `GroupMemberException.js` 구현 (14개 에러)
+- [x] `GroupPermissionException.js` 구현 (10개 에러 + 5개 추가)
+- [x] `GroupMemberException.js` 구현 (14개 에러 + 2개 추가)
 - [x] `GroupInviteException.js` 구현 (15개 에러)
-- [x] `GroupBusinessException.js` 구현 (17개 에러)
+- [x] `GroupBusinessException.js` 구현 (17개 에러 + 2개 추가)
 - [x] index.js export 파일 생성
+- [x] 누락 메서드 추가 완료 (2025-12-03 21:25)
 - [x] 문서: `docs/group/GROUP-EXCEPTION-COMPLETE.md` 작성 완료
 
 **Step 3: Validators & Logger 구현** (3-4시간) ✅ **완료 (2025-12-03)**
 - [x] `src/lib/validators/group-validators.js` (15개 검증 함수)
 - [x] `src/lib/logging/groupLogger.js` (20개 로깅 함수)
-- [x] `src/lib/helpers/group-helpers.js` (25개 헬퍼 함수)
+- [x] `src/lib/helpers/group-helpers.js` (27개 헬퍼 함수)
+- [x] 중복 함수 제거 완료 (2025-12-03 21:25)
 - [x] 문서: `docs/group/GROUP-VALIDATORS-COMPLETE.md` 작성 완료
 
 **Step 4: API 라우트 강화 - 핵심** (6-8시간) ✅ **완료 (2025-12-03)**
@@ -250,51 +253,193 @@ src/app/api/studies/
 - [x] 트랜잭션, 역할 계층, Soft Delete 적용
 - [x] 문서: `docs/group/GROUP-API-ROUTES-COMPLETE.md` 작성 완료
 
-**Step 5: API 라우트 강화 - 추가** (3-4시간) ⏳ **다음 작업**
-- [ ] `/api/groups/[id]/join/route.js`
-- [ ] `/api/groups/[id]/leave/route.js`
-- [ ] `/api/groups/search/route.js`
+**Step 5: API 라우트 강화 - 추가** (3-4시간) ✅ **완료 (2025-12-03)**
+- [x] `/api/groups/[id]/join/route.js` (POST - 그룹 가입)
+- [x] `/api/groups/[id]/leave/route.js` (POST - 그룹 탈퇴)
+- [x] `/api/groups/search/route.js` (GET - 고급 검색)
+- [x] 3개 추가 API 엔드포인트 구현
+- [x] 가입/탈퇴 비즈니스 로직 완성
+- [x] 고급 검색 기능 (필터링, 정렬, 페이지네이션)
+- [x] 문서: `docs/group/GROUP-API-ADDITIONAL-COMPLETE.md` 작성 완료
 
-**Step 6: 테스트 작성** (5-6시간)
-- [ ] group.test.js (40개)
-- [ ] group-members.test.js (30개)
-- [ ] group-invites.test.js (25개)
-- [ ] group-helpers.test.js (25개)
-- [ ] 예상 총 테스트: 120개
+**Step 6: 테스트 작성** (5-6시간) ✅ **완료 (2025-12-03)**
+- [x] Validator 테스트 작성 (29개) ✅ 100% (29/29 통과)
+- [x] Helper 테스트 작성 (30개) ✅ 100% (30/30 통과)
+- [x] API 테스트 수정 (40개) ✅ 100% (40/40 수정 완료)
+- [x] Integration 테스트 수정 (15개) ✅ 100% (15/15 수정 완료)
+- [x] 총 114개 테스트 작성 및 수정
+- **최종 결과**: 114/114 통과 (100%)
+- [x] Helper 함수 alias 추가 (checkGroupMembership, checkKickedHistory) ✅
+- [x] API 라우트 파일 재생성 (members, invites, join, leave) ✅
+- [x] GroupBusinessException.invalidInput() 메서드 추가 ✅
+- [x] 모든 테스트 파일 params Promise 패턴 적용 ✅
+- [x] 모든 테스트 파일 helper mock 추가 ✅
+- [x] 문서: `GROUP-STEP6-FINAL-COMPLETE.md` 작성 완료
 
-**Step 7: 프론트엔드 통합** (3-4시간)
+**Step 7: 프론트엔드 통합** (3-4시간) ⏸️ **Phase B에서 진행**
 - [ ] GroupCard 컴포넌트
 - [ ] GroupForm 컴포넌트
 - [ ] GroupMemberList 컴포넌트
 - [ ] GroupInviteModal 컴포넌트
 
-**문서**: `C:\Project\CoUp\docs\group\GROUP-ANALYSIS.md`
+**완료 문서**:
+- `docs/group/GROUP-ANALYSIS.md`
+- `docs/group/GROUP-EXCEPTION-COMPLETE.md`
+- `docs/group/GROUP-VALIDATORS-COMPLETE.md`
+- `docs/group/GROUP-API-ROUTES-COMPLETE.md`
+- `docs/group/GROUP-API-ADDITIONAL-COMPLETE.md`
+- `docs/group/GROUP-TEST-COMPLETE-GUIDE.md`
+- `docs/group/GROUP-STEP6-FINAL-COMPLETE.md`
+
+**최근 수정사항 (2025-12-03 23:30 - 최종 완료)**:
+- group-helpers.js 중복 함수 제거 ✅
+- GroupBusinessException: recruitmentClosed, capacityFull 추가 ✅
+- GroupPermissionException: 5개 메서드 추가 ✅
+- GroupMemberException: 2개 메서드 추가 ✅
+- 모든 테스트 파일 params Promise 패턴 적용 ✅
+- group-members.test.js: helper mock 추가, role 필터링 지원 ✅
+- group-invites.test.js: helper mock 추가, 완전 리팩토링 ✅
+- group-actions.test.js: helper mock + $transaction mock 추가 ✅
+- group-flow.test.js: helper mock + params Promise 패턴 완전 적용 ✅
+- API 라우트 members/route.js에 role 필터링 추가 ✅
+- **Step 6 최종 완료**: 114/114 테스트 100% 완료 ✅
+- **GROUP-STEP6-FINAL-COMPLETE.md** 작성 완료 ✅
 
 ---
 
-### A4. Notification 도메인
+### A4. Notification 도메인 ✅ (완료)
 
-**예상 시간**: 15-20시간  
-**우선순위**: High  
+**완료 날짜**: 2025-12-04  
+**테스트**: 174/174 통과 (100%)  
+**총 작업 시간**: ~18시간  
+**우선순위**: High
 
 **작업 범위**:
-- 알림 생성/조회 API
-- 읽음 처리
-- 설정 관리
-- 예외 처리: 30-40개
+- 알림 생성/조회 API (6개 엔드포인트)
+- 읽음 처리 (단건/전체)
+- 알림 설정 관리
+- 예외 처리: 40개 에러 코드
+
+**구현 단계**:
+
+**Step 1: 도메인 분석** (1시간) ✅ **완료**
+- [x] Prisma 스키마의 Notification 모델 분석
+- [x] 기존 알림 관련 코드 분석
+- [x] API 엔드포인트 요구사항 정리
+
+**Step 2: Exception 클래스 생성** (2시간) ✅ **완료**
+- [x] `src/lib/exceptions/notification/NotificationException.js` 생성
+- [x] `NotificationValidationException.js` 구현 (NOTI-VAL-001 ~ NOTI-VAL-015)
+- [x] `NotificationPermissionException.js` 구현 (NOTI-PERM-001 ~ NOTI-PERM-014)
+- [x] `NotificationBusinessException.js` 구현 (NOTI-BIZ-001 ~ NOTI-BIZ-023)
+- [x] index.js export 파일 생성
+
+**Step 3: Validators 구현** (2시간) ✅ **완료**
+- [x] `src/lib/validators/notification-validators.js` (10개 검증 함수)
+- [x] validateNotificationType
+- [x] validateNotificationData
+- [x] validateMarkAsRead
+
+**Step 4: Helpers 구현** (2시간) ✅ **완료**
+- [x] `src/lib/helpers/notification-helpers.js` (15개 헬퍼 함수)
+- [x] checkNotificationOwnership
+- [x] formatNotificationResponse
+- [x] createNotification
+
+**Step 5: API 라우트 구현** (5시간) ✅ **완료**
+- [x] `/api/notifications/route.js` (GET/POST)
+- [x] `/api/notifications/[id]/route.js` (GET/DELETE)
+- [x] `/api/notifications/[id]/read/route.js` (PATCH)
+- [x] `/api/notifications/mark-all-read/route.js` (PATCH)
+- [x] `/api/notifications/count/route.js` (GET)
+- [x] `/api/notifications/bulk/route.js` (DELETE)
+
+**Step 6: 테스트 작성** (6시간) ✅ **완료**
+- [x] Exception 테스트 (27개)
+- [x] Validator 테스트 (31개)
+- [x] Helper 테스트 (27개)
+- [x] API 테스트 (89개)
+- **최종 결과**: 174/174 통과 (100%)
+
+**완료된 테스트 파일**:
+- `notification-exception.test.js`: 27/27 (100%)
+- `notification-validators.test.js`: 31/31 (100%)
+- `notification-helpers.test.js`: 27/27 (100%)
+- `notifications.test.js`: 33/33 (100%)
+- `notification-actions.test.js`: 28/28 (100%)
+- `notification-read.test.js`: 28/28 (100%)
+
+**에러 코드 체계**:
+- `NOTI-001` ~ `NOTI-040`: 기본 NotificationException
+- `NOTI-VAL-xxx`: NotificationValidationException (유효성 검증)
+- `NOTI-PERM-xxx`: NotificationPermissionException (권한)
+- `NOTI-BIZ-xxx`: NotificationBusinessException (비즈니스 로직)
 
 ---
 
-### A5. Chat 도메인
+### A5. Chat 도메인 ⏳ (다음 작업)
 
 **예상 시간**: 20-25시간  
 **우선순위**: Medium  
 
 **작업 범위**:
-- 채팅방 관리
+- 채팅방 CRUD (생성, 조회, 수정, 삭제)
+- 채팅방 멤버 관리
 - 메시지 송수신
+- 읽음 처리
 - 파일 전송
 - 예외 처리: 50-70개
+
+**API 엔드포인트** (예상 8-10개):
+```
+src/app/api/chat/
+├── rooms/route.js - GET/POST (채팅방 목록, 생성)
+├── rooms/[id]/route.js - GET/PATCH/DELETE (채팅방 상세, 수정, 삭제)
+├── rooms/[id]/messages/route.js - GET/POST (메시지 조회, 전송)
+├── rooms/[id]/members/route.js - GET/POST/DELETE (멤버 관리)
+├── rooms/[id]/read/route.js - PATCH (읽음 처리)
+└── rooms/[id]/files/route.js - POST (파일 전송)
+```
+
+**구현 단계**:
+
+**Step 1: 도메인 분석** (2-3시간)
+- [ ] Prisma 스키마의 Chat 관련 모델 분석
+- [ ] 기존 채팅 관련 코드 분석
+- [ ] API 엔드포인트 요구사항 정리
+- [ ] 예외 케이스 식별 (50-70개)
+
+**Step 2: Exception 클래스 생성** (3-4시간)
+- [ ] `src/lib/exceptions/chat/ChatException.js` 생성
+- [ ] `ChatValidationException.js` 구현
+- [ ] `ChatPermissionException.js` 구현
+- [ ] `ChatBusinessException.js` 구현
+- [ ] index.js export 파일 생성
+
+**Step 3: Validators 구현** (2-3시간)
+- [ ] `src/lib/validators/chat-validators.js`
+- [ ] validateRoomData
+- [ ] validateMessageData
+- [ ] validateMemberAction
+
+**Step 4: Helpers 구현** (2-3시간)
+- [ ] `src/lib/helpers/chat-helpers.js`
+- [ ] checkRoomMembership
+- [ ] checkRoomOwnership
+- [ ] formatChatResponse
+
+**Step 5: API 라우트 구현** (6-8시간)
+- [ ] 채팅방 CRUD API
+- [ ] 메시지 송수신 API
+- [ ] 멤버 관리 API
+- [ ] 읽음 처리 API
+
+**Step 6: 테스트 작성** (6-8시간)
+- [ ] Exception 테스트 (25-30개)
+- [ ] Validator 테스트 (20-25개)
+- [ ] Helper 테스트 (20-25개)
+- [ ] API 테스트 (50-60개)
+- **목표**: 120-140개 테스트, 100% 통과
 
 ---
 
@@ -584,19 +729,23 @@ src/app/api/studies/
 ### 현재 진행 상황
 
 ```
-✅ Phase A1: Profile 도메인 (100% 완료)
-⏳ Phase A2: Study 도메인 (0% - 다음 작업)
-⏳ Phase A3-A10: 나머지 도메인들
+✅ Phase A1: Profile 도메인 (100% 완료) - 172 테스트
+✅ Phase A2: Study 도메인 (100% 완료) - 142 테스트
+✅ Phase A3: Group 도메인 (100% 완료) - 114 테스트
+✅ Phase A4: Notification 도메인 (100% 완료) - 174 테스트
+⏳ Phase A5: Chat 도메인 (0% - 다음 작업)
+⏳ Phase A6-A9: 나머지 도메인들
+✅ Phase A10: Admin 도메인 (100% 완료) - 61 테스트
 ⏳ Phase B: 사용자 흐름 테스트
 ⏳ Phase C: 배포 준비
 ```
 
 ### 전체 진행률
 
-- **Phase A**: 30% (3/10 도메인 완료)
+- **Phase A**: 50% (5/10 도메인 완료, 총 663 테스트)
 - **Phase B**: 0%
 - **Phase C**: 0%
-- **전체**: ~9% 완료
+- **전체**: ~15% 완료
 
 ---
 

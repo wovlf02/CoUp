@@ -1,144 +1,125 @@
-/**
+﻿/**
  * /api/groups/[id]/invites/route.js
  *
  * 그룹 초대 관리 API
  *
- * @routes
- * - GET    /api/groups/[id]/invites - 초대 목록 조회 (멤버만)
- * - POST   /api/groups/[id]/invites - 초대 생성 (ADMIN 이상)
- * - DELETE /api/groups/[id]/invites - 초대 취소 (생성자 또는 ADMIN)
- *
- * @author CoUp Team
- * @created 2025-12-03
+ * @route GET /api/groups/[id]/invites - 초대 목록 조회
+ * @route POST /api/groups/[id]/invites - 초대 생성
+ * @route DELETE /api/groups/[id]/invites - 초대 취소
+ * @access Private
  */
 
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authConfig } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import {
   GroupBusinessException,
+  GroupPermissionException,
   GroupInviteException
 } from '@/lib/exceptions/group';
-import { GroupLogger } from '@/lib/logging/groupLogger';
+import { GroupLogger, logInviteCreated, logInviteCanceled } from '@/lib/logging/groupLogger';
 import {
-  checkGroupExists,
+  checkGroupMembership,
   checkGroupPermission,
-  checkMemberExists,
+  checkGroupCapacity,
+  checkKickedHistory,
   generateInviteCode
 } from '@/lib/helpers/group-helpers';
-import { validateEmailFormat } from '@/lib/validators/group-validators';
+import { validateEmailFormat as validateEmail } from '@/lib/validators/group-validators';
 
 /**
  * GET /api/groups/[id]/invites
- * 초대 목록 조회 (멤버만)
  *
- * @param {Request} request
- * @param {Object} context
- * @returns {Response}
+ * 초대 목록 조회
+ * - 멤버만 조회 가능
+ * - 상태별 필터링
+ * - 페이지네이션
  */
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
       throw GroupBusinessException.authenticationRequired();
     }
 
-    const groupId = params.id;
+    const { params } = context;
+    const { id: groupId } = await params;
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'PENDING';
+    const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-
-    // 그룹 존재 확인
-    await checkGroupExists(groupId, prisma);
-
-    // 멤버 확인
-    await checkMemberExists(groupId, session.user.id, prisma);
-
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const skip = (page - 1) * limit;
+
+    // 멤버인지 확인
+    await checkGroupMembership(groupId, session.user.id, prisma);
+
+    // Where 조건
+    const where = {
+      groupId,
+      ...(status && { status })
+    };
 
     // 초대 목록 조회
     const [invites, total] = await Promise.all([
       prisma.groupInvite.findMany({
-        where: {
-          groupId,
-          ...(status && { status })
-        },
+        where,
         skip,
         take: limit,
         include: {
-          inviter: {
+          invitedBy: {
             select: {
               id: true,
               name: true,
               email: true,
-              avatar: true
+              avatarUrl: true
             }
           },
-          user: {
+          invitedUser: {
             select: {
               id: true,
               name: true,
               email: true,
-              avatar: true
+              avatarUrl: true
             }
           }
         },
         orderBy: { createdAt: 'desc' }
       }),
-      prisma.groupInvite.count({
-        where: {
-          groupId,
-          ...(status && { status })
-        }
-      })
+      prisma.groupInvite.count({ where })
     ]);
 
-    const formattedInvites = invites.map(invite => ({
-      id: invite.id,
-      email: invite.email,
-      code: invite.code,
-      status: invite.status,
-      createdAt: invite.createdAt,
-      expiresAt: invite.expiresAt,
-      usedAt: invite.usedAt,
-      inviter: invite.inviter,
-      user: invite.user
-    }));
-
-    GroupLogger.info('Group invites retrieved', {
+    GroupLogger.info('Invites list retrieved', {
       groupId,
       userId: session.user.id,
       total,
       status
     });
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      data: {
-        invites: formattedInvites,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit)
-        }
+      data: invites,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     });
 
   } catch (error) {
     if (error.code?.startsWith('GROUP-')) {
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
     }
 
-    GroupLogger.error('Failed to retrieve group invites', {
+    GroupLogger.error('Failed to retrieve invites', {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {
@@ -153,74 +134,68 @@ export async function GET(request, { params }) {
 
 /**
  * POST /api/groups/[id]/invites
- * 초대 생성 (ADMIN 이상)
  *
- * @param {Request} request
- * @param {Object} context
- * @returns {Response}
+ * 초대 생성
+ * - ADMIN 이상 권한 필요
+ * - 이메일 형식 검증 (선택적)
+ * - 이미 멤버인 경우 방지
+ * - 강퇴된 사용자 초대 방지
+ * - 정원 확인
+ * - 초대 코드 생성
  */
-export async function POST(request, { params }) {
+export async function POST(request, context) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
       throw GroupBusinessException.authenticationRequired();
     }
 
-    const groupId = params.id;
+    const { params } = context;
+    const { id: groupId } = await params;
     const body = await request.json();
-    const { email, expiresInDays = 7 } = body;
+    const { userId, email, expiresInDays = 7 } = body;
 
-    // 그룹 존재 확인
-    const group = await checkGroupExists(groupId, prisma);
-
-    // 권한 확인 (ADMIN 이상)
+    // ADMIN 이상 권한 확인
     await checkGroupPermission(groupId, session.user.id, 'ADMIN', prisma);
 
-    // 이메일 형식 확인 (선택적)
-    if (email) {
-      validateEmailFormat(email);
+    // 정원 확인
+    await checkGroupCapacity(groupId, prisma);
 
-      // 해당 이메일의 사용자가 이미 멤버인지 확인
-      const existingUser = await prisma.user.findUnique({
-        where: { email }
-      });
-
-      if (existingUser) {
-        const existingMember = await prisma.groupMember.findUnique({
-          where: {
-            groupId_userId: {
-              groupId,
-              userId: existingUser.id
-            }
-          }
-        });
-
-        if (existingMember && existingMember.status === 'ACTIVE') {
-          throw GroupInviteException.alreadyMember();
-        }
-
-        if (existingMember && existingMember.status === 'KICKED') {
-          throw GroupInviteException.cannotInviteKickedUser();
-        }
-      }
+    // 이메일 검증 (제공된 경우)
+    if (email && !validateEmail(email)) {
+      throw GroupBusinessException.invalidInput('유효하지 않은 이메일 형식입니다.');
     }
 
-    // 정원 확인
-    const currentMemberCount = await prisma.groupMember.count({
-      where: {
-        groupId,
-        status: 'ACTIVE'
-      }
-    });
+    let invitedUserId = userId;
 
-    if (currentMemberCount >= group.maxMembers) {
-      throw GroupBusinessException.groupFull();
+    // userId 제공된 경우
+    if (userId) {
+      // 사용자 존재 확인
+      const user = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+
+      if (!user) {
+        throw GroupBusinessException.invalidInput('존재하지 않는 사용자입니다.');
+      }
+
+      // 이미 멤버인지 확인
+      const existingMember = await prisma.groupMember.findUnique({
+        where: {
+          groupId_userId: { groupId, userId }
+        }
+      });
+
+      if (existingMember && (existingMember.status === 'ACTIVE' || existingMember.status === 'PENDING')) {
+        throw GroupInviteException.alreadyMember();
+      }
+
+      // 강퇴 이력 확인
+      await checkKickedHistory(groupId, userId, prisma);
     }
 
     // 초대 코드 생성
     const code = generateInviteCode();
-
-    // 만료 시간 계산
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
@@ -228,53 +203,54 @@ export async function POST(request, { params }) {
     const invite = await prisma.groupInvite.create({
       data: {
         groupId,
-        invitedBy: session.user.id,
-        email: email || null,
+        invitedById: session.user.id,
+        invitedUserId,
+        email,
         code,
         status: 'PENDING',
         expiresAt
       },
       include: {
-        inviter: {
+        invitedBy: {
           select: {
             id: true,
             name: true,
             email: true,
-            avatar: true
+            avatarUrl: true
           }
-        }
+        },
+        invitedUser: invitedUserId ? {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true
+          }
+        } : undefined
       }
     });
 
-    GroupLogger.logInviteCreated(groupId, session.user.id, invite.id, email);
+    logInviteCreated(groupId, invite.id, session.user.id, userId || email);
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      data: {
-        id: invite.id,
-        email: invite.email,
-        code: invite.code,
-        status: invite.status,
-        createdAt: invite.createdAt,
-        expiresAt: invite.expiresAt,
-        inviter: invite.inviter
-      },
+      data: invite,
       message: '초대가 성공적으로 생성되었습니다.'
     }, { status: 201 });
 
   } catch (error) {
     if (error.code?.startsWith('GROUP-')) {
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
     }
 
-    GroupLogger.error('Failed to create group invite', {
+    GroupLogger.error('Failed to create invite', {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {
@@ -289,31 +265,28 @@ export async function POST(request, { params }) {
 
 /**
  * DELETE /api/groups/[id]/invites
- * 초대 취소 (생성자 또는 ADMIN)
  *
- * @param {Request} request
- * @param {Object} context
- * @returns {Response}
+ * 초대 취소
+ * - 생성자 또는 ADMIN 권한 확인
+ * - PENDING 상태만 취소 가능
  */
-export async function DELETE(request, { params }) {
+export async function DELETE(request, context) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
       throw GroupBusinessException.authenticationRequired();
     }
 
-    const groupId = params.id;
+    const { params } = context;
+    const { id: groupId } = await params;
     const { searchParams } = new URL(request.url);
     const inviteId = searchParams.get('inviteId');
 
     if (!inviteId) {
-      throw GroupInviteException.inviteIdRequired();
+      throw GroupBusinessException.invalidInput('초대 ID는 필수입니다.');
     }
 
-    // 그룹 존재 확인
-    await checkGroupExists(groupId, prisma);
-
-    // 초대 확인
+    // 초대 조회
     const invite = await prisma.groupInvite.findUnique({
       where: { id: inviteId }
     });
@@ -323,57 +296,47 @@ export async function DELETE(request, { params }) {
     }
 
     if (invite.groupId !== groupId) {
-      throw GroupInviteException.inviteNotBelongToGroup();
+      throw GroupBusinessException.invalidInput('잘못된 그룹 ID입니다.');
     }
 
+    // 권한 확인 (생성자 또는 ADMIN)
+    if (invite.invitedById !== session.user.id) {
+      await checkGroupPermission(groupId, session.user.id, 'ADMIN', prisma);
+    }
+
+    // PENDING 상태 확인
     if (invite.status !== 'PENDING') {
-      throw GroupInviteException.inviteAlreadyUsed();
-    }
-
-    // 권한 확인: 생성자이거나 ADMIN 이상
-    let hasPermission = invite.invitedBy === session.user.id;
-
-    if (!hasPermission) {
-      try {
-        await checkGroupPermission(groupId, session.user.id, 'ADMIN', prisma);
-        hasPermission = true;
-      } catch (error) {
-        hasPermission = false;
-      }
-    }
-
-    if (!hasPermission) {
-      throw GroupInviteException.cannotCancelInvite();
+      throw GroupInviteException.invalidInviteStatus(
+        'PENDING 상태의 초대만 취소할 수 있습니다.'
+      );
     }
 
     // 초대 취소
     await prisma.groupInvite.update({
       where: { id: inviteId },
-      data: {
-        status: 'CANCELLED'
-      }
+      data: { status: 'CANCELLED' }
     });
 
-    GroupLogger.logInviteCancelled(groupId, session.user.id, inviteId);
+    logInviteCanceled(groupId, inviteId, session.user.id);
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      message: '초대가 성공적으로 취소되었습니다.'
+      message: '초대가 취소되었습니다.'
     });
 
   } catch (error) {
     if (error.code?.startsWith('GROUP-')) {
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
     }
 
-    GroupLogger.error('Failed to cancel group invite', {
+    GroupLogger.error('Failed to cancel invite', {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {

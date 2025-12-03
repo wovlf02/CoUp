@@ -1,4 +1,4 @@
-/**
+﻿/**
  * /api/groups/route.js
  *
  * 그룹 목록 조회 및 생성 API
@@ -11,6 +11,7 @@
  * @created 2025-12-03
  */
 
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authConfig } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -110,7 +111,7 @@ export async function GET(request) {
       filters: { category, isPublic, isRecruiting, search, sort }
     });
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       data: {
         groups: formattedGroups,
@@ -128,7 +129,7 @@ export async function GET(request) {
       GroupLogger.warn('Failed to retrieve groups list', {
         error: error.toJSON()
       });
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
@@ -138,7 +139,7 @@ export async function GET(request) {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {
@@ -206,7 +207,7 @@ export async function POST(request) {
     GroupLogger.logGroupCreated(result.group.id, session.user.id, result.group);
     GroupLogger.logMemberAdded(result.group.id, session.user.id, session.user.id, 'OWNER');
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       data: formatGroupResponse(result.group),
       message: '그룹이 성공적으로 생성되었습니다.'
@@ -218,7 +219,7 @@ export async function POST(request) {
         userId: error.userId,
         error: error.toJSON()
       });
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
@@ -228,7 +229,7 @@ export async function POST(request) {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {

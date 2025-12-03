@@ -76,18 +76,15 @@ export function validateGroupName(name) {
  * validateDescription('매주 알고리즘 문제를 풀어보는 그룹입니다'); // true
  */
 export function validateDescription(description) {
-  if (!description) {
-    throw GroupValidationException.descriptionRequired();
+  // description은 선택사항
+  if (!description || description.trim().length === 0) {
+    return true;
   }
 
   const trimmedDesc = description.trim();
 
-  if (trimmedDesc.length < 10) {
-    throw GroupValidationException.descriptionTooShort(10);
-  }
-
-  if (trimmedDesc.length > 500) {
-    throw GroupValidationException.descriptionTooLong(500);
+  if (trimmedDesc.length > 1000) {
+    throw GroupValidationException.descriptionTooLong(1000);
   }
 
   return true;
@@ -139,8 +136,8 @@ export function validateCapacity(capacity, currentMembers = 0) {
     throw GroupValidationException.capacityTooSmall(2);
   }
 
-  if (capacity > 100) {
-    throw GroupValidationException.capacityTooLarge(100);
+  if (capacity > 200) {
+    throw GroupValidationException.capacityTooLarge(200);
   }
 
   if (currentMembers > capacity) {
@@ -257,17 +254,24 @@ export function validateGroupData(data, isUpdate = false) {
     validateGroupName(data.name);
     validated.name = data.name.trim();
 
-    validateDescription(data.description);
-    validated.description = data.description.trim();
+    // description은 선택사항
+    if (data.description && data.description.trim().length > 0) {
+      validateDescription(data.description);
+      validated.description = data.description.trim();
+    }
 
     validateCategory(data.category);
     validated.category = data.category;
 
-    validateCapacity(data.maxMembers);
-    validated.maxMembers = data.maxMembers;
+    // maxMembers 기본값 설정 후 검증
+    const maxMembers = data.maxMembers || 50;
+    validateCapacity(maxMembers);
+    validated.maxMembers = maxMembers;
 
-    validateVisibility(data.isPublic);
-    validated.isPublic = data.isPublic;
+    // isPublic 기본값 설정 후 검증
+    const isPublic = data.isPublic !== undefined ? data.isPublic : true;
+    validateVisibility(isPublic);
+    validated.isPublic = isPublic;
   } else {
     // 수정 시에는 제공된 필드만 검증
     if (data.name !== undefined) {
@@ -277,7 +281,7 @@ export function validateGroupData(data, isUpdate = false) {
 
     if (data.description !== undefined) {
       validateDescription(data.description);
-      validated.description = data.description.trim();
+      validated.description = data.description ? data.description.trim() : '';
     }
 
     if (data.category !== undefined) {

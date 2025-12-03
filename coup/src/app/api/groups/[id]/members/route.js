@@ -1,17 +1,15 @@
-/**
+﻿/**
  * /api/groups/[id]/members/route.js
  *
  * 그룹 멤버 관리 API
  *
- * @routes
- * - GET    /api/groups/[id]/members - 멤버 목록 조회
- * - POST   /api/groups/[id]/members - 멤버 추가 (ADMIN 이상)
- * - DELETE /api/groups/[id]/members - 멤버 제거 (ADMIN 이상)
- *
- * @author CoUp Team
- * @created 2025-12-03
+ * @route GET /api/groups/[id]/members - 멤버 목록 조회
+ * @route POST /api/groups/[id]/members - 멤버 추가
+ * @route DELETE /api/groups/[id]/members - 멤버 제거
+ * @access Private
  */
 
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authConfig } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -20,47 +18,55 @@ import {
   GroupPermissionException,
   GroupMemberException
 } from '@/lib/exceptions/group';
-import { GroupLogger } from '@/lib/logging/groupLogger';
+import { GroupLogger, logMemberRemoved } from '@/lib/logging/groupLogger';
 import {
-  checkGroupExists,
+  checkGroupMembership,
   checkGroupPermission,
-  checkMemberExists,
-  canManageMember
+  canManageMember,
+  checkGroupCapacity,
+  checkKickedHistory
 } from '@/lib/helpers/group-helpers';
+
+const ROLE_ORDER = { OWNER: 1, ADMIN: 2, MEMBER: 3 };
 
 /**
  * GET /api/groups/[id]/members
- * 멤버 목록 조회
  *
- * @param {Request} request
- * @param {Object} context
- * @returns {Response}
+ * 멤버 목록 조회
+ * - 상태별 필터링 (ACTIVE, PENDING, LEFT, KICKED)
+ * - 페이지네이션
+ * - 역할 기준 정렬
  */
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
       throw GroupBusinessException.authenticationRequired();
     }
 
-    const groupId = params.id;
+    const { params } = context;
+    const { id: groupId } = await params;
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'ACTIVE';
+    const status = searchParams.get('status');
+    const role = searchParams.get('role');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-
-    // 그룹 존재 확인
-    await checkGroupExists(groupId, prisma);
-
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const skip = (page - 1) * limit;
+
+    // 그룹 멤버인지 확인
+    await checkGroupMembership(groupId, session.user.id, prisma);
+
+    // Where 조건
+    const where = {
+      groupId,
+      ...(status && { status }),
+      ...(role && { role })
+    };
 
     // 멤버 목록 조회
     const [members, total] = await Promise.all([
       prisma.groupMember.findMany({
-        where: {
-          groupId,
-          ...(status && { status })
-        },
+        where,
         skip,
         take: limit,
         include: {
@@ -69,66 +75,54 @@ export async function GET(request, { params }) {
               id: true,
               name: true,
               email: true,
-              avatar: true,
-              bio: true
+              avatarUrl: true
             }
           }
         },
         orderBy: [
-          { role: 'desc' },
-          { joinedAt: 'asc' }
+          { role: 'asc' },
+          { createdAt: 'asc' }
         ]
       }),
-      prisma.groupMember.count({
-        where: {
-          groupId,
-          ...(status && { status })
-        }
-      })
+      prisma.groupMember.count({ where })
     ]);
 
-    const formattedMembers = members.map(member => ({
-      id: member.id,
-      role: member.role,
-      status: member.status,
-      joinedAt: member.joinedAt,
-      leftAt: member.leftAt,
-      user: member.user
-    }));
+    // 역할 기준 정렬 (OWNER > ADMIN > MEMBER)
+    const sortedMembers = members.sort((a, b) => {
+      return ROLE_ORDER[a.role] - ROLE_ORDER[b.role];
+    });
 
-    GroupLogger.info('Group members retrieved', {
+    GroupLogger.info('Members list retrieved', {
       groupId,
       userId: session.user.id,
       total,
       status
     });
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      data: {
-        members: formattedMembers,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit)
-        }
+      data: sortedMembers,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     });
 
   } catch (error) {
     if (error.code?.startsWith('GROUP-')) {
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
     }
 
-    GroupLogger.error('Failed to retrieve group members', {
+    GroupLogger.error('Failed to retrieve members', {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {
@@ -143,31 +137,30 @@ export async function GET(request, { params }) {
 
 /**
  * POST /api/groups/[id]/members
- * 멤버 추가 (ADMIN 이상)
  *
- * @param {Request} request
- * @param {Object} context
- * @returns {Response}
+ * 멤버 추가
+ * - ADMIN 이상 권한 필요
+ * - 중복 가입 방지
+ * - 강퇴 이력 확인
+ * - 정원 확인
  */
-export async function POST(request, { params }) {
+export async function POST(request, context) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
       throw GroupBusinessException.authenticationRequired();
     }
 
-    const groupId = params.id;
+    const { params } = context;
+    const { id: groupId } = await params;
     const body = await request.json();
     const { userId, role = 'MEMBER' } = body;
 
     if (!userId) {
-      throw GroupMemberException.memberIdRequired();
+      throw GroupBusinessException.invalidInput('사용자 ID는 필수입니다.');
     }
 
-    // 그룹 존재 확인
-    const group = await checkGroupExists(groupId, prisma);
-
-    // 권한 확인 (ADMIN 이상)
+    // ADMIN 이상 권한 확인
     await checkGroupPermission(groupId, session.user.id, 'ADMIN', prisma);
 
     // 사용자 존재 확인
@@ -176,111 +169,99 @@ export async function POST(request, { params }) {
     });
 
     if (!user) {
-      throw GroupMemberException.userNotFound();
+      throw GroupBusinessException.invalidInput('존재하지 않는 사용자입니다.');
     }
 
-    // 이미 멤버인지 확인
+    // 강퇴 이력 확인
+    await checkKickedHistory(groupId, userId, prisma);
+
+    // 기존 멤버 확인
     const existingMember = await prisma.groupMember.findUnique({
       where: {
-        groupId_userId: {
-          groupId,
-          userId
-        }
+        groupId_userId: { groupId, userId }
       }
     });
 
-    if (existingMember && existingMember.status === 'ACTIVE') {
-      throw GroupMemberException.alreadyMember();
-    }
+    if (existingMember) {
+      if (existingMember.status === 'ACTIVE' || existingMember.status === 'PENDING') {
+        throw GroupMemberException.alreadyMember();
+      }
 
-    if (existingMember && existingMember.status === 'KICKED') {
-      throw GroupMemberException.previouslyKicked();
+      // LEFT 상태인 경우 재가입
+      if (existingMember.status === 'LEFT') {
+        const member = await prisma.groupMember.update({
+          where: { id: existingMember.id },
+          data: {
+            status: 'ACTIVE',
+            role,
+            leftAt: null
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true
+              }
+            }
+          }
+        });
+
+        GroupLogger.logMemberAdded(groupId, session.user.id, userId, role);
+
+        return NextResponse.json({
+          success: true,
+          data: member,
+          message: '멤버가 성공적으로 재가입되었습니다.'
+        }, { status: 201 });
+      }
     }
 
     // 정원 확인
-    const currentMemberCount = await prisma.groupMember.count({
-      where: {
+    await checkGroupCapacity(groupId, prisma);
+
+    // 새 멤버 추가
+    const member = await prisma.groupMember.create({
+      data: {
         groupId,
+        userId,
+        role,
         status: 'ACTIVE'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true
+          }
+        }
       }
     });
 
-    if (currentMemberCount >= group.maxMembers) {
-      throw GroupBusinessException.groupFull();
-    }
-
-    // 멤버 추가
-    let member;
-    if (existingMember) {
-      // 이전에 나간 멤버 재가입
-      member = await prisma.groupMember.update({
-        where: { id: existingMember.id },
-        data: {
-          status: 'ACTIVE',
-          role,
-          joinedAt: new Date(),
-          leftAt: null
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true
-            }
-          }
-        }
-      });
-    } else {
-      // 신규 멤버 추가
-      member = await prisma.groupMember.create({
-        data: {
-          groupId,
-          userId,
-          role,
-          status: 'ACTIVE'
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true
-            }
-          }
-        }
-      });
-    }
-
     GroupLogger.logMemberAdded(groupId, session.user.id, userId, role);
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      data: {
-        id: member.id,
-        role: member.role,
-        status: member.status,
-        joinedAt: member.joinedAt,
-        user: member.user
-      },
+      data: member,
       message: '멤버가 성공적으로 추가되었습니다.'
     }, { status: 201 });
 
   } catch (error) {
     if (error.code?.startsWith('GROUP-')) {
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
     }
 
-    GroupLogger.error('Failed to add group member', {
+    GroupLogger.error('Failed to add member', {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {
@@ -295,85 +276,91 @@ export async function POST(request, { params }) {
 
 /**
  * DELETE /api/groups/[id]/members
- * 멤버 제거 (ADMIN 이상)
  *
- * @param {Request} request
- * @param {Object} context
- * @returns {Response}
+ * 멤버 제거
+ * - ADMIN 이상 권한 필요
+ * - OWNER 제거 불가
+ * - 자기 자신 제거 불가
+ * - 역할 계층 확인
  */
-export async function DELETE(request, { params }) {
+export async function DELETE(request, context) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
       throw GroupBusinessException.authenticationRequired();
     }
 
-    const groupId = params.id;
+    const { params } = context;
+    const { id: groupId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const action = searchParams.get('action') || 'remove'; // remove, kick
+    const kick = searchParams.get('kick') === 'true';
 
     if (!userId) {
-      throw GroupMemberException.memberIdRequired();
+      throw GroupBusinessException.invalidInput('사용자 ID는 필수입니다.');
     }
 
-    // 그룹 존재 확인
-    await checkGroupExists(groupId, prisma);
+    // ADMIN 이상 권한 확인
+    const adminMember = await checkGroupPermission(groupId, session.user.id, 'ADMIN', prisma);
 
-    // 권한 확인 (ADMIN 이상)
-    const myMembership = await checkGroupPermission(groupId, session.user.id, 'ADMIN', prisma);
-
-    // 대상 멤버 확인
-    const targetMember = await checkMemberExists(groupId, userId, prisma);
-
-    // OWNER는 제거 불가
-    if (targetMember.role === 'OWNER') {
-      throw GroupPermissionException.cannotRemoveOwner();
-    }
-
-    // 자기 자신 제거 불가 (leave API 사용)
+    // 자기 자신 제거 불가
     if (userId === session.user.id) {
-      throw GroupMemberException.cannotRemoveSelf();
+      throw GroupPermissionException.cannotModifySelf('자기 자신을 제거할 수 없습니다.');
+    }
+
+    // 대상 멤버 조회
+    const targetMember = await prisma.groupMember.findUnique({
+      where: {
+        groupId_userId: { groupId, userId }
+      }
+    });
+
+    if (!targetMember) {
+      throw GroupMemberException.memberNotFound();
+    }
+
+    // OWNER 제거 불가
+    if (targetMember.role === 'OWNER') {
+      throw GroupPermissionException.cannotModifyOwner();
     }
 
     // 역할 계층 확인
-    if (!canManageMember(myMembership.role, targetMember.role)) {
-      throw GroupPermissionException.insufficientRole(
-        `${targetMember.role} 역할을 가진 멤버를 제거할 수 없습니다.`
+    if (!canManageMember(adminMember.role, targetMember.role)) {
+      throw GroupPermissionException.insufficientPermission(
+        '대상 멤버의 역할을 관리할 권한이 없습니다.'
       );
     }
 
-    // 멤버 제거/강퇴
-    const status = action === 'kick' ? 'KICKED' : 'LEFT';
+    // 멤버 제거 또는 강퇴
+    const newStatus = kick ? 'KICKED' : 'LEFT';
     await prisma.groupMember.update({
       where: { id: targetMember.id },
       data: {
-        status,
+        status: newStatus,
         leftAt: new Date()
       }
     });
 
-    const logMessage = action === 'kick' ? '강퇴' : '제거';
-    GroupLogger.logMemberRemoved(groupId, session.user.id, userId, logMessage);
+    logMemberRemoved(groupId, userId, session.user.id, kick);
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
-      message: `멤버가 성공적으로 ${logMessage}되었습니다.`
+      message: kick ? '멤버가 강퇴되었습니다.' : '멤버가 제거되었습니다.'
     });
 
   } catch (error) {
     if (error.code?.startsWith('GROUP-')) {
-      return Response.json(
+      return NextResponse.json(
         { success: false, error: error.toJSON() },
         { status: error.statusCode }
       );
     }
 
-    GroupLogger.error('Failed to remove group member', {
+    GroupLogger.error('Failed to remove member', {
       error: error.message,
       stack: error.stack
     });
-    return Response.json(
+    return NextResponse.json(
       {
         success: false,
         error: {

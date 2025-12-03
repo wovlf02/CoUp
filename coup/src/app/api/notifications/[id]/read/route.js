@@ -1,54 +1,77 @@
-// 알림 읽음 처리 API
+/**
+ * 알림 읽음 처리 API
+ *
+ * @description
+ * - POST/PATCH: 특정 알림 읽음 처리
+ *
+ * @module app/api/notifications/[id]/read/route
+ * @author CoUp Team
+ * @created 2025-12-03
+ */
+
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import {
+  NotificationPermissionException,
+  NotificationBusinessException
+} from '@/lib/exceptions/notification';
+import {
+  validateSession,
+  validateNotificationId
+} from '@/lib/validators/notification-validators';
+import {
+  markNotificationAsRead,
+  createSuccessResponse,
+  createErrorResponse,
+  formatNotificationResponse
+} from '@/lib/helpers/notification-helpers';
 
+/**
+ * POST /api/notifications/[id]/read
+ * 특정 알림 읽음 처리
+ */
 export async function POST(request, { params }) {
   try {
+    // 1. 세션 검증
     const session = await getServerSession(authOptions);
+    const user = validateSession(session);
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: '인증이 필요합니다' },
-        { status: 401 }
-      );
-    }
+    // 2. params에서 id 추출
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
 
-    const { id } = params;
+    // 3. 알림 ID 검증
+    validateNotificationId(id);
 
-    // 알림 소유권 확인
-    const notification = await prisma.notification.findFirst({
-      where: {
-        id,
-        userId: session.user.id,
-      },
-    });
+    // 4. 알림 읽음 처리
+    const notification = await markNotificationAsRead(id, user.id, prisma);
 
-    if (!notification) {
-      return NextResponse.json(
-        { error: '알림을 찾을 수 없습니다' },
-        { status: 404 }
-      );
-    }
-
-    // 읽음 처리
-    const updatedNotification = await prisma.notification.update({
-      where: { id },
-      data: { read: true },
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: updatedNotification,
-    });
+    // 5. 성공 응답
+    return NextResponse.json(
+      createSuccessResponse(
+        { data: formatNotificationResponse(notification) },
+        '알림을 읽음으로 표시했습니다.'
+      )
+    );
 
   } catch (error) {
-    console.error('알림 읽음 처리 오류:', error);
+    console.error('[NOTIFICATION READ ERROR]', error);
+
+    const response = createErrorResponse(error);
     return NextResponse.json(
-      { error: '알림 읽음 처리 중 오류가 발생했습니다' },
-      { status: 500 }
+      { error: response.error, code: response.code },
+      { status: response.statusCode }
     );
   }
+}
+
+/**
+ * PATCH /api/notifications/[id]/read
+ * 특정 알림 읽음 처리 (PATCH 메서드 지원)
+ */
+export async function PATCH(request, { params }) {
+  return POST(request, { params });
 }
 

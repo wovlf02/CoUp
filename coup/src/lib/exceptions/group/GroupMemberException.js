@@ -86,5 +86,29 @@ export default class GroupMemberException extends GroupException {
   static memberHasActiveTasks(taskCount) {
     return GroupException.memberHasActiveTasks(taskCount);
   }
+
+  // ========================================
+  // 추가 멤버 상태 체크 메서드
+  // ========================================
+
+  static memberNotActive(userId, status) {
+    return new GroupException(
+      '활성화된 멤버가 아닙니다.',
+      'GROUP-027',
+      403,
+      'high',
+      { userId, status }
+    );
+  }
+
+  static memberKicked(userId) {
+    return new GroupException(
+      '강퇴된 사용자는 재가입할 수 없습니다.',
+      'GROUP-030',
+      403,
+      'high',
+      { userId }
+    );
+  }
 }
 

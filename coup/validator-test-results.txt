@@ -1,0 +1,298 @@
+﻿
+> coup@0.1.0 test
+> jest src/__tests__/lib/validators/group-validators.test.js
+
+node.exe : [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([baseline-brows...ping@latest -D`:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAIL src/__tests__/lib/validators/group-validators.test.js
+  validateGroupName
+    ??should accept valid group name (2 ms)
+    ??should reject empty or null name (13 ms)
+    ??should reject too short name (1 ms)
+    ??should reject too long name
+  validateDescription
+    ??should accept valid description (1 ms)
+    횞 should accept empty description (9 ms)
+    ??should reject too long description (1 ms)
+  validateCategory
+    ??should accept valid categories
+    ??should reject invalid category (1 ms)
+  validateCapacity
+    횞 should accept valid capacity (2 ms)
+    ??should reject capacity below minimum (1 ms)
+    ??should reject capacity above maximum
+    ??should reject capacity less than current members (1 ms)
+  validateVisibility
+    ??should accept valid visibility values
+    ??should reject invalid visibility (1 ms)
+  validateGroupData
+    횞 should accept valid group data (3 ms)
+    ??should reject missing required fields
+    횞 should use default values for optional fields
+  validateRole
+    ??should accept valid roles
+    횞 should reject invalid role (3 ms)
+  validateMemberStatus
+    ??should accept valid member statuses
+    횞 should reject invalid status (2 ms)
+  validateInviteCode
+    ??should accept valid invite code
+    횞 should reject empty code (1 ms)
+    횞 should reject too short code (1 ms)
+    횞 should reject invalid format (1 ms)
+  validateEmailFormat
+    ??should accept valid email
+    ??should reject invalid email format (1 ms)
+    횞 should reject empty email (1 ms)
+
+  ??validateDescription ??should accept empty description
+
+    expect(received).not.toThrow()
+
+    Error name:    "GroupException"
+    Error message: "洹몃９ ?ㅻ챸???낅젰?댁＜?몄슂."
+
+        [0m [90m 114 |[39m   [90m// ?ㅻ챸 寃利?(3媛?[39m
+         [90m 115 |[39m   [36mstatic[39m descriptionRequired() {
+        [31m[1m>[22m[39m[90m 116 |[39m     [36mreturn[39m [36mnew[39m [33mGroupException[39m(
+         [90m     |[39m            [31m[1m^[22m[39m
+         [90m 117 |[39m       [32m'洹몃９ ?ㅻ챸???낅젰?댁＜?몄슂.'[39m[33m,[39m
+         [90m 118 |[39m       [32m'GROUP-006'[39m[33m,[39m
+         [90m 119 |[39m       [35m400[39m[33m,[39m[0m
+
+      at GroupException.descriptionRequired (src/lib/exceptions/group/GroupException.js:116:12)
+      at GroupValidationException.descriptionRequired (src/lib/exceptions/group/GroupValidationException.js:51:27)
+      at descriptionRequired (src/lib/validators/group-validators.js:80:36)
+      at src/__tests__/lib/validators/group-validators.test.js:47:37
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:47:47)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:47:47)
+
+  ??validateCapacity ??should accept valid capacity
+
+    expect(received).not.toThrow()
+
+    Error name:    "GroupException"
+    Error message: "洹몃９ ?뺤썝? 理쒕? 100紐낃퉴吏 媛?ν빀?덈떎."
+
+        [0m [90m 196 |[39m
+         [90m 197 |[39m   [36mstatic[39m capacityTooLarge(maxCapacity [33m=[39m [35m100[39m) {
+        [31m[1m>[22m[39m[90m 198 |[39m     [36mreturn[39m [36mnew[39m [33mGroupException[39m(
+         [90m     |[39m            [31m[1m^[22m[39m
+         [90m 199 |[39m       [32m`洹몃９ ?뺤썝? 理쒕? ${maxCapacity}紐낃퉴吏 媛?ν빀?덈떎.`[39m[33m,[39m
+         [90m 200 |[39m       [32m'GROUP-014'[39m[33m,[39m
+         [90m 201 |[39m       [35m400[39m[33m,[39m[0m
+
+      at GroupException.capacityTooLarge (src/lib/exceptions/group/GroupException.js:198:12)
+      at GroupValidationException.capacityTooLarge (src/lib/exceptions/group/GroupValidationException.js:95:27)
+      at capacityTooLarge (src/lib/validators/group-validators.js:143:36)
+      at src/__tests__/lib/validators/group-validators.test.js:78:34
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:78:45)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:78:45)
+
+  ??validateGroupData ??should accept valid group data
+
+    expect(received).not.toThrow()
+
+    Error name:    "GroupException"
+    Error message: "洹몃９ ?ㅻ챸? 理쒖냼 10???댁긽?댁뼱???⑸땲??"
+
+        [0m [90m 124 |[39m
+         [90m 125 |[39m   [36mstatic[39m descriptionTooShort(minLength [33m=[39m [35m10[39m) {
+        [31m[1m>[22m[39m[90m 126 |[39m     [36mreturn[39m [36mnew[39m [33mGroupException[39m(
+         [90m     |[39m            [31m[1m^[22m[39m
+         [90m 127 |[39m       [32m`洹몃９ ?ㅻ챸? 理쒖냼 ${minLength}???댁긽?댁뼱???⑸땲??`[39m[33m,[39m
+         [90m 128 |[39m       [32m'GROUP-007'[39m[33m,[39m
+         [90m 129 |[39m       [35m400[39m[33m,[39m[0m
+
+      at GroupException.descriptionTooShort (src/lib/exceptions/group/GroupException.js:126:12)
+      at GroupValidationException.descriptionTooShort (src/lib/exceptions/group/GroupValidationException.js:55:27)
+      at descriptionTooShort (src/lib/validators/group-validators.js:86:36)
+      at validateDescription (src/lib/validators/group-validators.js:260:5)
+      at src/__tests__/lib/validators/group-validators.test.js:119:35
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:119:52)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:119:52)
+
+  ??validateGroupData ??should use default values for optional fields
+
+    GroupException: 洹몃９ ?ㅻ챸???낅젰?댁＜?몄슂.
+
+    [0m [90m 114 |[39m   [90m// ?ㅻ챸 寃利?(3媛?[39m
+     [90m 115 |[39m   [36mstatic[39m descriptionRequired() {
+    [31m[1m>[22m[39m[90m 116 |[39m     [36mreturn[39m [36mnew[39m [33mGroupException[39m(
+     [90m     |[39m            [31m[1m^[22m[39m
+     [90m 117 |[39m       [32m'洹몃９ ?ㅻ챸???낅젰?댁＜?몄슂.'[39m[33m,[39m
+     [90m 118 |[39m       [32m'GROUP-006'[39m[33m,[39m
+     [90m 119 |[39m       [35m400[39m[33m,[39m[0m
+
+      at GroupException.descriptionRequired (src/lib/exceptions/group/GroupException.js:116:12)
+      at GroupValidationException.descriptionRequired (src/lib/exceptions/group/GroupValidationException.js:51:27)
+      at descriptionRequired (src/lib/validators/group-validators.js:80:36)
+      at validateDescription (src/lib/validators/group-validators.js:260:5)
+      at Object.<anonymous> (src/__tests__/lib/validators/group-validators.test.js:136:37)
+
+  ??validateRole ??should reject invalid role
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: GroupException
+    Received constructor: TypeError
+
+    Received message: "_GroupException.default.roleRequired is not a function"
+
+        [0m [90m 157 |[39m
+         [90m 158 |[39m   [36mstatic[39m roleRequired() {
+        [31m[1m>[22m[39m[90m 159 |[39m     [36mreturn[39m [33mGroupException[39m[33m.[39mroleRequired()[33m;[39m
+         [90m     |[39m                           [31m[1m^[22m[39m
+         [90m 160 |[39m   }
+         [90m 161 |[39m
+         [90m 162 |[39m   [36mstatic[39m invalidStatus(status[33m,[39m validStatuses [33m=[39m []) {[0m
+
+      at GroupValidationException.roleRequired (src/lib/exceptions/group/GroupValidationException.js:159:27)
+      at roleRequired (src/lib/validators/group-validators.js:329:36)
+      at src/__tests__/lib/validators/group-validators.test.js:153:30
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:153:36)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:153:36)
+
+  ??validateMemberStatus ??should reject invalid status
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: GroupException
+    Received constructor: TypeError
+
+    Received message: "_GroupException.default.invalidStatus is not a function"
+
+        [0m [90m 161 |[39m
+         [90m 162 |[39m   [36mstatic[39m invalidStatus(status[33m,[39m validStatuses [33m=[39m []) {
+        [31m[1m>[22m[39m[90m 163 |[39m     [36mreturn[39m [33mGroupException[39m[33m.[39minvalidStatus(status[33m,[39m validStatuses)[33m;[39m
+         [90m     |[39m                           [31m[1m^[22m[39m
+         [90m 164 |[39m   }
+         [90m 165 |[39m
+         [90m 166 |[39m   [36mstatic[39m statusRequired() {[0m
+
+      at GroupValidationException.invalidStatus (src/lib/exceptions/group/GroupValidationException.js:163:27)
+      at invalidStatus (src/lib/validators/group-validators.js:355:36)
+      at src/__tests__/lib/validators/group-validators.test.js:168:38
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:168:51)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:168:51)
+
+  ??validateInviteCode ??should reject empty code
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: GroupException
+    Received constructor: TypeError
+
+    Received message: "_GroupException.default.inviteCodeRequired is not a function"
+
+        [0m [90m 133 |[39m
+         [90m 134 |[39m   [36mstatic[39m inviteCodeRequired() {
+        [31m[1m>[22m[39m[90m 135 |[39m     [36mreturn[39m [33mGroupException[39m[33m.[39minviteCodeRequired()[33m;[39m
+         [90m     |[39m                           [31m[1m^[22m[39m
+         [90m 136 |[39m   }
+         [90m 137 |[39m
+         [90m 138 |[39m   [36mstatic[39m invalidInviteCodeFormat(code) {[0m
+
+      at GroupValidationException.inviteCodeRequired (src/lib/exceptions/group/GroupValidationException.js:135:27)
+      at inviteCodeRequired (src/lib/validators/group-validators.js:435:36)
+      at src/__tests__/lib/validators/group-validators.test.js:179:36
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:179:42)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:179:42)
+
+  ??validateInviteCode ??should reject too short code
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: GroupException
+    Received constructor: TypeError
+
+    Received message: "_GroupException.default.invalidInviteCodeFormat is not a function"
+
+        [0m [90m 137 |[39m
+         [90m 138 |[39m   [36mstatic[39m invalidInviteCodeFormat(code) {
+        [31m[1m>[22m[39m[90m 139 |[39m     [36mreturn[39m [33mGroupException[39m[33m.[39minvalidInviteCodeFormat(code)[33m;[39m
+         [90m     |[39m                           [31m[1m^[22m[39m
+         [90m 140 |[39m   }
+         [90m 141 |[39m
+         [90m 142 |[39m   [90m// ========================================[39m[0m
+
+      at GroupValidationException.invalidInviteCodeFormat (src/lib/exceptions/group/GroupValidationException.js:139:27)
+      at invalidInviteCodeFormat (src/lib/validators/group-validators.js:441:36)
+      at src/__tests__/lib/validators/group-validators.test.js:184:36
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:184:45)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:184:45)
+
+  ??validateInviteCode ??should reject invalid format
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: GroupException
+    Received constructor: TypeError
+
+    Received message: "_GroupException.default.invalidInviteCodeFormat is not a function"
+
+        [0m [90m 137 |[39m
+         [90m 138 |[39m   [36mstatic[39m invalidInviteCodeFormat(code) {
+        [31m[1m>[22m[39m[90m 139 |[39m     [36mreturn[39m [33mGroupException[39m[33m.[39minvalidInviteCodeFormat(code)[33m;[39m
+         [90m     |[39m                           [31m[1m^[22m[39m
+         [90m 140 |[39m   }
+         [90m 141 |[39m
+         [90m 142 |[39m   [90m// ========================================[39m[0m
+
+      at GroupValidationException.invalidInviteCodeFormat (src/lib/exceptions/group/GroupValidationException.js:139:27)
+      at invalidInviteCodeFormat (src/lib/validators/group-validators.js:441:36)
+      at src/__tests__/lib/validators/group-validators.test.js:189:36
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:189:54)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:189:54)
+
+  ??validateEmailFormat ??should reject empty email
+
+    expect(received).toThrow(expected)
+
+    Expected constructor: GroupException
+    Received constructor: TypeError
+
+    Received message: "_GroupException.default.emailRequired is not a function"
+
+        [0m [90m 145 |[39m
+         [90m 146 |[39m   [36mstatic[39m emailRequired() {
+        [31m[1m>[22m[39m[90m 147 |[39m     [36mreturn[39m [33mGroupException[39m[33m.[39memailRequired()[33m;[39m
+         [90m     |[39m                           [31m[1m^[22m[39m
+         [90m 148 |[39m   }
+         [90m 149 |[39m
+         [90m 150 |[39m   [36mstatic[39m invalidEmailFormat(email) {[0m
+
+      at GroupValidationException.emailRequired (src/lib/exceptions/group/GroupValidationException.js:147:27)
+      at emailRequired (src/lib/validators/group-validators.js:459:36)
+      at src/__tests__/lib/validators/group-validators.test.js:206:37
+      at Object.<anonymous> (node_modules/expect/build/index.js:1824:9)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:2235:93)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:206:43)
+      at Object.toThrow (src/__tests__/lib/validators/group-validators.test.js:206:43)
+
+Test Suites: 1 failed, 1 total
+Tests:       10 failed, 19 passed, 29 total
+Snapshots:   0 total
+Time:        0.34 s, estimated 2 s
+Ran all test suites matching src/__tests__/lib/validators/group-validators.test.js.

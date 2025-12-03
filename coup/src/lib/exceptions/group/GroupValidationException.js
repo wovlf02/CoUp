@@ -71,6 +71,10 @@ export default class GroupValidationException extends GroupException {
     return GroupException.categoryInvalid(category);
   }
 
+  static invalidCategory(category, validCategories = []) {
+    return GroupException.categoryInvalid(category);
+  }
+
   static categoryNotFound(category) {
     return GroupException.categoryNotFound(category);
   }
@@ -103,6 +107,10 @@ export default class GroupValidationException extends GroupException {
     return GroupException.visibilityRequired();
   }
 
+  static visibilityInvalidType() {
+    return GroupException.visibilityRequired();
+  }
+
   static tooManyTags(maxTags = 10) {
     return GroupException.tooManyTags(maxTags);
   }
@@ -117,6 +125,60 @@ export default class GroupValidationException extends GroupException {
 
   static imageTooLarge(size, maxSize = 5) {
     return GroupException.imageTooLarge(size, maxSize);
+  }
+
+  // ========================================
+  // 초대 코드 검증 (2개)
+  // ========================================
+
+  static inviteCodeRequired() {
+    return GroupException.inviteCodeRequired();
+  }
+
+  static invalidInviteCodeFormat(code) {
+    return GroupException.invalidInviteCodeFormat(code);
+  }
+
+  // ========================================
+  // 이메일 검증 (2개)
+  // ========================================
+
+  static emailRequired() {
+    return GroupException.emailRequired();
+  }
+
+  static invalidEmailFormat(email) {
+    return GroupException.invalidEmailFormat(email);
+  }
+
+  // ========================================
+  // 역할 및 상태 검증 (2개)
+  // ========================================
+
+  static roleRequired() {
+    return GroupException.roleRequired();
+  }
+
+  static invalidStatus(status, validStatuses = []) {
+    return GroupException.invalidStatus(status, validStatuses);
+  }
+
+  static statusRequired() {
+    return GroupException.roleRequired(); // status와 role은 유사한 validation
+  }
+
+  // ========================================
+  // 중복 검증 (1개)
+  // ========================================
+
+  static groupNameExists(name) {
+    return new GroupValidationException(
+      `이미 존재하는 그룹 이름입니다: ${name}`,
+      'GROUP-NAME-EXISTS',
+      409,
+      'low',
+      { name }
+    );
   }
 }
 
