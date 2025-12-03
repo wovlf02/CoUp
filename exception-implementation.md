@@ -14,7 +14,7 @@
 Phase A: 도메인별 예외 처리 시스템 구축
 ├─ A1. Profile 도메인 ✅ 100% (172 테스트)
 ├─ A2. Study 도메인 ✅ 100% (142 테스트)
-├─ A3. Group 도메인 ⏳ 14% (Step 1/7 완료)
+├─ A3. Group 도메인 ⏳ 43% (Step 3/7 완료)
 ├─ A4. Notification 도메인 ⏳ 0%
 ├─ A5. Chat 도메인 ⏳ 0%
 ├─ A6. Dashboard 도메인 ⏳ 0%
@@ -23,7 +23,7 @@ Phase A: 도메인별 예외 처리 시스템 구축
 ├─ A9. Auth 도메인 ⏳ 0%
 └─ A10. Admin 도메인 ✅ 100% (61 테스트)
 
-Phase A 전체: 32% 완료 (3/10 도메인 완료, 1개 진행 중)
+Phase A 전체: 36% 완료 (3/10 도메인 완료, 1개 진행 중)
 ```
 Phase B: 사용자 흐름 통합 테스트 (완료율: 0%)
   ├─ B1. 신규 사용자 온보딩 플로우
@@ -207,7 +207,7 @@ src/app/api/studies/
 
 **예상 시간**: 28-36시간  
 **우선순위**: High  
-**완료율**: 14% (Step 1/7 완료)
+**완료율**: 43% (Step 3/7 완료)
 
 **작업 범위**:
 - Group CRUD API (8개 엔드포인트)
@@ -224,24 +224,33 @@ src/app/api/studies/
 - [x] GroupException 계층 구조 설계 (5개 서브 클래스)
 - [x] 문서: `docs/group/GROUP-ANALYSIS.md` 작성 완료
 
-**Step 2: Exception 클래스 구현** (5-6시간) ⏳ **다음 작업**
-- [ ] `src/lib/exceptions/group/GroupException.js` 생성
-- [ ] 76개 에러 메서드 구현
-- [ ] 5개 서브 클래스 구현
-- [ ] index.js export 파일 생성
+**Step 2: Exception 클래스 구현** (5-6시간) ✅ **완료 (2025-12-03)**
+- [x] `src/lib/exceptions/group/GroupException.js` 생성 (76개 메서드)
+- [x] `GroupValidationException.js` 구현 (20개 에러)
+- [x] `GroupPermissionException.js` 구현 (10개 에러)
+- [x] `GroupMemberException.js` 구현 (14개 에러)
+- [x] `GroupInviteException.js` 구현 (15개 에러)
+- [x] `GroupBusinessException.js` 구현 (17개 에러)
+- [x] index.js export 파일 생성
+- [x] 문서: `docs/group/GROUP-EXCEPTION-COMPLETE.md` 작성 완료
 
-**Step 3: Validators & Logger 구현** (3-4시간)
-- [ ] `src/lib/validators/group-validators.js` (15개 검증 함수)
-- [ ] `src/lib/logging/groupLogger.js` (20개 로깅 함수)
-- [ ] `src/lib/helpers/group-helpers.js` (25개 헬퍼 함수)
+**Step 3: Validators & Logger 구현** (3-4시간) ✅ **완료 (2025-12-03)**
+- [x] `src/lib/validators/group-validators.js` (15개 검증 함수)
+- [x] `src/lib/logging/groupLogger.js` (20개 로깅 함수)
+- [x] `src/lib/helpers/group-helpers.js` (25개 헬퍼 함수)
+- [x] 문서: `docs/group/GROUP-VALIDATORS-COMPLETE.md` 작성 완료
 
-**Step 4: API 라우트 강화 - 핵심** (6-8시간)
-- [ ] `/api/groups/route.js` (GET/POST)
-- [ ] `/api/groups/[id]/route.js` (GET/PATCH/DELETE)
-- [ ] `/api/groups/[id]/members/route.js` (GET/POST/DELETE)
-- [ ] `/api/groups/[id]/invites/route.js` (GET/POST/DELETE)
+**Step 4: API 라우트 강화 - 핵심** (6-8시간) ✅ **완료 (2025-12-03)**
+- [x] `/api/groups/route.js` (GET/POST)
+- [x] `/api/groups/[id]/route.js` (GET/PATCH/DELETE)
+- [x] `/api/groups/[id]/members/route.js` (GET/POST/DELETE)
+- [x] `/api/groups/[id]/invites/route.js` (GET/POST/DELETE)
+- [x] Prisma Schema 업데이트 (Group, GroupMember, GroupInvite 모델)
+- [x] 10개 API 엔드포인트 구현
+- [x] 트랜잭션, 역할 계층, Soft Delete 적용
+- [x] 문서: `docs/group/GROUP-API-ROUTES-COMPLETE.md` 작성 완료
 
-**Step 5: API 라우트 강화 - 추가** (3-4시간)
+**Step 5: API 라우트 강화 - 추가** (3-4시간) ⏳ **다음 작업**
 - [ ] `/api/groups/[id]/join/route.js`
 - [ ] `/api/groups/[id]/leave/route.js`
 - [ ] `/api/groups/search/route.js`

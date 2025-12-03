@@ -48,6 +48,12 @@ model User {
   createdStudyTasks  StudyTask[]         @relation("StudyTaskCreator")
   assignedStudyTasks StudyTaskAssignee[] @relation("TaskAssignee")
 
+  // 그룹 관련
+  createdGroups   Group[]       @relation("GroupCreator")
+  groupMembers    GroupMember[]
+  sentInvites     GroupInvite[] @relation("GroupInviter")
+  receivedInvites GroupInvite[] @relation("GroupInvitee")
+
   // 관리자 관련
   sanctions        Sanction[] @relation("UserSanctions")
   receivedWarnings Warning[]
@@ -596,6 +602,111 @@ enum AdminRoleType {
   MODERATOR // 콘텐츠 모더레이션
   ADMIN // 사용자/스터디 관리
   SUPER_ADMIN // 모든 권한
+}
+
+// ============================================
+// 그룹 (Group)
+// ============================================
+model Group {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+  category    String  @default("etc")
+  imageUrl    String?
+
+  // 그룹 설정
+  isPublic     Boolean @default(true)
+  maxMembers   Int     @default(50)
+  isRecruiting Boolean @default(true)
+
+  // 메타
+  createdBy String
+  deletedAt DateTime?
+
+  // 타임스탬프
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  creator User          @relation("GroupCreator", fields: [createdBy], references: [id])
+  members GroupMember[]
+  invites GroupInvite[]
+
+  @@index([category])
+  @@index([isPublic, isRecruiting])
+  @@index([createdBy])
+}
+
+// ============================================
+// 그룹 멤버 (GroupMember)
+// ============================================
+model GroupMember {
+  id      String            @id @default(cuid())
+  groupId String
+  userId  String
+  role    GroupMemberRole   @default(MEMBER)
+  status  GroupMemberStatus @default(ACTIVE)
+
+  // 타임스탬프
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+
+  // 관계
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@index([status])
+  @@index([groupId, status])
+}
+
+enum GroupMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum GroupMemberStatus {
+  PENDING
+  ACTIVE
+  LEFT
+  KICKED
+}
+
+// ============================================
+// 그룹 초대 (GroupInvite)
+// ============================================
+model GroupInvite {
+  id        String            @id @default(cuid())
+  groupId   String
+  invitedBy String
+  email     String?
+  code      String            @unique @default(cuid())
+  status    GroupInviteStatus @default(PENDING)
+
+  // 타임스탬프
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  usedAt    DateTime?
+  usedBy    String?
+
+  // 관계
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  inviter User  @relation("GroupInviter", fields: [invitedBy], references: [id])
+  user    User? @relation("GroupInvitee", fields: [usedBy], references: [id])
+
+  @@index([groupId])
+  @@index([invitedBy])
+  @@index([status])
+  @@index([code])
+}
+
+enum GroupInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
 }
 
 // ============================================
