@@ -56,7 +56,6 @@ export default function StudyJoinPage({ params }) {
   };
 
   const handleSubmit = async () => {
-    setErrors({});
     setIsSubmitting(true);
 
     try {

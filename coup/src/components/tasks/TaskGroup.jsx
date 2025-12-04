@@ -1,7 +1,7 @@
 import TaskCard from './TaskCard'
 import styles from './TaskGroup.module.css'
 
-export default function TaskGroup({ title, tasks, onToggleComplete, onDeleteTask, onCardClick }) {
+export default function TaskGroup({ title, tasks, onToggleComplete, onDeleteTask, onCardClick, onEdit }) {
   return (
     <div className={styles.taskGroup}>
       <div className={styles.groupHeader}>
@@ -17,6 +17,7 @@ export default function TaskGroup({ title, tasks, onToggleComplete, onDeleteTask
             onToggleComplete={onToggleComplete}
             onDeleteTask={onDeleteTask}
             onCardClick={onCardClick}
+            onEdit={onEdit}
           />
         ))}
       </div>

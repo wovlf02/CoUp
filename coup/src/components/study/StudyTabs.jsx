@@ -20,7 +20,7 @@ export default function StudyTabs({ studyId, activeTab, userRole }) {
   return (
     <div className={styles.tabs}>
       {tabs
-        .filter(tab => !tab.adminOnly || userRole === 'OWNER')
+        .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(userRole))
         .map((tab) => (
           <Link
             key={tab.label}

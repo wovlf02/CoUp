@@ -4,7 +4,7 @@
 import { formatDateTimeKST } from '@/utils/time';
 import styles from './TaskDetailModal.module.css';
 
-export default function TaskDetailModal({ task, onClose, onToggleComplete, onDelete }) {
+export default function TaskDetailModal({ task, onClose, onToggleComplete, onDelete, onEdit }) {
   if (!task) return null;
 
   const getPriorityInfo = () => {
@@ -127,6 +127,15 @@ export default function TaskDetailModal({ task, onClose, onToggleComplete, onDel
         <div className={styles.footer}>
           <button onClick={handleDelete} className={styles.deleteButton}>
             삭제
+          </button>
+          <button 
+            onClick={() => {
+              onEdit && onEdit(task)
+              onClose()
+            }} 
+            className={styles.editButton}
+          >
+            수정
           </button>
           <button onClick={onClose} className={styles.doneButton}>
             닫기

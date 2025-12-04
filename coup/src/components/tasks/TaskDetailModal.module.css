@@ -229,6 +229,7 @@
 }
 
 .deleteButton,
+.editButton,
 .doneButton {
   flex: 1;
   padding: 12px 24px;
@@ -250,6 +251,18 @@
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+}
+
+.editButton {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: 2px solid #3b82f6;
+  color: white;
+}
+
+.editButton:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
 }
 
 .doneButton {

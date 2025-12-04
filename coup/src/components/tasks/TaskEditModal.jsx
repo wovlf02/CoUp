@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useMyStudies, useCreateTask } from '@/lib/hooks/useApi'
+import { useMyStudies, useUpdateTask } from '@/lib/hooks/useApi'
 import { useSession } from 'next-auth/react'
 import styles from './TaskCreateModal.module.css'
 
-export default function TaskCreateModal({ onClose, onSuccess }) {
+export default function TaskEditModal({ task, onClose, onSuccess }) {
   const { data: session } = useSession()
   const [formData, setFormData] = useState({
     title: '',
@@ -19,13 +19,31 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
   const [loadingMembers, setLoadingMembers] = useState(false)
 
   const { data: studiesData } = useMyStudies({ limit: 50, filter: 'active' })
-  const createTask = useCreateTask()
+  const updateTask = useUpdateTask()
 
-  // API 응답에서 study 객체만 추출 (data.studies 배열에서 추출)
+  // API 응답에서 study 객체만 추출
   const studies = studiesData?.data?.studies?.map(item => item.study).filter(study => study) || []
 
-  // 현재 사용자 ID
-  const currentUserId = session?.user?.id
+  // task 데이터로 초기화
+  useEffect(() => {
+    if (task) {
+      // dueDate를 datetime-local 형식으로 변환
+      let dueDateFormatted = ''
+      if (task.dueDate) {
+        const date = new Date(task.dueDate)
+        dueDateFormatted = date.toISOString().slice(0, 16)
+      }
+
+      setFormData({
+        title: task.title || '',
+        description: task.description || '',
+        studyId: task.studyId || task.study?.id || '',
+        dueDate: dueDateFormatted,
+        priority: task.priority || 'MEDIUM',
+        assigneeIds: task.assignees?.map(a => a.userId || a.id) || [],
+      })
+    }
+  }, [task])
 
   // 스터디 선택 시 멤버 목록 가져오기
   useEffect(() => {
@@ -90,29 +108,34 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
     }
 
     try {
-      await createTask.mutateAsync({
-        title: formData.title,
-        description: formData.description || null,
-        studyId: formData.studyId,
-        dueDate: formData.dueDate,
-        priority: formData.priority,
-        status: 'TODO',
-        assigneeIds: formData.assigneeIds,
+      await updateTask.mutateAsync({
+        id: task.id,
+        data: {
+          title: formData.title,
+          description: formData.description || null,
+          studyId: formData.studyId,
+          dueDate: formData.dueDate,
+          priority: formData.priority,
+          assigneeIds: formData.assigneeIds,
+        }
       })
 
-      alert('할 일이 추가되었습니다!')
+      alert('할 일이 수정되었습니다!')
       onSuccess()
     } catch (error) {
-      console.error('할일 생성 실패:', error)
-      alert('할 일 추가에 실패했습니다. 다시 시도해주세요.')
+      console.error('할일 수정 실패:', error)
+      alert('할 일 수정에 실패했습니다. 다시 시도해주세요.')
     }
   }
+
+  // 현재 사용자 ID
+  const currentUserId = session?.user?.id
 
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>할 일 추가</h2>
+          <h2 className={styles.modalTitle}>할 일 수정</h2>
           <button className={styles.closeButton} onClick={onClose}>✕</button>
         </div>
 
@@ -250,9 +273,9 @@ export default function TaskCreateModal({ onClose, onSuccess }) {
             <button
               type="submit"
               className={styles.submitButton}
-              disabled={createTask.isPending}
+              disabled={updateTask.isPending}
             >
-              {createTask.isPending ? '추가 중...' : '추가'}
+              {updateTask.isPending ? '수정 중...' : '수정'}
             </button>
           </div>
         </form>

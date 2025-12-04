@@ -307,6 +307,46 @@ export function useRejectJoinRequest() {
   })
 }
 
+// 멤버 역할 변경 (OWNER만 가능)
+export function useChangeMemberRole() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, memberId, role }) => 
+      api.patch(`/api/studies/${studyId}/members/${memberId}/role`, { role }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+      queryClient.invalidateQueries(['studies', variables.studyId])
+    },
+  })
+}
+
+// 멤버 강퇴 (ADMIN 이상 가능)
+export function useKickMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, memberId, reason }) => 
+      api.delete(`/api/studies/${studyId}/members/${memberId}`, { reason }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+      queryClient.invalidateQueries(['studies', variables.studyId])
+    },
+  })
+}
+
+// 가입 신청 승인
+export function useApproveJoinRequest() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, requestId }) => 
+      api.post(`/api/studies/${studyId}/join-requests/${requestId}/approve`),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
+      queryClient.invalidateQueries(['studies', variables.studyId])
+    },
+  })
+}
+
 // ==================== 채팅 ====================
 export function useChatMessages(studyId, params = {}) {
   return useQuery({
@@ -532,7 +572,7 @@ export function useDeleteTask() {
 export function useToggleTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id) => api.post(`/api/tasks/${id}/toggle`),
+    mutationFn: (id) => api.patch(`/api/tasks/${id}/toggle`),
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks'])
     },

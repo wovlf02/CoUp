@@ -2,12 +2,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireStudyMember } from '@/lib/auth-helpers'
-import { getSession } from 'next-auth/react'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(request, context) {
   try {
     const { params } = context
     const { id: studyId } = await params
+    
+    // 현재 사용자 세션 가져오기
+    const session = await getServerSession(authOptions)
+    const currentUserId = session?.user?.id
     
     const study = await prisma.study.findUnique({
       where: { id: studyId },
@@ -39,10 +44,18 @@ export async function GET(request, context) {
       return NextResponse.json({ error: 'Study not found' }, { status: 404 })
     }
 
+    // 현재 사용자의 역할 찾기
+    let myRole = null
+    if (currentUserId) {
+      const myMembership = study.members.find(m => m.userId === currentUserId)
+      myRole = myMembership?.role || null
+    }
+
     // currentMembers 계산하여 추가
     const responseData = {
       ...study,
       currentMembers: study._count.members,
+      myRole, // 현재 사용자의 역할 추가
     }
     
     return NextResponse.json({ success: true, data: responseData }, { status: 200 })

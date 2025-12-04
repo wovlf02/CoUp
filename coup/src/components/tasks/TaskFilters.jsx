@@ -5,8 +5,8 @@ import styles from './TaskFilters.module.css'
 
 export default function TaskFilters({ filter, setFilter, taskCount, viewMode, setViewMode }) {
   const { data: studiesData } = useMyStudies({ limit: 50, filter: 'active' })
-  // API 응답에서 study 객체만 추출
-  const studies = studiesData?.data?.map(item => item.study).filter(study => study) || []
+  // API 응답에서 study 객체만 추출 (data.studies 배열에서 추출)
+  const studies = studiesData?.data?.studies?.map(item => item.study).filter(study => study) || []
 
   const incompleteCount = taskCount || 0
 

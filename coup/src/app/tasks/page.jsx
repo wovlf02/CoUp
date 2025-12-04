@@ -9,6 +9,7 @@ import TaskProgressWidget from '@/components/tasks/TaskProgressWidget'
 import TaskByStudyWidget from '@/components/tasks/TaskByStudyWidget'
 import TaskEmpty from '@/components/tasks/TaskEmpty'
 import TaskCreateModal from '@/components/tasks/TaskCreateModal'
+import TaskEditModal from '@/components/tasks/TaskEditModal'
 import TaskDetailModal from '@/components/tasks/TaskDetailModal'
 import { useTasks, useToggleTask, useDeleteTask, useTaskStats } from '@/lib/hooks/useApi'
 import { getUrgencyLevel } from '@/utils/time'
@@ -22,6 +23,8 @@ export default function TasksPage() {
   })
   const [viewMode, setViewMode] = useState('list') // 'list' or 'calendar'
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingTask, setEditingTask] = useState(null)
   const [selectedTask, setSelectedTask] = useState(null)
 
   // 실제 API 호출
@@ -92,6 +95,12 @@ export default function TasksPage() {
 
   const incompleteCount = tasks.filter(t => !t.completed).length
 
+  // 수정 모달 열기
+  const handleEditTask = (task) => {
+    setEditingTask(task)
+    setShowEditModal(true)
+  }
+
   // 로딩 상태
   if (isLoading) {
     return (
@@ -145,6 +154,7 @@ export default function TasksPage() {
                 onToggleComplete={handleToggleComplete}
                 onDeleteTask={handleDeleteTask}
                 onCardClick={setSelectedTask}
+                onEdit={handleEditTask}
               />
             )}
 
@@ -155,6 +165,7 @@ export default function TasksPage() {
                 onToggleComplete={handleToggleComplete}
                 onDeleteTask={handleDeleteTask}
                 onCardClick={setSelectedTask}
+                onEdit={handleEditTask}
               />
             )}
 
@@ -165,6 +176,7 @@ export default function TasksPage() {
                 onToggleComplete={handleToggleComplete}
                 onDeleteTask={handleDeleteTask}
                 onCardClick={setSelectedTask}
+                onEdit={handleEditTask}
               />
             )}
           </div>
@@ -190,6 +202,21 @@ export default function TasksPage() {
           onClose={() => setSelectedTask(null)}
           onToggleComplete={handleToggleComplete}
           onDelete={handleDeleteTask}
+          onEdit={handleEditTask}
+        />
+      )}
+
+      {showEditModal && editingTask && (
+        <TaskEditModal
+          task={editingTask}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingTask(null)
+          }}
+          onSuccess={() => {
+            setShowEditModal(false)
+            setEditingTask(null)
+          }}
         />
       )}
     </div>

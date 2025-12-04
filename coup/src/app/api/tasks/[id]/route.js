@@ -91,6 +91,61 @@ export async function PATCH(request, { params }) {
   }
 }
 
+// PUT 메서드 - 전체 업데이트
+export async function PUT(request, { params }) {
+  const session = await requireAuth()
+  if (session instanceof NextResponse) return session
+
+  try {
+    const { id } = await params
+    const body = await request.json()
+
+    const task = await prisma.task.findUnique({
+      where: { id }
+    })
+
+    if (!task || task.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "할일을 찾을 수 없습니다" },
+        { status: 404 }
+      )
+    }
+
+    const updated = await prisma.task.update({
+      where: { id },
+      data: {
+        title: body.title,
+        description: body.description || null,
+        studyId: body.studyId,
+        priority: body.priority || 'MEDIUM',
+        dueDate: body.dueDate ? new Date(body.dueDate) : null,
+      },
+      include: {
+        study: {
+          select: {
+            id: true,
+            name: true,
+            emoji: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: "할일이 수정되었습니다",
+      data: updated
+    })
+
+  } catch (error) {
+    console.error('Update task error:', error)
+    return NextResponse.json(
+      { error: "할일 수정 중 오류가 발생했습니다" },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(request, { params }) {
   const session = await requireAuth()
   if (session instanceof NextResponse) return session

@@ -114,6 +114,14 @@
   margin: 0;
 }
 
+/* 로딩 상태 */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--gray-500);
+  font-size: 1rem;
+}
+
 .headerActions {
   display: flex;
   gap: 12px;
