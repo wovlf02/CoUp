@@ -13,6 +13,7 @@ export async function GET(request, context) {
       where: { id: studyId },
       include: { 
         members: {
+          where: { status: 'ACTIVE' },
           include: {
             user: {
               select: {
@@ -23,6 +24,13 @@ export async function GET(request, context) {
               }
             }
           }
+        },
+        _count: {
+          select: {
+            members: {
+              where: { status: 'ACTIVE' }
+            }
+          }
         }
       }
     })
@@ -30,8 +38,14 @@ export async function GET(request, context) {
     if (!study) {
       return NextResponse.json({ error: 'Study not found' }, { status: 404 })
     }
+
+    // currentMembers 계산하여 추가
+    const responseData = {
+      ...study,
+      currentMembers: study._count.members,
+    }
     
-    return NextResponse.json({ success: true, data: study }, { status: 200 })
+    return NextResponse.json({ success: true, data: responseData }, { status: 200 })
   } catch (error) {
     console.error('GET study error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
