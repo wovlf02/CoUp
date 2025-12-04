@@ -18,7 +18,6 @@ import { StudyStatusSkeleton } from './WidgetSkeleton'
 
 /**
  * 안전한 퍼센트 계산
- * 0으로 나누기 방지 및 0-100 범위 제한
  */
 function safePercentage(numerator, denominator) {
   if (!denominator || denominator === 0) return 0
@@ -30,11 +29,10 @@ function safePercentage(numerator, denominator) {
  * 스터디 현황 위젯 컴포넌트
  */
 function StudyStatusComponent({ stats = {}, nextEvent = null, isLoading = false }) {
-  // 로딩 상태
   if (isLoading) {
     return <StudyStatusSkeleton />
   }
-  // 안전한 기본값 설정
+
   const attendanceRate = safePercentage(
     stats?.attendedCount || 0,
     stats?.totalAttendance || 0
@@ -113,15 +111,16 @@ function StudyStatusComponent({ stats = {}, nextEvent = null, isLoading = false 
           </span>
         </div>
       )}
+    </div>
+  )
+}
+
 /**
- * Props 비교 함수 (얕은 비교)
- * stats와 nextEvent의 주요 속성만 비교하여 불필요한 리렌더링 방지
+ * Props 비교 함수
  */
 const arePropsEqual = (prevProps, nextProps) => {
-  // 로딩 상태 비교
   if (prevProps.isLoading !== nextProps.isLoading) return false
 
-  // stats 객체의 주요 속성만 비교
   const prevStats = prevProps.stats || {}
   const nextStats = nextProps.stats || {}
 
@@ -135,17 +134,12 @@ const arePropsEqual = (prevProps, nextProps) => {
     return false
   }
 
-  // nextEvent 비교
   const prevEvent = prevProps.nextEvent
   const nextEvent = nextProps.nextEvent
 
-  // 둘 다 null이면 같음
   if (prevEvent === null && nextEvent === null) return true
-
-  // 하나만 null이면 다름
   if (prevEvent === null || nextEvent === null) return false
 
-  // nextEvent의 주요 속성 비교
   if (
     prevEvent.dday !== nextEvent.dday ||
     prevEvent.date !== nextEvent.date ||
@@ -157,11 +151,4 @@ const arePropsEqual = (prevProps, nextProps) => {
   return true
 }
 
-/**
- * 메모이제이션된 StudyStatus 컴포넌트
- */
 export default memo(StudyStatusComponent, arePropsEqual)
-
-    </div>
-  )
-}

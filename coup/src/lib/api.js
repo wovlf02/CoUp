@@ -74,16 +74,23 @@ class ApiClient {
     const config = {
       method,
       headers: {
-        'Content-Type': 'application/json',
         ...headers,
       },
       credentials: 'include', // 쿠키 자동 포함 (인증)
       ...customConfig,
     }
 
-    // Body 추가
+    // Body 추가 (FormData인 경우 JSON 변환 안함, Content-Type도 자동 설정)
     if (body) {
-      config.body = JSON.stringify(body)
+      if (body instanceof FormData) {
+        config.body = body
+        // FormData는 브라우저가 Content-Type을 자동으로 설정함 (multipart/form-data)
+      } else {
+        config.headers['Content-Type'] = 'application/json'
+        config.body = JSON.stringify(body)
+      }
+    } else {
+      config.headers['Content-Type'] = 'application/json'
     }
 
     try {

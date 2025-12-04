@@ -74,6 +74,7 @@ enum Provider {
 
 enum UserRole {
   USER
+  ADMIN
 }
 
 enum UserStatus {

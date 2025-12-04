@@ -72,57 +72,61 @@ export default function MyStudiesListPage() {
   const itemsPerPage = 5;
 
   // React Query 설정 with 에러 처리
-  const { data, isLoading, error, refetch, isError } = useMyStudies({
-    limit: 1000,
-    onError: (error) => {
-      // 네트워크 에러
-      if (!window.navigator.onLine || error.message?.includes('Network')) {
+  // 첫 번째 인자: API 쿼리 파라미터
+  // 두 번째 인자: React Query 옵션
+  const { data, isLoading, error, refetch, isError } = useMyStudies(
+    {},  // API params - 기본값 사용 (limit 생략하면 검증 통과)
+    {                 // React Query options
+      onError: (error) => {
+        // 네트워크 에러
+        if (!window.navigator.onLine || error.message?.includes('Network')) {
+          showToast({
+            message: '네트워크 연결을 확인해주세요',
+            type: 'error'
+          });
+          return;
+        }
+
+        // 타임아웃
+        if (error.name === 'AbortError') {
+          showToast({
+            message: '요청 시간이 초과되었습니다',
+            type: 'error'
+          });
+          return;
+        }
+
+        // 인증 에러
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          showToast({
+            message: '로그인이 필요합니다',
+            type: 'error'
+          });
+          setTimeout(() => router.push('/auth/signin'), 1500);
+          return;
+        }
+
+        // 서버 에러
+        if (error.response?.status >= 500) {
+          showToast({
+            message: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요',
+            type: 'error'
+          });
+          return;
+        }
+
+        // 일반 에러
         showToast({
-          message: '네트워크 연결을 확인해주세요',
+          message: '스터디 목록을 불러오는데 문제가 발생했습니다',
           type: 'error'
         });
-        return;
-      }
-
-      // 타임아웃
-      if (error.name === 'AbortError') {
-        showToast({
-          message: '요청 시간이 초과되었습니다',
-          type: 'error'
-        });
-        return;
-      }
-
-      // 인증 에러
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        showToast({
-          message: '로그인이 필요합니다',
-          type: 'error'
-        });
-        setTimeout(() => router.push('/auth/signin'), 1500);
-        return;
-      }
-
-      // 서버 에러
-      if (error.response?.status >= 500) {
-        showToast({
-          message: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요',
-          type: 'error'
-        });
-        return;
-      }
-
-      // 일반 에러
-      showToast({
-        message: '스터디 목록을 불러오는데 문제가 발생했습니다',
-        type: 'error'
-      });
-    },
-    retry: 1,
-    retryDelay: 1000,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-  });
+      },
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,  // cacheTime은 v5에서 gcTime으로 변경됨
+    }
+  );
 
   // 무한 로딩 방지 (10초 타임아웃)
   useEffect(() => {
@@ -144,7 +148,7 @@ export default function MyStudiesListPage() {
     };
   }, [isLoading, isLoadingTimeout]);
 
-  const allStudies = data?.data || [];
+  const allStudies = data?.data?.studies || [];
 
   // 클라이언트 측 필터링
   const getFilteredStudies = () => {

@@ -51,7 +51,7 @@ export default function StudiesExplorePage() {
 
   // 내 스터디 목록 가져오기 (필터링용)
   const { data: myStudiesData } = useMyStudies({ limit: 100 }); // 전체 가져오기
-  const myStudyIds = (myStudiesData?.data || []).map(s => s.study?.id || s.studyId);
+  const myStudyIds = (myStudiesData?.data?.studies || []).map(s => s.study?.id || s.studyId);
 
   // 내 스터디를 제외한 목록
   const studies = (data?.data || []).filter(study => !myStudyIds.includes(study.id));

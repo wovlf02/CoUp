@@ -62,9 +62,9 @@ export function useUser(userId) {
  * @returns {Object} useQuery 결과
  */
 export function useDashboard(options = {}) {
-    queryFn: () => api.get('/api/my-studies', params),
-  })
-}
+  return useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => api.get('/api/dashboard'),
 
     // 실시간 업데이트 설정
     refetchInterval: 30000, // 30초마다 갱신
@@ -82,9 +82,10 @@ export function useDashboard(options = {}) {
 
     // 사용자 정의 옵션 병합
     ...options
-export function useCreateStudy() {
-  const queryClient = useQueryClient()
-  return useMutation({
+  })
+}
+
+// ==================== 스터디 ====================
 /**
  * 내 스터디 목록 조회 Hook
  * - 1분마다 자동 갱신
@@ -94,9 +95,9 @@ export function useCreateStudy() {
  * @returns {Object} useQuery 결과
  */
 export function useMyStudies(params = {}, options = {}) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/studies/${id}`, data),
+  return useQuery({
+    queryKey: ['my-studies', params],
+    queryFn: () => api.get('/api/my-studies', params),
 
     // 실시간 업데이트
     refetchInterval: 60000, // 1분마다 갱신
@@ -105,6 +106,48 @@ export function useMyStudies(params = {}, options = {}) {
     gcTime: 10 * 60 * 1000, // 10분
 
     ...options
+  })
+}
+
+export function useStudies(params = {}) {
+  return useQuery({
+    queryKey: ['studies', params],
+    queryFn: () => api.get('/api/studies', params),
+  })
+}
+
+export function useStudy(id) {
+  return useQuery({
+    queryKey: ['studies', id],
+    queryFn: () => api.get(`/api/studies/${id}`),
+    enabled: !!id,
+  })
+}
+
+export function useCreateStudy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => api.post('/api/studies', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['studies'])
+      queryClient.invalidateQueries(['my-studies'])
+    },
+  })
+}
+
+export function useUpdateStudy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.put(`/api/studies/${id}`, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.id])
+      queryClient.invalidateQueries(['studies'])
+      queryClient.invalidateQueries(['my-studies'])
+    },
+  })
+}
+
+export function useDeleteStudy() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id) => api.delete(`/api/studies/${id}`),
@@ -115,58 +158,16 @@ export function useMyStudies(params = {}, options = {}) {
   })
 }
 
-export function useJoinStudy() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }) => api.post(`/api/studies/${id}/join`, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['studies', variables.id])
-      queryClient.invalidateQueries(['my-studies'])
-    },
-  })
-}
-
-export function useLeaveStudy() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id) => api.post(`/api/studies/${id}/leave`),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['studies'])
-      queryClient.invalidateQueries(['my-studies'])
-    },
-  })
-}
-
-// ==================== 스터디 멤버 ====================
-export function useStudyMembers(studyId, params = {}) {
-  return useQuery({
-    queryKey: ['studies', studyId, 'members', params],
-    queryFn: () => api.get(`/api/studies/${studyId}/members`, params),
-    enabled: !!studyId,
-  })
-}
-
-export function useJoinRequests(studyId) {
-  return useQuery({
-    queryKey: ['studies', studyId, 'join-requests'],
-    queryFn: () => api.get(`/api/studies/${studyId}/join-requests`),
-    enabled: !!studyId,
-  })
-}
-
-export function useApproveMember() {
-  const queryClient = useQueryClient()
-  return useMutation({
 /**
  * 스터디 가입 Hook (Optimistic Update)
  * - 즉시 내 스터디 목록에 추가
  * - 실패 시 롤백
  * @returns {Object} useMutation 결과
  */
-}
-
-export function useRejectMember() {
+export function useJoinStudy() {
   const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => api.post(`/api/studies/${id}/join`, data),
 
     // Optimistic Update
     onMutate: async ({ id }) => {
@@ -204,19 +205,19 @@ export function useRejectMember() {
       queryClient.invalidateQueries({ queryKey: ['my-studies'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     }
+  })
 }
 
-export function useRejectJoinRequest() {
 /**
  * 스터디 탈퇴 Hook (Optimistic Update)
  * - 즉시 내 스터디 목록에서 제거
  * - 실패 시 복원
  * @returns {Object} useMutation 결과
  */
-  })
-}
-
-// ==================== 채팅 ====================
+export function useLeaveStudy() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.post(`/api/studies/${id}/leave`),
 
     // Optimistic Update
     onMutate: async (studyId) => {
@@ -249,11 +250,113 @@ export function useRejectJoinRequest() {
     },
 
     // 성공 시 갱신
-    enabled: !!studyId && !!params.q,
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studies'] })
       queryClient.invalidateQueries({ queryKey: ['my-studies'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     }
+  })
+}
+
+// ==================== 스터디 멤버 ====================
+export function useStudyMembers(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'members', params],
+    queryFn: () => api.get(`/api/studies/${studyId}/members`, params),
+    enabled: !!studyId,
+  })
+}
+
+export function useJoinRequests(studyId) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'join-requests'],
+    queryFn: () => api.get(`/api/studies/${studyId}/join-requests`),
+    enabled: !!studyId,
+  })
+}
+
+export function useApproveMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, userId }) => api.post(`/api/studies/${studyId}/members/${userId}/approve`),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
+    },
+  })
+}
+
+export function useRejectMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, userId }) => api.post(`/api/studies/${studyId}/members/${userId}/reject`),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'members'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
+    },
+  })
+}
+
+export function useRejectJoinRequest() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, requestId }) => api.post(`/api/studies/${studyId}/join-requests/${requestId}/reject`),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
+    },
+  })
+}
+
+// ==================== 채팅 ====================
+export function useChatMessages(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'chat', params],
+    queryFn: () => api.get(`/api/studies/${studyId}/chat`, params),
+    enabled: !!studyId,
+  })
+}
+
+// 별칭: useMessages (useChatMessages와 동일)
+export function useMessages(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'messages', params],
+    queryFn: () => api.get(`/api/studies/${studyId}/chat`, params),
+    enabled: !!studyId,
+    refetchInterval: 5000, // 5초마다 새 메시지 확인
+  })
+}
+
+export function useSendMessage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, data }) => api.post(`/api/studies/${studyId}/chat`, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'chat'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'messages'])
+    },
+  })
+}
+
+export function useDeleteMessage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, messageId }) => api.delete(`/api/studies/${studyId}/chat/${messageId}`),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['studies', variables.studyId, 'chat'])
+      queryClient.invalidateQueries(['studies', variables.studyId, 'messages'])
+    },
+  })
+}
+
+export function useSearchChat(studyId, params = {}) {
+  return useQuery({
+    queryKey: ['studies', studyId, 'chat', 'search', params],
+    queryFn: () => api.get(`/api/studies/${studyId}/chat/search`, params),
+    enabled: !!studyId && !!params.q,
+  })
+}
+
+// ==================== 공지사항 ====================
 export function useNotices(studyId, params = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'notices', params],

@@ -91,12 +91,25 @@ export const POST = withStudyErrorHandler(async (request, context) => {
   // 2. FormData 파싱
   const formData = await request.formData();
   const file = formData.get('file');
-  const folderId = formData.get('folderId');
-  const category = formData.get('category') || 'DOCUMENT'; // IMAGE, DOCUMENT, etc.
+  const rawFolderId = formData.get('folderId');
+  const folderId = rawFolderId && rawFolderId !== '' ? rawFolderId : null;
+  const rawCategory = formData.get('category');
+  
+  // 유효한 카테고리 목록
+  const validCategories = ['IMAGE', 'DOCUMENT', 'ARCHIVE', 'VIDEO', 'AUDIO', 'CODE'];
+  const category = validCategories.includes(rawCategory) ? rawCategory : 'DOCUMENT';
 
   // 3. 파일 존재 확인
   if (!file) {
     throw StudyFileException.fileRequired({ studyId });
+  }
+
+  // 3-1. 파일 객체 검증 (FormData에서 File 객체가 아닌 경우)
+  if (typeof file === 'string' || !file.name || typeof file.arrayBuffer !== 'function') {
+    throw StudyFileException.fileRequired({ 
+      studyId,
+      userMessage: '올바른 파일을 선택해주세요'
+    });
   }
 
   // 4. 파일 이름 정제
@@ -201,7 +214,7 @@ export const POST = withStudyErrorHandler(async (request, context) => {
       size: file.size,
       type: file.type,
       url: fileUrl,
-      folderId: folderId || null
+      folderId: folderId  // 이미 null로 정제됨
     },
     include: {
       uploader: {
@@ -229,16 +242,18 @@ export const POST = withStudyErrorHandler(async (request, context) => {
     select: { name: true, emoji: true }
   });
 
-  await prisma.notification.createMany({
-    data: members.map(member => ({
-      userId: member.userId,
-      type: 'FILE',
-      studyId,
-      studyName: study.name,
-      studyEmoji: study.emoji,
-      message: `새 파일: ${sanitizedFilename}`
-    }))
-  });
+  if (members.length > 0 && study) {
+    await prisma.notification.createMany({
+      data: members.map(member => ({
+        userId: member.userId,
+        type: 'FILE',
+        studyId,
+        studyName: study.name,
+        studyEmoji: study.emoji,
+        message: `새 파일: ${sanitizedFilename}`
+      }))
+    });
+  }
 
   // 14. 로깅
   StudyLogger.logFileUpload(savedFile.id, studyId, session.user.id, {

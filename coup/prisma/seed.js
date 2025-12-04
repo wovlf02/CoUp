@@ -1,23 +1,37 @@
 // prisma/seed.js
+require('dotenv').config()
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')
 
 const prisma = new PrismaClient()
 
+// Prisma 연결 확인을 위한 디버깅
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? '설정됨' : '없음')
+
 async function main() {
   console.log('🌱 Starting MASSIVE comprehensive seed...')
 
-  // 기존 데이터 삭제 (개발용)
+  // 기존 데이터 삭제 (개발용) - 순서 중요: 의존성 있는 테이블부터
   await prisma.notification.deleteMany()
+  await prisma.studyTaskAssignee.deleteMany()
+  await prisma.studyTask.deleteMany()
   await prisma.task.deleteMany()
   await prisma.event.deleteMany()
+  await prisma.noticeFile.deleteMany()
   await prisma.file.deleteMany()
   await prisma.message.deleteMany()
   await prisma.notice.deleteMany()
   await prisma.studyMember.deleteMany()
+  await prisma.groupInvite.deleteMany()
+  await prisma.groupMember.deleteMany()
+  await prisma.group.deleteMany()
   await prisma.study.deleteMany()
+  await prisma.sanction.deleteMany()
+  await prisma.warning.deleteMany()
   await prisma.report.deleteMany()
-  await prisma.setting.deleteMany()
+  await prisma.adminLog.deleteMany()
+  await prisma.adminRole.deleteMany()
+  await prisma.systemSetting.deleteMany()
   await prisma.user.deleteMany()
 
   console.log('✅ Cleaned existing data')
@@ -81,6 +95,20 @@ async function main() {
     { name: '연개소문', email: 'yeon@example.com', bio: '시스템 관리자', seed: 'yeon' },
     { name: '대조영', email: 'dae@example.com', bio: '클라우드 엔지니어', seed: 'dae' },
   ]
+
+  // 시스템 관리자 생성
+  const admin = await prisma.user.create({
+    data: {
+      email: 'admin@coup.com',
+      password: hashedPassword,
+      name: '시스템 관리자',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      bio: 'CoUp 시스템 관리자입니다.',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+    },
+  })
+  console.log('✅ Admin created:', admin.email)
 
   for (const userData of userNames) {
     const user = await prisma.user.create({
@@ -197,12 +225,11 @@ async function main() {
       usedUserIds.add(users[userIndex].id)
 
       const isPending = Math.random() < 0.1 // 10% 확률로 대기중
-      const isAdmin = !isPending && Math.random() < 0.2 // 20% 확률로 ADMIN
 
       memberData.push({
         studyId: study.id,
         userId: users[userIndex].id,
-        role: isAdmin ? 'ADMIN' : 'MEMBER',
+        role: 'MEMBER',
         status: isPending ? 'PENDING' : 'ACTIVE',
         introduction: isPending ? '가입 신청합니다!' : '열심히 하겠습니다!',
         level: ['초급', '중급', '상급'][Math.floor(Math.random() * 3)],

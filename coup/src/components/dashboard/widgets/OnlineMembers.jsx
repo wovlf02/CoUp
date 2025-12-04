@@ -11,17 +11,16 @@
 
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import styles from './Widget.module.css'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
 import { OnlineMembersSkeleton } from './WidgetSkeleton'
 
 /**
  * 멤버 아바타 컴포넌트 (이미지 로딩 실패 처리)
+ */
 const MemberAvatar = memo(function MemberAvatar({ member }) {
-function MemberAvatar({ member }) {
   const [imageError, setImageError] = useState(false)
 
   if (!member.avatar || imageError) {
@@ -40,22 +39,22 @@ function MemberAvatar({ member }) {
       height={32}
       onError={() => setImageError(true)}
     />
+  )
 })
-}
+
 /**
  * 온라인 멤버 위젯 컴포넌트
  */
 function OnlineMembersComponent({ members = [], totalMembers = 0, isLoading = false }) {
-export default function OnlineMembers({ members = [], totalMembers = 0, isLoading = false }) {
   // 로딩 상태
   if (isLoading) {
     return <OnlineMembersSkeleton />
   }
+
   // useMemo로 온라인 멤버 필터링 최적화
   const onlineMembers = useMemo(() => {
     return (members || []).filter(m => m.isOnline)
   }, [members])
-  const onlineMembers = members?.filter(m => m.isOnline) || []
   
   return (
     <div className={styles.widget}>
@@ -96,6 +95,13 @@ export default function OnlineMembers({ members = [], totalMembers = 0, isLoadin
 
       {totalMembers > 0 && (
         <Link href="/members" className={styles.widgetLink}>
+          📊 전체 멤버 ({totalMembers}명) →
+        </Link>
+      )}
+    </div>
+  )
+}
+
 /**
  * Props 비교 함수
  * members 배열과 totalMembers만 비교
@@ -137,10 +143,3 @@ const arePropsEqual = (prevProps, nextProps) => {
  * 메모이제이션된 OnlineMembers 컴포넌트
  */
 export default memo(OnlineMembersComponent, arePropsEqual)
-
-          📊 전체 멤버 ({totalMembers}명) →
-        </Link>
-      )}
-    </div>
-  )
-}

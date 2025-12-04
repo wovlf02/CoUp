@@ -24,15 +24,12 @@ function formatRelativeTime(dateString) {
     const date = new Date(dateString)
     const now = new Date()
     
-    // Invalid Date 체크
     if (isNaN(date.getTime())) {
-      console.error('Invalid date:', dateString)
       return '날짜 오류'
     }
     
     const diff = now - date
     
-    // 음수 방지 (미래 날짜)
     if (diff < 0) {
       return '방금 전'
     }
@@ -50,14 +47,12 @@ function formatRelativeTime(dateString) {
     if (weeks < 4) return `${weeks}주 전`
     if (months < 12) return `${months}개월 전`
 
-    // 1년 이상은 절대 날짜 표시
     return date.toLocaleDateString('ko-KR', { 
       year: 'numeric',
       month: 'short', 
       day: 'numeric' 
     })
   } catch (error) {
-    console.error('Error formatting relative time:', error)
     return '날짜 오류'
   }
 }
@@ -70,12 +65,11 @@ function truncateText(text, maxLength = 80) {
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + '...'
 }
+
 /**
  * 고정 공지 위젯 컴포넌트
  */
 function PinnedNoticeComponent({ notice, isLoading = false }) {
-export default function PinnedNotice({ notice, isLoading = false }) {
-  // 로딩 상태
   if (isLoading) {
     return <PinnedNoticeSkeleton />
   }
@@ -110,24 +104,22 @@ export default function PinnedNotice({ notice, isLoading = false }) {
       >
         자세히 보기 →
       </Link>
+    </div>
+  )
+}
+
 /**
  * Props 비교 함수
- * notice 객체의 주요 속성만 비교
  */
 const arePropsEqual = (prevProps, nextProps) => {
-  // 로딩 상태 비교
   if (prevProps.isLoading !== nextProps.isLoading) return false
 
   const prevNotice = prevProps.notice
   const nextNotice = nextProps.notice
 
-  // 둘 다 null이면 같음
   if (prevNotice === null && nextNotice === null) return true
-
-  // 하나만 null이면 다름
   if (prevNotice === null || nextNotice === null) return false
 
-  // notice의 주요 속성 비교
   return (
     prevNotice.id === nextNotice.id &&
     prevNotice.title === nextNotice.title &&
@@ -137,11 +129,4 @@ const arePropsEqual = (prevProps, nextProps) => {
   )
 }
 
-/**
- * 메모이제이션된 PinnedNotice 컴포넌트
- */
 export default memo(PinnedNoticeComponent, arePropsEqual)
-
-    </div>
-  )
-}

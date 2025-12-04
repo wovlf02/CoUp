@@ -28,13 +28,15 @@ export async function GET(request) {
       return NextResponse.json(error, { status: error.statusCode })
     }
 
-    userId = parseInt(session.user.id)
+    userId = session.user.id
 
     // 3. 쿼리 파라미터 검증
     const { searchParams } = new URL(request.url)
     const filter = searchParams.get('filter') || 'all'
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '1000')
+    // limit은 파라미터가 없으면 전체 조회 (validation 스킵)
+    const limitParam = searchParams.get('limit')
+    const limit = limitParam ? parseInt(limitParam) : null
 
     // 필터 검증
     const filterValidation = validateFilter(filter)
@@ -43,20 +45,19 @@ export async function GET(request) {
       return NextResponse.json(error, { status: error.statusCode })
     }
 
-    // 페이지네이션 검증
-    const paginationValidation = validatePagination({ page, limit })
-    if (!paginationValidation.valid) {
-      const error = createMyStudiesError('INVALID_REQUEST', paginationValidation.error)
-      return NextResponse.json(error, { status: error.statusCode })
+    // 페이지네이션 검증 (limit이 명시적으로 전달된 경우만)
+    if (limitParam) {
+      const paginationValidation = validatePagination({ page, limit })
+      if (!paginationValidation.valid) {
+        const error = createMyStudiesError('INVALID_REQUEST', paginationValidation.error)
+        return NextResponse.json(error, { status: error.statusCode })
+      }
     }
 
-    // 4. DB 쿼리 (삭제된 스터디 제외)
+    // 4. DB 쿼리
     const studyMembers = await prisma.studyMember.findMany({
       where: {
-        userId,
-        study: {
-          deletedAt: null  // 삭제된 스터디 제외
-        }
+        userId
       },
       include: {
         study: {
@@ -72,7 +73,6 @@ export async function GET(request) {
             isRecruiting: true,
             tags: true,
             createdAt: true,
-            deletedAt: true,
             _count: {
               select: {
                 members: {

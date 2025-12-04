@@ -45,8 +45,8 @@ export default function DashboardClient({ user: initialUser }) {
 
   const { stats, myStudies, recentActivities, upcomingEvents, widgetData } = dashboardData.data
 
-  // 통계 카드 데이터
-  const statsCards = [
+  // 통계 카드 데이터 - useMemo로 최적화
+  const statsCards = useMemo(() => [
     {
       icon: '📚',
       label: '활성 스터디',

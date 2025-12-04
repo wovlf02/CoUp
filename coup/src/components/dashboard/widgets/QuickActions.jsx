@@ -21,11 +21,9 @@ import { QuickActionsSkeleton } from './WidgetSkeleton'
 const QuickActionsContent = memo(function QuickActionsContent({ isAdmin = false }) {
   const [isLoading, setIsLoading] = useState(false)
 
-  // useCallback으로 핸들러 최적화
   const handleVideoCall = useCallback(async () => {
     try {
       setIsLoading(true)
-      // TODO: 화상 통화 기능 구현
       alert('화상 스터디 기능은 준비 중입니다')
     } catch (error) {
       console.error('화상 통화 시작 실패:', error)
@@ -39,15 +37,12 @@ const QuickActionsContent = memo(function QuickActionsContent({ isAdmin = false 
     try {
       setIsLoading(true)
       
-      // TODO: 실제 초대 링크 생성
       const inviteLink = `${window.location.origin}/invite?code=SAMPLE`
       
-      // 클립보드 API 시도
       try {
         await navigator.clipboard.writeText(inviteLink)
         alert('초대 링크가 복사되었습니다!')
       } catch (clipboardError) {
-        // 폴백: 수동 복사
         const textarea = document.createElement('textarea')
         textarea.value = inviteLink
         textarea.style.position = 'fixed'
@@ -103,19 +98,20 @@ const QuickActionsContent = memo(function QuickActionsContent({ isAdmin = false 
         )}
       </div>
     </div>
+  )
 })
-}
 
 /**
  * QuickActions 메인 컴포넌트 (로딩 상태 처리)
+ */
 function QuickActionsComponent({ isAdmin = false, isLoading = false }) {
-export default function QuickActions({ isAdmin = false, isLoading = false }) {
   if (isLoading) {
     return <QuickActionsSkeleton />
   }
 
   return <QuickActionsContent isAdmin={isAdmin} />
 }
+
 /**
  * Props 비교 함수
  */
@@ -126,8 +122,5 @@ const arePropsEqual = (prevProps, nextProps) => {
   )
 }
 
-/**
- * 메모이제이션된 QuickActions 컴포넌트
- */
 export default memo(QuickActionsComponent, arePropsEqual)
 
