@@ -42,9 +42,9 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
   // 4. 대상 멤버 확인
   const targetMember = await prisma.studyMember.findUnique({
     where: {
-      userId_studyId: {
-        userId,
+      studyId_userId: {
         studyId,
+        userId,
       },
     },
     include: {
@@ -96,9 +96,9 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
   // 7. 역할 변경
   const updatedMember = await prisma.studyMember.update({
     where: {
-      userId_studyId: {
-        userId,
+      studyId_userId: {
         studyId,
+        userId,
       },
     },
     data: { role },

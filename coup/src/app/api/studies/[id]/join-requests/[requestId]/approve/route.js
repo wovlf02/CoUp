@@ -8,7 +8,6 @@ import {
   handlePrismaError
 } from '@/lib/exceptions/study-errors'
 import { checkStudyCapacity } from '@/lib/study-helpers'
-import { approveJoinRequest as approveJoinRequestTransaction } from '@/lib/transaction-helpers'
 
 export async function POST(request, { params }) {
   try {
@@ -55,31 +54,28 @@ export async function POST(request, { params }) {
       return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 5. 트랜잭션으로 승인 처리 (상태 변경 + 멤버 수 업데이트 + 알림)
-    const approveResult = await approveJoinRequestTransaction(
-      prisma,
-      requestId,
-      studyId,
-      joinRequest.userId,
-      session.user.id,
-      session.user.name
-    )
-
-    if (!approveResult.success) {
-      logStudyError('가입 승인 트랜잭션', new Error(approveResult.error), {
-        studyId,
-        requestId,
-        approverId: session.user.id
-      })
-
-      const errorResponse = createStudyErrorResponse('JOIN_APPROVE_FAILED', approveResult.error)
-      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
-    }
+    // 5. 승인 처리: PENDING -> ACTIVE 상태 변경
+    const updatedMember = await prisma.studyMember.update({
+      where: { id: requestId },
+      data: {
+        status: 'ACTIVE',
+        approvedAt: new Date()
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    })
 
     return NextResponse.json({
       success: true,
       message: "가입이 승인되었습니다",
-      data: approveResult.member
+      data: updatedMember
     })
 
   } catch (error) {

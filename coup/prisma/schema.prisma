@@ -160,6 +160,7 @@ model StudyMember {
 
 enum MemberRole {
   OWNER
+  ADMIN
   MEMBER
 }
 

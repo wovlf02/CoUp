@@ -21,86 +21,104 @@ export default function MyStudySettingsPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
   const [activeTab, setActiveTab] = useState('basic');
+  
+  // 수정 모달 상태
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
+  const [editErrors, setEditErrors] = useState({});
 
   // 실제 API Hooks
-  const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
+  const { data: studyData, isLoading: studyLoading, refetch: refetchStudy } = useStudy(studyId);
   const updateStudyMutation = useUpdateStudy();
   const deleteStudyMutation = useDeleteStudy();
   const leaveStudyMutation = useLeaveStudy();
 
   const study = studyData?.data;
 
-  const [formData, setFormData] = useState({
-    name: study?.name || '',
-    category: study?.category || '',
-    subCategory: study?.subCategory || '',
-    description: study?.description || '',
-    tags: study?.tags || [],
-    isPublic: study?.isPublic !== undefined ? study.isPublic : true,
-    autoApprove: study?.autoApprove || false,
-    maxMembers: study?.maxMembers || 50
-  });
+  // 수정 모달 열기
+  const openEditModal = () => {
+    setEditFormData({
+      name: study?.name || '',
+      category: study?.category || '',
+      subCategory: study?.subCategory || '',
+      description: study?.description || '',
+      tags: study?.tags || [],
+      isPublic: study?.isPublic !== undefined ? study.isPublic : true,
+      autoApprove: study?.autoApprove || false,
+      maxMembers: study?.maxMembers || 50
+    });
+    setEditErrors({});
+    setIsEditModalOpen(true);
+  };
 
-  const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (study && Object.keys(formData).some(key => formData[key] !== study[key])) {
-      setFormData({
-        name: study.name || '',
-        category: study.category || '',
-        subCategory: study.subCategory || '',
-        description: study.description || '',
-        tags: study.tags || [],
-        isPublic: study.isPublic !== undefined ? study.isPublic : true,
-        autoApprove: study.autoApprove || false,
-        maxMembers: study.maxMembers || 50
-      });
-    }
-  }, [study, formData]);
-
+  // 수정 모달 닫기
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditFormData(null);
+    setEditErrors({});
+  };
 
   // 유효성 검사
   const validateForm = () => {
+    if (!editFormData) return false;
+    
     const newErrors = {};
 
-    if (!formData.name.trim()) {
+    if (!editFormData.name?.trim()) {
       newErrors.name = '스터디 이름은 필수입니다.';
-    } else if (formData.name.length < 2 || formData.name.length > 50) {
+    } else if (editFormData.name.length < 2 || editFormData.name.length > 50) {
       newErrors.name = '스터디 이름은 2-50자 사이여야 합니다.';
     }
 
-    if (formData.description.length < 10 || formData.description.length > 500) {
+    if ((editFormData.description?.length || 0) < 10 || (editFormData.description?.length || 0) > 500) {
       newErrors.description = '스터디 소개는 10-500자 사이여야 합니다.';
     }
 
-    if (formData.maxMembers < 2 || formData.maxMembers > 100) {
+    if (editFormData.maxMembers < 2 || editFormData.maxMembers > 100) {
       newErrors.maxMembers = '최대 인원은 2-100명 사이여야 합니다.';
     }
 
-    setErrors(newErrors);
+    setEditErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async () => {
+  // 변경사항 적용
+  const handleApplyChanges = async () => {
     if (!validateForm()) {
-      alert('입력 내용을 확인해주세요.');
       return;
     }
-
-    if (!confirm('변경사항을 저장하시겠습니까?')) return;
 
     try {
       await updateStudyMutation.mutateAsync({
         id: studyId,
-        data: formData
+        data: editFormData
       });
-      alert('저장되었습니다!');
-      setErrors({});
+      
+      // 성공 시 데이터 새로고침 후 모달 닫기
+      await refetchStudy();
+      closeEditModal();
+      alert('변경사항이 적용되었습니다!');
     } catch (error) {
       alert('저장 실패: ' + error.message);
     }
   };
 
+  // 태그 추가 (모달용)
+  const handleTagAdd = (e) => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      e.preventDefault();
+      const newTag = e.target.value.trim();
+      if (!editFormData.tags.includes(newTag)) {
+        setEditFormData({
+          ...editFormData,
+          tags: [...editFormData.tags, newTag],
+        });
+      }
+      e.target.value = '';
+    }
+  };
+
+  // 스터디 삭제
   const handleDeleteStudy = async () => {
     const confirmation = prompt('스터디를 삭제하려면 "삭제"를 입력하세요:');
     if (confirmation === '삭제') {
@@ -114,30 +132,7 @@ export default function MyStudySettingsPage({ params }) {
     }
   };
 
-  const handleRoleChange = async (memberId, userId, newRole) => {
-    if (!confirm(`멤버의 역할을 ${newRole}로 변경하시겠습니까?`)) return;
-
-    try {
-      await changeMemberRoleMutation.mutateAsync({ studyId, userId, role: newRole });
-      alert('역할이 변경되었습니다.');
-      await refetchMembers();
-    } catch (error) {
-      alert('역할 변경 실패: ' + error.message);
-    }
-  };
-
-  const handleKickMember = async (userId, memberName) => {
-    if (!confirm(`${memberName}님을 스터디에서 강퇴하시겠습니까?`)) return;
-
-    try {
-      await kickMemberMutation.mutateAsync({ studyId, userId });
-      alert('멤버가 강퇴되었습니다.');
-      await refetchMembers();
-    } catch (error) {
-      alert('강퇴 실패: ' + error.message);
-    }
-  };
-
+  // 스터디 탈퇴
   const handleLeaveStudy = async () => {
     if (!confirm('정말 스터디를 탈퇴하시겠습니까?')) return;
 
@@ -147,19 +142,6 @@ export default function MyStudySettingsPage({ params }) {
       router.push('/my-studies');
     } catch (error) {
       alert('탈퇴 실패: ' + error.message);
-    }
-  };
-
-  const handleTagAdd = (e) => {
-    if (e.key === 'Enter' && e.target.value.trim()) {
-      const newTag = e.target.value.trim();
-      if (!formData.tags.includes(newTag)) {
-        setFormData({
-          ...formData,
-          tags: [...formData.tags, newTag],
-        });
-      }
-      e.target.value = '';
     }
   };
 
@@ -227,38 +209,107 @@ export default function MyStudySettingsPage({ params }) {
             </button>
           </div>
 
-          {/* 기본 정보 */}
-          {activeTab === 'basic' && isAdmin && (
+          {/* 기본 정보 - 읽기 전용 뷰 */}
+          {activeTab === 'basic' && (
             <div className={styles.settingsContent}>
               <div className={styles.settingsCard}>
                 <h3 className={styles.cardTitle}>📝 기본 정보</h3>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>스터디 이름 *</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={styles.input}
-                    placeholder="스터디 이름을 입력하세요"
-                  />
-                  <span className={styles.hint}>
-                    {errors.name ? (
-                      <span style={{ color: 'var(--danger-500)' }}>{errors.name}</span>
-                    ) : (
-                      '2-50자'
-                    )}
-                  </span>
+                {/* 읽기 전용 정보 표시 */}
+                <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>스터디 이름</label>
+                  <p className={styles.infoValue}>{study.name}</p>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>카테고리</label>
-                  <div className={styles.selectGroup}>
+                <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>카테고리</label>
+                  <p className={styles.infoValue}>{study.category || '미설정'}</p>
+                </div>
+
+                <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>스터디 소개</label>
+                  <p className={styles.infoValue}>{study.description || '소개가 없습니다.'}</p>
+                </div>
+
+                <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>태그</label>
+                  <div className={styles.tagContainer}>
+                    {study.tags && study.tags.length > 0 ? (
+                      study.tags.map((tag) => (
+                        <span key={tag} className={styles.tagReadonly}>#{tag}</span>
+                      ))
+                    ) : (
+                      <span className={styles.infoEmpty}>태그 없음</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>공개 여부</label>
+                  <p className={styles.infoValue}>
+                    {study.isPublic ? '🌐 전체 공개' : '🔒 비공개'}
+                  </p>
+                </div>
+
+                <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>가입 승인</label>
+                  <p className={styles.infoValue}>
+                    {study.autoApprove ? '✅ 자동 승인' : '✋ 수동 승인'}
+                  </p>
+                </div>
+
+                <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>최대 인원</label>
+                  <p className={styles.infoValue}>{study.maxMembers}명</p>
+                </div>
+
+                {/* 수정 버튼 - OWNER만 표시 */}
+                {isOwner && (
+                  <div className={styles.formActions}>
+                    <button
+                      className={styles.editButton}
+                      onClick={openEditModal}
+                    >
+                      ✏️ 수정
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 수정 모달 */}
+          {isEditModalOpen && (
+            <div className={styles.modalOverlay} onClick={closeEditModal}>
+              <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.modalHeader}>
+                  <h2 className={styles.modalTitle}>📝 기본 정보 수정</h2>
+                  <button className={styles.modalClose} onClick={closeEditModal}>×</button>
+                </div>
+                
+                <div className={styles.modalContent}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>스터디 이름 *</label>
+                    <input
+                      type="text"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className={styles.input}
+                      placeholder="스터디 이름을 입력하세요"
+                    />
+                    {editErrors.name && (
+                      <span className={styles.errorText}>{editErrors.name}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>카테고리</label>
                     <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      value={editFormData.category}
+                      onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
                       className={styles.select}
                     >
+                      <option value="">선택하세요</option>
                       {STUDY_CATEGORIES.map((cat) => (
                         <option key={cat.main} value={cat.main}>
                           {cat.main}
@@ -266,121 +317,114 @@ export default function MyStudySettingsPage({ params }) {
                       ))}
                     </select>
                   </div>
-                </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>스터디 소개</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className={styles.textarea}
-                    rows={5}
-                    placeholder="스터디에 대해 소개해주세요"
-                  />
-                  <span className={styles.hint}>
-                    {errors.description ? (
-                      <span style={{ color: 'var(--danger-500)' }}>{errors.description}</span>
-                    ) : (
-                      `${formData.description.length}/500자`
-                    )}
-                  </span>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>태그</label>
-                  <div className={styles.tagContainer}>
-                    {formData.tags.map((tag) => (
-                      <span key={tag} className={styles.tag}>
-                        #{tag}
-                        <button
-                          className={styles.tagRemove}
-                          onClick={() =>
-                            setFormData({
-                              ...formData,
-                              tags: formData.tags.filter((t) => t !== tag),
-                            })
-                          }
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                    <input
-                      type="text"
-                      placeholder="+ 추가 (Enter)"
-                      className={styles.tagInput}
-                      onKeyDown={handleTagAdd}
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>스터디 소개</label>
+                    <textarea
+                      value={editFormData.description}
+                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                      className={styles.textarea}
+                      rows={4}
+                      placeholder="스터디에 대해 소개해주세요"
                     />
+                    <span className={styles.hint}>{editFormData.description.length}/500자</span>
+                    {editErrors.description && (
+                      <span className={styles.errorText}>{editErrors.description}</span>
+                    )}
                   </div>
-                </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>공개 여부</label>
-                  <div className={styles.radioGroup}>
-                    <label className={styles.radioLabel}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>태그</label>
+                    <div className={styles.tagContainer}>
+                      {editFormData.tags.map((tag) => (
+                        <span key={tag} className={styles.tag}>
+                          #{tag}
+                          <button
+                            className={styles.tagRemove}
+                            onClick={() =>
+                              setEditFormData({
+                                ...editFormData,
+                                tags: editFormData.tags.filter((t) => t !== tag),
+                              })
+                            }
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
                       <input
-                        type="radio"
-                        checked={formData.isPublic}
-                        onChange={() => setFormData({ ...formData, isPublic: true })}
+                        type="text"
+                        placeholder="+ 추가 (Enter)"
+                        className={styles.tagInput}
+                        onKeyDown={handleTagAdd}
                       />
-                      <span>전체 공개 - 누구나 검색 가능</span>
-                    </label>
-                    <label className={styles.radioLabel}>
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>공개 여부</label>
+                    <div className={styles.radioGroup}>
+                      <label className={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          checked={editFormData.isPublic}
+                          onChange={() => setEditFormData({ ...editFormData, isPublic: true })}
+                        />
+                        <span>전체 공개</span>
+                      </label>
+                      <label className={styles.radioLabel}>
+                        <input
+                          type="radio"
+                          checked={!editFormData.isPublic}
+                          onChange={() => setEditFormData({ ...editFormData, isPublic: false })}
+                        />
+                        <span>비공개</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>가입 승인</label>
+                    <label className={styles.checkboxLabel}>
                       <input
-                        type="radio"
-                        checked={!formData.isPublic}
-                        onChange={() => setFormData({ ...formData, isPublic: false })}
+                        type="checkbox"
+                        checked={editFormData.autoApprove}
+                        onChange={(e) =>
+                          setEditFormData({ ...editFormData, autoApprove: e.target.checked })
+                        }
                       />
-                      <span>비공개 - 초대 링크만</span>
+                      <span>자동 승인</span>
                     </label>
                   </div>
-                </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>가입 승인</label>
-                  <label className={styles.checkboxLabel}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>최대 인원</label>
                     <input
-                      type="checkbox"
-                      checked={formData.autoApprove}
+                      type="number"
+                      value={editFormData.maxMembers}
                       onChange={(e) =>
-                        setFormData({ ...formData, autoApprove: e.target.checked })
+                        setEditFormData({ ...editFormData, maxMembers: parseInt(e.target.value) || 2 })
                       }
+                      className={styles.input}
+                      min="2"
+                      max="100"
                     />
-                    <span>자동 승인 (체크 해제 시 수동 승인)</span>
-                  </label>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>최대 인원</label>
-                  <input
-                    type="number"
-                    value={formData.maxMembers}
-                    onChange={(e) =>
-                      setFormData({ ...formData, maxMembers: parseInt(e.target.value) || 2 })
-                    }
-                    className={styles.input}
-                    min="2"
-                    max="100"
-                  />
-                  <span className={styles.hint}>
-                    {errors.maxMembers ? (
-                      <span style={{ color: 'var(--danger-500)' }}>{errors.maxMembers}</span>
-                    ) : (
-                      '2-100명'
+                    {editErrors.maxMembers && (
+                      <span className={styles.errorText}>{editErrors.maxMembers}</span>
                     )}
-                  </span>
+                  </div>
                 </div>
 
-                <div className={styles.formActions}>
-                  <button className={styles.cancelButton} onClick={() => router.back()}>
+                <div className={styles.modalFooter}>
+                  <button className={styles.cancelButton} onClick={closeEditModal}>
                     취소
                   </button>
                   <button
-                    className={styles.saveButton}
-                    onClick={handleSave}
+                    className={styles.applyButton}
+                    onClick={handleApplyChanges}
                     disabled={updateStudyMutation.isPending}
                   >
-                    {updateStudyMutation.isPending ? '저장 중...' : '변경사항 저장'}
+                    {updateStudyMutation.isPending ? '적용 중...' : '적용'}
                   </button>
                 </div>
               </div>

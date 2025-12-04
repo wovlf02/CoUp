@@ -31,8 +31,10 @@ export default function MyStudyMembersPage({ params }) {
   const rejectJoinRequest = useRejectJoinRequest();
 
   const study = studyData?.data;
-  const members = membersData?.members || [];
-  const joinRequests = requestsData?.requests || [];
+  // API 응답 구조에 맞게 수정: { data: [...], pagination: {...} } 또는 { members: [...] }
+  const members = membersData?.data || membersData?.members || [];
+  // API 응답 구조에 맞게 수정: { success: true, data: [...] } 또는 { requests: [...] }
+  const joinRequests = requestsData?.data || requestsData?.requests || [];
 
   // 로딩 상태
   if (studyLoading || membersLoading || requestsLoading) {

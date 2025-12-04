@@ -1,12 +1,11 @@
-// 스터디 탐색 (Explore) - 공개 스터디 검색 및 필터링
+// 스터디 탐색 (Explore) - 무한 스크롤
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import { useStudies, useMyStudies } from '@/lib/hooks/useApi';
 
-// 카테고리 정의 (정적 데이터는 유지)
+// 카테고리 정의
 const categories = [
   { id: 'all', label: '전체', value: null, icon: '📚' },
   { id: 'programming', label: '프로그래밍', value: '프로그래밍', icon: '💻' },
@@ -17,57 +16,162 @@ const categories = [
   { id: 'finance', label: '재테크', value: '재테크', icon: '💰' },
 ];
 
-// 스터디 생성 팁 (정적 데이터는 유지)
+// 스터디 생성 팁
 const studyTips = [
   { title: '명확한 목표', description: '구체적인 학습 목표를 설정하세요' },
   { title: '규칙적인 일정', description: '정기적인 모임으로 습관을 만드세요' },
   { title: '적극적인 소통', description: '활발한 소통으로 동기부여하세요' },
 ];
 
+const ITEMS_PER_LOAD = 20; // 한 번에 20개씩 로드
+
 export default function StudiesExplorePage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
-  const [currentPage, setCurrentPage] = useState(1);
+  
+  // 무한 스크롤 상태
+  const [studies, setStudies] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [error, setError] = useState(null);
+  
+  // 내 스터디 ID 목록
+  const [myStudyIds, setMyStudyIds] = useState([]);
+  
+  // 스크롤 감지용 ref
+  const observerRef = useRef(null);
+  const loadMoreRef = useRef(null);
 
-  const itemsPerPage = 10;
+  // 내 스터디 목록 가져오기
+  useEffect(() => {
+    const fetchMyStudies = async () => {
+      try {
+        const response = await fetch('/api/studies/my?limit=100');
+        if (response.ok) {
+          const data = await response.json();
+          const ids = (data.data?.studies || []).map(s => s.study?.id || s.studyId);
+          setMyStudyIds(ids);
+        }
+      } catch (err) {
+        console.error('내 스터디 로드 실패:', err);
+      }
+    };
+    fetchMyStudies();
+  }, []);
 
-  // 실제 API 호출
-  const queryParams = {
-    page: currentPage,
-    limit: itemsPerPage,
-  };
+  // 스터디 목록 가져오기
+  const fetchStudies = useCallback(async (pageNum, reset = false) => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    if (reset) setIsInitialLoading(true);
+    setError(null);
+    
+    try {
+      const params = new URLSearchParams({
+        page: pageNum.toString(),
+        limit: ITEMS_PER_LOAD.toString(),
+      });
+      
+      if (selectedCategory && selectedCategory !== '전체') {
+        params.append('category', selectedCategory);
+      }
+      
+      if (searchKeyword && searchKeyword.trim()) {
+        params.append('search', searchKeyword.trim());
+      }
+      
+      const response = await fetch(`/api/studies?${params}`);
+      
+      if (!response.ok) {
+        throw new Error('스터디 목록을 불러오는데 실패했습니다.');
+      }
+      
+      const data = await response.json();
+      const newStudies = data.data || [];
+      const pagination = data.pagination || { total: 0 };
+      
+      // 내 스터디 제외
+      const filteredStudies = newStudies.filter(study => !myStudyIds.includes(study.id));
+      
+      setTotalCount(pagination.total);
+      
+      if (reset) {
+        setStudies(filteredStudies);
+      } else {
+        setStudies(prev => [...prev, ...filteredStudies]);
+      }
+      
+      // 더 불러올 데이터가 있는지 확인
+      const totalLoaded = reset ? filteredStudies.length : studies.length + filteredStudies.length;
+      setHasMore(totalLoaded < pagination.total);
+      
+    } catch (err) {
+      console.error('스터디 로드 에러:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+      setIsInitialLoading(false);
+    }
+  }, [selectedCategory, searchKeyword, myStudyIds, isLoading, studies.length]);
 
-  // 카테고리가 '전체'가 아닌 경우만 추가
-  if (selectedCategory && selectedCategory !== '전체') {
-    queryParams.category = selectedCategory;
-  }
+  // 초기 로드 및 필터 변경 시 리셋
+  useEffect(() => {
+    setPage(1);
+    setStudies([]);
+    setHasMore(true);
+    fetchStudies(1, true);
+  }, [selectedCategory, myStudyIds]); // searchKeyword는 검색 버튼 클릭 시에만
 
-  // 검색어가 있는 경우만 추가
-  if (searchKeyword && searchKeyword.trim()) {
-    queryParams.search = searchKeyword.trim();
-  }
+  // Intersection Observer로 무한 스크롤 구현
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+    
+    observerRef.current = observer;
+    
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoading]);
 
-  const { data, isLoading, error } = useStudies(queryParams);
+  // 페이지 변경 시 추가 로드
+  useEffect(() => {
+    if (page > 1) {
+      fetchStudies(page, false);
+    }
+  }, [page]);
 
-  // 내 스터디 목록 가져오기 (필터링용)
-  const { data: myStudiesData } = useMyStudies({ limit: 100 }); // 전체 가져오기
-  const myStudyIds = (myStudiesData?.data?.studies || []).map(s => s.study?.id || s.studyId);
-
-  // 내 스터디를 제외한 목록
-  const studies = (data?.data || []).filter(study => !myStudyIds.includes(study.id));
-  const pagination = data?.pagination || { total: 0, totalPages: 1 };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
+  // 검색 핸들러
   const handleSearch = () => {
-    setCurrentPage(1); // 검색 시 첫 페이지로
+    setPage(1);
+    setStudies([]);
+    setHasMore(true);
+    fetchStudies(1, true);
   };
 
-  // 로딩 상태
-  if (isLoading) {
+  // 카테고리 변경 핸들러
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+  };
+
+  // 초기 로딩 상태
+  if (isInitialLoading) {
     return (
       <div className={styles.container}>
         <div className={styles.mainContent}>
@@ -78,12 +182,15 @@ export default function StudiesExplorePage() {
   }
 
   // 에러 상태
-  if (error) {
+  if (error && studies.length === 0) {
     return (
       <div className={styles.container}>
         <div className={styles.mainContent}>
           <div className={styles.error}>
-            스터디를 불러오는데 실패했습니다. 다시 시도해주세요.
+            {error}
+            <button onClick={() => fetchStudies(1, true)} className={styles.retryButton}>
+              다시 시도
+            </button>
           </div>
         </div>
       </div>
@@ -130,10 +237,7 @@ export default function StudiesExplorePage() {
                 className={`${styles.categoryTab} ${
                   selectedCategory === category.label ? styles.active : ''
                 }`}
-                onClick={() => {
-                  setSelectedCategory(category.label);
-                  setCurrentPage(1);
-                }}
+                onClick={() => handleCategoryChange(category.label)}
               >
                 {category.icon} {category.label}
               </button>
@@ -141,8 +245,16 @@ export default function StudiesExplorePage() {
           </div>
         </div>
 
+        {/* 결과 정보 */}
+        <div className={styles.resultInfo}>
+          <span>총 {totalCount}개의 스터디</span>
+          {studies.length > 0 && (
+            <span className={styles.loadedCount}>({studies.length}개 표시 중)</span>
+          )}
+        </div>
+
         {/* 스터디 카드 그리드 */}
-        {studies.length === 0 ? (
+        {studies.length === 0 && !isLoading ? (
           <div className={styles.emptyState}>
             <p>검색 결과가 없습니다.</p>
           </div>
@@ -156,10 +268,9 @@ export default function StudiesExplorePage() {
               >
                 <div className={styles.cardHeader}>
                   <div className={styles.emoji}>{study.emoji}</div>
-                  {study.isRecruiting && (
+                  {study.isRecruiting ? (
                     <span className={styles.recruitingBadge}>모집중</span>
-                  )}
-                  {!study.isRecruiting && (
+                  ) : (
                     <span className={styles.closedBadge}>모집완료</span>
                   )}
                 </div>
@@ -195,38 +306,13 @@ export default function StudiesExplorePage() {
           </div>
         )}
 
-        {/* 페이지네이션 */}
-        {pagination.totalPages > 1 && (
-          <div className={styles.pagination}>
-            <button
-              className={styles.paginationArrow}
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              ←
-            </button>
-
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                className={`${styles.paginationButton} ${
-                  currentPage === page ? styles.active : ''
-                }`}
-                onClick={() => handlePageChange(page)}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              className={styles.paginationArrow}
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === pagination.totalPages}
-            >
-              →
-            </button>
-          </div>
-        )}
+        {/* 무한 스크롤 로더 */}
+        <div ref={loadMoreRef} className={styles.loadMore}>
+          {isLoading && <div className={styles.loadingMore}>더 불러오는 중...</div>}
+          {!hasMore && studies.length > 0 && (
+            <div className={styles.endMessage}>모든 스터디를 불러왔습니다 🎉</div>
+          )}
+        </div>
       </div>
 
       {/* 우측 사이드바 위젯 */}
@@ -239,10 +325,7 @@ export default function StudiesExplorePage() {
               <button
                 key={category.id}
                 className={styles.categoryItem}
-                onClick={() => {
-                  setSelectedCategory(category.label);
-                  setCurrentPage(1);
-                }}
+                onClick={() => handleCategoryChange(category.label)}
               >
                 <span className={styles.categoryIcon}>{category.icon}</span>
                 <span className={styles.categoryLabel}>{category.label}</span>
@@ -273,7 +356,7 @@ export default function StudiesExplorePage() {
           <div className={styles.widgetContent}>
             <div className={styles.statItem}>
               <span className={styles.statLabel}>전체 스터디</span>
-              <span className={styles.statValue}>{pagination.total}개</span>
+              <span className={styles.statValue}>{totalCount}개</span>
             </div>
           </div>
           <div className={styles.widgetFooter}>

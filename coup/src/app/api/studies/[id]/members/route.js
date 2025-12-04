@@ -30,18 +30,15 @@ export const GET = withStudyErrorHandler(async (request, context) => {
   // 2. 쿼리 파라미터 추출 및 검증
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10')));
+  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '50')));
   const skip = (page - 1) * limit;
   const role = searchParams.get('role'); // 'OWNER' | 'ADMIN' | 'MEMBER'
-  const status = searchParams.get('status'); // 'ACTIVE' | 'INACTIVE'
+  const status = searchParams.get('status') || 'ACTIVE'; // 기본값: ACTIVE (활성 멤버만)
 
   // 3. where 조건 생성
-  let whereClause = { studyId };
+  let whereClause = { studyId, status };
   if (role) {
     whereClause.role = role;
-  }
-  if (status) {
-    whereClause.status = status;
   }
 
   // 4. 비즈니스 로직 - 데이터 조회
@@ -151,9 +148,9 @@ export const POST = withStudyErrorHandler(async (request, context) => {
   // 6. 이미 멤버인지 확인
   const existingMember = await prisma.studyMember.findUnique({
     where: {
-      userId_studyId: {
-        userId,
-        studyId
+      studyId_userId: {
+        studyId,
+        userId
       }
     }
   });
@@ -240,9 +237,9 @@ export const DELETE = withStudyErrorHandler(async (request, context) => {
   // 3. 대상 멤버 확인
   const targetMember = await prisma.studyMember.findUnique({
     where: {
-      userId_studyId: {
-        userId,
-        studyId
+      studyId_userId: {
+        studyId,
+        userId
       }
     }
   });
@@ -262,9 +259,9 @@ export const DELETE = withStudyErrorHandler(async (request, context) => {
   // 5. 멤버 제거
   await prisma.studyMember.delete({
     where: {
-      userId_studyId: {
-        userId,
-        studyId
+      studyId_userId: {
+        studyId,
+        userId
       }
     }
   });

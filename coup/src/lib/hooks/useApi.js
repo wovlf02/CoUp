@@ -138,7 +138,7 @@ export function useCreateStudy() {
 export function useUpdateStudy() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/studies/${id}`, data),
+    mutationFn: ({ id, data }) => api.patch(`/api/studies/${id}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.id])
       queryClient.invalidateQueries(['studies'])

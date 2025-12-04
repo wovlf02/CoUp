@@ -8,7 +8,6 @@ import {
   handlePrismaError
 } from '@/lib/exceptions/study-errors'
 import { validateJoinReject } from '@/lib/validators/study-validation'
-import { rejectJoinRequest as rejectJoinRequestTransaction } from '@/lib/transaction-helpers'
 
 export async function POST(request, { params }) {
   try {
@@ -67,27 +66,10 @@ export async function POST(request, { params }) {
       return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 6. 트랜잭션으로 거절 처리 (레코드 삭제 + 알림)
-    const rejectResult = await rejectJoinRequestTransaction(
-      prisma,
-      requestId,
-      studyId,
-      joinRequest.userId,
-      session.user.id,
-      session.user.name,
-      reason
-    )
-
-    if (!rejectResult.success) {
-      logStudyError('가입 거절 트랜잭션', new Error(rejectResult.error), {
-        studyId,
-        requestId,
-        rejecterId: session.user.id
-      })
-
-      const errorResponse = createStudyErrorResponse('JOIN_REJECT_FAILED', rejectResult.error)
-      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
-    }
+    // 6. 거절 처리: StudyMember 레코드 삭제
+    await prisma.studyMember.delete({
+      where: { id: requestId }
+    })
 
     return NextResponse.json({
       success: true,

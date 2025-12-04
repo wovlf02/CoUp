@@ -46,16 +46,28 @@ export const GET = withStudyErrorHandler(async (request, context) => {
   }
 
   // 4. 조회수 증가
-  await prisma.notice.update({
+  const updatedNotice = await prisma.notice.update({
     where: { id: noticeId },
-    data: { views: { increment: 1 } }
+    data: { views: { increment: 1 } },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true
+        }
+      }
+    }
   });
 
-  // 5. 로깅
+  // 5. 캐시 무효화 (조회수 변경 반영)
+  invalidateNoticesCache(studyId);
+
+  // 6. 로깅
   StudyLogger.logNoticeView(noticeId, studyId, result.session.user.id);
 
-  // 6. 응답
-  return createSuccessResponse(notice);
+  // 7. 응답 (업데이트된 조회수 포함)
+  return createSuccessResponse(updatedNotice);
 });
 
 /**

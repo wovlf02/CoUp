@@ -54,20 +54,64 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
+    const category = searchParams.get('category')
+    const search = searchParams.get('search')
+    
+    // 필터 조건 구성
+    const where = {}
+    
+    if (category && category !== '전체') {
+      where.category = category
+    }
+    
+    if (search && search.trim()) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { tags: { hasSome: [search] } },
+      ]
+    }
     
     const studies = await prisma.study.findMany({
+      where,
       skip: (page - 1) * limit,
-      take: limit
+      take: limit,
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          }
+        },
+        _count: {
+          select: {
+            members: {
+              where: { status: 'ACTIVE' }
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
     
-    const total = await prisma.study.count()
+    const total = await prisma.study.count({ where })
+    
+    // 응답 데이터 가공
+    const formattedStudies = studies.map(study => ({
+      ...study,
+      currentMembers: study._count?.members || 0,
+    }))
     
     return NextResponse.json({
       success: true,
-      data: studies,
+      data: formattedStudies,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
     })
   } catch (error) {
+    console.error('[API /studies] Error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

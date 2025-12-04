@@ -5,7 +5,7 @@ import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import styles from './page.module.css';
-import { useStudy, useEvents, useCreateEvent, useDeleteEvent } from '@/lib/hooks/useApi';
+import { useStudy, useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import StudyTabs from '@/components/study/StudyTabs';
 
@@ -18,6 +18,8 @@ export default function MyStudyCalendarPage({ params }) {
   const [showModal, setShowModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isEditingDetail, setIsEditingDetail] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -36,6 +38,7 @@ export default function MyStudyCalendarPage({ params }) {
   const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
   const { data: eventsData, isLoading: eventsLoading } = useEvents(studyId, { month });
   const createEventMutation = useCreateEvent();
+  const updateEventMutation = useUpdateEvent();
   const deleteEventMutation = useDeleteEvent();
 
   const study = studyData?.data;
@@ -65,14 +68,69 @@ export default function MyStudyCalendarPage({ params }) {
 
   const handleOpenDetailModal = (event) => {
     setSelectedEvent(event);
+    setEditFormData({
+      title: event.title,
+      date: new Date(event.date).toISOString().split('T')[0],
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.location || '',
+      color: event.color || '#6366F1'
+    });
+    setIsEditingDetail(false);
     setShowDetailModal(true);
   };
 
   const handleCloseDetailModal = () => {
     setShowDetailModal(false);
     setSelectedEvent(null);
+    setIsEditingDetail(false);
+    setEditFormData(null);
   };
 
+  const handleStartEditing = () => {
+    setIsEditingDetail(true);
+  };
+
+  const handleCancelEditing = () => {
+    if (selectedEvent) {
+      setEditFormData({
+        title: selectedEvent.title,
+        date: new Date(selectedEvent.date).toISOString().split('T')[0],
+        startTime: selectedEvent.startTime,
+        endTime: selectedEvent.endTime,
+        location: selectedEvent.location || '',
+        color: selectedEvent.color || '#6366F1'
+      });
+    }
+    setIsEditingDetail(false);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editFormData.title.trim()) {
+      alert('일정 제목을 입력해주세요.');
+      return;
+    }
+
+    try {
+      await updateEventMutation.mutateAsync({
+        studyId,
+        eventId: selectedEvent.id,
+        data: editFormData
+      });
+      setIsEditingDetail(false);
+      handleCloseDetailModal();
+      alert('일정이 수정되었습니다.');
+    } catch (error) {
+      alert('일정 수정 실패: ' + error.message);
+    }
+  };
+
+  // 기존 생성 모달로 넘어가는 함수 (필요시 사용)
   const handleEditFromDetail = () => {
     if (selectedEvent) {
       setFormData({
@@ -869,43 +927,101 @@ export default function MyStudyCalendarPage({ params }) {
       )}
 
       {/* 일정 상세보기 모달 */}
-      {showDetailModal && selectedEvent && (
+      {showDetailModal && selectedEvent && editFormData && (
         <div className={styles.modalOverlay} onClick={handleCloseDetailModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>📅 일정 상세</h2>
+              <h2 className={styles.modalTitle}>
+                {isEditingDetail ? '✏️ 일정 수정' : '📅 일정 상세'}
+              </h2>
               <button className={styles.modalClose} onClick={handleCloseDetailModal}>
                 ✕
               </button>
             </div>
 
             <div className={styles.detailContent}>
+              {/* 일정 제목 */}
               <div className={styles.detailSection}>
                 <div className={styles.detailLabel}>일정 제목</div>
-                <div className={styles.detailValue}>{selectedEvent.title}</div>
+                {isEditingDetail ? (
+                  <input
+                    type="text"
+                    name="title"
+                    value={editFormData.title}
+                    onChange={handleEditInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <div className={styles.detailValue}>{selectedEvent.title}</div>
+                )}
               </div>
 
+              {/* 날짜 */}
               <div className={styles.detailSection}>
                 <div className={styles.detailLabel}>날짜</div>
-                <div className={styles.detailValue}>
-                  {formatDateForDisplay(selectedEvent.date)}
-                </div>
+                {isEditingDetail ? (
+                  <input
+                    type="date"
+                    name="date"
+                    value={editFormData.date}
+                    onChange={handleEditInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <div className={styles.detailValue}>
+                    {formatDateForDisplay(selectedEvent.date)}
+                  </div>
+                )}
               </div>
 
+              {/* 시간 */}
               <div className={styles.detailSection}>
                 <div className={styles.detailLabel}>시간</div>
-                <div className={styles.detailValue}>
-                  {selectedEvent.startTime} - {selectedEvent.endTime}
-                </div>
+                {isEditingDetail ? (
+                  <div className={styles.timeInputRow}>
+                    <input
+                      type="time"
+                      name="startTime"
+                      value={editFormData.startTime}
+                      onChange={handleEditInputChange}
+                      className={styles.editInput}
+                    />
+                    <span className={styles.timeSeparator}>~</span>
+                    <input
+                      type="time"
+                      name="endTime"
+                      value={editFormData.endTime}
+                      onChange={handleEditInputChange}
+                      className={styles.editInput}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.detailValue}>
+                    {selectedEvent.startTime} - {selectedEvent.endTime}
+                  </div>
+                )}
               </div>
 
-              {selectedEvent.location && (
-                <div className={styles.detailSection}>
-                  <div className={styles.detailLabel}>장소</div>
-                  <div className={styles.detailValue}>📍 {selectedEvent.location}</div>
-                </div>
-              )}
+              {/* 장소 */}
+              <div className={styles.detailSection}>
+                <div className={styles.detailLabel}>장소</div>
+                {isEditingDetail ? (
+                  <input
+                    type="text"
+                    name="location"
+                    value={editFormData.location}
+                    onChange={handleEditInputChange}
+                    placeholder="장소를 입력하세요 (선택)"
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <div className={styles.detailValue}>
+                    {selectedEvent.location ? `📍 ${selectedEvent.location}` : '-'}
+                  </div>
+                )}
+              </div>
 
+              {/* 작성자 (읽기 전용) */}
               <div className={styles.detailSection}>
                 <div className={styles.detailLabel}>작성자</div>
                 <div className={styles.detailValue}>
@@ -913,32 +1029,76 @@ export default function MyStudyCalendarPage({ params }) {
                 </div>
               </div>
 
+              {/* 색상 */}
               <div className={styles.detailSection}>
                 <div className={styles.detailLabel}>색상</div>
-                <div className={styles.detailColorBox} style={{ backgroundColor: selectedEvent.color || '#6366F1' }}>
-                  {selectedEvent.color || '#6366F1'}
-                </div>
+                {isEditingDetail ? (
+                  <div className={styles.colorPickerRow}>
+                    <input
+                      type="color"
+                      name="color"
+                      value={editFormData.color}
+                      onChange={handleEditInputChange}
+                      className={styles.colorInput}
+                    />
+                    <div className={styles.colorPresets}>
+                      {['#6366F1', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'].map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={`${styles.colorPreset} ${editFormData.color === color ? styles.activeColor : ''}`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => setEditFormData(prev => ({ ...prev, color }))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.detailColorBox} style={{ backgroundColor: selectedEvent.color || '#6366F1' }}>
+                    {selectedEvent.color || '#6366F1'}
+                  </div>
+                )}
               </div>
             </div>
 
             <div className={styles.detailActions}>
               {canDeleteEvent(selectedEvent) && (
                 <>
-                  <button
-                    className={styles.detailEditButton}
-                    onClick={handleEditFromDetail}
-                  >
-                    ✏️ 수정
-                  </button>
-                  <button
-                    className={styles.detailDeleteButton}
-                    onClick={() => {
-                      handleCloseDetailModal();
-                      handleDeleteEvent(selectedEvent.id);
-                    }}
-                  >
-                    🗑️ 삭제
-                  </button>
+                  {isEditingDetail ? (
+                    <>
+                      <button
+                        className={styles.detailSaveButton}
+                        onClick={handleSaveEdit}
+                        disabled={updateEventMutation.isPending}
+                      >
+                        {updateEventMutation.isPending ? '저장 중...' : '💾 저장'}
+                      </button>
+                      <button
+                        className={styles.detailCancelButton}
+                        onClick={handleCancelEditing}
+                      >
+                        취소
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        className={styles.detailEditButton}
+                        onClick={handleStartEditing}
+                      >
+                        ✏️ 수정
+                      </button>
+                      <button
+                        className={styles.detailDeleteButton}
+                        onClick={() => {
+                          handleCloseDetailModal();
+                          handleDeleteEvent(selectedEvent.id);
+                        }}
+                      >
+                        🗑️ 삭제
+                      </button>
+                    </>
+                  )}
                 </>
               )}
               <button

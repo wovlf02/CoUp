@@ -8,7 +8,6 @@ import {
   handlePrismaError
 } from '@/lib/exceptions/study-errors'
 import { canModifyMember } from '@/lib/study-helpers'
-import { kickMember as kickMemberTransaction } from '@/lib/transaction-helpers'
 
 // 강퇴
 export async function DELETE(request, { params }) {
@@ -20,7 +19,7 @@ export async function DELETE(request, { params }) {
     const result = await requireStudyMember(studyId, 'ADMIN')
     if (result instanceof NextResponse) return result
 
-    const { session, membership } = result
+    const { session, member: actorMember } = result
 
     // 3. 자기 자신 강퇴 불가
     if (userId === session.user.id) {
@@ -57,31 +56,22 @@ export async function DELETE(request, { params }) {
       return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 6. 역할 계층 검증 - ADMIN이 ADMIN 강퇴 불가
-    if (!canModifyMember(membership.role, targetMember.role)) {
+    // 6. 역할 계층 검증 - ADMIN이 ADMIN 강퇴 불가 (OWNER만 ADMIN 강퇴 가능)
+    if (targetMember.role === 'ADMIN' && actorMember.role !== 'OWNER') {
       const errorResponse = createStudyErrorResponse('ROLE_HIERARCHY_VIOLATION')
       return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
     }
 
-    // 7. 트랜잭션으로 강퇴 처리 (멤버 수 업데이트 + 알림 포함)
-    const kickResult = await kickMemberTransaction(
-      prisma,
-      studyId,
-      userId,
-      session.user.id,
-      session.user.name
-    )
-
-    if (!kickResult.success) {
-      logStudyError('멤버 강퇴 트랜잭션', new Error(kickResult.error), {
-        studyId,
-        targetUserId: userId,
-        kickerId: session.user.id
-      })
-
-      const errorResponse = createStudyErrorResponse('MEMBER_KICK_FAILED', kickResult.error)
-      return NextResponse.json(errorResponse, { status: errorResponse.statusCode })
-    }
+    // 7. 멤버 상태를 KICKED로 변경
+    await prisma.studyMember.update({
+      where: {
+        studyId_userId: {
+          studyId,
+          userId
+        }
+      },
+      data: { status: 'KICKED' }
+    })
 
     return NextResponse.json({
       success: true,

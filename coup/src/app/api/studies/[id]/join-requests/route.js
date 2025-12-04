@@ -1,8 +1,9 @@
-// Study join-requests API - 완벽한 stub 버전
+// Study join-requests API - StudyMember의 PENDING 상태 활용
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireStudyMember } from '@/lib/auth-helpers'
-import { getSession } from 'next-auth/react'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(request, context) {
   try {
@@ -12,12 +13,25 @@ export async function GET(request, context) {
     const result = await requireStudyMember(studyId, 'ADMIN')
     if (result instanceof NextResponse) return result
     
-    const requests = await prisma.joinRequest.findMany({
-      where: { studyId, status: 'PENDING' }
+    // PENDING 상태의 StudyMember를 가입 요청으로 조회
+    const requests = await prisma.studyMember.findMany({
+      where: { studyId, status: 'PENDING' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true
+          }
+        }
+      },
+      orderBy: { joinedAt: 'desc' }
     })
     
     return NextResponse.json({ success: true, data: requests })
   } catch (error) {
+    console.error('GET join-requests error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }
@@ -28,7 +42,7 @@ export async function POST(request, context) {
     const { id: studyId } = await params
     const body = await request.json()
     
-    const session = await getSession()
+    const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -39,7 +53,7 @@ export async function POST(request, context) {
       return NextResponse.json({ error: 'Study not found' }, { status: 404 })
     }
     
-    // Check capacity
+    // Check capacity (활성 멤버 수)
     const memberCount = await prisma.studyMember.count({ 
       where: { studyId, status: 'ACTIVE' } 
     })
@@ -48,7 +62,7 @@ export async function POST(request, context) {
       return NextResponse.json({ error: 'Study is full' }, { status: 400 })
     }
     
-    // Check if already member
+    // Check if already member or has pending request
     const existingMember = await prisma.studyMember.findUnique({
       where: { 
         studyId_userId: { studyId, userId: session.user.id } 
@@ -56,41 +70,38 @@ export async function POST(request, context) {
     })
     
     if (existingMember) {
-      return NextResponse.json({ error: 'Already a member' }, { status: 400 })
-    }
-    
-    // Check if kicked
-    const kickedMember = await prisma.studyMember.findFirst({
-      where: { 
-        studyId, 
-        userId: session.user.id, 
-        status: 'KICKED' 
+      if (existingMember.status === 'ACTIVE') {
+        return NextResponse.json({ error: 'Already a member' }, { status: 400 })
       }
-    })
-    
-    if (kickedMember) {
-      return NextResponse.json({ error: 'Cannot rejoin after being kicked' }, { status: 403 })
-    }
-    
-    // Check existing join request
-    const existingRequest = await prisma.joinRequest.findFirst({
-      where: { 
-        studyId, 
-        userId: session.user.id,
-        status: 'PENDING'
+      if (existingMember.status === 'PENDING') {
+        return NextResponse.json({ error: 'Request already exists' }, { status: 400 })
       }
-    })
-    
-    if (existingRequest) {
-      return NextResponse.json({ error: 'Request already exists' }, { status: 400 })
+      if (existingMember.status === 'KICKED') {
+        return NextResponse.json({ error: 'Cannot rejoin after being kicked' }, { status: 403 })
+      }
+      // LEFT 상태면 다시 PENDING으로 업데이트
+      if (existingMember.status === 'LEFT') {
+        const updated = await prisma.studyMember.update({
+          where: { id: existingMember.id },
+          data: { 
+            status: 'PENDING',
+            introduction: body.message || body.introduction || '',
+            joinedAt: new Date()
+          }
+        })
+        return NextResponse.json({ success: true, data: updated }, { status: 201 })
+      }
     }
     
-    const joinRequest = await prisma.joinRequest.create({
+    // PENDING 상태로 StudyMember 생성 (가입 요청)
+    const joinRequest = await prisma.studyMember.create({
       data: { 
         studyId, 
         userId: session.user.id, 
-        message: body.message || '', 
-        status: 'PENDING' 
+        role: 'MEMBER',
+        status: 'PENDING',
+        introduction: body.message || body.introduction || '',
+        joinedAt: new Date()
       }
     })
     
@@ -112,35 +123,32 @@ export async function PATCH(request, context) {
     const result = await requireStudyMember(studyId, 'ADMIN')
     if (result instanceof NextResponse) return result
     
-    const joinRequest = await prisma.joinRequest.findFirst({
-      where: { id: requestId, studyId }
+    // PENDING 상태의 StudyMember 찾기
+    const joinRequest = await prisma.studyMember.findFirst({
+      where: { id: requestId, studyId, status: 'PENDING' }
     })
     
     if (!joinRequest) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 })
     }
     
-    const updated = await prisma.joinRequest.update({
-      where: { id: requestId },
-      data: { 
-        status: body.action === 'approve' ? 'APPROVED' : 'REJECTED',
-        processedAt: new Date()
-      }
-    })
-    
     if (body.action === 'approve') {
-      await prisma.studyMember.create({
+      // 승인: PENDING → ACTIVE로 변경
+      const updated = await prisma.studyMember.update({
+        where: { id: requestId },
         data: { 
-          studyId, 
-          userId: joinRequest.userId, 
-          role: 'MEMBER', 
           status: 'ACTIVE',
           joinedAt: new Date()
         }
       })
+      return NextResponse.json({ success: true, data: updated })
+    } else {
+      // 거절: StudyMember 레코드 삭제 (또는 REJECTED 상태로 변경)
+      await prisma.studyMember.delete({
+        where: { id: requestId }
+      })
+      return NextResponse.json({ success: true, message: 'Request rejected' })
     }
-    
-    return NextResponse.json({ success: true, data: updated })
   } catch (error) {
     console.error('PATCH join-requests error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })

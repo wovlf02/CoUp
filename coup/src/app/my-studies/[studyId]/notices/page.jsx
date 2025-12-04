@@ -4,6 +4,7 @@
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
 import { useStudy, useNotices, useDeleteNotice, useTogglePinNotice } from '@/lib/hooks/useApi';
 import NoticeCreateEditModal from '@/components/studies/NoticeCreateEditModal';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
@@ -16,8 +17,10 @@ export default function MyStudyNoticesPage({ params }) {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
+  const [detailNotice, setDetailNotice] = useState(null);
 
   // 실제 API 호출
+  const queryClient = useQueryClient();
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
   const { data: noticesData, isLoading: noticesLoading } = useNotices(studyId);
   const deleteNotice = useDeleteNotice();
@@ -25,6 +28,13 @@ export default function MyStudyNoticesPage({ params }) {
 
   const study = studyData?.data;
   const notices = noticesData?.data || [];
+
+  // 상세 모달 닫기 (조회수 업데이트)
+  const closeDetailModal = () => {
+    setDetailNotice(null);
+    // 캐시 무효화하여 강제 새로고침
+    queryClient.invalidateQueries({ queryKey: ['studies', studyId, 'notices'] });
+  };
 
   // 로딩 상태
   if (studyLoading || noticesLoading) {
@@ -88,6 +98,27 @@ export default function MyStudyNoticesPage({ params }) {
     } catch (error) {
       console.error('고정 토글 실패:', error);
       alert('고정 처리에 실패했습니다');
+    }
+  };
+
+  // 공지 상세보기 (조회수 증가)
+  const handleViewNotice = async (notice) => {
+    try {
+      // API 호출로 조회수 증가 (서버에서 +1 되고 캐시 무효화됨)
+      const response = await fetch(`/api/studies/${studyId}/notices/${notice.id}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // API에서 반환된 데이터로 모달 표시 (이미 증가된 조회수 포함)
+        setDetailNotice(result.data);
+      } else {
+        // 실패 시 기존 데이터로 표시
+        setDetailNotice(notice);
+      }
+    } catch (error) {
+      console.error('공지 조회 실패:', error);
+      // 에러 시 기존 데이터로 표시
+      setDetailNotice(notice);
     }
   };
 
@@ -197,7 +228,12 @@ export default function MyStudyNoticesPage({ params }) {
             <div className={styles.pinnedSection}>
               <h3 className={styles.sectionLabel}>📌 고정 공지 ({pinnedNotices.length})</h3>
               {pinnedNotices.map((notice) => (
-                <div key={notice.id} className={styles.noticeCard}>
+                <div 
+                  key={notice.id} 
+                  className={styles.noticeCard}
+                  onClick={() => handleViewNotice(notice)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className={styles.noticeCardHeader}>
                     <div className={styles.noticeTitleRow}>
                       <span className={styles.pinnedIcon}>📌</span>
@@ -210,7 +246,8 @@ export default function MyStudyNoticesPage({ params }) {
                       <div className={styles.noticeActions}>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedNotice(notice);
                             setIsModalOpen(true);
                           }}
@@ -219,13 +256,19 @@ export default function MyStudyNoticesPage({ params }) {
                         </button>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => handleTogglePin(notice.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTogglePin(notice.id);
+                          }}
                         >
                           고정 해제
                         </button>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => handleDelete(notice.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(notice.id);
+                          }}
                         >
                           삭제
                         </button>
@@ -267,7 +310,12 @@ export default function MyStudyNoticesPage({ params }) {
               </div>
             ) : (
               regularNotices.map((notice) => (
-                <div key={notice.id} className={styles.noticeCard}>
+                <div 
+                  key={notice.id} 
+                  className={styles.noticeCard}
+                  onClick={() => handleViewNotice(notice)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className={styles.noticeCardHeader}>
                     <div className={styles.noticeTitleRow}>
                       <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
@@ -279,7 +327,8 @@ export default function MyStudyNoticesPage({ params }) {
                       <div className={styles.noticeActions}>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedNotice(notice);
                             setIsModalOpen(true);
                           }}
@@ -288,19 +337,30 @@ export default function MyStudyNoticesPage({ params }) {
                         </button>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => handleTogglePin(notice.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTogglePin(notice.id);
+                          }}
                         >
                           고정
                         </button>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => handleDelete(notice.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(notice.id);
+                          }}
                         >
                           삭제
                         </button>
                       </div>
                     ) : (
-                      <button className={styles.reportBtn}>신고</button>
+                      <button 
+                        className={styles.reportBtn}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        신고
+                      </button>
                     )}
                   </div>
 
@@ -393,6 +453,88 @@ export default function MyStudyNoticesPage({ params }) {
             setSelectedNotice(null);
           }}
         />
+      )}
+
+      {/* 공지 상세보기 모달 */}
+      {detailNotice && (
+        <div className={styles.detailModalOverlay} onClick={closeDetailModal}>
+          <div className={styles.detailModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.detailHeader}>
+              <div className={styles.detailTitleSection}>
+                {detailNotice.isPinned && <span className={styles.pinnedBadge}>📌 고정</span>}
+                {detailNotice.isImportant && <span className={styles.importantBadgeLarge}>⭐ 중요</span>}
+                <h2 className={styles.detailTitle}>{detailNotice.title}</h2>
+              </div>
+              <button className={styles.closeBtn} onClick={closeDetailModal}>✕</button>
+            </div>
+
+            <div className={styles.detailMeta}>
+              <div className={styles.authorInfo}>
+                <span className={styles.authorAvatar}>
+                  {detailNotice.author?.avatar ? (
+                    <img src={detailNotice.author.avatar} alt="avatar" />
+                  ) : (
+                    '👤'
+                  )}
+                </span>
+                <div>
+                  <span className={styles.authorName}>{detailNotice.author?.name || '작성자'}</span>
+                  <span className={styles.authorRole}>({detailNotice.author?.role || 'MEMBER'})</span>
+                </div>
+              </div>
+              <div className={styles.detailTime}>
+                <span>작성: {new Date(detailNotice.createdAt).toLocaleString()}</span>
+                {detailNotice.updatedAt && detailNotice.updatedAt !== detailNotice.createdAt && (
+                  <span> · 수정: {new Date(detailNotice.updatedAt).toLocaleString()}</span>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.detailContent}>
+              {detailNotice.content.split('\n').map((line, idx) => (
+                <p key={idx}>{line || <br />}</p>
+              ))}
+            </div>
+
+            <div className={styles.detailFooter}>
+              <div className={styles.detailStats}>
+                <span>👁 조회 {detailNotice.views || 0}</span>
+              </div>
+              {canEdit() && (
+                <div className={styles.detailActions}>
+                  <button
+                    className={styles.editBtn}
+                    onClick={() => {
+                      closeDetailModal();
+                      setSelectedNotice(detailNotice);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    ✏️ 수정
+                  </button>
+                  <button
+                    className={styles.pinBtn}
+                    onClick={async () => {
+                      await handleTogglePin(detailNotice.id);
+                      closeDetailModal();
+                    }}
+                  >
+                    {detailNotice.isPinned ? '📌 고정 해제' : '📌 고정'}
+                  </button>
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={async () => {
+                      await handleDelete(detailNotice.id);
+                      closeDetailModal();
+                    }}
+                  >
+                    🗑 삭제
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
