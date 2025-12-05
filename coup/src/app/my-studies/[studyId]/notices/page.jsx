@@ -220,6 +220,11 @@ export default function MyStudyNoticesPage({ params }) {
                   className={`${styles.noticeCard} ${styles.pinnedCard}`}
                   onClick={() => handleViewNotice(notice)}
                 >
+                  {/* 중요 배지 (좌측 상단) */}
+                  {notice.isImportant && (
+                    <span className={styles.importantBadgeTop}>⭐ 중요</span>
+                  )}
+
                   {/* 상단: 작성자 정보 (좌측) + 메타 정보 (우측) */}
                   <div className={styles.noticeCardHeader}>
                     <div className={styles.authorSection}>
@@ -230,9 +235,6 @@ export default function MyStudyNoticesPage({ params }) {
                     </div>
                     <div className={styles.metaSection}>
                       <span className={styles.pinnedBadge}>📌 고정</span>
-                      {notice.isImportant && (
-                        <span className={styles.importantBadge}>⭐ 중요</span>
-                      )}
                       <div className={styles.dateTimeGroup}>
                         <span className={styles.noticeDateTime}>
                           {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
@@ -344,6 +346,11 @@ export default function MyStudyNoticesPage({ params }) {
                   className={`${styles.noticeCard} ${notice.isImportant ? styles.importantCard : ''}`}
                   onClick={() => handleViewNotice(notice)}
                 >
+                  {/* 중요 배지 (좌측 상단) */}
+                  {notice.isImportant && (
+                    <span className={styles.importantBadgeTop}>⭐ 중요</span>
+                  )}
+
                   {/* 상단: 작성자 정보 (좌측) + 메타 정보 (우측) */}
                   <div className={styles.noticeCardHeader}>
                     <div className={styles.authorSection}>
@@ -353,9 +360,6 @@ export default function MyStudyNoticesPage({ params }) {
                       <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
                     </div>
                     <div className={styles.metaSection}>
-                      {notice.isImportant && (
-                        <span className={styles.importantBadge}>⭐ 중요</span>
-                      )}
                       <div className={styles.dateTimeGroup}>
                         <span className={styles.noticeDateTime}>
                           {new Date(notice.createdAt).toLocaleDateString('ko-KR', {

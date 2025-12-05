@@ -45,7 +45,8 @@ export default function StudiesExplorePage() {
   // 스크롤 감지용 ref
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
-  
+  const isLoadingRef = useRef(false); // 중복 호출 방지용
+
   // 맨 위로 버튼 표시 여부
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -68,8 +69,10 @@ export default function StudiesExplorePage() {
 
   // 스터디 목록 가져오기
   const fetchStudies = useCallback(async (pageNum, reset = false) => {
-    if (isLoading) return;
-    
+    // 중복 호출 방지
+    if (isLoading || isLoadingRef.current) return;
+
+    isLoadingRef.current = true;
     setIsLoading(true);
     if (reset) setIsInitialLoading(true);
     setError(null);
@@ -107,24 +110,28 @@ export default function StudiesExplorePage() {
       
       setTotalCount(pagination.total);
       
+      // 더 불러올 데이터가 있는지 확인
+      // 1. 새로 불러온 원본 데이터가 0개면 끝
+      // 2. 새로 불러온 원본 데이터가 limit보다 적으면 끝
+      const hasMoreData = newStudies.length > 0 && newStudies.length >= ITEMS_PER_LOAD;
+
       if (reset) {
         setStudies(filteredStudies);
       } else {
         setStudies(prev => [...prev, ...filteredStudies]);
       }
-      
-      // 더 불러올 데이터가 있는지 확인
-      const totalLoaded = reset ? filteredStudies.length : studies.length + filteredStudies.length;
-      setHasMore(totalLoaded < pagination.total);
-      
+
+      setHasMore(hasMoreData);
+
     } catch (err) {
       console.error('스터디 로드 에러:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
       setIsInitialLoading(false);
+      isLoadingRef.current = false;
     }
-  }, [selectedCategory, searchKeyword, recruitingFilter, myStudyIds, isLoading, studies.length]);
+  }, [selectedCategory, searchKeyword, recruitingFilter, myStudyIds, isLoading]);
 
   // 초기 로드 및 필터 변경 시 리셋
   useEffect(() => {
@@ -136,9 +143,18 @@ export default function StudiesExplorePage() {
 
   // Intersection Observer로 무한 스크롤 구현
   useEffect(() => {
+    // hasMore가 false면 observer를 설정하지 않음
+    if (!hasMore) {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
+        // hasMore가 true이고, 로딩 중이 아닐 때만 다음 페이지 로드
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingRef.current) {
           setPage(prev => prev + 1);
         }
       },
