@@ -220,11 +220,49 @@ export default function MyStudyNoticesPage({ params }) {
                   className={`${styles.noticeCard} ${styles.pinnedCard}`}
                   onClick={() => handleViewNotice(notice)}
                 >
+                  {/* 상단: 작성자 정보 (좌측) + 메타 정보 (우측) */}
                   <div className={styles.noticeCardHeader}>
-                    <div className={styles.noticeBadges}>
+                    <div className={styles.authorSection}>
+                      <span className={styles.authorAvatar}>
+                        {notice.author?.name?.charAt(0) || '?'}
+                      </span>
+                      <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
+                    </div>
+                    <div className={styles.metaSection}>
                       <span className={styles.pinnedBadge}>📌 고정</span>
                       {notice.isImportant && (
                         <span className={styles.importantBadge}>⭐ 중요</span>
+                      )}
+                      <div className={styles.dateTimeGroup}>
+                        <span className={styles.noticeDateTime}>
+                          {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          })} {new Date(notice.createdAt).toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          })}
+                        </span>
+                        <span className={styles.viewCount}>👁️ {notice.views || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 제목 */}
+                  <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
+
+                  {/* 내용 미리보기 */}
+                  <p className={styles.noticeContent}>{notice.content}</p>
+
+                  {/* 하단: 카테고리 태그 + 액션 버튼 */}
+                  <div className={styles.noticeFooter}>
+                    <div className={styles.noticeTags}>
+                      <span className={styles.categoryTag}>📢 공지</span>
+                      {notice.updatedAt && notice.updatedAt !== notice.createdAt && (
+                        <span className={styles.updatedTag}>✏️ 수정됨</span>
                       )}
                     </div>
                     {canEdit() && (
@@ -237,7 +275,7 @@ export default function MyStudyNoticesPage({ params }) {
                             setIsModalOpen(true);
                           }}
                         >
-                          ✏️
+                          ✏️ 수정
                         </button>
                         <button
                           className={styles.actionBtn}
@@ -246,7 +284,7 @@ export default function MyStudyNoticesPage({ params }) {
                             handleTogglePin(notice.id);
                           }}
                         >
-                          📌
+                          📌 고정해제
                         </button>
                         <button
                           className={`${styles.actionBtn} ${styles.deleteBtn}`}
@@ -255,37 +293,10 @@ export default function MyStudyNoticesPage({ params }) {
                             handleDelete(notice.id);
                           }}
                         >
-                          🗑️
+                          🗑️ 삭제
                         </button>
                       </div>
                     )}
-                  </div>
-
-                  <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
-
-                  <p className={styles.noticeContent}>{notice.content}</p>
-
-                  <div className={styles.noticeFooter}>
-                    <div className={styles.noticeAuthor}>
-                      <span className={styles.authorAvatar}>
-                        {notice.author?.name?.charAt(0) || '?'}
-                      </span>
-                      <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
-                      <span className={styles.authorDivider}>·</span>
-                      <span className={styles.noticeDate}>
-                        {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                    <div className={styles.noticeStats}>
-                      <span className={styles.viewCount}>
-                        👁️ {notice.views || 0}
-                      </span>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -333,10 +344,48 @@ export default function MyStudyNoticesPage({ params }) {
                   className={`${styles.noticeCard} ${notice.isImportant ? styles.importantCard : ''}`}
                   onClick={() => handleViewNotice(notice)}
                 >
+                  {/* 상단: 작성자 정보 (좌측) + 메타 정보 (우측) */}
                   <div className={styles.noticeCardHeader}>
-                    <div className={styles.noticeBadges}>
+                    <div className={styles.authorSection}>
+                      <span className={styles.authorAvatar}>
+                        {notice.author?.name?.charAt(0) || '?'}
+                      </span>
+                      <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
+                    </div>
+                    <div className={styles.metaSection}>
                       {notice.isImportant && (
                         <span className={styles.importantBadge}>⭐ 중요</span>
+                      )}
+                      <div className={styles.dateTimeGroup}>
+                        <span className={styles.noticeDateTime}>
+                          {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          })} {new Date(notice.createdAt).toLocaleTimeString('ko-KR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          })}
+                        </span>
+                        <span className={styles.viewCount}>👁️ {notice.views || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 제목 */}
+                  <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
+
+                  {/* 내용 미리보기 */}
+                  <p className={styles.noticeContent}>{notice.content}</p>
+
+                  {/* 하단: 카테고리 태그 + 액션 버튼 */}
+                  <div className={styles.noticeFooter}>
+                    <div className={styles.noticeTags}>
+                      <span className={styles.categoryTag}>📢 공지</span>
+                      {notice.updatedAt && notice.updatedAt !== notice.createdAt && (
+                        <span className={styles.updatedTag}>✏️ 수정됨</span>
                       )}
                     </div>
                     {canEdit() ? (
@@ -349,7 +398,7 @@ export default function MyStudyNoticesPage({ params }) {
                             setIsModalOpen(true);
                           }}
                         >
-                          ✏️
+                          ✏️ 수정
                         </button>
                         <button
                           className={styles.actionBtn}
@@ -358,7 +407,7 @@ export default function MyStudyNoticesPage({ params }) {
                             handleTogglePin(notice.id);
                           }}
                         >
-                          📌
+                          📌 고정
                         </button>
                         <button
                           className={`${styles.actionBtn} ${styles.deleteBtn}`}
@@ -367,44 +416,19 @@ export default function MyStudyNoticesPage({ params }) {
                             handleDelete(notice.id);
                           }}
                         >
-                          🗑️
+                          🗑️ 삭제
                         </button>
                       </div>
                     ) : (
-                      <button 
-                        className={styles.reportBtn}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        🚨
-                      </button>
+                      <div className={styles.noticeActions}>
+                        <button
+                          className={styles.reportBtn}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          🚨 신고
+                        </button>
+                      </div>
                     )}
-                  </div>
-
-                  <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
-
-                  <p className={styles.noticeContent}>{notice.content}</p>
-
-                  <div className={styles.noticeFooter}>
-                    <div className={styles.noticeAuthor}>
-                      <span className={styles.authorAvatar}>
-                        {notice.author?.name?.charAt(0) || '?'}
-                      </span>
-                      <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
-                      <span className={styles.authorDivider}>·</span>
-                      <span className={styles.noticeDate}>
-                        {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                    <div className={styles.noticeStats}>
-                      <span className={styles.viewCount}>
-                        👁️ {notice.views || 0}
-                      </span>
-                    </div>
                   </div>
                 </div>
               ));
