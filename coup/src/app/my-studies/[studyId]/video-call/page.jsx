@@ -350,6 +350,19 @@ export default function MyStudyVideoCallPage({ params }) {
       // FormData로 파일 준비
       const formData = new FormData();
       formData.append('file', selectedFile);
+      
+      // 파일 타입에 따른 카테고리 결정
+      const getFileCategory = (mimeType) => {
+        if (mimeType.startsWith('image/')) return 'IMAGE';
+        if (mimeType.startsWith('video/')) return 'VIDEO';
+        if (mimeType.startsWith('audio/')) return 'AUDIO';
+        if (['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed', 'application/gzip', 'application/x-tar'].includes(mimeType)) return 'ARCHIVE';
+        if (['text/javascript', 'text/css', 'text/html', 'application/json', 'application/xml', 'text/x-python', 'text/x-java'].includes(mimeType)) return 'CODE';
+        return 'DOCUMENT';
+      };
+      
+      const category = getFileCategory(selectedFile.type);
+      formData.append('category', category);
 
       // 파일 업로드 API 호출 (올바른 경로)
       const result = await api.post(`/api/studies/${studyId}/files`, formData, {

@@ -50,7 +50,10 @@ export default function MyStudyChatPage({ params }) {
     senderId: msg.userId || msg.senderId
   }));
 
-  const allMessages = [...apiMessages, ...realtimeMessages];
+  // 중복 제거: apiMessages에 없는 realtimeMessages만 추가
+  const apiMessageIds = new Set(apiMessages.map(m => m.id));
+  const uniqueRealtimeMessages = realtimeMessages.filter(m => !apiMessageIds.has(m.id) && !m.id?.startsWith('temp-'));
+  const allMessages = [...apiMessages, ...uniqueRealtimeMessages];
   const onlineMembers = []; // TODO: Socket.io로 실시간 온라인 멤버 구현
 
 
@@ -231,6 +234,20 @@ export default function MyStudyChatPage({ params }) {
       console.log('[Chat] Step 1: Uploading file...');
       const formData = new FormData();
       formData.append('file', selectedFile);
+      
+      // 파일 타입에 따른 카테고리 결정
+      const getFileCategory = (mimeType) => {
+        if (mimeType.startsWith('image/')) return 'IMAGE';
+        if (mimeType.startsWith('video/')) return 'VIDEO';
+        if (mimeType.startsWith('audio/')) return 'AUDIO';
+        if (['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed', 'application/gzip', 'application/x-tar'].includes(mimeType)) return 'ARCHIVE';
+        if (['text/javascript', 'text/css', 'text/html', 'application/json', 'application/xml', 'text/x-python', 'text/x-java'].includes(mimeType)) return 'CODE';
+        return 'DOCUMENT';
+      };
+      
+      const category = getFileCategory(selectedFile.type);
+      formData.append('category', category);
+      console.log('[Chat] File category:', category, 'MIME:', selectedFile.type);
 
       const uploadResult = await api.post(`/api/studies/${studyId}/files`, formData, {
         headers: {} // FormData는 헤더를 비워야 Content-Type이 자동 설정됨
