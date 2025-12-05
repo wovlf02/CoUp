@@ -133,6 +133,52 @@
   border-color: var(--primary-600);
 }
 
+/* 모집 상태 필터 */
+.recruitingFilter {
+  display: flex;
+  align-items: center;
+  gap: 0.8vw;
+  margin-top: 1vh;
+  padding-top: 1vh;
+  border-top: 1px solid var(--gray-200);
+}
+
+.filterLabel {
+  font-size: clamp(0.75rem, 0.85vw, 0.9rem);
+  font-weight: 600;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+
+.filterButtons {
+  display: flex;
+  gap: 0.4vw;
+}
+
+.filterBtn {
+  padding: 0.4vh 0.7vw;
+  border: 1px solid var(--gray-300);
+  background: white;
+  border-radius: 0.8vw;
+  font-size: clamp(0.7rem, 0.75vw, 0.85rem);
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterBtn:hover {
+  border-color: var(--primary-400);
+  color: var(--primary-600);
+}
+
+.filterBtn.active {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  border-color: var(--primary-400);
+  font-weight: 600;
+}
+
 /* 스터디 카드 그리드 - 비율 기반 동적 컬럼 */
 .studiesGrid {
   display: grid;
@@ -260,6 +306,45 @@
   border-radius: 0.8vw;
   font-size: clamp(0.65rem, 0.7vw, 0.8rem);
   font-weight: 600;
+}
+
+/* 인원 마감 뱃지 */
+.fullBadge {
+  padding: 0.3vh 0.6vw;
+  background: var(--error-100);
+  color: var(--error-700);
+  border-radius: 0.8vw;
+  font-size: clamp(0.65rem, 0.7vw, 0.8rem);
+  font-weight: 600;
+}
+
+/* 인원 마감 스터디 카드 */
+.fullStudyCard {
+  opacity: 0.75;
+  position: relative;
+}
+
+.fullStudyCard::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* 멤버 수 마감 상태 */
+.membersFull {
+  color: var(--error-600);
+  font-weight: 600;
+}
+
+.fullText {
+  font-size: clamp(0.6rem, 0.65vw, 0.75rem);
+  color: var(--error-500);
 }
 
 .studyName {
@@ -752,5 +837,47 @@
 
   .loadMore {
     padding: 3vh 0;
+  }
+}
+
+/* 맨 위로 플로팅 버튼 */
+.scrollTopButton {
+  position: fixed;
+  bottom: 2vh;
+  right: 2vw;
+  padding: 1vh 1.2vw;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+  color: white;
+  border: none;
+  border-radius: 2vw;
+  font-size: clamp(0.8rem, 0.9vw, 1rem);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.3vw;
+}
+
+.scrollTopButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+}
+
+.scrollTopButton:active {
+  transform: translateY(-1px);
+}
+
+/* 모바일에서 맨 위로 버튼 */
+@media (max-width: 768px) {
+  .scrollTopButton {
+    bottom: 10vh;
+    right: 4vw;
+    padding: 1.2vh 1.5vw;
+    border-radius: 50px;
+    font-size: 0.85rem;
   }
 }

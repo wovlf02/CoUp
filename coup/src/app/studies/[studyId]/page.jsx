@@ -32,7 +32,27 @@ export default function StudyPreviewPage({ params }) {
     );
   }
 
+  // 인원 마감 또는 모집완료 여부 확인
+  const isFull = study?.currentMembers >= study?.maxMembers;
+  const isNotRecruiting = study?.isRecruiting === false;
+  const cannotJoin = isFull || isNotRecruiting;
+
+  // 가입 불가 사유 메시지
+  const getJoinDisabledMessage = () => {
+    if (isFull) return '인원이 다 찼습니다';
+    if (isNotRecruiting) return '모집이 마감되었습니다';
+    return '';
+  };
+
   const handleJoin = () => {
+    if (isFull) {
+      alert('이 스터디는 인원이 다 찼습니다. 다른 스터디를 찾아보세요!');
+      return;
+    }
+    if (isNotRecruiting) {
+      alert('이 스터디는 현재 모집을 받지 않습니다.');
+      return;
+    }
     router.push(`/studies/${studyId}/join`);
   };
 
@@ -106,8 +126,12 @@ export default function StudyPreviewPage({ params }) {
               </div>
             </div>
 
-            <button onClick={handleJoin} className={styles.joinButton}>
-              🚀 스터디 가입하기
+            <button 
+              onClick={handleJoin} 
+              className={`${styles.joinButton} ${cannotJoin ? styles.joinButtonDisabled : ''}`}
+              disabled={cannotJoin}
+            >
+              {cannotJoin ? `🚫 ${getJoinDisabledMessage()}` : '🚀 스터디 가입하기'}
             </button>
           </div>
 
@@ -146,10 +170,16 @@ export default function StudyPreviewPage({ params }) {
           <div className={styles.sideCard}>
             <h3 className={styles.sideCardTitle}>🚀 빠른 가입</h3>
             <p className={styles.sideCardText}>
-              지금 가입하고 함께 성장해보세요!
+              {cannotJoin 
+                ? (isFull ? '현재 인원이 다 찼습니다.' : '현재 모집을 받지 않습니다.')
+                : '지금 가입하고 함께 성장해보세요!'}
             </p>
-            <button onClick={handleJoin} className={styles.sideJoinButton}>
-              가입하기
+            <button 
+              onClick={handleJoin} 
+              className={`${styles.sideJoinButton} ${cannotJoin ? styles.sideJoinButtonDisabled : ''}`}
+              disabled={cannotJoin}
+            >
+              {cannotJoin ? (isFull ? '마감' : '모집종료') : '가입하기'}
             </button>
           </div>
 

@@ -28,6 +28,7 @@ const ITEMS_PER_LOAD = 20; // 한 번에 20개씩 로드
 export default function StudiesExplorePage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [recruitingFilter, setRecruitingFilter] = useState('all'); // 'all', 'recruiting', 'closed'
   
   // 무한 스크롤 상태
   const [studies, setStudies] = useState([]);
@@ -44,12 +45,15 @@ export default function StudiesExplorePage() {
   // 스크롤 감지용 ref
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
+  
+  // 맨 위로 버튼 표시 여부
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // 내 스터디 목록 가져오기
   useEffect(() => {
     const fetchMyStudies = async () => {
       try {
-        const response = await fetch('/api/studies/my?limit=100');
+        const response = await fetch('/api/my-studies?limit=100');
         if (response.ok) {
           const data = await response.json();
           const ids = (data.data?.studies || []).map(s => s.study?.id || s.studyId);
@@ -84,6 +88,10 @@ export default function StudiesExplorePage() {
         params.append('search', searchKeyword.trim());
       }
       
+      if (recruitingFilter && recruitingFilter !== 'all') {
+        params.append('recruiting', recruitingFilter);
+      }
+      
       const response = await fetch(`/api/studies?${params}`);
       
       if (!response.ok) {
@@ -116,7 +124,7 @@ export default function StudiesExplorePage() {
       setIsLoading(false);
       setIsInitialLoading(false);
     }
-  }, [selectedCategory, searchKeyword, myStudyIds, isLoading, studies.length]);
+  }, [selectedCategory, searchKeyword, recruitingFilter, myStudyIds, isLoading, studies.length]);
 
   // 초기 로드 및 필터 변경 시 리셋
   useEffect(() => {
@@ -124,7 +132,7 @@ export default function StudiesExplorePage() {
     setStudies([]);
     setHasMore(true);
     fetchStudies(1, true);
-  }, [selectedCategory, myStudyIds]); // searchKeyword는 검색 버튼 클릭 시에만
+  }, [selectedCategory, recruitingFilter, myStudyIds]); // searchKeyword는 검색 버튼 클릭 시에만
 
   // Intersection Observer로 무한 스크롤 구현
   useEffect(() => {
@@ -149,6 +157,25 @@ export default function StudiesExplorePage() {
       }
     };
   }, [hasMore, isLoading]);
+
+  // 스크롤 위치 감지 (맨 위로 버튼 표시 여부)
+  useEffect(() => {
+    const handleScroll = () => {
+      // 300px 이상 스크롤하면 버튼 표시
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 맨 위로 스크롤 함수
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // 페이지 변경 시 추가 로드
   useEffect(() => {
@@ -243,6 +270,31 @@ export default function StudiesExplorePage() {
               </button>
             ))}
           </div>
+
+          {/* 모집 상태 필터 */}
+          <div className={styles.recruitingFilter}>
+            <span className={styles.filterLabel}>모집 상태:</span>
+            <div className={styles.filterButtons}>
+              <button
+                className={`${styles.filterBtn} ${recruitingFilter === 'all' ? styles.active : ''}`}
+                onClick={() => setRecruitingFilter('all')}
+              >
+                전체
+              </button>
+              <button
+                className={`${styles.filterBtn} ${recruitingFilter === 'recruiting' ? styles.active : ''}`}
+                onClick={() => setRecruitingFilter('recruiting')}
+              >
+                🟢 모집중
+              </button>
+              <button
+                className={`${styles.filterBtn} ${recruitingFilter === 'closed' ? styles.active : ''}`}
+                onClick={() => setRecruitingFilter('closed')}
+              >
+                🔴 모집마감
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* 결과 정보 */}
@@ -260,18 +312,24 @@ export default function StudiesExplorePage() {
           </div>
         ) : (
           <div className={styles.studiesGrid}>
-            {studies.map((study) => (
+            {studies.map((study) => {
+              const isFull = (study.currentMembers || 0) >= study.maxMembers;
+              const isNotRecruiting = study.isRecruiting === false;
+              const cannotJoin = isFull || isNotRecruiting;
+              return (
               <Link
                 key={study.id}
                 href={`/studies/${study.id}`}
-                className={styles.studyCard}
+                className={`${styles.studyCard} ${cannotJoin ? styles.fullStudyCard : ''}`}
               >
                 <div className={styles.cardHeader}>
                   <div className={styles.emoji}>{study.emoji}</div>
-                  {study.isRecruiting ? (
-                    <span className={styles.recruitingBadge}>모집중</span>
-                  ) : (
+                  {isFull ? (
+                    <span className={styles.fullBadge}>인원마감</span>
+                  ) : isNotRecruiting ? (
                     <span className={styles.closedBadge}>모집완료</span>
+                  ) : (
+                    <span className={styles.recruitingBadge}>모집중</span>
                   )}
                 </div>
 
@@ -296,13 +354,16 @@ export default function StudiesExplorePage() {
                 </div>
 
                 <div className={styles.cardFooter}>
-                  <span className={styles.members}>
+                  <span className={`${styles.members} ${cannotJoin ? styles.membersFull : ''}`}>
                     👥 {study.currentMembers || 0}/{study.maxMembers}명
+                    {isFull && <span className={styles.fullText}> (마감)</span>}
+                    {!isFull && isNotRecruiting && <span className={styles.fullText}> (모집종료)</span>}
                   </span>
                   <span className={styles.owner}>👤 {study.owner?.name || '알 수 없음'}</span>
                 </div>
               </Link>
-            ))}
+            );
+            })}
           </div>
         )}
 
@@ -364,6 +425,17 @@ export default function StudiesExplorePage() {
           </div>
         </div>
       </aside>
+
+      {/* 맨 위로 플로팅 버튼 */}
+      {showScrollTop && (
+        <button 
+          className={styles.scrollTopButton}
+          onClick={scrollToTop}
+          aria-label="맨 위로"
+        >
+          ↑ 맨 위로
+        </button>
+      )}
     </div>
   );
 }

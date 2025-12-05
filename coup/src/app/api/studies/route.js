@@ -56,6 +56,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const category = searchParams.get('category')
     const search = searchParams.get('search')
+    const recruitingFilter = searchParams.get('recruiting') // 'all', 'recruiting', 'closed'
     
     // 필터 조건 구성
     const where = {}
@@ -63,6 +64,14 @@ export async function GET(request) {
     if (category && category !== '전체') {
       where.category = category
     }
+    
+    // 모집 상태 필터
+    if (recruitingFilter === 'recruiting') {
+      where.isRecruiting = true
+    } else if (recruitingFilter === 'closed') {
+      where.isRecruiting = false
+    }
+    // 'all'이거나 없으면 전체 표시
     
     if (search && search.trim()) {
       where.OR = [

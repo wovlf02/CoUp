@@ -45,7 +45,8 @@ export default function MyStudySettingsPage({ params }) {
       tags: study?.tags || [],
       isPublic: study?.isPublic !== undefined ? study.isPublic : true,
       autoApprove: study?.autoApprove || false,
-      maxMembers: study?.maxMembers || 50
+      maxMembers: study?.maxMembers || 50,
+      isRecruiting: study?.isRecruiting !== undefined ? study.isRecruiting : true
     });
     setEditErrors({});
     setIsEditModalOpen(true);
@@ -259,6 +260,13 @@ export default function MyStudySettingsPage({ params }) {
                 </div>
 
                 <div className={styles.infoGroup}>
+                  <label className={styles.infoLabel}>모집 상태</label>
+                  <p className={`${styles.infoValue} ${study.isRecruiting ? styles.recruitingStatus : styles.closedStatus}`}>
+                    {study.isRecruiting ? '🟢 모집중' : '🔴 모집마감'}
+                  </p>
+                </div>
+
+                <div className={styles.infoGroup}>
                   <label className={styles.infoLabel}>최대 인원</label>
                   <p className={styles.infoValue}>{study.maxMembers}명</p>
                 </div>
@@ -395,6 +403,33 @@ export default function MyStudySettingsPage({ params }) {
                       />
                       <span>자동 승인</span>
                     </label>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>모집 상태</label>
+                    <div className={styles.recruitingToggle}>
+                      <label className={`${styles.toggleLabel} ${editFormData.isRecruiting ? styles.toggleActive : ''}`}>
+                        <input
+                          type="radio"
+                          name="isRecruiting"
+                          checked={editFormData.isRecruiting}
+                          onChange={() => setEditFormData({ ...editFormData, isRecruiting: true })}
+                        />
+                        <span>🟢 모집중</span>
+                      </label>
+                      <label className={`${styles.toggleLabel} ${!editFormData.isRecruiting ? styles.toggleInactive : ''}`}>
+                        <input
+                          type="radio"
+                          name="isRecruiting"
+                          checked={!editFormData.isRecruiting}
+                          onChange={() => setEditFormData({ ...editFormData, isRecruiting: false })}
+                        />
+                        <span>🔴 모집마감</span>
+                      </label>
+                    </div>
+                    <p className={styles.recruitingHint}>
+                      모집마감으로 설정하면 새로운 멤버가 가입 신청을 할 수 없습니다.
+                    </p>
                   </div>
 
                   <div className={styles.formGroup}>

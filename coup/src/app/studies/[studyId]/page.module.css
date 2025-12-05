@@ -163,9 +163,20 @@
   transition: all 0.3s;
 }
 
-.joinButton:hover {
+.joinButton:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+}
+
+/* 가입 버튼 비활성화 */
+.joinButtonDisabled {
+  background: linear-gradient(135deg, var(--gray-400), var(--gray-500));
+  cursor: not-allowed;
+}
+
+.joinButtonDisabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 /* 섹션 */
@@ -362,6 +373,18 @@
 .sideJoinButton:hover {
   background: var(--primary-700);
   transform: translateY(-2px);
+}
+
+/* 사이드 가입 버튼 비활성화 */
+.sideJoinButtonDisabled {
+  background: var(--gray-300);
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
+.sideJoinButtonDisabled:hover {
+  background: var(--gray-300);
+  transform: none;
 }
 
 /* 정보 리스트 */
