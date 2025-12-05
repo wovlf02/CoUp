@@ -29,11 +29,9 @@ export default function MyStudyNoticesPage({ params }) {
   const study = studyData?.data;
   const notices = noticesData?.data || [];
 
-  // 상세 모달 닫기 (조회수 업데이트)
+  // 상세 모달 닫기
   const closeDetailModal = () => {
     setDetailNotice(null);
-    // 캐시 무효화하여 강제 새로고침
-    queryClient.invalidateQueries({ queryKey: ['studies', studyId, 'notices'] });
   };
 
   // 로딩 상태
@@ -93,13 +91,26 @@ export default function MyStudyNoticesPage({ params }) {
   // 공지 상세보기 (조회수 증가)
   const handleViewNotice = async (notice) => {
     try {
-      // API 호출로 조회수 증가 (서버에서 +1 되고 캐시 무효화됨)
+      // API 호출로 조회수 증가
       const response = await fetch(`/api/studies/${studyId}/notices/${notice.id}`);
       const result = await response.json();
       
       if (result.success && result.data) {
         // API에서 반환된 데이터로 모달 표시 (이미 증가된 조회수 포함)
         setDetailNotice(result.data);
+
+        // 캐시에서 해당 공지의 조회수를 직접 업데이트
+        queryClient.setQueryData(['studies', studyId, 'notices'], (oldData) => {
+          if (!oldData?.data) return oldData;
+          return {
+            ...oldData,
+            data: oldData.data.map(n =>
+              n.id === notice.id
+                ? { ...n, views: result.data.views }
+                : n
+            )
+          };
+        });
       } else {
         // 실패 시 기존 데이터로 표시
         setDetailNotice(notice);
@@ -200,20 +211,18 @@ export default function MyStudyNoticesPage({ params }) {
           </div>
 
           {/* 고정 공지 */}
-          {pinnedNotices.length > 0 && (
+          {pinnedNotices.length > 0 && (activeTab === '전체' || activeTab === '고정') && (
             <div className={styles.pinnedSection}>
               <h3 className={styles.sectionLabel}>📌 고정 공지 ({pinnedNotices.length})</h3>
               {pinnedNotices.map((notice) => (
                 <div 
                   key={notice.id} 
-                  className={styles.noticeCard}
+                  className={`${styles.noticeCard} ${styles.pinnedCard}`}
                   onClick={() => handleViewNotice(notice)}
-                  style={{ cursor: 'pointer' }}
                 >
                   <div className={styles.noticeCardHeader}>
-                    <div className={styles.noticeTitleRow}>
-                      <span className={styles.pinnedIcon}>📌</span>
-                      <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
+                    <div className={styles.noticeBadges}>
+                      <span className={styles.pinnedBadge}>📌 고정</span>
                       {notice.isImportant && (
                         <span className={styles.importantBadge}>⭐ 중요</span>
                       )}
@@ -228,7 +237,7 @@ export default function MyStudyNoticesPage({ params }) {
                             setIsModalOpen(true);
                           }}
                         >
-                          수정
+                          ✏️
                         </button>
                         <button
                           className={styles.actionBtn}
@@ -237,29 +246,46 @@ export default function MyStudyNoticesPage({ params }) {
                             handleTogglePin(notice.id);
                           }}
                         >
-                          고정 해제
+                          📌
                         </button>
                         <button
-                          className={styles.actionBtn}
+                          className={`${styles.actionBtn} ${styles.deleteBtn}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(notice.id);
                           }}
                         >
-                          삭제
+                          🗑️
                         </button>
                       </div>
                     )}
                   </div>
 
-                  <div className={styles.noticeAuthor}>
-                    {notice.author?.name || '작성자'}({notice.author?.role || 'MEMBER'}) · {new Date(notice.createdAt).toLocaleString()}
-                  </div>
+                  <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
 
                   <p className={styles.noticeContent}>{notice.content}</p>
 
-                  <div className={styles.noticeStats}>
-                    <span className={styles.stat}>👁 {notice.views || 0}</span>
+                  <div className={styles.noticeFooter}>
+                    <div className={styles.noticeAuthor}>
+                      <span className={styles.authorAvatar}>
+                        {notice.author?.name?.charAt(0) || '?'}
+                      </span>
+                      <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
+                      <span className={styles.authorDivider}>·</span>
+                      <span className={styles.noticeDate}>
+                        {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className={styles.noticeStats}>
+                      <span className={styles.viewCount}>
+                        👁️ {notice.views || 0}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -268,33 +294,47 @@ export default function MyStudyNoticesPage({ params }) {
 
           {/* 일반 공지 */}
           <div className={styles.regularSection}>
-            <h3 className={styles.sectionLabel}>📄 최근 공지 ({regularNotices.length})</h3>
-            {regularNotices.length === 0 ? (
-              <div className={styles.emptyState}>
-                <p>공지사항이 없습니다</p>
-                {canEdit() && (
-                  <button
-                    className={styles.createButton}
-                    onClick={() => {
-                      setSelectedNotice(null);
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    첫 공지 작성하기
-                  </button>
-                )}
-              </div>
-            ) : (
-              regularNotices.map((notice) => (
-                <div 
+            {(activeTab === '전체' || activeTab === '일반') && (
+              <h3 className={styles.sectionLabel}>📄 최근 공지 ({regularNotices.length})</h3>
+            )}
+            {activeTab === '중요' && (
+              <h3 className={styles.sectionLabel}>⭐ 중요 공지 ({notices.filter(n => n.isImportant).length})</h3>
+            )}
+
+            {(() => {
+              let filteredNotices = regularNotices;
+              if (activeTab === '중요') {
+                filteredNotices = notices.filter(n => n.isImportant);
+              }
+
+              if (filteredNotices.length === 0) {
+                return (
+                  <div className={styles.emptyState}>
+                    <span className={styles.emptyIcon}>📭</span>
+                    <p>공지사항이 없습니다</p>
+                    {canEdit() && (
+                      <button
+                        className={styles.createButton}
+                        onClick={() => {
+                          setSelectedNotice(null);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        + 첫 공지 작성하기
+                      </button>
+                    )}
+                  </div>
+                );
+              }
+
+              return filteredNotices.map((notice) => (
+                <div
                   key={notice.id} 
-                  className={styles.noticeCard}
+                  className={`${styles.noticeCard} ${notice.isImportant ? styles.importantCard : ''}`}
                   onClick={() => handleViewNotice(notice)}
-                  style={{ cursor: 'pointer' }}
                 >
                   <div className={styles.noticeCardHeader}>
-                    <div className={styles.noticeTitleRow}>
-                      <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
+                    <div className={styles.noticeBadges}>
                       {notice.isImportant && (
                         <span className={styles.importantBadge}>⭐ 중요</span>
                       )}
@@ -309,7 +349,7 @@ export default function MyStudyNoticesPage({ params }) {
                             setIsModalOpen(true);
                           }}
                         >
-                          수정
+                          ✏️
                         </button>
                         <button
                           className={styles.actionBtn}
@@ -318,16 +358,16 @@ export default function MyStudyNoticesPage({ params }) {
                             handleTogglePin(notice.id);
                           }}
                         >
-                          고정
+                          📌
                         </button>
                         <button
-                          className={styles.actionBtn}
+                          className={`${styles.actionBtn} ${styles.deleteBtn}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(notice.id);
                           }}
                         >
-                          삭제
+                          🗑️
                         </button>
                       </div>
                     ) : (
@@ -335,23 +375,40 @@ export default function MyStudyNoticesPage({ params }) {
                         className={styles.reportBtn}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        신고
+                        🚨
                       </button>
                     )}
                   </div>
 
-                  <div className={styles.noticeAuthor}>
-                    {notice.author?.name || '작성자'}({notice.author?.role || 'MEMBER'}) · {new Date(notice.createdAt).toLocaleString()}
-                  </div>
+                  <h4 className={styles.noticeCardTitle}>{notice.title}</h4>
 
                   <p className={styles.noticeContent}>{notice.content}</p>
 
-                  <div className={styles.noticeStats}>
-                    <span className={styles.stat}>👁 {notice.views || 0}</span>
+                  <div className={styles.noticeFooter}>
+                    <div className={styles.noticeAuthor}>
+                      <span className={styles.authorAvatar}>
+                        {notice.author?.name?.charAt(0) || '?'}
+                      </span>
+                      <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
+                      <span className={styles.authorDivider}>·</span>
+                      <span className={styles.noticeDate}>
+                        {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className={styles.noticeStats}>
+                      <span className={styles.viewCount}>
+                        👁️ {notice.views || 0}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ))
-            )}
+              ));
+            })()}
           </div>
         </div>
 
@@ -435,80 +492,85 @@ export default function MyStudyNoticesPage({ params }) {
       {detailNotice && (
         <div className={styles.detailModalOverlay} onClick={closeDetailModal}>
           <div className={styles.detailModal} onClick={(e) => e.stopPropagation()}>
+            {/* 헤더 */}
             <div className={styles.detailHeader}>
-              <div className={styles.detailTitleSection}>
-                {detailNotice.isPinned && <span className={styles.pinnedBadge}>📌 고정</span>}
-                {detailNotice.isImportant && <span className={styles.importantBadgeLarge}>⭐ 중요</span>}
-                <h2 className={styles.detailTitle}>{detailNotice.title}</h2>
+              <div className={styles.detailBadges}>
+                {detailNotice.isPinned && <span className={styles.detailPinnedBadge}>📌 고정</span>}
+                {detailNotice.isImportant && <span className={styles.detailImportantBadge}>⭐ 중요</span>}
               </div>
               <button className={styles.closeBtn} onClick={closeDetailModal}>✕</button>
             </div>
 
+            {/* 제목 */}
+            <h2 className={styles.detailTitle}>{detailNotice.title}</h2>
+
+            {/* 작성자 정보 */}
             <div className={styles.detailMeta}>
-              <div className={styles.authorInfo}>
-                <span className={styles.authorAvatar}>
-                  {detailNotice.author?.avatar ? (
-                    <img src={detailNotice.author.avatar} alt="avatar" />
-                  ) : (
-                    '👤'
-                  )}
+              <div className={styles.detailAuthor}>
+                <span className={styles.detailAuthorAvatar}>
+                  {detailNotice.author?.name?.charAt(0) || '?'}
                 </span>
-                <div>
-                  <span className={styles.authorName}>{detailNotice.author?.name || '작성자'}</span>
-                  <span className={styles.authorRole}>({detailNotice.author?.role || 'MEMBER'})</span>
+                <div className={styles.detailAuthorInfo}>
+                  <span className={styles.detailAuthorName}>{detailNotice.author?.name || '작성자'}</span>
+                  <span className={styles.detailDate}>
+                    {new Date(detailNotice.createdAt).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                    {detailNotice.updatedAt && detailNotice.updatedAt !== detailNotice.createdAt && (
+                      <span className={styles.editedMark}> (수정됨)</span>
+                    )}
+                  </span>
                 </div>
               </div>
-              <div className={styles.detailTime}>
-                <span>작성: {new Date(detailNotice.createdAt).toLocaleString()}</span>
-                {detailNotice.updatedAt && detailNotice.updatedAt !== detailNotice.createdAt && (
-                  <span> · 수정: {new Date(detailNotice.updatedAt).toLocaleString()}</span>
-                )}
+              <div className={styles.detailViewCount}>
+                👁️ {detailNotice.views || 0}회 조회
               </div>
             </div>
 
+            {/* 본문 */}
             <div className={styles.detailContent}>
               {detailNotice.content.split('\n').map((line, idx) => (
                 <p key={idx}>{line || <br />}</p>
               ))}
             </div>
 
-            <div className={styles.detailFooter}>
-              <div className={styles.detailStats}>
-                <span>👁 조회 {detailNotice.views || 0}</span>
+            {/* 액션 버튼 */}
+            {canEdit() && (
+              <div className={styles.detailFooter}>
+                <button
+                  className={styles.detailEditBtn}
+                  onClick={() => {
+                    closeDetailModal();
+                    setSelectedNotice(detailNotice);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  ✏️ 수정
+                </button>
+                <button
+                  className={styles.detailPinBtn}
+                  onClick={async () => {
+                    await handleTogglePin(detailNotice.id);
+                    closeDetailModal();
+                  }}
+                >
+                  {detailNotice.isPinned ? '📌 고정 해제' : '📌 고정하기'}
+                </button>
+                <button
+                  className={styles.detailDeleteBtn}
+                  onClick={async () => {
+                    await handleDelete(detailNotice.id);
+                    closeDetailModal();
+                  }}
+                >
+                  🗑️ 삭제
+                </button>
               </div>
-              {canEdit() && (
-                <div className={styles.detailActions}>
-                  <button
-                    className={styles.editBtn}
-                    onClick={() => {
-                      closeDetailModal();
-                      setSelectedNotice(detailNotice);
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    ✏️ 수정
-                  </button>
-                  <button
-                    className={styles.pinBtn}
-                    onClick={async () => {
-                      await handleTogglePin(detailNotice.id);
-                      closeDetailModal();
-                    }}
-                  >
-                    {detailNotice.isPinned ? '📌 고정 해제' : '📌 고정'}
-                  </button>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={async () => {
-                      await handleDelete(detailNotice.id);
-                      closeDetailModal();
-                    }}
-                  >
-                    🗑 삭제
-                  </button>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}
