@@ -211,8 +211,9 @@ export async function markNotificationAsRead(notificationId, userId, prisma) {
   try {
     const notification = await checkNotificationOwnership(notificationId, userId, prisma);
 
+    // 이미 읽은 알림이면 현재 상태 그대로 반환 (멱등성 보장)
     if (notification.isRead) {
-      throw NotificationBusinessException.notificationAlreadyRead(notificationId);
+      return notification;
     }
 
     const updated = await prisma.notification.update({

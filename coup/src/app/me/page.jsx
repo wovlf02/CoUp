@@ -15,7 +15,7 @@ export default function MyPage() {
   const { data: statsData, isLoading: statsLoading } = useUserStats()
 
   const user = userData?.user || null
-  const userStudies = studiesData?.data || []
+  const userStudies = studiesData?.data?.studies || []
   const userStats = statsData?.stats || null
 
   // 로딩 상태

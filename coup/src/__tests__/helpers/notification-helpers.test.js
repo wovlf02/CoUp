@@ -252,12 +252,14 @@ describe('Notification Helpers', () => {
       });
     });
 
-    it('이미 읽은 알림이면 예외 발생', async () => {
+    it('이미 읽은 알림이면 현재 상태 그대로 반환 (멱등성)', async () => {
       const mockNotification = { id: 'n1', userId: 'user1', isRead: true };
       mockPrisma.notification.findUnique.mockResolvedValue(mockNotification);
 
-      await expect(markNotificationAsRead('n1', 'user1', mockPrisma))
-        .rejects.toThrow(NotificationBusinessException);
+      const result = await markNotificationAsRead('n1', 'user1', mockPrisma);
+
+      expect(result.isRead).toBe(true);
+      expect(mockPrisma.notification.update).not.toHaveBeenCalled();
     });
 
     it('소유자가 아니면 예외 발생', async () => {
