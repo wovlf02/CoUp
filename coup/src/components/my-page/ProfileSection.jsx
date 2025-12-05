@@ -28,19 +28,20 @@ export default function ProfileSection({ user }) {
         headers: { 'Content-Type': 'application/json' },
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || '출석 실패');
+        throw new Error(data.error || data.message || '출석 실패');
       }
 
-      const data = await response.json();
-      alert(`출석 완료! ${data.attendedStudies}개 스터디에 출석되었습니다.`);
-
-      // 페이지 새로고침하여 최신 정보 반영
-      window.location.reload();
+      if (data.attendedStudies === 0) {
+        alert(data.message || '참여 중인 스터디가 없습니다.');
+      } else {
+        alert(`출석 완료! ${data.attendedStudies}개 스터디에 출석되었습니다.`);
+      }
     } catch (error) {
-      console.error('Attendance error:', error);
-      alert(error.message);
+      console.error('출석 실패', error);
+      alert(error.message || '출석 처리 중 오류가 발생했습니다.');
     } finally {
       setIsAttending(false);
     }
