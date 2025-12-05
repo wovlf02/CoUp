@@ -3,10 +3,10 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStudy, useNotices, useDeleteNotice, useTogglePinNotice } from '@/lib/hooks/useApi';
 import NoticeCreateEditModal from '@/components/studies/NoticeCreateEditModal';
+import StudyTabs from '@/components/study/StudyTabs';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import styles from './page.module.css';
 
@@ -54,17 +54,6 @@ export default function MyStudyNoticesPage({ params }) {
     );
   }
 
-  const tabs = [
-    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
-    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
-    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
-    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
-    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
-    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥', adminOnly: true },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️', adminOnly: true },
-  ];
 
   const pinnedNotices = notices.filter(n => n.isPinned);
   const regularNotices = notices.filter(n => !n.isPinned);
@@ -147,20 +136,7 @@ export default function MyStudyNoticesPage({ params }) {
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className={styles.tabs}>
-        {tabs
-          .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.myRole))
-          .map((tab) => (
-            <Link
-              key={tab.label}
-              href={tab.href}
-              className={`${styles.tab} ${tab.label === '공지' ? styles.active : ''}`}
-            >
-              <span className={styles.tabIcon}>{tab.icon}</span>
-              <span className={styles.tabLabel}>{tab.label}</span>
-            </Link>
-          ))}
-      </div>
+      <StudyTabs studyId={studyId} activeTab="공지" userRole={study.myRole} />
 
       {/* 메인 콘텐츠 */}
       <div className={styles.mainContent}>

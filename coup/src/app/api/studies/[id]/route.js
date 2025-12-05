@@ -19,7 +19,12 @@ export async function GET(request, context) {
       include: { 
         members: {
           where: { status: 'ACTIVE' },
-          include: {
+          select: {
+            id: true,
+            userId: true,  // 명시적으로 userId 포함
+            role: true,
+            status: true,
+            joinedAt: true,
             user: {
               select: {
                 id: true,
@@ -46,9 +51,16 @@ export async function GET(request, context) {
 
     // 현재 사용자의 역할 찾기
     let myRole = null
+    let myJoinedAt = null
     if (currentUserId) {
       const myMembership = study.members.find(m => m.userId === currentUserId)
       myRole = myMembership?.role || null
+      myJoinedAt = myMembership?.joinedAt || null
+
+      // 디버그 로그 (개발 환경에서만)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Study API] User ${currentUserId} role in study ${studyId}: ${myRole}`)
+      }
     }
 
     // currentMembers 계산하여 추가
@@ -56,6 +68,7 @@ export async function GET(request, context) {
       ...study,
       currentMembers: study._count.members,
       myRole, // 현재 사용자의 역할 추가
+      myJoinedAt, // 현재 사용자의 가입일 추가
     }
     
     return NextResponse.json({ success: true, data: responseData }, { status: 200 })

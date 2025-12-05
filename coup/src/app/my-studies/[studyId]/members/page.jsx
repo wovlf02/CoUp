@@ -3,11 +3,11 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useStudy, useStudyMembers, useJoinRequests, useChangeMemberRole, useKickMember, useApproveJoinRequest, useRejectJoinRequest } from '@/lib/hooks/useApi';
 import { handleStudyError } from '@/lib/error-handlers/study-error-handler';
 import { showSuccessToast, showStudyErrorToast, showErrorToast, showWarningToast } from '@/lib/error-handlers/toast-helper';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
+import StudyTabs from '@/components/study/StudyTabs';
 import styles from './page.module.css';
 
 export default function MyStudyMembersPage({ params }) {
@@ -20,6 +20,7 @@ export default function MyStudyMembersPage({ params }) {
   const [modalAction, setModalAction] = useState(null);
   const [kickReason, setKickReason] = useState('');
   const [rejectReason, setRejectReason] = useState('');
+  const [detailRequest, setDetailRequest] = useState(null); // 상세 정보 모달용
 
   // API Hooks
   const { data: studyData, isLoading: studyLoading } = useStudy(studyId);
@@ -66,17 +67,6 @@ export default function MyStudyMembersPage({ params }) {
     );
   }
 
-  const tabs = [
-    { label: '개요', href: `/my-studies/${studyId}`, icon: '📊' },
-    { label: '채팅', href: `/my-studies/${studyId}/chat`, icon: '💬' },
-    { label: '공지', href: `/my-studies/${studyId}/notices`, icon: '📢' },
-    { label: '파일', href: `/my-studies/${studyId}/files`, icon: '📁' },
-    { label: '캘린더', href: `/my-studies/${studyId}/calendar`, icon: '📅' },
-    { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
-    { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
-    { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥' },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' },
-  ];
 
   // 멤버 통계
   const memberStats = {
@@ -291,20 +281,7 @@ export default function MyStudyMembersPage({ params }) {
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className={styles.tabs}>
-        {tabs
-          .filter(tab => !tab.adminOnly || ['OWNER', 'ADMIN'].includes(study.myRole))
-          .map((tab) => (
-            <Link
-              key={tab.label}
-              href={tab.href}
-              className={`${styles.tab} ${tab.label === '멤버' ? styles.active : ''}`}
-            >
-              <span className={styles.tabIcon}>{tab.icon}</span>
-              <span className={styles.tabLabel}>{tab.label}</span>
-            </Link>
-          ))}
-      </div>
+      <StudyTabs studyId={studyId} activeTab="멤버" userRole={study.myRole} />
 
       {/* 메인 콘텐츠 */}
       <div className={styles.mainContent}>
@@ -432,16 +409,30 @@ export default function MyStudyMembersPage({ params }) {
                         <h4 className={styles.requestName}>{request.user.name}</h4>
                         <div className={styles.requestEmail}>{request.user.email}</div>
                         <div className={styles.requestDate}>
-                          신청일: {new Date(request.createdAt).toLocaleDateString()}
+                          신청일: {request.joinedAt ? new Date(request.joinedAt).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : '-'}
                         </div>
-                        {request.message && (
+                        {request.introduction && (
                           <div className={styles.requestMessage}>
-                            💬 {request.message}
+                            💬 {request.introduction.length > 50
+                              ? request.introduction.slice(0, 50) + '...'
+                              : request.introduction}
                           </div>
                         )}
                       </div>
                     </div>
                     <div className={styles.requestActions}>
+                      <button
+                        className={styles.detailBtn}
+                        onClick={() => setDetailRequest(request)}
+                      >
+                        📋 상세
+                      </button>
                       <button
                         className={styles.approveBtn}
                         onClick={() => handleApproveRequest(request)}
@@ -567,6 +558,174 @@ export default function MyStudyMembersPage({ params }) {
                 onClick={modalAction === 'kick' ? confirmKick : confirmReject}
               >
                 확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 가입 신청 상세 정보 모달 */}
+      {detailRequest && (
+        <div className={styles.detailModalOverlay} onClick={() => setDetailRequest(null)}>
+          <div className={styles.detailModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.detailModalHeader}>
+              <h3 className={styles.detailModalTitle}>📋 가입 신청 상세 정보</h3>
+              <button
+                className={styles.detailModalClose}
+                onClick={() => setDetailRequest(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.detailModalContent}>
+              {/* 신청자 프로필 */}
+              <div className={styles.detailProfile}>
+                <div className={styles.detailAvatar}>
+                  {detailRequest.user.avatar ? (
+                    <img src={detailRequest.user.avatar} alt="avatar" />
+                  ) : (
+                    <span>{detailRequest.user.name?.charAt(0) || '?'}</span>
+                  )}
+                </div>
+                <div className={styles.detailProfileInfo}>
+                  <h4 className={styles.detailName}>{detailRequest.user.name}</h4>
+                  <p className={styles.detailEmail}>{detailRequest.user.email}</p>
+                </div>
+              </div>
+
+              {/* 신청 정보 */}
+              <div className={styles.detailSection}>
+                <h5 className={styles.detailSectionTitle}>📅 신청 정보</h5>
+                <div className={styles.detailInfoGrid}>
+                  <div className={styles.detailInfoItem}>
+                    <span className={styles.detailInfoLabel}>신청일</span>
+                    <span className={styles.detailInfoValue}>
+                      {detailRequest.joinedAt ? (
+                        <>
+                          <span className={styles.dateRow}>
+                            {new Date(detailRequest.joinedAt).toLocaleDateString('ko-KR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              weekday: 'long'
+                            })}
+                          </span>
+                          <span className={styles.timeRow}>
+                            {new Date(detailRequest.joinedAt).toLocaleTimeString('ko-KR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </span>
+                        </>
+                      ) : '-'}
+                    </span>
+                  </div>
+                  <div className={styles.detailInfoItem}>
+                    <span className={styles.detailInfoLabel}>상태</span>
+                    <span className={`${styles.detailInfoValue} ${styles.pendingStatus}`}>
+                      ⏳ 승인 대기중
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 자기소개 (유저 bio) */}
+              {detailRequest.user.bio && (
+                <div className={styles.detailSection}>
+                  <h5 className={styles.detailSectionTitle}>👤 자기소개</h5>
+                  <div className={styles.detailIntroduction}>
+                    {detailRequest.user.bio}
+                  </div>
+                </div>
+              )}
+
+              {/* 가입 시 작성한 소개 */}
+              {detailRequest.introduction && (
+                <div className={styles.detailSection}>
+                  <h5 className={styles.detailSectionTitle}>💬 가입 신청 메시지</h5>
+                  <div className={styles.detailIntroduction}>
+                    {detailRequest.introduction}
+                  </div>
+                </div>
+              )}
+
+              {/* 가입 동기 */}
+              {detailRequest.motivation && (
+                <div className={styles.detailSection}>
+                  <h5 className={styles.detailSectionTitle}>🎯 가입 동기</h5>
+                  <div className={styles.detailMotivation}>
+                    {detailRequest.motivation}
+                  </div>
+                </div>
+              )}
+
+              {/* 실력/수준 */}
+              {detailRequest.level && (
+                <div className={styles.detailSection}>
+                  <h5 className={styles.detailSectionTitle}>📊 실력/수준</h5>
+                  <div className={styles.detailLevel}>
+                    <span className={styles.levelBadge}>{detailRequest.level}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* 참여 중인 스터디 */}
+              <div className={styles.detailSection}>
+                <h5 className={styles.detailSectionTitle}>📚 참여 중인 스터디</h5>
+                {detailRequest.user.studyMembers && detailRequest.user.studyMembers.length > 0 ? (
+                  <div className={styles.participatingStudies}>
+                    {detailRequest.user.studyMembers.map((membership) => (
+                      <div key={membership.study.id} className={styles.studyItem}>
+                        <div className={styles.studyItemHeader}>
+                          <span className={styles.studyEmoji}>{membership.study.emoji}</span>
+                          <div className={styles.studyItemInfo}>
+                            <span className={styles.studyItemName}>{membership.study.name}</span>
+                            <span className={styles.studyItemCategory}>{membership.study.category}</span>
+                          </div>
+                          <span className={`${styles.studyRoleBadge} ${styles[membership.role.toLowerCase()]}`}>
+                            {membership.role === 'OWNER' ? '👑' : membership.role === 'ADMIN' ? '⭐' : '👤'} {membership.role}
+                          </span>
+                        </div>
+                        <div className={styles.studyItemMeta}>
+                          가입: {new Date(membership.joinedAt).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.noStudies}>
+                    <span className={styles.noStudiesIcon}>📭</span>
+                    <p>아직 참여 중인 스터디가 없습니다.</p>
+                    <p className={styles.noStudiesHint}>첫 스터디 가입을 시도하고 있어요!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.detailModalFooter}>
+              <button
+                className={styles.detailRejectBtn}
+                onClick={() => {
+                  setDetailRequest(null);
+                  handleRejectRequest(detailRequest);
+                }}
+              >
+                ❌ 거절
+              </button>
+              <button
+                className={styles.detailApproveBtn}
+                onClick={() => {
+                  setDetailRequest(null);
+                  handleApproveRequest(detailRequest);
+                }}
+              >
+                ✅ 승인
               </button>
             </div>
           </div>

@@ -221,7 +221,8 @@ export function useLeaveStudy() {
 
     // Optimistic Update
     onMutate: async (studyId) => {
-      await queryClient.cancelQueries({ queryKey: ['studies'] })
+      // 해당 스터디 관련 모든 쿼리 취소
+      await queryClient.cancelQueries({ queryKey: ['studies', studyId] })
       await queryClient.cancelQueries({ queryKey: ['my-studies'] })
 
       const previousStudies = queryClient.getQueryData(['studies'])
@@ -232,11 +233,14 @@ export function useLeaveStudy() {
         if (!old) return old
         return {
           ...old,
-          studies: old.studies?.filter(study => study.id !== studyId)
+          data: {
+            ...old.data,
+            studies: old.data?.studies?.filter(study => study.study?.id !== studyId)
+          }
         }
       })
 
-      return { previousStudies, previousMyStudies }
+      return { previousStudies, previousMyStudies, studyId }
     },
 
     // 에러 시 복원
@@ -249,8 +253,12 @@ export function useLeaveStudy() {
       }
     },
 
-    // 성공 시 갱신
-    onSuccess: () => {
+    // 성공 시 해당 스터디 관련 캐시 모두 제거
+    onSuccess: (_, studyId) => {
+      // 탈퇴한 스터디 관련 캐시 즉시 제거
+      queryClient.removeQueries({ queryKey: ['studies', studyId] })
+
+      // 다른 쿼리들 갱신
       queryClient.invalidateQueries({ queryKey: ['studies'] })
       queryClient.invalidateQueries({ queryKey: ['my-studies'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
@@ -258,12 +266,35 @@ export function useLeaveStudy() {
   })
 }
 
+/**
+ * OWNER 권한 위임 Hook
+ * - OWNER만 사용 가능
+ * - ADMIN에게만 위임 가능
+ * - 위임 후 원래 OWNER는 ADMIN으로 강등
+ * @returns {Object} useMutation 결과
+ */
+export function useTransferOwnership() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studyId, targetUserId }) =>
+      api.post(`/api/studies/${studyId}/transfer-ownership`, { targetUserId }),
+
+    onSuccess: (data, variables) => {
+      // 스터디 정보 갱신
+      queryClient.invalidateQueries({ queryKey: ['studies', variables.studyId] })
+      queryClient.invalidateQueries({ queryKey: ['studies', variables.studyId, 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['my-studies'] })
+    }
+  })
+}
+
 // ==================== 스터디 멤버 ====================
-export function useStudyMembers(studyId, params = {}) {
+export function useStudyMembers(studyId, params = {}, options = {}) {
   return useQuery({
     queryKey: ['studies', studyId, 'members', params],
     queryFn: () => api.get(`/api/studies/${studyId}/members`, params),
     enabled: !!studyId,
+    ...options, // 외부에서 enabled 등을 오버라이드 가능
   })
 }
 
@@ -272,6 +303,7 @@ export function useJoinRequests(studyId) {
     queryKey: ['studies', studyId, 'join-requests'],
     queryFn: () => api.get(`/api/studies/${studyId}/join-requests`),
     enabled: !!studyId,
+    staleTime: 0, // 항상 최신 데이터 조회
   })
 }
 

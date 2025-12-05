@@ -14,7 +14,7 @@ export default function StudyTabs({ studyId, activeTab, userRole }) {
     { label: '할일', href: `/my-studies/${studyId}/tasks`, icon: '✅' },
     { label: '화상', href: `/my-studies/${studyId}/video-call`, icon: '📹' },
     { label: '멤버', href: `/my-studies/${studyId}/members`, icon: '👥', adminOnly: true },
-    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️', adminOnly: true },
+    { label: '설정', href: `/my-studies/${studyId}/settings`, icon: '⚙️' }, // 모든 멤버 접근 가능 (탈퇴 기능)
   ];
 
   return (

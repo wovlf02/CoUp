@@ -3,9 +3,8 @@
 
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import styles from './page.module.css';
-import { useStudy, useUpdateStudy, useDeleteStudy, useLeaveStudy } from '@/lib/hooks/useApi';
+import { useStudy, useUpdateStudy, useDeleteStudy, useLeaveStudy, useTransferOwnership, useStudyMembers } from '@/lib/hooks/useApi';
 import { getStudyHeaderStyle } from '@/utils/studyColors';
 import StudyTabs from '@/components/study/StudyTabs';
 
@@ -20,20 +19,47 @@ const STUDY_CATEGORIES = [
 export default function MyStudySettingsPage({ params }) {
   const router = useRouter();
   const { studyId } = use(params);
-  const [activeTab, setActiveTab] = useState('basic');
-  
+  const [activeTab, setActiveTab] = useState(null); // 역할 확인 후 설정
+
   // 수정 모달 상태
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
   const [editErrors, setEditErrors] = useState({});
+
+  // 권한 위임 모달 상태
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [selectedAdminId, setSelectedAdminId] = useState('');
 
   // 실제 API Hooks
   const { data: studyData, isLoading: studyLoading, refetch: refetchStudy } = useStudy(studyId);
   const updateStudyMutation = useUpdateStudy();
   const deleteStudyMutation = useDeleteStudy();
   const leaveStudyMutation = useLeaveStudy();
+  const transferOwnershipMutation = useTransferOwnership();
 
   const study = studyData?.data;
+  const userRole = study?.role || study?.myRole || 'MEMBER';
+  const isOwner = userRole === 'OWNER';
+  const isAdmin = userRole === 'ADMIN' || isOwner;
+
+  // OWNER일 때만 멤버 목록 조회 (권한 위임을 위해)
+  const { data: membersData } = useStudyMembers(studyId, {}, {
+    enabled: !!studyId && !!study && isOwner
+  });
+  const members = membersData?.data || [];
+
+  // ADMIN 역할의 멤버들만 필터링 (권한 위임 대상)
+  const adminMembers = members.filter(m => m.role === 'ADMIN');
+
+  // 역할에 따라 기본 탭 설정
+  useEffect(() => {
+    if (study && activeTab === null) {
+      // requestAnimationFrame으로 비동기 처리
+      requestAnimationFrame(() => {
+        setActiveTab(isAdmin ? 'basic' : 'mySettings');
+      });
+    }
+  }, [study, isAdmin, activeTab]);
 
   // 수정 모달 열기
   const openEditModal = () => {
@@ -146,6 +172,31 @@ export default function MyStudySettingsPage({ params }) {
     }
   };
 
+  // 권한 위임
+  const handleTransferOwnership = async () => {
+    if (!selectedAdminId) {
+      alert('권한을 위임할 관리자를 선택해주세요.');
+      return;
+    }
+
+    const selectedAdmin = adminMembers.find(m => m.userId === selectedAdminId);
+    const adminName = selectedAdmin?.user?.name || selectedAdmin?.user?.email || '선택한 관리자';
+
+    if (!confirm(`정말 ${adminName}님에게 스터디장 권한을 위임하시겠습니까?\n\n위임 후에는 관리자로 강등됩니다.`)) {
+      return;
+    }
+
+    try {
+      await transferOwnershipMutation.mutateAsync({ studyId, targetUserId: selectedAdminId });
+      alert(`${adminName}님에게 스터디장 권한이 위임되었습니다.\n당신은 관리자로 변경되었습니다.`);
+      setIsTransferModalOpen(false);
+      setSelectedAdminId('');
+      refetchStudy();
+    } catch (error) {
+      alert('권한 위임 실패: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
   if (studyLoading) {
     return <div className={styles.container}>로딩 중...</div>;
   }
@@ -153,10 +204,6 @@ export default function MyStudySettingsPage({ params }) {
   if (!study) {
     return <div className={styles.container}>스터디를 찾을 수 없습니다.</div>;
   }
-
-  const userRole = study.role || study.myRole || 'MEMBER';
-  const isOwner = userRole === 'OWNER';
-  const isAdmin = userRole === 'ADMIN' || isOwner;
 
   return (
     <div className={styles.container}>
@@ -194,24 +241,26 @@ export default function MyStudySettingsPage({ params }) {
             <h2 className={styles.settingsTitle}>⚙️ 스터디 설정</h2>
           </div>
 
-          {/* 설정 탭 */}
+          {/* 설정 탭 - OWNER/ADMIN은 기본 정보 탭 표시, MEMBER는 내 설정만 */}
           <div className={styles.settingsTabs}>
+            {isAdmin && (
+              <button
+                className={`${styles.settingsTab} ${activeTab === 'basic' ? styles.active : ''}`}
+                onClick={() => setActiveTab('basic')}
+              >
+                기본 정보
+              </button>
+            )}
             <button
-              className={`${styles.settingsTab} ${activeTab === 'basic' ? styles.active : ''}`}
-              onClick={() => setActiveTab('basic')}
+              className={`${styles.settingsTab} ${activeTab === 'mySettings' ? styles.active : ''}`}
+              onClick={() => setActiveTab('mySettings')}
             >
-              기본 정보
-            </button>
-            <button
-              className={`${styles.settingsTab} ${activeTab === 'danger' ? styles.active : ''}`}
-              onClick={() => setActiveTab('danger')}
-            >
-              위험 구역
+              내 설정
             </button>
           </div>
 
-          {/* 기본 정보 - 읽기 전용 뷰 */}
-          {activeTab === 'basic' && (
+          {/* 기본 정보 - OWNER/ADMIN만 표시 */}
+          {activeTab === 'basic' && isAdmin && (
             <div className={styles.settingsContent}>
               <div className={styles.settingsCard}>
                 <h3 className={styles.cardTitle}>📝 기본 정보</h3>
@@ -466,39 +515,126 @@ export default function MyStudySettingsPage({ params }) {
             </div>
           )}
 
-          {/* 위험 구역 */}
-          {activeTab === 'danger' && (
+          {/* 내 설정 탭 - 모든 멤버 접근 가능 */}
+          {activeTab === 'mySettings' && (
             <div className={styles.settingsContent}>
-              <div className={`${styles.settingsCard} ${styles.dangerCard}`}>
-                <h3 className={styles.cardTitle}>⚠️ 위험 구역</h3>
-                <p className={styles.dangerWarning}>
-                  아래 작업은 되돌릴 수 없습니다. 신중하게 진행해주세요.
-                </p>
-
-                {!isOwner && (
-                  <div className={styles.dangerAction}>
-                    <div className={styles.dangerInfo}>
-                      <h4 className={styles.dangerTitle}>스터디 탈퇴</h4>
-                      <p className={styles.dangerDesc}>
-                        스터디에서 나가며 모든 데이터 접근 권한을 잃습니다.
-                      </p>
-                    </div>
-                    <button className={styles.deleteButton} onClick={handleLeaveStudy}>
-                      스터디 탈퇴
-                    </button>
+              {/* 내 정보 카드 */}
+              <div className={styles.settingsCard}>
+                <h3 className={styles.cardTitle}>👤 내 정보</h3>
+                <div className={styles.myInfoCard}>
+                  <div className={styles.myInfoRow}>
+                    <span className={styles.myInfoLabel}>내 역할</span>
+                    <span className={`${styles.myRoleBadge} ${styles[userRole?.toLowerCase()]}`}>
+                      {userRole === 'OWNER' ? '👑 스터디장' : userRole === 'ADMIN' ? '⭐ 관리자' : '👤 멤버'}
+                    </span>
                   </div>
-                )}
+                  <div className={styles.myInfoRow}>
+                    <span className={styles.myInfoLabel}>가입일</span>
+                    <span className={styles.myInfoValue}>
+                      {study.myJoinedAt ? new Date(study.myJoinedAt).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : '-'}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                {isOwner && (
-                  <div className={styles.dangerAction}>
-                    <div className={styles.dangerInfo}>
-                      <h4 className={styles.dangerTitle}>스터디 삭제</h4>
-                      <p className={styles.dangerDesc}>
-                        스터디와 모든 데이터가 영구적으로 삭제됩니다.
-                      </p>
+              {/* OWNER 전용: 권한 위임 카드 */}
+              {isOwner && (
+                <div className={styles.settingsCard}>
+                  <h3 className={styles.cardTitle}>👥 권한 위임</h3>
+                  <p className={styles.transferDesc}>
+                    스터디장 권한을 관리자에게 위임할 수 있습니다. 위임 후에는 관리자로 강등됩니다.
+                  </p>
+
+                  {adminMembers.length === 0 ? (
+                    <div className={styles.noAdminWarning}>
+                      <span className={styles.noAdminIcon}>⚠️</span>
+                      <p>권한을 위임할 관리자가 없습니다.</p>
+                      <p className={styles.noAdminHint}>먼저 멤버 관리에서 관리자를 지정해주세요.</p>
                     </div>
-                    <button className={styles.deleteButton} onClick={handleDeleteStudy}>
-                      스터디 삭제
+                  ) : (
+                    <div className={styles.transferSection}>
+                      <div className={styles.adminSelectWrapper}>
+                        <label className={styles.adminSelectLabel}>권한을 위임할 관리자 선택</label>
+                        <select
+                          value={selectedAdminId}
+                          onChange={(e) => setSelectedAdminId(e.target.value)}
+                          className={styles.adminSelect}
+                        >
+                          <option value="">관리자를 선택하세요</option>
+                          {adminMembers.map((member) => (
+                            <option key={member.userId} value={member.userId}>
+                              {member.user?.name || member.user?.email} (⭐ 관리자)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        className={styles.transferButton}
+                        onClick={handleTransferOwnership}
+                        disabled={!selectedAdminId || transferOwnershipMutation.isPending}
+                      >
+                        {transferOwnershipMutation.isPending ? '위임 중...' : '👑 스터디장 권한 위임'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 스터디 탈퇴 카드 */}
+              <div className={`${styles.settingsCard} ${styles.dangerCard}`}>
+                <h3 className={styles.cardTitle}>🚪 스터디 탈퇴</h3>
+
+                {isOwner ? (
+                  // OWNER인 경우
+                  <div className={styles.ownerLeaveInfo}>
+                    <div className={styles.ownerWarningBox}>
+                      <span className={styles.ownerWarningIcon}>👑</span>
+                      <div>
+                        <p className={styles.ownerWarningTitle}>스터디장은 탈퇴할 수 없습니다</p>
+                        <p className={styles.ownerWarningDesc}>
+                          탈퇴를 원하시면 위에서 스터디장 권한을 위임하거나, 아래에서 스터디를 삭제해주세요.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className={styles.ownerOptions}>
+                      <div className={styles.ownerOption}>
+                        <span className={styles.optionIcon}>🗑️</span>
+                        <div className={styles.optionContent}>
+                          <h4>스터디 삭제</h4>
+                          <p>스터디와 모든 데이터를 영구적으로 삭제합니다.</p>
+                        </div>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={handleDeleteStudy}
+                          disabled={deleteStudyMutation.isPending}
+                        >
+                          {deleteStudyMutation.isPending ? '삭제 중...' : '스터디 삭제'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // MEMBER/ADMIN인 경우
+                  <div className={styles.leaveSection}>
+                    <div className={styles.leaveWarning}>
+                      <h4>⚠️ 탈퇴 시 주의사항</h4>
+                      <ul className={styles.warningList}>
+                        <li>스터디의 모든 활동 기록에 접근할 수 없게 됩니다.</li>
+                        <li>채팅, 파일, 일정 등 스터디 데이터를 볼 수 없습니다.</li>
+                        <li>재가입을 원하시면 다시 가입 신청이 필요합니다.</li>
+                      </ul>
+                    </div>
+                    <button
+                      className={styles.leaveButton}
+                      onClick={handleLeaveStudy}
+                      disabled={leaveStudyMutation.isPending}
+                    >
+                      {leaveStudyMutation.isPending ? '탈퇴 중...' : '🚪 스터디 탈퇴하기'}
                     </button>
                   </div>
                 )}

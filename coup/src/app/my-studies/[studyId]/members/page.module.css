@@ -746,6 +746,424 @@
   background: #b91c1c;
 }
 
+/* 상세보기 버튼 */
+.detailBtn {
+  padding: 8px 14px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.detailBtn:hover {
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+}
+
+/* ===== 가입 신청 상세 정보 모달 ===== */
+.detailModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.detailModal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detailModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--gray-200);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.detailModalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+}
+
+.detailModalClose {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  color: #92400e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.detailModalClose:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: rotate(90deg);
+}
+
+.detailModalContent {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* 프로필 섹션 */
+.detailProfile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 20px;
+}
+
+.detailAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.detailAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detailProfileInfo {
+  flex: 1;
+}
+
+.detailName {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 4px 0;
+}
+
+.detailEmail {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin: 0;
+}
+
+/* 섹션 스타일 */
+.detailSection {
+  margin-bottom: 20px;
+}
+
+.detailSection:last-child {
+  margin-bottom: 0;
+}
+
+.detailSectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detailInfoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.detailInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.detailInfoLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detailInfoValue {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--gray-800);
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dateRow {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.timeRow {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+
+.pendingStatus {
+  color: #d97706;
+  font-weight: 600;
+}
+
+/* 자기소개, 동기, 수준 */
+.detailIntroduction,
+.detailMotivation {
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: var(--gray-700);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.detailLevel {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.levelBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #6d28d9;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.noExtraInfo {
+  text-align: center;
+  padding: 24px;
+  color: var(--gray-400);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* 참여 중인 스터디 목록 */
+.participatingStudies {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.studyItem {
+  padding: 12px 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.studyItem:hover {
+  background: white;
+  border-color: var(--gray-200);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.studyItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.studyEmoji {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.studyItemInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.studyItemName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.studyItemCategory {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.studyRoleBadge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.studyRoleBadge.owner {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.studyRoleBadge.admin {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.studyRoleBadge.member {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.studyItemMeta {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--gray-200);
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+/* 참여 중인 스터디 없음 */
+.noStudies {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.noStudiesIcon {
+  font-size: 2rem;
+}
+
+.noStudies p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #166534;
+  font-weight: 500;
+}
+
+.noStudiesHint {
+  font-size: 0.8rem !important;
+  font-weight: 400 !important;
+  color: #22c55e !important;
+}
+
+/* 모달 푸터 */
+.detailModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.detailRejectBtn {
+  padding: 12px 24px;
+  background: white;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.detailRejectBtn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.detailApproveBtn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.detailApproveBtn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 /* 반응형 */
 @media (max-width: 1200px) {
   .mainContent {
@@ -811,3 +1229,27 @@
   }
 }
 
+/* 반응형 - 상세 모달 */
+@media (max-width: 600px) {
+  .detailModal {
+    max-height: 90vh;
+  }
+
+  .detailModalContent {
+    padding: 20px;
+  }
+
+  .detailInfoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .detailModalFooter {
+    flex-direction: column;
+  }
+
+  .detailRejectBtn,
+  .detailApproveBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

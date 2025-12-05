@@ -22,7 +22,24 @@ export async function GET(request, context) {
             id: true,
             name: true,
             email: true,
-            avatar: true
+            avatar: true,
+            bio: true,
+            // 유저가 참여 중인 다른 스터디 정보
+            studyMembers: {
+              where: { status: 'ACTIVE' },
+              include: {
+                study: {
+                  select: {
+                    id: true,
+                    name: true,
+                    emoji: true,
+                    category: true
+                  }
+                }
+              },
+              orderBy: { joinedAt: 'desc' },
+              take: 5 // 최근 5개만
+            }
           }
         }
       },

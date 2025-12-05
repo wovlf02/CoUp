@@ -920,3 +920,330 @@
   margin: 0;
   line-height: 1.4;
 }
+
+/* ===== 내 설정 탭 스타일 ===== */
+
+/* 내 정보 카드 */
+.myInfoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.myInfoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.myInfoRow:last-child {
+  border-bottom: none;
+}
+
+.myInfoLabel {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.myInfoValue {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.myRoleBadge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.myRoleBadge.owner {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.myRoleBadge.admin {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  color: #6d28d9;
+  border: 1px solid #8b5cf6;
+}
+
+.myRoleBadge.member {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  color: #4b5563;
+  border: 1px solid #9ca3af;
+}
+
+/* OWNER 탈퇴 불가 안내 */
+.ownerLeaveInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ownerWarningBox {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+}
+
+.ownerWarningIcon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.ownerWarningTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 6px 0;
+}
+
+.ownerWarningDesc {
+  font-size: 0.875rem;
+  color: #a16207;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.ownerOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ownerOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.ownerOption:hover {
+  border-color: var(--gray-300);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ownerOption .optionIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.ownerOption .optionContent {
+  flex: 1;
+}
+
+.ownerOption .optionContent h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 4px 0;
+}
+
+.ownerOption .optionContent p {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* MEMBER/ADMIN 탈퇴 섹션 */
+.leaveSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.leaveWarning {
+  padding: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.leaveWarning h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #991b1b;
+  margin: 0 0 12px 0;
+}
+
+.warningList {
+  margin: 0;
+  padding-left: 20px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.warningList li {
+  margin-bottom: 4px;
+}
+
+.leaveButton {
+  align-self: flex-start;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.leaveButton:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.leaveButton:disabled {
+  background: var(--gray-400);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 반응형 - 내 설정 */
+@media (max-width: 640px) {
+  .ownerWarningBox {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .ownerOption {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .ownerOption .deleteButton {
+    width: 100%;
+  }
+
+  .leaveButton {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ===== 권한 위임 스타일 ===== */
+
+.transferDesc {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.noAdminWarning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.noAdminIcon {
+  font-size: 2rem;
+}
+
+.noAdminWarning p {
+  margin: 0;
+  color: #92400e;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.noAdminHint {
+  font-size: 0.8rem !important;
+  font-weight: 400 !important;
+  color: #a16207 !important;
+}
+
+.transferSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adminSelectWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adminSelectLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.adminSelect {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--gray-800);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.adminSelect:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.transferButton {
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.transferButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.transferButton:disabled {
+  background: var(--gray-300);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 반응형 - 권한 위임 */
+@media (max-width: 640px) {
+  .transferButton {
+    width: 100%;
+  }
+}
