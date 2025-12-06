@@ -4,8 +4,10 @@
  * 상대 시간 표시 (예: 2시간 전, 3일 전)
  */
 export const getRelativeTime = (dateString) => {
+  if (!dateString) return '-'
   const now = new Date()
   const date = new Date(dateString)
+  if (isNaN(date.getTime())) return '-'
   const diffMs = now - date
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMins / 60)
@@ -22,7 +24,9 @@ export const getRelativeTime = (dateString) => {
  * 날짜 포맷팅 (예: 2024년 11월 9일)
  */
 export const formatDate = (dateString) => {
+  if (!dateString) return '-'
   const date = new Date(dateString)
+  if (isNaN(date.getTime())) return '-'
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`
 }
 

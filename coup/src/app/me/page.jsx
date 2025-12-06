@@ -1,17 +1,23 @@
 'use client'
 
-import ProfileSection from '@/components/my-page/ProfileSection'
-import ProfileEditForm from '@/components/my-page/ProfileEditForm'
-import MyStudiesList from '@/components/my-page/MyStudiesList'
-import ActivityStats from '@/components/my-page/ActivityStats'
-import AccountActions from '@/components/my-page/AccountActions'
+import { useState } from 'react'
 import { useMe, useMyStudies, useUserStats } from '@/lib/hooks/useApi'
+import HeroProfile from '@/components/my-page/HeroProfile'
+import QuickStats from '@/components/my-page/QuickStats'
+import TabNavigation from '@/components/my-page/TabNavigation'
+import OverviewTab from '@/components/my-page/OverviewTab'
+import StudiesTab from '@/components/my-page/StudiesTab'
+import SettingsTab from '@/components/my-page/SettingsTab'
+import LoadingState from '@/components/my-page/LoadingState'
+import ErrorState from '@/components/my-page/ErrorState'
 import styles from './page.module.css'
 
 export default function MyPage() {
-  // 실제 API 호출
+  const [activeTab, setActiveTab] = useState('overview')
+
+  // API 호출
   const { data: userData, isLoading: userLoading } = useMe()
-  const { data: studiesData, isLoading: studiesLoading } = useMyStudies({ limit: 10 })
+  const { data: studiesData, isLoading: studiesLoading } = useMyStudies({ limit: 20 })
   const { data: statsData, isLoading: statsLoading } = useUserStats()
 
   const user = userData?.user || null
@@ -22,38 +28,53 @@ export default function MyPage() {
   if (userLoading || studiesLoading || statsLoading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>프로필을 불러오는 중...</div>
+        <LoadingState />
       </div>
     )
   }
 
-  // 사용자 없음
+  // 에러 상태
   if (!user) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>사용자 정보를 불러올 수 없습니다.</div>
+        <ErrorState
+          message="사용자 정보를 불러올 수 없습니다."
+          onRetry={() => window.location.reload()}
+        />
       </div>
     )
+  }
+
+  // 탭 콘텐츠 렌더링
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <OverviewTab stats={userStats} studies={userStudies} />
+      case 'studies':
+        return <StudiesTab studies={userStudies} />
+      case 'settings':
+        return <SettingsTab />
+      default:
+        return <OverviewTab stats={userStats} studies={userStudies} />
+    }
   }
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>👤 마이페이지</h1>
-          <p className={styles.subtitle}>
-            내 정보와 활동을 관리하세요
-          </p>
-        </div>
-      </header>
+      {/* 히어로 프로필 섹션 */}
+      <HeroProfile user={user} />
 
-      <div className={styles.content}>
-        <ProfileSection user={user} />
-        <ProfileEditForm user={user} />
-        {userStats && <ActivityStats stats={userStats} />}
-        <MyStudiesList studies={userStudies} />
-        <AccountActions />
-      </div>
+      {/* 퀵 스탯 */}
+      <QuickStats stats={userStats} user={user} />
+
+      {/* 탭 네비게이션 */}
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* 탭 콘텐츠 */}
+      <main className={styles.tabContent}>
+        {renderTabContent()}
+      </main>
     </div>
   )
 }
+

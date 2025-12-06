@@ -1,78 +1,21 @@
-/* 마이페이지 스타일 */
+/* 마이페이지 레이아웃 스타일 */
 
 .container {
   width: 100%;
-  max-width: 800px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 20px 48px;
+  min-height: 100vh;
 }
 
-/* 페이지 헤더 - 일관된 스타일 */
-.header {
-  margin-bottom: 2rem;
+.tabContent {
+  min-height: 400px;
 }
 
-.headerContent {
-  flex: 1;
-}
-
-.title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.subtitle {
-  font-size: 1.125rem;
-  color: var(--gray-600);
-  margin: 0;
-}
-
-/* 1열 중앙 배치 레이아웃 */
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-/* 로딩 & 에러 */
-.loading,
-.error {
-  text-align: center;
-  padding: 3rem;
-  font-size: 1.125rem;
-  color: var(--gray-600);
-}
-
-.error {
-  color: var(--danger-500);
-}
-
-/* 반응형 디자인 */
+/* 반응형 */
 @media (max-width: 768px) {
   .container {
-    max-width: 100%;
-    padding: 0 16px;
-  }
-
-  .header {
-    margin-bottom: 24px;
-  }
-
-  .title {
-    font-size: 1.5rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
-  }
-
-  .content {
-    gap: 16px;
+    padding: 0 16px 40px;
   }
 }
+
