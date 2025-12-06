@@ -84,6 +84,15 @@ export default function AdminDashboardPage() {
 
   const summary = stats?.summary || {}
 
+  // API 응답 구조에 맞게 데이터 추출
+  const totalUsers = summary.users?.total || 0
+  const activeStudies = summary.studies?.active || 0
+  const pendingReports = summary.reports?.pending || 0
+  const newUsersThisWeek = summary.users?.newThisWeek || 0
+
+  // 최근 활동 데이터
+  const recentActivity = stats?.recentActivity || {}
+
   return (
     <div className={styles.dashboard}>
       <div className={styles.header}>
@@ -95,8 +104,7 @@ export default function AdminDashboardPage() {
       <div className={styles.statsGrid}>
         <StatCard
           title="총 사용자"
-          value={summary.totalUsers || 0}
-          previousValue={summary.previousUsers}
+          value={totalUsers}
           unit="명"
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -110,8 +118,7 @@ export default function AdminDashboardPage() {
 
         <StatCard
           title="활성 스터디"
-          value={summary.activeStudies || 0}
-          previousValue={summary.previousStudies}
+          value={activeStudies}
           unit="개"
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -126,7 +133,7 @@ export default function AdminDashboardPage() {
 
         <StatCard
           title="처리 대기"
-          value={summary.pendingReports || 0}
+          value={pendingReports}
           unit="건"
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -140,8 +147,7 @@ export default function AdminDashboardPage() {
 
         <StatCard
           title="신규 가입"
-          value={summary.newUsersThisWeek || 0}
-          previousValue={summary.previousNewUsers}
+          value={newUsersThisWeek}
           unit="명"
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -155,7 +161,7 @@ export default function AdminDashboardPage() {
 
       <div className={styles.grid}>
         <div className={styles.mainColumn}>
-          <RecentActivity activity={stats?.recentActivity || []} />
+          <RecentActivity activity={recentActivity} />
         </div>
 
         <div className={styles.sideColumn}>
