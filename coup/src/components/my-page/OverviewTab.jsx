@@ -28,6 +28,11 @@ function StudyCard({ study, role }) {
     return classMap[role] || styles.roleMember
   }
 
+  // 새 활동 표시 (메시지 + 공지)
+  const newMessages = study.newMessages || 0
+  const newNotices = study.newNotices || 0
+  const hasNewActivity = newMessages > 0 || newNotices > 0
+
   return (
     <Link href={`/my-studies/${study.id}`} className={styles.studyCard}>
       <div className={styles.studyCardTop}>
@@ -38,8 +43,16 @@ function StudyCard({ study, role }) {
       </div>
       <h4 className={styles.studyName}>{study.name}</h4>
       <div className={styles.studyMeta}>
-        <span className={styles.memberCount}>👥 {study.currentMembers || study.members?.current || 0}명</span>
-        <span className={styles.lastActivity}>{getRelativeTime(study.lastActivity)}</span>
+        <span className={styles.memberCount}>
+          👥 {study.currentMembers || 0}/{study.maxMembers || 20}
+        </span>
+        {hasNewActivity && (
+          <span className={styles.newActivity}>
+            {newMessages > 0 && `💬 ${newMessages}`}
+            {newMessages > 0 && newNotices > 0 && ' '}
+            {newNotices > 0 && `📢 ${newNotices}`}
+          </span>
+        )}
       </div>
     </Link>
   )

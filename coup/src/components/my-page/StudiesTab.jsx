@@ -6,7 +6,7 @@ import { getRoleText } from '@/utils/format'
 import styles from './StudiesTab.module.css'
 
 // 스터디 카드 컴포넌트
-function StudyCard({ study, role }) {
+function StudyCard({ study, role, joinedAt }) {
   const getRoleBadgeClass = (role) => {
     const classMap = {
       OWNER: styles.roleOwner,
@@ -17,6 +17,11 @@ function StudyCard({ study, role }) {
     return classMap[role] || styles.roleMember
   }
 
+  // 새 활동 표시 (메시지 + 공지)
+  const newMessages = study.newMessages || 0
+  const newNotices = study.newNotices || 0
+  const hasNewActivity = newMessages > 0 || newNotices > 0
+
   return (
     <Link href={`/my-studies/${study.id}`} className={styles.studyCard}>
       <div className={styles.studyLeft}>
@@ -24,9 +29,24 @@ function StudyCard({ study, role }) {
         <div className={styles.studyInfo}>
           <h4 className={styles.studyName}>{study.name}</h4>
           <div className={styles.studyMeta}>
-            <span className={styles.memberCount}>👥 {study.currentMembers || study.members?.current || 0}명</span>
-            <span className={styles.dot}>•</span>
-            <span className={styles.lastActivity}>{getRelativeTime(study.lastActivity)}</span>
+            <span className={styles.memberCount}>
+              👥 {study.currentMembers || 0}/{study.maxMembers || 20}명
+            </span>
+            {hasNewActivity && (
+              <>
+                <span className={styles.dot}>•</span>
+                <span className={styles.newActivity}>
+                  {newMessages > 0 && <span className={styles.badge}>💬 {newMessages}</span>}
+                  {newNotices > 0 && <span className={styles.badge}>📢 {newNotices}</span>}
+                </span>
+              </>
+            )}
+            {joinedAt && (
+              <>
+                <span className={styles.dot}>•</span>
+                <span className={styles.joinedAt}>가입 {getRelativeTime(joinedAt)}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -55,7 +75,8 @@ export default function StudiesTab({ studies }) {
         {studyList.map((item) => {
           const study = item.study || item
           const role = item.role || study.role
-          return <StudyCard key={study.id} study={study} role={role} />
+          const joinedAt = item.joinedAt
+          return <StudyCard key={study.id} study={study} role={role} joinedAt={joinedAt} />
         })}
       </div>
     )

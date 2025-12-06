@@ -187,6 +187,29 @@
   gap: 4px;
 }
 
+.newActivity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: var(--primary-100);
+  color: var(--primary-700);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.joinedAt {
+  color: var(--gray-400);
+  font-size: 0.75rem;
+}
+
 .studyRight {
   display: flex;
   align-items: center;
