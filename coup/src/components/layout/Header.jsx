@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Header.module.css'
-import { useMe } from '@/lib/hooks/useApi'
+import { useMe, useNotifications, useMarkAllNotificationsAsRead } from '@/lib/hooks/useApi'
 
 /**
  * 상단 헤더
@@ -18,8 +18,6 @@ export default function Header({ onMenuToggle }) {
   const router = useRouter()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
-  const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
 
@@ -27,35 +25,16 @@ export default function Header({ onMenuToggle }) {
   const { data: userData } = useMe()
   const user = userData?.user || session?.user
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const response = await fetch('/api/notifications?limit=5')
-      const data = await response.json()
-      if (data.success) {
-        setNotifications(data.data)
-        setUnreadCount(data.data.filter(n => !n.read).length)
-      }
-    } catch (error) {
-      console.error('알림 로드 실패:', error)
-    }
-  }, [])
+  // React Query로 알림 데이터 가져오기 (자동 동기화)
+  const { data: notificationsData } = useNotifications({ limit: 5 })
+  const markAllReadMutation = useMarkAllNotificationsAsRead()
 
-  // 알림 데이터 가져오기
-  useEffect(() => {
-    if (user) {
-      fetchNotifications()
-    }
-  }, [user, fetchNotifications])
+  const notifications = notificationsData?.data || []
+  const unreadCount = notifications.filter(n => !n.isRead).length
 
   const handleMarkAllRead = async () => {
     try {
-      const response = await fetch('/api/notifications/mark-all-read', {
-        method: 'POST',
-      })
-      if (response.ok) {
-        setNotifications(notifications.map(n => ({ ...n, read: true })))
-        setUnreadCount(0)
-      }
+      await markAllReadMutation.mutateAsync()
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error)
     }
@@ -164,20 +143,28 @@ export default function Header({ onMenuToggle }) {
                   notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`${styles.notificationItem} ${notification.read ? styles.read : ''}`}
+                      className={`${styles.notificationItem} ${notification.isRead ? styles.read : ''}`}
                     >
                       <div className={styles.notificationIcon}>
-                        {notification.type === 'ANNOUNCEMENT' && '📢'}
-                        {notification.type === 'INVITATION' && '💌'}
-                        {notification.type === 'TASK' && '✅'}
-                        {notification.type === 'COMMENT' && '💬'}
-                        {notification.type === 'SYSTEM' && 'ℹ️'}
+                        {notification.studyEmoji || (
+                          notification.type === 'JOIN_APPROVED' ? '✅' :
+                          notification.type === 'NOTICE' ? '📢' :
+                          notification.type === 'FILE' ? '📁' :
+                          notification.type === 'EVENT' ? '📅' :
+                          notification.type === 'TASK' ? '✏️' :
+                          notification.type === 'MEMBER' ? '👤' :
+                          notification.type === 'KICK' ? '🚫' :
+                          notification.type === 'CHAT' ? '💬' :
+                          '🔔'
+                        )}
                       </div>
                       <div className={styles.notificationText}>
-                        <p className={styles.notificationTitle}>{notification.title}</p>
                         <p className={styles.notificationDesc}>
                           {notification.message}
                         </p>
+                        {notification.studyName && (
+                          <p className={styles.notificationStudy}>{notification.studyName}</p>
+                        )}
                         <span className={styles.notificationTime}>
                           {new Date(notification.createdAt).toLocaleDateString('ko-KR')}
                         </span>

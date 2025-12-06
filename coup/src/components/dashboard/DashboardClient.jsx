@@ -176,10 +176,10 @@ export default function DashboardClient({ user: initialUser }) {
           )}
         </section>
 
-        {/* 최근 활동 */}
+        {/* 알림 */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>최근 활동</h2>
+            <h2 className={styles.sectionTitle}>알림</h2>
             <Link href="/notifications" className={styles.sectionLink}>
               전체 보기 →
             </Link>
@@ -188,8 +188,8 @@ export default function DashboardClient({ user: initialUser }) {
           {recentActivities.length === 0 ? (
             <EmptyState
               icon="📭"
-              title="최근 활동이 없습니다"
-              description="스터디에 참여하고 활동을 시작해보세요!"
+              title="알림이 없습니다"
+              description="새로운 알림이 오면 여기에 표시됩니다"
             />
           ) : (
             <div className={styles.activitiesList}>
