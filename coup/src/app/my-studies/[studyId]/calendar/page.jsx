@@ -419,9 +419,11 @@ export default function MyStudyCalendarPage({ params }) {
                   📋 리스트
                 </button>
               </div>
-              <button className={styles.addButton} onClick={handleOpenModal}>
-                + 일정 추가
-              </button>
+              {['OWNER', 'ADMIN'].includes(study?.myRole) && (
+                <button className={styles.addButton} onClick={handleOpenModal}>
+                  + 일정 추가
+                </button>
+              )}
             </div>
           </div>
 

@@ -45,7 +45,7 @@ export default function StudyTaskFormModal({
         status: task.status || 'TODO',
         priority: task.priority || 'MEDIUM',
         dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-        assigneeIds: task.assignees?.map(a => a.userId || a.id) || []
+        assigneeIds: task.assignees?.map(a => a.id) || []
       });
     } else {
       setFormData({

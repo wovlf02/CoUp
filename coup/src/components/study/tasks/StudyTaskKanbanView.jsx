@@ -89,21 +89,21 @@ export default function StudyTaskKanbanView({
                     {task.assignees && task.assignees.length > 0 && (
                       <div className={styles.assignees}>
                         {task.assignees.slice(0, 3).map((assignee, index) => (
-                          assignee.user?.avatar ? (
+                          assignee?.avatar ? (
                             <img
                               key={index}
-                              src={assignee.user.avatar}
-                              alt={assignee.user?.name}
+                              src={assignee.avatar}
+                              alt={assignee?.name}
                               className={styles.assigneeAvatar}
-                              title={assignee.user?.name}
+                              title={assignee?.name}
                             />
                           ) : (
                             <div
                               key={index}
                               className={styles.assigneeAvatarPlaceholder}
-                              title={assignee.user?.name}
+                              title={assignee?.name}
                             >
-                              {assignee.user?.name?.charAt(0) || '?'}
+                              {assignee?.name?.charAt(0) || '?'}
                             </div>
                           )
                         ))}

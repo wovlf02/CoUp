@@ -537,7 +537,7 @@ export function useCreateEvent() {
 export function useUpdateEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, eventId, data }) => api.put(`/api/studies/${studyId}/calendar/${eventId}`, data),
+    mutationFn: ({ studyId, eventId, data }) => api.patch(`/api/studies/${studyId}/calendar/${eventId}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'calendar'])
     },

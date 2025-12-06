@@ -106,11 +106,14 @@ export const POST = withStudyErrorHandler(async (request, context) => {
   const { params } = context
   const { id: studyId } = await params
 
+  console.log('[Calendar POST] Starting - studyId:', studyId)
+
   // 1. ADMIN 권한 확인
   const result = await requireStudyMember(studyId)
   if (result instanceof NextResponse) return result
 
   const { session, member } = result
+  console.log('[Calendar POST] Auth passed - userId:', session.user.id, 'role:', member.role)
 
   // ADMIN 이상 권한 확인
   if (!['OWNER', 'ADMIN'].includes(member.role)) {
@@ -119,7 +122,8 @@ export const POST = withStudyErrorHandler(async (request, context) => {
 
   // 2. 입력 검증
   const body = await request.json()
-  const { title, date, startTime, endTime, location, description, color } = body
+  console.log('[Calendar POST] Request body:', JSON.stringify(body))
+  const { title, date, startTime, endTime, location, color } = body
 
   // 제목 검증 (필수, 2-100자)
   if (!title || !title.trim()) {
@@ -141,12 +145,17 @@ export const POST = withStudyErrorHandler(async (request, context) => {
     throw StudyValidationException.invalidSearchQueryFormat('Invalid date format', { studyId, date })
   }
 
-  // 시작 시간 (미래)
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  dateObj.setHours(0, 0, 0, 0)
+  // 시작 날짜 검증 (오늘 포함 미래만 허용)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  if (dateObj < now) {
+  // UTC 날짜를 로컬 날짜로 변환 (YYYY-MM-DD 형식은 UTC로 해석됨)
+  const eventDate = new Date(dateObj.getTime() + dateObj.getTimezoneOffset() * 60000)
+  eventDate.setHours(0, 0, 0, 0)
+
+  console.log('[Calendar POST] Date validation - today:', today.toISOString(), 'eventDate:', eventDate.toISOString(), 'input:', date)
+
+  if (eventDate < today) {
     throw StudyFeatureException.eventStartTimeInPast(date, { studyId })
   }
 
@@ -170,11 +179,6 @@ export const POST = withStudyErrorHandler(async (request, context) => {
     throw StudyFeatureException.eventEndTimeBeforeStartTime(startTime, endTime, { studyId })
   }
 
-  // 설명 검증 (선택, max 1000자)
-  if (description && description.length > 1000) {
-    throw StudyFeatureException.eventDescriptionTooLong(description, 1000, { studyId })
-  }
-
   // 위치 검증 (선택, max 200자)
   if (location && location.length > 200) {
     throw StudyValidationException.invalidStudyNameLength(location, { min: 0, max: 200 }, {
@@ -192,10 +196,14 @@ export const POST = withStudyErrorHandler(async (request, context) => {
   }
 
   // 일정 중복 확인 (선택)
+  // 날짜를 YYYY-MM-DD 형식에서 Date 객체로 변환 (시간 부분은 00:00:00 UTC)
+  const [year, month, day] = date.split('-').map(Number)
+  const eventDateForDB = new Date(Date.UTC(year, month - 1, day))
+
   const overlapping = await prisma.event.findFirst({
     where: {
       studyId,
-      date: dateObj,
+      date: eventDateForDB,
       OR: [
         {
           startTime: { lte: startTime },
@@ -227,16 +235,17 @@ export const POST = withStudyErrorHandler(async (request, context) => {
   }
 
   // 3. 일정 생성
+  console.log('[Calendar POST] Creating event - studyId:', studyId, 'userId:', session.user.id, 'date:', eventDateForDB.toISOString())
+
   const event = await prisma.event.create({
     data: {
       studyId,
       createdById: session.user.id,
       title: title.trim(),
-      date: dateObj,
+      date: eventDateForDB,
       startTime,
       endTime,
       location: location?.trim() || null,
-      description: description?.trim() || null,
       color: color || '#6366F1'
     },
     include: {

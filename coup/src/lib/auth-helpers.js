@@ -170,9 +170,9 @@ export async function requireStudyMember(studyId, minRole = 'MEMBER') {
     )
   }
 
-  // 역할 확인
-  const roleHierarchy = { MEMBER: 0, OWNER: 1 }
-  if (roleHierarchy[member.role] < roleHierarchy[minRole]) {
+  // 역할 확인 (MEMBER < ADMIN < OWNER)
+  const roleHierarchy = { MEMBER: 0, ADMIN: 1, OWNER: 2 }
+  if ((roleHierarchy[member.role] ?? 0) < (roleHierarchy[minRole] ?? 0)) {
     return NextResponse.json(
       { error: "권한이 부족합니다" },
       { status: 403 }

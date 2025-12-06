@@ -78,19 +78,19 @@ export default function StudyTaskDetailModal({
               <div className={styles.assigneeList}>
                 {task.assignees.map((assignee, index) => (
                   <div key={index} className={styles.assigneeItem}>
-                    {assignee.user?.avatar ? (
+                    {assignee?.avatar ? (
                       <img
-                        src={assignee.user.avatar}
-                        alt={assignee.user?.name}
+                        src={assignee.avatar}
+                        alt={assignee?.name}
                         className={styles.assigneeAvatar}
                       />
                     ) : (
                       <div className={styles.assigneeAvatarPlaceholder}>
-                        {assignee.user?.name?.charAt(0) || '?'}
+                        {assignee?.name?.charAt(0) || '?'}
                       </div>
                     )}
                     <span className={styles.assigneeName}>
-                      {assignee.user?.name || '알 수 없음'}
+                      {assignee?.name || '알 수 없음'}
                     </span>
                   </div>
                 ))}
