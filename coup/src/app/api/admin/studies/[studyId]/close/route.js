@@ -18,7 +18,7 @@ import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-async function closeStudyHandler(request, { params }) {
+async function closeStudyHandler(request, context) {
   const startTime = Date.now()
 
   // 권한 확인
@@ -29,6 +29,7 @@ async function closeStudyHandler(request, { params }) {
 
   const { adminRole } = auth
   const adminId = adminRole.userId
+  const params = await context.params
   const { studyId } = params
 
   if (!studyId) {
@@ -131,7 +132,7 @@ async function closeStudyHandler(request, { params }) {
 }
 
 // 종료 해제 (재개)
-async function reopenStudyHandler(request, { params }) {
+async function reopenStudyHandler(request, context) {
   const startTime = Date.now()
 
   const auth = await requireAdmin(request, PERMISSIONS.STUDY_MANAGE)
@@ -141,6 +142,7 @@ async function reopenStudyHandler(request, { params }) {
 
   const { adminRole } = auth
   const adminId = adminRole.userId
+  const params = await context.params
   const { studyId } = params
 
   AdminLogger.info('Admin study reopen request', { adminId, studyId })

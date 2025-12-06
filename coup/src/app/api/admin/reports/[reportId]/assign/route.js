@@ -19,7 +19,7 @@ import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-async function assignReportHandler(request, { params }) {
+async function assignReportHandler(request, context) {
   const startTime = Date.now()
 
   // 권한 확인
@@ -30,6 +30,7 @@ async function assignReportHandler(request, { params }) {
 
   const { adminRole } = auth
   const currentAdminId = adminRole.userId
+  const params = await context.params
   const { reportId } = params
 
   // reportId 검증

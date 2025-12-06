@@ -15,12 +15,13 @@ import { PERMISSIONS } from '@/lib/admin/permissions'
 
 const prisma = new PrismaClient()
 
-export async function POST(request, { params }) {
+export async function POST(request, context) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.REPORT_RESOLVE)
   if (auth instanceof NextResponse) return auth
 
   const { adminRole } = auth
+  const params = await context.params
   const { reportId } = params
 
   try {

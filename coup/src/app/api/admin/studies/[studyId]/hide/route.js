@@ -18,7 +18,7 @@ import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-async function hideStudyHandler(request, { params }) {
+async function hideStudyHandler(request, context) {
   const startTime = Date.now()
 
   // 권한 확인
@@ -29,6 +29,7 @@ async function hideStudyHandler(request, { params }) {
 
   const { adminRole } = auth
   const adminId = adminRole.userId
+  const params = await context.params
   const { studyId } = params
 
   // studyId 검증
@@ -155,7 +156,7 @@ async function hideStudyHandler(request, { params }) {
 }
 
 // 숨김 해제
-async function unhideStudyHandler(request, { params }) {
+async function unhideStudyHandler(request, context) {
   const startTime = Date.now()
 
   // 권한 확인
@@ -166,6 +167,7 @@ async function unhideStudyHandler(request, { params }) {
 
   const { adminRole } = auth
   const adminId = adminRole.userId
+  const params = await context.params
   const { studyId } = params
 
   AdminLogger.info('Admin study unhide request', { adminId, studyId })

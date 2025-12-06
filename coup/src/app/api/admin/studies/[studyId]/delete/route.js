@@ -18,7 +18,7 @@ import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-async function deleteStudyHandler(request, { params }) {
+async function deleteStudyHandler(request, context) {
   const startTime = Date.now()
 
   // 권한 확인 (삭제는 최고 권한 필요)
@@ -29,6 +29,7 @@ async function deleteStudyHandler(request, { params }) {
 
   const { adminRole } = auth
   const adminId = adminRole.userId
+  const params = await context.params
   const { studyId } = params
 
   if (!studyId) {

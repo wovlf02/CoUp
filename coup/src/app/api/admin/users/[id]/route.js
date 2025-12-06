@@ -26,7 +26,7 @@ const prisma = new PrismaClient()
 /**
  * GET - 사용자 상세 조회
  */
-async function getUserHandler(request, { params }) {
+async function getUserHandler(request, context) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_VIEW)
   if (auth instanceof NextResponse) {
@@ -34,7 +34,8 @@ async function getUserHandler(request, { params }) {
   }
 
   const adminId = auth.adminRole.userId
-  const { id: userId } = await params
+  const params = await context.params
+  const { id: userId } = params
 
   AdminLogger.info('Admin user detail request', { adminId, userId })
 
@@ -99,7 +100,7 @@ async function getUserHandler(request, { params }) {
 /**
  * PATCH - 사용자 정보 수정
  */
-async function patchUserHandler(request, { params }) {
+async function patchUserHandler(request, context) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_EDIT)
   if (auth instanceof NextResponse) {
@@ -107,7 +108,8 @@ async function patchUserHandler(request, { params }) {
   }
 
   const adminId = auth.adminRole.userId
-  const { id: userId } = await params
+  const params = await context.params
+  const { id: userId } = params
   const body = await request.json()
 
   AdminLogger.info('Admin user update request', { adminId, userId, updates: Object.keys(body) })
@@ -175,7 +177,7 @@ async function patchUserHandler(request, { params }) {
 /**
  * DELETE - 사용자 삭제
  */
-async function deleteUserHandler(request, { params }) {
+async function deleteUserHandler(request, context) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_DELETE)
   if (auth instanceof NextResponse) {
@@ -183,7 +185,8 @@ async function deleteUserHandler(request, { params }) {
   }
 
   const adminId = auth.adminRole.userId
-  const { id: userId } = await params
+  const params = await context.params
+  const { id: userId } = params
 
   AdminLogger.warn('Admin user deletion request', { adminId, userId })
 

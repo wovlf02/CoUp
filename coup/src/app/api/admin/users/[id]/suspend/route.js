@@ -22,7 +22,7 @@ import {
 
 const prisma = new PrismaClient()
 
-async function suspendUserHandler(request, { params }) {
+async function suspendUserHandler(request, context) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_EDIT)
   if (auth instanceof NextResponse) {
@@ -30,7 +30,8 @@ async function suspendUserHandler(request, { params }) {
   }
 
   const adminId = auth.adminRole.userId
-  const { id: userId } = await params
+  const params = await context.params
+  const { id: userId } = params
   const body = await request.json()
   const { reason, duration } = body
 

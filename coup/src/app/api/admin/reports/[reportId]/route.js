@@ -18,7 +18,7 @@ import { withAdminErrorHandler } from '@/lib/utils/admin-utils'
 
 const prisma = new PrismaClient()
 
-async function getReportDetailHandler(request, { params }) {
+async function getReportDetailHandler(request, context) {
   const startTime = Date.now()
 
   // 권한 확인
@@ -29,6 +29,9 @@ async function getReportDetailHandler(request, { params }) {
 
   const { adminRole } = auth
   const adminId = adminRole.userId
+
+  // Next.js 15에서 params는 Promise이므로 await 필요
+  const params = await context.params
   const { reportId } = params
 
   // reportId 검증

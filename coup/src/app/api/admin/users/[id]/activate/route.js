@@ -20,7 +20,7 @@ import {
 
 const prisma = new PrismaClient()
 
-async function activateUserHandler(request, { params }) {
+async function activateUserHandler(request, context) {
   // 권한 확인
   const auth = await requireAdmin(request, PERMISSIONS.USER_EDIT)
   if (auth instanceof NextResponse) {
@@ -28,7 +28,8 @@ async function activateUserHandler(request, { params }) {
   }
 
   const adminId = auth.adminRole.userId
-  const { id: userId } = await params
+  const params = await context.params
+  const { id: userId } = params
 
   AdminLogger.info('Admin user activation request', { adminId, userId })
 
