@@ -107,8 +107,7 @@ export default function AdminNavbar({ user, adminRole }) {
       <div className={styles.container}>
         <div className={styles.left}>
           <Link href="/admin" className={styles.logo}>
-            <Image src="/mainlogo.png" alt="CoUp" width={32} height={32} />
-            <span className={styles.logoText}>CoUp Admin</span>
+            <Image src="/mainlogo.png" alt="CoUp" width={120} height={40} />
           </Link>
 
           <ul className={styles.desktopMenu}>

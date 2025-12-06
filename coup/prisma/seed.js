@@ -110,6 +110,17 @@ async function main() {
   })
   console.log('✅ Admin created:', admin.email)
 
+  // 시스템 관리자에게 SUPER_ADMIN 권한 부여
+  await prisma.adminRole.create({
+    data: {
+      userId: admin.id,
+      role: 'SUPER_ADMIN',
+      permissions: { all: true },
+      grantedBy: admin.id,
+    },
+  })
+  console.log('✅ AdminRole created: SUPER_ADMIN')
+
   for (const userData of userNames) {
     const user = await prisma.user.create({
       data: {

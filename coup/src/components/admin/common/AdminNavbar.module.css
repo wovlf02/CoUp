@@ -39,6 +39,13 @@
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-lg);
   transition: var(--transition-opacity);
+  cursor: pointer;
+}
+
+.logo img {
+  width: 120px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .logo:hover {
