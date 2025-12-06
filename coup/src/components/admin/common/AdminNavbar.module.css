@@ -1,4 +1,9 @@
-/* Navbar */
+/* Admin Navbar - Combined Styles */
+/* 이 파일은 분리된 스타일을 하나로 모아 export합니다 */
+
+/* ================================
+   Base Styles
+   ================================ */
 .navbar {
   position: sticky;
   top: 0;
@@ -30,6 +35,12 @@
   gap: var(--space-8);
 }
 
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .logo {
   display: flex;
   align-items: center;
@@ -52,11 +63,19 @@
   opacity: var(--opacity-hover);
 }
 
-.logoText {
-  font-weight: var(--font-weight-bold);
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--z-dropdown) - 1);
+  background: transparent;
 }
 
-/* Desktop Menu */
+/* ================================
+   Menu Styles
+   ================================ */
 .desktopMenu {
   display: flex;
   align-items: center;
@@ -90,14 +109,9 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* Right Section */
-.right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-/* Icon Button */
+/* ================================
+   Icon Button
+   ================================ */
 .iconButton {
   position: relative;
   display: flex;
@@ -118,7 +132,13 @@
   color: var(--text-primary);
 }
 
-/* Notification Badge */
+/* ================================
+   Notification Styles
+   ================================ */
+.notificationContainer {
+  position: relative;
+}
+
 .notificationBadge {
   position: absolute;
   top: 4px;
@@ -135,15 +155,8 @@
   align-items: center;
   justify-content: center;
   border: 2px solid var(--bg-elevated);
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Notification Container */
-.notificationContainer {
-  position: relative;
-}
-
-/* Notification Dropdown */
 .notificationDropdown {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -190,19 +203,6 @@
   flex: 1;
   overflow-y: auto;
   max-height: 360px;
-}
-
-.notificationList::-webkit-scrollbar {
-  width: 6px;
-}
-
-.notificationList::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.notificationList::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
-  border-radius: var(--radius-full);
 }
 
 .notificationItem {
@@ -325,7 +325,9 @@
   background-color: var(--primary-50);
 }
 
-/* Profile */
+/* ================================
+   Profile Styles
+   ================================ */
 .profileContainer {
   position: relative;
 }
@@ -368,18 +370,9 @@
   font-size: var(--font-size-sm);
 }
 
-/* Backdrop */
-.backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: calc(var(--z-dropdown) - 1);
-  background: transparent;
-}
-
-/* Dropdown */
+/* ================================
+   Dropdown Styles
+   ================================ */
 .dropdown {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -395,10 +388,7 @@
 }
 
 .dropdownHeader {
-  padding: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  padding: 0.75rem;
 }
 
 .profileInfo {
@@ -427,10 +417,10 @@
 }
 
 .userName {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
+  font-weight: 600;
   color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
 }
 
 .userEmail {
@@ -439,36 +429,34 @@
 }
 
 .userRole {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  background-color: var(--gray-100);
+  border-radius: 0.25rem;
   display: inline-block;
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--primary-700);
-  background-color: var(--primary-50);
-  border-radius: var(--radius-sm);
 }
 
 .divider {
   height: 1px;
   background-color: var(--border-primary);
-  margin: var(--space-2) 0;
+  margin: 0.25rem 0;
 }
 
 .dropdownItem {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3) var(--space-3);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
-  background: transparent;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: none;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  text-align: left;
   cursor: pointer;
   transition: var(--transition-colors);
-  text-align: left;
 }
 
 .dropdownItem:hover {
@@ -489,7 +477,9 @@
   flex-shrink: 0;
 }
 
-/* Mobile Menu Button */
+/* ================================
+   Mobile Menu
+   ================================ */
 .mobileMenuButton {
   display: none;
   align-items: center;
@@ -509,65 +499,6 @@
   color: var(--text-primary);
 }
 
-.dropdownHeader {
-  padding: 0.75rem;
-}
-
-.userName {
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 0.25rem 0;
-  font-size: 0.875rem;
-}
-
-.userRole {
-  font-size: 0.75rem;
-  color: #6b7280;
-  padding: 0.25rem 0.5rem;
-  background-color: #f3f4f6;
-  border-radius: 0.25rem;
-  display: inline-block;
-}
-
-.divider {
-  height: 1px;
-  background-color: #e5e7eb;
-  margin: 0.25rem 0;
-}
-
-.dropdownItem {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  background: none;
-  border: none;
-  border-radius: 0.5rem;
-  color: #374151;
-  font-size: 0.875rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.dropdownItem:hover {
-  background-color: #f3f4f6;
-}
-
-.mobileMenuButton {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-}
-
-/* Mobile Menu */
 .mobileMenu {
   position: fixed;
   top: 64px;
@@ -621,7 +552,9 @@
   padding-left: calc(var(--space-6) - 4px);
 }
 
-/* Responsive */
+/* ================================
+   Responsive
+   ================================ */
 @media (max-width: 1024px) {
   .desktopMenu {
     display: none;
@@ -635,10 +568,6 @@
 @media (max-width: 768px) {
   .container {
     padding: 0 var(--space-4);
-  }
-
-  .logoText {
-    display: none;
   }
 
   .notificationDropdown {
@@ -659,3 +588,4 @@
     display: none;
   }
 }
+

@@ -580,6 +580,133 @@ export class AdminLogger {
   }
 
   /**
+   * 스터디 조회 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logStudyView(adminId, studyId, context = {}) {
+    this.debug(`Study viewed: ${studyId} by admin: ${adminId}`, {
+      action: 'study_view',
+      adminId,
+      studyId,
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
+   * 스터디 종료 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} reason - 종료 사유
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logStudyClose(adminId, studyId, reason, context = {}) {
+    this.warn(`Study closed: ${studyId} by admin: ${adminId}`, {
+      action: 'study_close',
+      adminId,
+      studyId,
+      reason,
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
+   * 스터디 삭제 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} reason - 삭제 사유
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logStudyDelete(adminId, studyId, reason, context = {}) {
+    this.warn(`Study deleted: ${studyId} by admin: ${adminId}`, {
+      action: 'study_delete',
+      adminId,
+      studyId,
+      reason,
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
+   * 스터디 숨김 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {string} studyId - 스터디 ID
+   * @param {string} reason - 숨김 사유
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logStudyHide(adminId, studyId, reason, context = {}) {
+    this.warn(`Study hidden: ${studyId} by admin: ${adminId}`, {
+      action: 'study_hide',
+      adminId,
+      studyId,
+      reason,
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
+   * 설정 조회 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logSettingsView(adminId, context = {}) {
+    this.debug(`Settings viewed by admin: ${adminId}`, {
+      action: 'settings_view',
+      adminId,
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
+   * 설정 업데이트 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {Object} settings - 업데이트된 설정
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logSettingsUpdate(adminId, settings, context = {}) {
+    this.warn(`Settings updated by admin: ${adminId}`, {
+      action: 'settings_update',
+      adminId,
+      settingsUpdated: Object.keys(settings || {}),
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
+   * 설정 변경 로깅 (캐시 클리어 등 특정 작업)
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {string} changeType - 변경 유형
+   * @param {Object} oldValue - 이전 값
+   * @param {Object} newValue - 새 값
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logSettingsChange(adminId, changeType, oldValue, newValue, context = {}) {
+    this.warn(`Settings changed: ${changeType} by admin: ${adminId}`, {
+      action: 'settings_change',
+      adminId,
+      changeType,
+      oldValue,
+      newValue,
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
    * 신고 처리 액션 로깅
    */
   static logReportProcessed(adminId, reportId, action, context = {}) {
@@ -588,6 +715,52 @@ export class AdminLogger {
       adminId,
       reportId,
       processingAction: action,
+      timestamp: new Date().toISOString(),
+      ...context
+    });
+  }
+
+  /**
+   * 신고 목록/상세 조회 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {string|Object} reportIdOrContext - 신고 ID 또는 컨텍스트 객체
+   * @param {Object} [context] - 추가 컨텍스트 (reportId가 문자열인 경우)
+   */
+  static logReportView(adminId, reportIdOrContext, context = {}) {
+    // 두 가지 호출 방식 지원:
+    // 1. logReportView(adminId, { filters, resultCount, ... })
+    // 2. logReportView(adminId, reportId, { ... })
+    if (typeof reportIdOrContext === 'object') {
+      this.debug(`Report list viewed by admin: ${adminId}`, {
+        action: 'report_view',
+        adminId,
+        timestamp: new Date().toISOString(),
+        ...reportIdOrContext
+      });
+    } else {
+      this.debug(`Report viewed: ${reportIdOrContext} by admin: ${adminId}`, {
+        action: 'report_view',
+        adminId,
+        reportId: reportIdOrContext,
+        timestamp: new Date().toISOString(),
+        ...context
+      });
+    }
+  }
+
+  /**
+   * 분석 페이지 조회 로깅
+   *
+   * @param {string} adminId - 관리자 ID
+   * @param {string} analyticsType - 분석 유형 (overview, users, studies, etc.)
+   * @param {Object} context - 추가 컨텍스트
+   */
+  static logAnalyticsView(adminId, analyticsType, context = {}) {
+    this.debug(`Analytics viewed: ${analyticsType} by admin: ${adminId}`, {
+      action: 'analytics_view',
+      adminId,
+      analyticsType,
       timestamp: new Date().toISOString(),
       ...context
     });
@@ -616,20 +789,6 @@ export class AdminLogger {
         ...context
       });
     }
-  }
-
-  /**
-   * 권한 거부 로깅
-   */
-  static logPermissionDenied(adminId, permission, role, context = {}) {
-    this.warn(`Permission denied: ${adminId}`, {
-      action: 'permission_denied',
-      adminId,
-      permission,
-      role,
-      timestamp: new Date().toISOString(),
-      ...context
-    });
   }
 
   /**
