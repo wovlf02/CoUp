@@ -73,7 +73,7 @@ export default function AdvancedSettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.advanced.devMode}
+              checked={settings.advanced?.devMode ?? false}
               onChange={(e) => handleChange('devMode', e.target.checked)}
               className={styles.checkbox}
             />
@@ -85,10 +85,10 @@ export default function AdvancedSettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.advanced.consoleLogs}
+              checked={settings.advanced?.consoleLogs ?? false}
               onChange={(e) => handleChange('consoleLogs', e.target.checked)}
               className={styles.checkbox}
-              disabled={!settings.advanced.devMode}
+              disabled={!settings.advanced?.devMode}
             />
             <div className={styles.checkboxLabel}>
               <span>콘솔 로그 표시</span>
@@ -98,10 +98,10 @@ export default function AdvancedSettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.advanced.networkLogs}
+              checked={settings.advanced?.networkLogs ?? false}
               onChange={(e) => handleChange('networkLogs', e.target.checked)}
               className={styles.checkbox}
-              disabled={!settings.advanced.devMode}
+              disabled={!settings.advanced?.devMode}
             />
             <div className={styles.checkboxLabel}>
               <span>네트워크 요청 표시</span>
@@ -120,7 +120,7 @@ export default function AdvancedSettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.advanced.betaFeatures}
+              checked={settings.advanced?.betaFeatures ?? false}
               onChange={(e) => handleChange('betaFeatures', e.target.checked)}
               className={styles.checkbox}
             />
@@ -132,7 +132,7 @@ export default function AdvancedSettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.advanced.newUI}
+              checked={settings.advanced?.newUI ?? false}
               onChange={(e) => handleChange('newUI', e.target.checked)}
               className={styles.checkbox}
             />
@@ -144,7 +144,7 @@ export default function AdvancedSettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.advanced.experimentalAPI}
+              checked={settings.advanced?.experimentalAPI ?? false}
               onChange={(e) => handleChange('experimentalAPI', e.target.checked)}
               className={styles.checkbox}
             />

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { defaultSettings, SETTINGS_TABS, applySettings, saveSettings, loadSettings, resetSettings } from '../settingsConfig';
+import { useSettings } from '@/contexts/SettingsContext';
+import { SETTINGS_TABS } from '../settingsConfig';
 import SettingsHeader from './SettingsHeader';
 import SettingsSidebar from './SettingsSidebar';
 import SettingsMobileNav from './SettingsMobileNav';
@@ -20,7 +21,9 @@ export default function SettingsContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
 
-  // 초기 탭과 설정을 useMemo로 계산
+  const { settings: globalSettings, saveSettings, resetSettings, defaultSettings, isLoaded } = useSettings();
+
+  // 초기 탭 계산
   const initialTab = useMemo(() => {
     if (tabParam && SETTINGS_TABS.find(t => t.id === tabParam)) {
       return tabParam;
@@ -28,39 +31,38 @@ export default function SettingsContent() {
     return 'language';
   }, [tabParam]);
 
-  const initialSettings = useMemo(() => {
-    if (typeof window === 'undefined') return defaultSettings;
-    const saved = loadSettings();
-    return saved ? { ...defaultSettings, ...saved } : defaultSettings;
-  }, []);
-
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [settings, setSettings] = useState(initialSettings);
+  const [localSettings, setLocalSettings] = useState(globalSettings);
   const [hasChanges, setHasChanges] = useState(false);
   const [toast, setToast] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // 전역 설정이 로드되면 로컬 상태 업데이트
+  useEffect(() => {
+    if (isLoaded) {
+      setLocalSettings(globalSettings);
+    }
+  }, [isLoaded, globalSettings]);
+
   // 설정 저장
   const handleSave = () => {
-    saveSettings(settings);
+    saveSettings(localSettings);
     setHasChanges(false);
-    applySettings(settings);
     setToast({ message: '설정이 저장되었습니다! ✅', type: 'success' });
   };
 
   // 설정 업데이트
   const updateSettings = (newSettings) => {
-    setSettings(newSettings);
+    setLocalSettings(newSettings);
     setHasChanges(true);
   };
 
   // 설정 초기화
   const handleReset = () => {
     if (confirm('모든 설정을 기본값으로 초기화하시겠습니까?')) {
-      setSettings(defaultSettings);
+      setLocalSettings(defaultSettings);
       resetSettings();
       setHasChanges(false);
-      applySettings(defaultSettings);
       setToast({ message: '설정이 초기화되었습니다.', type: 'info' });
     }
   };
@@ -76,19 +78,19 @@ export default function SettingsContent() {
   const renderContent = () => {
     switch (activeTab) {
       case 'language':
-        return <LanguageSettings settings={settings} onUpdate={updateSettings} />;
+        return <LanguageSettings settings={localSettings} onUpdate={updateSettings} />;
       case 'accessibility':
-        return <AccessibilitySettings settings={settings} onUpdate={updateSettings} />;
+        return <AccessibilitySettings settings={localSettings} onUpdate={updateSettings} />;
       case 'notifications':
-        return <NotificationSettings settings={settings} onUpdate={updateSettings} />;
+        return <NotificationSettings settings={localSettings} onUpdate={updateSettings} />;
       case 'privacy':
-        return <PrivacySettings settings={settings} onUpdate={updateSettings} />;
+        return <PrivacySettings settings={localSettings} onUpdate={updateSettings} />;
       case 'data':
         return <DataSettings />;
       case 'advanced':
-        return <AdvancedSettings settings={settings} onUpdate={updateSettings} />;
+        return <AdvancedSettings settings={localSettings} onUpdate={updateSettings} />;
       default:
-        return <LanguageSettings settings={settings} onUpdate={updateSettings} />;
+        return <LanguageSettings settings={localSettings} onUpdate={updateSettings} />;
     }
   };
 

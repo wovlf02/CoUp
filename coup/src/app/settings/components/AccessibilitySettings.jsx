@@ -11,8 +11,50 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
     });
   };
 
+  const handleFontSizeChange = (value) => {
+    onUpdate({
+      ...settings,
+      fontSize: value
+    });
+  };
+
   return (
     <div className={styles.container}>
+
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>🔤 글꼴 크기</h3>
+        <p style={{ marginBottom: '16px', color: 'var(--gray-600)', fontSize: '0.9rem' }}>
+          화면의 글꼴 크기를 조절합니다. (현재: {settings.fontSize || 100}%)
+        </p>
+        <div className={styles.fontSizeControl}>
+          <input
+            type="range"
+            min="80"
+            max="150"
+            step="10"
+            value={settings.fontSize || 100}
+            onChange={(e) => handleFontSizeChange(Number(e.target.value))}
+            className={styles.slider}
+          />
+          <div className={styles.fontSizeInputWrapper}>
+            <input
+              type="number"
+              min="80"
+              max="150"
+              step="10"
+              value={settings.fontSize || 100}
+              onChange={(e) => handleFontSizeChange(Number(e.target.value))}
+              className={styles.fontSizeInput}
+            />
+            <span className={styles.fontSizeUnit}>%</span>
+          </div>
+        </div>
+        <div className={styles.previewBox}>
+          <p style={{ fontSize: `${(settings.fontSize || 100) / 100}rem` }}>
+            미리보기: 이 텍스트는 설정된 글꼴 크기로 표시됩니다.
+          </p>
+        </div>
+      </div>
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>⌨️ 키보드 탐색</h3>
@@ -20,7 +62,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.keyboardNav}
+              checked={settings.accessibility?.keyboardNav ?? true}
               onChange={(e) => handleChange('keyboardNav', e.target.checked)}
               className={styles.checkbox}
             />
@@ -32,7 +74,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.focusIndicator}
+              checked={settings.accessibility?.focusIndicator ?? true}
               onChange={(e) => handleChange('focusIndicator', e.target.checked)}
               className={styles.checkbox}
             />
@@ -44,7 +86,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.shortcuts}
+              checked={settings.accessibility?.shortcuts ?? true}
               onChange={(e) => handleChange('shortcuts', e.target.checked)}
               className={styles.checkbox}
             />
@@ -62,7 +104,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.screenReader}
+              checked={settings.accessibility?.screenReader ?? true}
               onChange={(e) => handleChange('screenReader', e.target.checked)}
               className={styles.checkbox}
             />
@@ -74,7 +116,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.ariaLabels}
+              checked={settings.accessibility?.ariaLabels ?? true}
               onChange={(e) => handleChange('ariaLabels', e.target.checked)}
               className={styles.checkbox}
             />
@@ -92,7 +134,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.highContrast}
+              checked={settings.accessibility?.highContrast ?? false}
               onChange={(e) => handleChange('highContrast', e.target.checked)}
               className={styles.checkbox}
             />
@@ -104,7 +146,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.colorBlind}
+              checked={settings.accessibility?.colorBlind ?? false}
               onChange={(e) => handleChange('colorBlind', e.target.checked)}
               className={styles.checkbox}
             />
@@ -122,7 +164,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.reduceMotion}
+              checked={settings.accessibility?.reduceMotion ?? false}
               onChange={(e) => handleChange('reduceMotion', e.target.checked)}
               className={styles.checkbox}
             />
@@ -134,7 +176,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.autoplayVideos}
+              checked={settings.accessibility?.autoplayVideos ?? true}
               onChange={(e) => handleChange('autoplayVideos', e.target.checked)}
               className={styles.checkbox}
             />
@@ -146,7 +188,7 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.accessibility.reduceFlash}
+              checked={settings.accessibility?.reduceFlash ?? false}
               onChange={(e) => handleChange('reduceFlash', e.target.checked)}
               className={styles.checkbox}
             />

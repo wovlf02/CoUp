@@ -20,7 +20,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.analytics}
+              checked={settings.privacy?.analytics ?? true}
               onChange={(e) => handleChange('analytics', e.target.checked)}
               className={styles.checkbox}
             />
@@ -32,7 +32,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.errorReports}
+              checked={settings.privacy?.errorReports ?? true}
               onChange={(e) => handleChange('errorReports', e.target.checked)}
               className={styles.checkbox}
             />
@@ -44,7 +44,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.performanceData}
+              checked={settings.privacy?.performanceData ?? false}
               onChange={(e) => handleChange('performanceData', e.target.checked)}
               className={styles.checkbox}
             />
@@ -64,7 +64,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
               type="radio"
               name="cookiePolicy"
               value="essential"
-              checked={settings.privacy.cookiePolicy === 'essential'}
+              checked={settings.privacy?.cookiePolicy === 'essential'}
               onChange={(e) => handleChange('cookiePolicy', e.target.value)}
               className={styles.radio}
             />
@@ -75,7 +75,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
               type="radio"
               name="cookiePolicy"
               value="functional"
-              checked={settings.privacy.cookiePolicy === 'functional'}
+              checked={(settings.privacy?.cookiePolicy ?? 'functional') === 'functional'}
               onChange={(e) => handleChange('cookiePolicy', e.target.value)}
               className={styles.radio}
             />
@@ -86,7 +86,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
               type="radio"
               name="cookiePolicy"
               value="all"
-              checked={settings.privacy.cookiePolicy === 'all'}
+              checked={settings.privacy?.cookiePolicy === 'all'}
               onChange={(e) => handleChange('cookiePolicy', e.target.value)}
               className={styles.radio}
             />
@@ -101,7 +101,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.publicProfile}
+              checked={settings.privacy?.publicProfile ?? true}
               onChange={(e) => handleChange('publicProfile', e.target.checked)}
               className={styles.checkbox}
             />
@@ -113,7 +113,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.publicActivity}
+              checked={settings.privacy?.publicActivity ?? false}
               onChange={(e) => handleChange('publicActivity', e.target.checked)}
               className={styles.checkbox}
             />
@@ -125,7 +125,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.searchable}
+              checked={settings.privacy?.searchable ?? true}
               onChange={(e) => handleChange('searchable', e.target.checked)}
               className={styles.checkbox}
             />
@@ -143,7 +143,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.twoFactor}
+              checked={settings.privacy?.twoFactor ?? false}
               onChange={(e) => handleChange('twoFactor', e.target.checked)}
               className={styles.checkbox}
             />
@@ -155,7 +155,7 @@ export default function PrivacySettings({ settings, onUpdate }) {
           <label className={styles.checkboxOption}>
             <input
               type="checkbox"
-              checked={settings.privacy.loginAlerts}
+              checked={settings.privacy?.loginAlerts ?? true}
               onChange={(e) => handleChange('loginAlerts', e.target.checked)}
               className={styles.checkbox}
             />
