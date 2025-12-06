@@ -9,27 +9,32 @@ import styles from './page.module.css';
 
 export default function NotificationsPage() {
   const { data: session } = useSession();
-  const [notifications, setNotifications] = useState([]);
+  const [allNotifications, setAllNotifications] = useState([]); // 전체 알림 데이터
   const [filter, setFilter] = useState('all'); // all, unread, read
   const [isLoading, setIsLoading] = useState(true);
 
+  // 필터링된 알림 목록 계산 (로컬에서 필터링)
+  const notifications = allNotifications.filter(n => {
+    if (filter === 'unread') return !n.isRead;
+    if (filter === 'read') return n.isRead;
+    return true; // 'all'
+  });
+
+  // 세션 변경 시에만 데이터 로드 (필터 변경 시에는 로컬 필터링)
   useEffect(() => {
     if (session?.user) {
       fetchNotifications();
     }
-  }, [session, filter]);
+  }, [session]);
 
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      const params = {};
-      if (filter === 'unread') params.read = 'false';
-      if (filter === 'read') params.read = 'true';
-
-      const data = await api.get('/api/notifications', params);
+      // 전체 알림을 한 번에 가져옴 (필터 없이)
+      const data = await api.get('/api/notifications', { limit: 100 });
 
       if (data.success) {
-        setNotifications(data.data);
+        setAllNotifications(data.data);
       }
     } catch (error) {
       console.error('알림 로드 실패:', error);
@@ -41,8 +46,8 @@ export default function NotificationsPage() {
   const handleMarkAsRead = async (id) => {
     try {
       await api.post(`/api/notifications/${id}/read`);
-      setNotifications(notifications.map(n =>
-        n.id === id ? { ...n, read: true } : n
+      setAllNotifications(allNotifications.map(n =>
+        n.id === id ? { ...n, isRead: true } : n
       ));
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error);
@@ -52,7 +57,7 @@ export default function NotificationsPage() {
   const handleMarkAllRead = async () => {
     try {
       await api.post('/api/notifications/mark-all-read');
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
+      setAllNotifications(allNotifications.map(n => ({ ...n, isRead: true })));
     } catch (error) {
       console.error('전체 읽음 처리 실패:', error);
     }
@@ -63,7 +68,7 @@ export default function NotificationsPage() {
 
     try {
       await api.delete(`/api/notifications/${id}`);
-      setNotifications(notifications.filter(n => n.id !== id));
+      setAllNotifications(allNotifications.filter(n => n.id !== id));
     } catch (error) {
       console.error('알림 삭제 실패:', error);
     }
@@ -81,7 +86,7 @@ export default function NotificationsPage() {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = allNotifications.filter(n => !n.isRead).length;
 
   return (
     <div className={styles.container}>
@@ -132,8 +137,8 @@ export default function NotificationsPage() {
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`${styles.notificationCard} ${notification.read ? styles.read : styles.unread}`}
-              onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+              className={`${styles.notificationCard} ${notification.isRead ? styles.read : styles.unread}`}
+              onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
             >
               <div className={styles.notificationIcon}>
                 {getNotificationIcon(notification.type)}
@@ -144,7 +149,7 @@ export default function NotificationsPage() {
                   <h3 className={styles.notificationTitle}>
                     {notification.title}
                   </h3>
-                  {!notification.read && (
+                  {!notification.isRead && (
                     <span className={styles.unreadBadge}>NEW</span>
                   )}
                 </div>
