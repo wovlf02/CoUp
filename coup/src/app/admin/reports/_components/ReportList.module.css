@@ -112,3 +112,13 @@
   }
 }
 
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
