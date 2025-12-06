@@ -1,7 +1,7 @@
 /**
  * 알림 카드 컴포넌트
  */
-import { getRelativeTime, getTypeInfo } from '../utils';
+import { getRelativeTime, getTypeInfo, getNotificationTitle, getNotificationMessage } from '../utils';
 import styles from './NotificationCard.module.css';
 
 export default function NotificationCard({
@@ -13,6 +13,10 @@ export default function NotificationCard({
 }) {
   const typeInfo = getTypeInfo(notification.type);
   const isUnread = !notification.isRead;
+  
+  // 알림 제목과 메시지 생성
+  const title = getNotificationTitle(notification);
+  const message = getNotificationMessage(notification);
 
   const handleClick = () => {
     onClick?.(notification);
@@ -43,19 +47,21 @@ export default function NotificationCard({
       {/* 읽지 않음 인디케이터 */}
       {isUnread && <div className={styles.unreadIndicator} />}
 
-      {/* 아이콘 */}
-      <div
+      {/* 아이콘 - 스터디 이모지 우선 사용 */}
+      <div 
         className={styles.iconWrapper}
         style={{ background: typeInfo.bgColor }}
       >
-        <span className={styles.icon}>{typeInfo.icon}</span>
+        <span className={styles.icon}>
+          {notification.studyEmoji || typeInfo.icon}
+        </span>
       </div>
 
       {/* 콘텐츠 */}
       <div className={styles.content}>
         <div className={styles.header}>
-          <span
-            className={styles.typeLabel}
+          <span 
+            className={styles.typeLabel} 
             style={{ color: typeInfo.color }}
           >
             {typeInfo.label}
@@ -65,8 +71,8 @@ export default function NotificationCard({
           </span>
         </div>
 
-        <h3 className={styles.title}>{notification.title}</h3>
-        <p className={styles.message}>{notification.message}</p>
+        <h3 className={styles.title}>{title}</h3>
+        <p className={styles.message}>{message}</p>
 
         {notification.link && (
           <span className={styles.linkHint}>클릭하여 자세히 보기 →</span>
@@ -97,4 +103,3 @@ export default function NotificationCard({
     </article>
   );
 }
-

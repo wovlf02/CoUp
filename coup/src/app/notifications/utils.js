@@ -60,6 +60,61 @@ export const getTypeInfo = (type) => {
 };
 
 /**
+ * 스터디 이름 포맷팅 (이모지 포함)
+ * @param {object} notification - 알림 객체
+ * @returns {string} 포맷된 스터디 이름
+ */
+const formatStudyName = (notification) => {
+  if (!notification.studyName) return '';
+  
+  if (notification.studyEmoji) {
+    return `${notification.studyEmoji} ${notification.studyName}`;
+  }
+  return notification.studyName;
+};
+
+/**
+ * 알림 제목 생성
+ * - studyName이 있으면 스터디 이름 표시
+ * - message가 제목 역할을 할 수 있으면 그것 사용
+ * @param {object} notification - 알림 객체
+ * @returns {string} 알림 제목
+ */
+export const getNotificationTitle = (notification) => {
+  // 스터디 이름이 있으면 스터디 이름을 제목으로
+  const studyName = formatStudyName(notification);
+  
+  if (studyName) {
+    return studyName;
+  }
+
+  // title 필드가 있으면 사용
+  if (notification.title) {
+    return notification.title;
+  }
+
+  // 기본: 타입 라벨
+  const typeInfo = getTypeInfo(notification.type);
+  return typeInfo.label;
+};
+
+/**
+ * 알림 메시지 포맷팅
+ * @param {object} notification - 알림 객체
+ * @returns {string} 포맷된 메시지
+ */
+export const getNotificationMessage = (notification) => {
+  // message가 있으면 사용
+  if (notification.message) {
+    return notification.message;
+  }
+
+  // 기본 메시지
+  const typeInfo = getTypeInfo(notification.type);
+  return `${typeInfo.label} 알림이 도착했습니다`;
+};
+
+/**
  * 알림 목록을 그룹화
  * @param {Array} notifications - 알림 목록
  * @returns {Array} 그룹화된 알림 배열 [groupKey, { label, notifications }]
@@ -100,4 +155,3 @@ export const calculateStats = (notifications) => {
     typeCounts
   };
 };
-
