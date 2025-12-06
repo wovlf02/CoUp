@@ -32,6 +32,8 @@ export default function UserList({ searchParams }) {
       if (searchParams?.status) params.status = searchParams.status
       if (searchParams?.provider) params.provider = searchParams.provider
 
+      console.log('🔍 Fetching users with params:', params)
+
       const result = await api.get('/api/admin/users', params)
       console.log('📊 Users API Response:', result)
 
@@ -41,7 +43,7 @@ export default function UserList({ searchParams }) {
           ? result.data
           : (result.data?.users || result.data || [])
 
-        console.log('📊 Parsed users data:', usersData)
+        console.log('📊 Parsed users data:', usersData.length, 'users')
         setUsers(usersData)
         setPagination(result.pagination || null)
       } else {
@@ -54,7 +56,7 @@ export default function UserList({ searchParams }) {
     } finally {
       setLoading(false)
     }
-  }, [searchParams])
+  }, [searchParams?.page, searchParams?.search, searchParams?.status, searchParams?.provider])
 
   useEffect(() => {
     if (status === 'unauthenticated') {

@@ -1,13 +1,12 @@
+'use client'
+
 import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import UserList from './_components/UserList'
 import UserFilters from './_components/UserFilters'
 import styles from './page.module.css'
 
-export const metadata = {
-  title: '사용자 관리 - CoUp Admin',
-}
-
-export default function UsersPage({ searchParams }) {
+export default function UsersPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -17,13 +16,29 @@ export default function UsersPage({ searchParams }) {
         </div>
       </div>
 
-      <UserFilters />
+      <Suspense fallback={null}>
+        <UserFilters />
+      </Suspense>
 
       <Suspense fallback={<UserListSkeleton />}>
-        <UserList searchParams={searchParams} />
+        <UserListWrapper />
       </Suspense>
     </div>
   )
+}
+
+function UserListWrapper() {
+  const searchParams = useSearchParams()
+
+  // searchParams를 객체로 변환
+  const params = {
+    page: searchParams.get('page') || '1',
+    search: searchParams.get('search') || '',
+    status: searchParams.get('status') || '',
+    provider: searchParams.get('provider') || '',
+  }
+
+  return <UserList searchParams={params} />
 }
 
 function UserListSkeleton() {

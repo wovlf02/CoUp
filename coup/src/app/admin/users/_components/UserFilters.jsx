@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import styles from './UserFilters.module.css'
 
@@ -8,23 +8,29 @@ export default function UserFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [search, setSearch] = useState(searchParams.get('search') || '')
-  const [status, setStatus] = useState(searchParams.get('status') || 'all')
-  const [provider, setProvider] = useState(searchParams.get('provider') || 'all')
+  // 초기값을 URL 파라미터에서 가져옴
+  const initialSearch = searchParams.get('search') || ''
+  const initialStatus = searchParams.get('status') || 'all'
+  const initialProvider = searchParams.get('provider') || 'all'
+
+  const [search, setSearch] = useState(initialSearch)
+  const [status, setStatus] = useState(initialStatus)
+  const [provider, setProvider] = useState(initialProvider)
+
+  const updateFilters = useCallback((filters) => {
+    const params = new URLSearchParams()
+
+    if (filters.search?.trim()) params.set('search', filters.search.trim())
+    if (filters.status && filters.status !== 'all') params.set('status', filters.status)
+    if (filters.provider && filters.provider !== 'all') params.set('provider', filters.provider)
+
+    const queryString = params.toString()
+    router.push(queryString ? `/admin/users?${queryString}` : '/admin/users')
+  }, [router])
 
   const handleSearch = (e) => {
     e.preventDefault()
     updateFilters({ search, status, provider })
-  }
-
-  const updateFilters = (filters) => {
-    const params = new URLSearchParams()
-
-    if (filters.search) params.set('search', filters.search)
-    if (filters.status !== 'all') params.set('status', filters.status)
-    if (filters.provider !== 'all') params.set('provider', filters.provider)
-
-    router.push(`/admin/users?${params.toString()}`)
   }
 
   const handleReset = () => {
@@ -48,14 +54,18 @@ export default function UserFilters() {
             onChange={(e) => setSearch(e.target.value)}
             className={styles.searchInput}
           />
+          <button type="submit" className={styles.searchButton}>
+            검색
+          </button>
         </div>
 
         <div className={styles.filters}>
           <select
             value={status}
             onChange={(e) => {
-              setStatus(e.target.value)
-              updateFilters({ search, status: e.target.value, provider })
+              const newStatus = e.target.value
+              setStatus(newStatus)
+              updateFilters({ search, status: newStatus, provider })
             }}
             className={styles.select}
           >
@@ -68,8 +78,9 @@ export default function UserFilters() {
           <select
             value={provider}
             onChange={(e) => {
-              setProvider(e.target.value)
-              updateFilters({ search, status, provider: e.target.value })
+              const newProvider = e.target.value
+              setProvider(newProvider)
+              updateFilters({ search, status, provider: newProvider })
             }}
             className={styles.select}
           >
