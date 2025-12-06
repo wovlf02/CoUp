@@ -49,17 +49,36 @@ export async function GET(request, context) {
       return NextResponse.json({ error: 'Study not found' }, { status: 404 })
     }
 
-    // 현재 사용자의 역할 찾기
+    // 현재 사용자의 역할 찾기 - 별도 쿼리로 정확히 조회
     let myRole = null
     let myJoinedAt = null
+    let myMembershipStatus = null
+
     if (currentUserId) {
-      const myMembership = study.members.find(m => m.userId === currentUserId)
-      myRole = myMembership?.role || null
-      myJoinedAt = myMembership?.joinedAt || null
+      // 현재 사용자의 멤버십을 직접 조회 (상태와 관계없이)
+      const myMembership = await prisma.studyMember.findUnique({
+        where: {
+          studyId_userId: {
+            studyId: studyId,
+            userId: currentUserId
+          }
+        },
+        select: {
+          role: true,
+          status: true,
+          joinedAt: true
+        }
+      })
+
+      if (myMembership) {
+        myRole = myMembership.role
+        myJoinedAt = myMembership.joinedAt
+        myMembershipStatus = myMembership.status
+      }
 
       // 디버그 로그 (개발 환경에서만)
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Study API] User ${currentUserId} role in study ${studyId}: ${myRole}`)
+        console.log(`[Study API] User ${currentUserId} role in study ${studyId}: ${myRole} (status: ${myMembershipStatus})`)
       }
     }
 
@@ -69,6 +88,7 @@ export async function GET(request, context) {
       currentMembers: study._count.members,
       myRole, // 현재 사용자의 역할 추가
       myJoinedAt, // 현재 사용자의 가입일 추가
+      myMembershipStatus, // 현재 사용자의 멤버십 상태 추가
     }
     
     return NextResponse.json({ success: true, data: responseData }, { status: 200 })

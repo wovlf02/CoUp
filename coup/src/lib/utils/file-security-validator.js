@@ -25,15 +25,21 @@ const readFile = promisify(fs.readFile);
 export const ALLOWED_FILE_TYPES = {
   // 이미지
   IMAGE: {
-    extensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'],
+    extensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.tif', '.heic', '.heif'],
     mimeTypes: [
       'image/jpeg',
       'image/png',
       'image/gif',
       'image/webp',
       'image/svg+xml',
+      'image/bmp',
+      'image/x-icon',
+      'image/vnd.microsoft.icon',
+      'image/tiff',
+      'image/heic',
+      'image/heif',
     ],
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 10 * 1024 * 1024, // 10MB
   },
 
   // 문서

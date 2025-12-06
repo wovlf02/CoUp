@@ -111,9 +111,17 @@ class ApiClient {
 
       // 에러 응답 처리
       if (!response.ok) {
-        const errorMessage = typeof data === 'object'
-          ? (data.error || data.message || `HTTP ${response.status}`)
-          : data || `HTTP ${response.status}`
+        let errorMessage
+        if (typeof data === 'object') {
+          // data.error가 객체인 경우 (StudyException의 toResponse() 형식)
+          if (typeof data.error === 'object' && data.error !== null) {
+            errorMessage = data.error.message || data.error.code || `HTTP ${response.status}`
+          } else {
+            errorMessage = data.error || data.message || `HTTP ${response.status}`
+          }
+        } else {
+          errorMessage = data || `HTTP ${response.status}`
+        }
 
         console.error(`❌ [API] ${method} ${url} - ${response.status}:`, errorMessage)
         throw new ApiError(errorMessage, response.status, data)

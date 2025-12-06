@@ -54,10 +54,13 @@ export async function GET(request) {
       }
     }
 
-    // 4. DB 쿼리
+    // 4. DB 쿼리 - ACTIVE 또는 PENDING 상태만 조회 (KICKED, LEFT 제외)
     const studyMembers = await prisma.studyMember.findMany({
       where: {
-        userId
+        userId,
+        status: {
+          in: ['ACTIVE', 'PENDING']
+        }
       },
       include: {
         study: {

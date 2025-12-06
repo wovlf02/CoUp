@@ -95,9 +95,39 @@ export const POST = withStudyErrorHandler(async (request, context) => {
   const folderId = rawFolderId && rawFolderId !== '' ? rawFolderId : null;
   const rawCategory = formData.get('category');
   
+  // 파일 확장자에 따라 카테고리 자동 결정
+  const getAutoCategory = (filename) => {
+    if (!filename) return 'DOCUMENT';
+    const ext = filename.toLowerCase().split('.').pop();
+
+    // 이미지
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif', 'heic', 'heif'].includes(ext)) {
+      return 'IMAGE';
+    }
+    // 비디오
+    if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v'].includes(ext)) {
+      return 'VIDEO';
+    }
+    // 오디오
+    if (['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma'].includes(ext)) {
+      return 'AUDIO';
+    }
+    // 압축
+    if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz'].includes(ext)) {
+      return 'ARCHIVE';
+    }
+    // 코드
+    if (['js', 'jsx', 'ts', 'tsx', 'py', 'java', 'cpp', 'c', 'h', 'hpp', 'cs', 'go', 'rb', 'php', 'swift', 'kt', 'rs', 'html', 'css', 'scss', 'less', 'json', 'xml', 'yaml', 'yml', 'sql', 'sh', 'bash'].includes(ext)) {
+      return 'CODE';
+    }
+    // 기본: 문서
+    return 'DOCUMENT';
+  };
+
   // 유효한 카테고리 목록
   const validCategories = ['IMAGE', 'DOCUMENT', 'ARCHIVE', 'VIDEO', 'AUDIO', 'CODE'];
-  const category = validCategories.includes(rawCategory) ? rawCategory : 'DOCUMENT';
+  // rawCategory가 유효하면 사용, 아니면 파일 확장자 기반 자동 결정
+  const category = validCategories.includes(rawCategory) ? rawCategory : getAutoCategory(file?.name);
 
   // 3. 파일 존재 확인
   if (!file) {
