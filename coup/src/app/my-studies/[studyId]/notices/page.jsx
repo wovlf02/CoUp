@@ -220,11 +220,6 @@ export default function MyStudyNoticesPage({ params }) {
                   className={`${styles.noticeCard} ${styles.pinnedCard}`}
                   onClick={() => handleViewNotice(notice)}
                 >
-                  {/* 중요 배지 (좌측 상단) */}
-                  {notice.isImportant && (
-                    <span className={styles.importantBadgeTop}>⭐ 중요</span>
-                  )}
-
                   {/* 상단: 작성자 정보 (좌측) + 메타 정보 (우측) */}
                   <div className={styles.noticeCardHeader}>
                     <div className={styles.authorSection}>
@@ -234,20 +229,25 @@ export default function MyStudyNoticesPage({ params }) {
                       <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
                     </div>
                     <div className={styles.metaSection}>
-                      <span className={styles.pinnedBadge}>📌 고정</span>
-                      <div className={styles.dateTimeGroup}>
-                        <span className={styles.noticeDateTime}>
-                          {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                          })} {new Date(notice.createdAt).toLocaleTimeString('ko-KR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: false
-                          })}
-                        </span>
+                      <span className={styles.noticeDateTime}>
+                        {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        })} {new Date(notice.createdAt).toLocaleTimeString('ko-KR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: false
+                        })}
+                      </span>
+                      <div className={styles.badgeViewRow}>
+                        <div className={styles.badgeGroup}>
+                          <span className={styles.pinnedBadge}>📌 고정</span>
+                          {notice.isImportant && (
+                            <span className={styles.importantBadge}>⭐ 중요</span>
+                          )}
+                        </div>
                         <span className={styles.viewCount}>👁️ {notice.views || 0}</span>
                       </div>
                     </div>
@@ -346,11 +346,6 @@ export default function MyStudyNoticesPage({ params }) {
                   className={`${styles.noticeCard} ${notice.isImportant ? styles.importantCard : ''}`}
                   onClick={() => handleViewNotice(notice)}
                 >
-                  {/* 중요 배지 (좌측 상단) */}
-                  {notice.isImportant && (
-                    <span className={styles.importantBadgeTop}>⭐ 중요</span>
-                  )}
-
                   {/* 상단: 작성자 정보 (좌측) + 메타 정보 (우측) */}
                   <div className={styles.noticeCardHeader}>
                     <div className={styles.authorSection}>
@@ -360,19 +355,29 @@ export default function MyStudyNoticesPage({ params }) {
                       <span className={styles.authorName}>{notice.author?.name || '작성자'}</span>
                     </div>
                     <div className={styles.metaSection}>
-                      <div className={styles.dateTimeGroup}>
-                        <span className={styles.noticeDateTime}>
-                          {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                          })} {new Date(notice.createdAt).toLocaleTimeString('ko-KR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: false
-                          })}
-                        </span>
+                      <span className={styles.noticeDateTime}>
+                        {new Date(notice.createdAt).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        })} {new Date(notice.createdAt).toLocaleTimeString('ko-KR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: false
+                        })}
+                      </span>
+                      <div className={styles.badgeViewRow}>
+                        {(notice.isPinned || notice.isImportant) && (
+                          <div className={styles.badgeGroup}>
+                            {notice.isPinned && (
+                              <span className={styles.pinnedBadge}>📌 고정</span>
+                            )}
+                            {notice.isImportant && (
+                              <span className={styles.importantBadge}>⭐ 중요</span>
+                            )}
+                          </div>
+                        )}
                         <span className={styles.viewCount}>👁️ {notice.views || 0}</span>
                       </div>
                     </div>
