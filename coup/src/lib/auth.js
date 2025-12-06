@@ -106,12 +106,76 @@ export const authConfig = {
             throw new Error(AUTH_ERRORS.ACCOUNT_DELETED.message)
           }
 
+          // 정지 상태 확인 및 기간 만료 체크
           if (user.status === "SUSPENDED") {
-            console.log('❌ [AUTH] 정지된 계정')
-            const message = user.suspendReason
-              ? `${AUTH_ERRORS.ACCOUNT_SUSPENDED.message}. 사유: ${user.suspendReason}`
-              : AUTH_ERRORS.ACCOUNT_SUSPENDED.message
-            throw new Error(message)
+            // 정지 기간이 만료됐는지 확인
+            if (user.suspendedUntil && new Date(user.suspendedUntil) < new Date()) {
+              // 정지 기간 만료 - 자동 해제
+              console.log('🔓 [AUTH] 정지 기간 만료, 자동 해제 중...')
+              try {
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: {
+                    status: 'ACTIVE',
+                    suspendedUntil: null,
+                    suspendReason: null,
+                  }
+                })
+                // 관련 제재 비활성화
+                await prisma.sanction.updateMany({
+                  where: {
+                    userId: user.id,
+                    type: 'SUSPENSION',
+                    isActive: true,
+                  },
+                  data: { isActive: false }
+                })
+                user.status = 'ACTIVE'
+                console.log('✅ [AUTH] 정지 자동 해제 완료')
+              } catch (updateError) {
+                logAuthError('authorize - 정지 자동 해제', updateError, { userId: user.id })
+              }
+            } else {
+              // 아직 정지 중
+              console.log('❌ [AUTH] 정지된 계정')
+              const suspendedUntilStr = user.suspendedUntil
+                ? new Date(user.suspendedUntil).toLocaleDateString('ko-KR')
+                : '영구 정지'
+              const message = user.suspendReason
+                ? `계정이 정지되었습니다. (${suspendedUntilStr}까지)\n사유: ${user.suspendReason}`
+                : `계정이 정지되었습니다. (${suspendedUntilStr}까지)`
+              throw new Error(message)
+            }
+          }
+
+          // 활동 제한 상태 확인 및 기간 만료 체크
+          let restrictedActions = user.restrictedActions || []
+          if (user.restrictedUntil) {
+            if (new Date(user.restrictedUntil) < new Date()) {
+              // 제한 기간 만료 - 자동 해제
+              console.log('🔓 [AUTH] 활동 제한 기간 만료, 자동 해제 중...')
+              try {
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: {
+                    restrictedUntil: null,
+                    restrictedActions: [],
+                  }
+                })
+                await prisma.sanction.updateMany({
+                  where: {
+                    userId: user.id,
+                    type: 'RESTRICTION',
+                    isActive: true,
+                  },
+                  data: { isActive: false }
+                })
+                restrictedActions = []
+                console.log('✅ [AUTH] 활동 제한 자동 해제 완료')
+              } catch (updateError) {
+                logAuthError('authorize - 활동 제한 자동 해제', updateError, { userId: user.id })
+              }
+            }
           }
 
           // 6. 관리자 권한 확인
@@ -155,6 +219,8 @@ export const authConfig = {
             provider: user.provider,
             isAdmin: isAdmin,
             adminRole: adminRole?.role || null,
+            restrictedActions: restrictedActions,
+            restrictedUntil: user.restrictedUntil,
           }
 
           console.log('✅ [AUTH] authorize 완료, 반환값:', result)
@@ -209,6 +275,8 @@ export const authConfig = {
           token.provider = user.provider
           token.isAdmin = user.isAdmin
           token.adminRole = user.adminRole
+          token.restrictedActions = user.restrictedActions || []
+          token.restrictedUntil = user.restrictedUntil
 
           console.log('🔑 [AUTH] JWT 생성:', {
             email: token.email,
@@ -253,6 +321,8 @@ export const authConfig = {
           provider: token.provider || 'CREDENTIALS',
           isAdmin: false,
           adminRole: null,
+          restrictedActions: token.restrictedActions || [],
+          restrictedUntil: token.restrictedUntil || null,
         }
 
         // 관리자 권한을 DB에서 실시간 조회 (매 요청마다 최신 정보)

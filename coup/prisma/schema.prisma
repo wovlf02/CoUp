@@ -30,6 +30,10 @@ model User {
   suspendedUntil DateTime?
   suspendReason  String?
 
+  // 활동 제한
+  restrictedUntil   DateTime?
+  restrictedActions String[]  @default([])
+
   // 타임스탬프
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -489,6 +493,7 @@ model Sanction {
   duration        String? // "1d", "3d", "7d", "30d", "permanent"
   expiresAt       DateTime?
   relatedReportId String?
+  metadata        String?      @db.Text // JSON 형식의 추가 데이터
 
   // 해제 정보
   isActive        Boolean   @default(true)
@@ -510,6 +515,7 @@ enum SanctionType {
   CHAT_BAN // 채팅 금지
   STUDY_CREATE_BAN // 스터디 생성 금지
   FILE_UPLOAD_BAN // 파일 업로드 금지
+  RESTRICTION // 활동 제한
   SUSPENSION // 계정 정지
   PERMANENT_BAN // 영구 정지
 }

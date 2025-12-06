@@ -109,6 +109,40 @@ export async function POST(request, context) {
                 : null,
             },
           })
+
+          // 경고 횟수 확인하여 자동 제재
+          const warningCount = await tx.warning.count({
+            where: { userId: report.targetId }
+          })
+
+          // 경고 3회 이상 시 자동 정지
+          if (warningCount >= 3) {
+            const autoSuspendDays = warningCount >= 5 ? 30 : warningCount >= 4 ? 14 : 7
+            const autoExpiresAt = new Date()
+            autoExpiresAt.setDate(autoExpiresAt.getDate() + autoSuspendDays)
+
+            await tx.sanction.create({
+              data: {
+                userId: report.targetId,
+                adminId: adminRole.userId,
+                type: 'SUSPENSION',
+                reason: `경고 ${warningCount}회 누적으로 인한 자동 정지`,
+                duration: `${autoSuspendDays}d`,
+                expiresAt: autoExpiresAt,
+                relatedReportId: reportId,
+                isActive: true,
+              },
+            })
+
+            await tx.user.update({
+              where: { id: report.targetId },
+              data: {
+                status: 'SUSPENDED',
+                suspendedUntil: autoExpiresAt,
+                suspendReason: `경고 ${warningCount}회 누적으로 인한 자동 정지`,
+              },
+            })
+          }
         } else if (linkedAction === 'suspend_user' && report.targetType === 'USER') {
           // 사용자 정지
           const duration = linkedActionDetails?.duration || '7d'
@@ -119,7 +153,9 @@ export async function POST(request, context) {
               '1d': 1,
               '3d': 3,
               '7d': 7,
+              '14d': 14,
               '30d': 30,
+              '90d': 90,
             }
             const days = durationMap[duration] || 7
             expiresAt = new Date()
@@ -147,6 +183,57 @@ export async function POST(request, context) {
               status: 'SUSPENDED',
               suspendedUntil: expiresAt,
               suspendReason: resolution,
+            },
+          })
+        } else if (linkedAction === 'restrict_user' && report.targetType === 'USER') {
+          // 활동 제한
+          const duration = linkedActionDetails?.duration || '7d'
+          let expiresAt = null
+
+          if (duration !== 'permanent') {
+            const durationMap = {
+              '1d': 1,
+              '3d': 3,
+              '7d': 7,
+              '14d': 14,
+              '30d': 30,
+              '90d': 90,
+            }
+            const days = durationMap[duration] || 7
+            expiresAt = new Date()
+            expiresAt.setDate(expiresAt.getDate() + days)
+          }
+
+          // 제한 유형 결정
+          const restrictions = []
+          if (linkedActionDetails?.restrictStudyCreate) restrictions.push('STUDY_CREATE')
+          if (linkedActionDetails?.restrictStudyJoin) restrictions.push('STUDY_JOIN')
+          if (linkedActionDetails?.restrictMessage) restrictions.push('MESSAGE')
+          if (linkedActionDetails?.restrictType === 'all' || restrictions.length === 0) {
+            restrictions.push('STUDY_CREATE', 'STUDY_JOIN', 'MESSAGE')
+          }
+
+          // 제재 기록 생성
+          actionResult = await tx.sanction.create({
+            data: {
+              userId: report.targetId,
+              adminId: adminRole.userId,
+              type: 'RESTRICTION',
+              reason: resolution,
+              duration,
+              expiresAt,
+              relatedReportId: reportId,
+              isActive: true,
+              metadata: JSON.stringify({ restrictions }),
+            },
+          })
+
+          // 사용자 제한 상태 업데이트
+          await tx.user.update({
+            where: { id: report.targetId },
+            data: {
+              restrictedUntil: expiresAt,
+              restrictedActions: restrictions,
             },
           })
         } else if (linkedAction === 'delete_content') {
