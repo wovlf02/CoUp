@@ -310,80 +310,76 @@ export const authConfig = {
           throw new Error(AUTH_ERRORS.INVALID_SESSION.message)
         }
 
-        // 기본 사용자 정보
+        // 기본 사용자 정보 (토큰에서 최소한만)
         session.user = {
           id: token.id || '',
           email: token.email || '',
           name: token.name || '',
-          image: token.image || null,
-          role: token.role || 'USER',
-          status: token.status || 'ACTIVE',
-          provider: token.provider || 'CREDENTIALS',
+          image: null, // DB에서 조회
           isAdmin: false,
           adminRole: null,
-          restrictedActions: token.restrictedActions || [],
-          restrictedUntil: token.restrictedUntil || null,
         }
 
-        // 관리자 권한을 DB에서 실시간 조회 (매 요청마다 최신 정보)
+        // DB에서 사용자 정보 및 관리자 권한 조회
         try {
-          const adminRole = await prisma.adminRole.findUnique({
-            where: { userId: token.id },
-            select: {
-              role: true,
-              expiresAt: true,
-            }
-          })
+          const [adminRole, user] = await Promise.all([
+            prisma.adminRole.findUnique({
+              where: { userId: token.id },
+              select: { role: true, expiresAt: true }
+            }),
+            prisma.user.findUnique({
+              where: { id: token.id },
+              select: {
+                status: true,
+                avatar: true,
+                role: true,
+                provider: true,
+                restrictedActions: true,
+                restrictedUntil: true,
+              }
+            })
+          ])
 
+          // 관리자 권한 설정
           const isAdmin = adminRole && (!adminRole.expiresAt || new Date(adminRole.expiresAt) > new Date())
-
           if (isAdmin) {
             session.user.isAdmin = true
             session.user.adminRole = adminRole.role
           }
 
+          // 사용자 정보 설정
+          if (user) {
+            // avatar가 base64 데이터인 경우 null로 설정 (URL만 허용)
+            const avatar = user.avatar
+            if (avatar && !avatar.startsWith('data:')) {
+              session.user.image = avatar
+            }
+
+            session.user.status = user.status
+            session.user.role = user.role
+            session.user.provider = user.provider
+            session.user.restrictedActions = user.restrictedActions || []
+            session.user.restrictedUntil = user.restrictedUntil
+
+            // 계정 상태 확인
+            if (user.status === 'DELETED') {
+              throw new Error(AUTH_ERRORS.ACCOUNT_DELETED.message)
+            }
+            if (user.status === 'SUSPENDED') {
+              throw new Error(AUTH_ERRORS.ACCOUNT_SUSPENDED.message)
+            }
+          }
+
           console.log('📝 [AUTH] Session created:', {
             email: session.user.email,
             isAdmin: session.user.isAdmin,
-            adminRole: session.user.adminRole,
-            fetchedFromDB: !!adminRole
           })
-        } catch (dbError) {
-          logAuthError('session - 관리자 권한 조회', dbError, { userId: token.id })
-          // 에러 발생 시에도 세션은 반환 (관리자 권한 없는 상태로)
-        }
-
-        // 사용자 계정 상태 확인 (DB 실시간 조회)
-        try {
-          const user = await prisma.user.findUnique({
-            where: { id: token.id },
-            select: { status: true }
-          })
-
-          if (!user) {
-            console.log('❌ [AUTH] 사용자를 찾을 수 없음 (삭제됨)')
-            throw new Error(AUTH_ERRORS.ACCOUNT_DELETED.message)
-          }
-
-          if (user.status === 'DELETED') {
-            console.log('❌ [AUTH] 삭제된 계정')
-            throw new Error(AUTH_ERRORS.ACCOUNT_DELETED.message)
-          }
-
-          if (user.status === 'SUSPENDED') {
-            console.log('❌ [AUTH] 정지된 계정')
-            throw new Error(AUTH_ERRORS.ACCOUNT_SUSPENDED.message)
-          }
-
-          // 세션에 최신 상태 반영
-          session.user.status = user.status
         } catch (dbError) {
           if (dbError.message === AUTH_ERRORS.ACCOUNT_DELETED.message ||
               dbError.message === AUTH_ERRORS.ACCOUNT_SUSPENDED.message) {
             throw dbError
           }
-          logAuthError('session - 사용자 상태 조회', dbError, { userId: token.id })
-          // DB 조회 실패 시 토큰의 상태 사용
+          logAuthError('session - DB 조회', dbError, { userId: token.id })
         }
 
         return session

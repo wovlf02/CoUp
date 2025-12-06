@@ -21,9 +21,22 @@
   white-space: nowrap;
 }
 
+.targetLink {
+  text-decoration: none;
+}
+
+.targetLink:hover .targetTitle {
+  color: var(--primary-600);
+  text-decoration: underline;
+}
+
 .targetType {
   font-size: var(--font-size-xs);
   color: var(--text-tertiary);
+}
+
+.targetStatus {
+  color: var(--text-quaternary);
 }
 
 /* Reporter Name */
