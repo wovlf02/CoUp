@@ -66,7 +66,6 @@ export default function AdvancedSettings({ settings, onUpdate }) {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>📱 고급 설정</h2>
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>👨‍💻 개발자 모드</h3>

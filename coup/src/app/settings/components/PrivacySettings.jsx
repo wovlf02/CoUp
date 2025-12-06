@@ -13,7 +13,6 @@ export default function PrivacySettings({ settings, onUpdate }) {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>🔒 개인정보 및 보안</h2>
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>📊 데이터 수집</h3>

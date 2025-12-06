@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { formatDateTimeKST } from '@/utils/time';
 import { formatBytes } from '@/utils/file'; // formatBytes 유틸리티 함수 임포트
 import { useSession } from 'next-auth/react'; // useSession 임포트
-import { useStudy } from '@/hooks/useStudy';
-import { useNotice } from '@/hooks/useNotice';
+import { useStudy, useNotice } from '@/lib/hooks/useApi';
 import styles from './page.module.css';
 
 export default function AnnouncementDetailPage({ params }) {

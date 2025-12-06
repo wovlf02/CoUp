@@ -10,7 +10,6 @@ export default function LanguageSettings({ settings, onUpdate }) {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>🌍 언어 설정</h2>
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>표시 언어</h3>

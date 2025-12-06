@@ -13,7 +13,6 @@ export default function AccessibilitySettings({ settings, onUpdate }) {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>♿ 접근성</h2>
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>⌨️ 키보드 탐색</h3>

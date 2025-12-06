@@ -3,7 +3,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   animation: fadeIn 0.4s ease;
 }
 
@@ -22,7 +22,7 @@
 .sectionCard {
   background: white;
   border-radius: 20px;
-  padding: 28px;
+  padding: 24px;
   border: 1px solid var(--gray-100);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.3s ease;
@@ -41,45 +41,53 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--gray-900);
-  margin: 0 0 20px;
+  margin: 0 0 16px;
 }
 
 .titleIcon {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
 }
 
 /* 설정 목록 */
 .settingsList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .settingItem {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 18px 20px;
+  gap: 16px;
+  padding: 16px 18px;
   background: var(--gray-50);
   border-radius: 14px;
-  border: 2px solid var(--gray-100);
+  border: 2px solid transparent;
   text-decoration: none;
   transition: all 0.25s ease;
 }
 
 .settingItem:hover {
   background: white;
-  border-color: var(--primary-300);
+  border-color: var(--primary-200);
   transform: translateX(6px);
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.1);
 }
 
 .settingIcon {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .settingInfo {
@@ -90,14 +98,27 @@
 }
 
 .settingName {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--gray-900);
-  font-size: 1rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 2px 8px;
+  background: var(--primary-100);
+  color: var(--primary-700);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
 .settingDesc {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--gray-500);
+  line-height: 1.4;
 }
 
 .settingArrow {
@@ -115,26 +136,26 @@
 .accountActions {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .logoutBtn,
 .deleteBtn {
   width: 100%;
-  padding: 18px 24px;
+  padding: 16px 20px;
   border-radius: 14px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.25s ease;
   text-align: left;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .btnIcon {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   flex-shrink: 0;
 }
 
@@ -149,7 +170,7 @@
 }
 
 .btnWarning {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 400;
   opacity: 0.8;
 }
@@ -184,38 +205,78 @@
   box-shadow: 0 6px 20px rgba(220, 38, 38, 0.15);
 }
 
+/* 앱 정보 */
+.appInfo {
+  text-align: center;
+  padding: 20px;
+  color: var(--gray-500);
+}
+
+.appVersion {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--gray-400);
+}
+
+.appLinks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.appLink {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.appLink:hover {
+  color: var(--primary-500);
+  text-decoration: underline;
+}
+
+.linkDivider {
+  color: var(--gray-300);
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .sectionCard {
-    padding: 22px 18px;
+    padding: 20px 16px;
     border-radius: 16px;
   }
 
   .settingItem {
-    padding: 16px;
-    gap: 14px;
+    padding: 14px;
+    gap: 12px;
   }
 
   .settingIcon {
-    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
   }
 
   .settingName {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .settingDesc {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .logoutBtn,
   .deleteBtn {
-    padding: 16px 20px;
-    gap: 14px;
+    padding: 14px 16px;
+    gap: 12px;
   }
 
   .btnIcon {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
   }
 }
 

@@ -1,35 +1,37 @@
 // 데이터 및 저장공간 설정
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import styles from './DataSettings.module.css';
 
+// 초기 데이터 계산
+function getInitialData() {
+  if (typeof window === 'undefined') {
+    return { cacheSize: 0, cookieCount: 0, storageSize: 0 };
+  }
+
+  // 쿠키 개수
+  const cookies = document.cookie.split(';').filter(c => c.trim());
+  const cookieCount = cookies.length;
+
+  // 로컬 저장소 크기
+  let total = 0;
+  for (let key in localStorage) {
+    if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
+      total += localStorage[key].length + key.length;
+    }
+  }
+  const storageSize = parseFloat((total / 1024 / 1024).toFixed(2));
+
+  return { cacheSize: 0, cookieCount, storageSize };
+}
+
 export default function DataSettings() {
-  const [cacheSize, setCacheSize] = useState(0);
-  const [cookieCount, setCookieCount] = useState(0);
-  const [storageSize, setStorageSize] = useState(0);
+  const initialData = useMemo(() => getInitialData(), []);
 
-  useEffect(() => {
-    // 캐시 크기 계산 (추정치)
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        setCacheSize(names.length * 5); // MB 추정
-      });
-    }
-
-    // 쿠키 개수
-    const cookies = document.cookie.split(';').filter(c => c.trim());
-    setCookieCount(cookies.length);
-
-    // 로컬 저장소 크기
-    let total = 0;
-    for (let key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        total += localStorage[key].length + key.length;
-      }
-    }
-    setStorageSize((total / 1024 / 1024).toFixed(2)); // MB
-  }, []);
+  const [cacheSize, setCacheSize] = useState(initialData.cacheSize);
+  const [cookieCount, setCookieCount] = useState(initialData.cookieCount);
+  const [storageSize, setStorageSize] = useState(initialData.storageSize);
 
   const handleClearCache = async () => {
     if (confirm('캐시를 지우시겠습니까?')) {
@@ -78,7 +80,6 @@ export default function DataSettings() {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>📊 데이터 및 저장공간</h2>
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>📦 캐시</h3>
