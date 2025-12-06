@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="public/mainlogo.png" alt="CoUp Logo" width="120" />
+<img src="mainlogo.png" alt="CoUp Logo" width="120" />
 
 **함께, 더 높이. 당신의 성장을 위한 스터디 허브.**
 
