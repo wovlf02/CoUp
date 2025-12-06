@@ -306,6 +306,7 @@ export default function MyStudyNoticesPage({ params }) {
           )}
 
           {/* 일반 공지 */}
+          {activeTab !== '고정' && (
           <div className={styles.regularSection}>
             {(activeTab === '전체' || activeTab === '일반') && (
               <h3 className={styles.sectionLabel}>📄 최근 공지 ({regularNotices.length})</h3>
@@ -318,6 +319,8 @@ export default function MyStudyNoticesPage({ params }) {
               let filteredNotices = regularNotices;
               if (activeTab === '중요') {
                 filteredNotices = notices.filter(n => n.isImportant);
+              } else if (activeTab === '일반') {
+                filteredNotices = notices.filter(n => !n.isPinned && !n.isImportant);
               }
 
               if (filteredNotices.length === 0) {
@@ -443,6 +446,7 @@ export default function MyStudyNoticesPage({ params }) {
               ));
             })()}
           </div>
+          )}
         </div>
 
         {/* 우측 위젯 */}
