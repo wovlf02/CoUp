@@ -24,7 +24,47 @@ export default function MyStudyFilesPage({ params }) {
 
   const study = studyData?.data;
   const files = filesData?.data || [];
-  const folders = []; // TODO: 폴더 기능 구현
+
+  // 파일 확장자 추출 함수
+  const getFileExtension = (filename) => {
+    if (!filename) return '';
+    const parts = filename.split('.');
+    if (parts.length < 2) return '';
+    return parts[parts.length - 1].toLowerCase();
+  };
+
+  // 파일 확장자 기준 카테고리 분류 함수
+  const getFileCategory = (file) => {
+    const ext = getFileExtension(file.name);
+
+    // 문서 확장자
+    const docExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'hwp', 'hwpx', 'rtf', 'odt', 'ods', 'odp', 'csv'];
+    if (docExtensions.includes(ext)) return '문서';
+
+    // 이미지 확장자
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico', 'tiff', 'tif', 'heic', 'heif'];
+    if (imageExtensions.includes(ext)) return '이미지';
+
+    // 압축 파일 확장자
+    const archiveExtensions = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz'];
+    if (archiveExtensions.includes(ext)) return '압축';
+
+    return '기타';
+  };
+
+  // 필터링된 파일 목록
+  const filteredFiles = activeFilter === '전체'
+    ? files
+    : files.filter(file => getFileCategory(file) === activeFilter);
+
+  // 각 카테고리별 파일 수
+  const fileCounts = {
+    전체: files.length,
+    문서: files.filter(f => getFileCategory(f) === '문서').length,
+    이미지: files.filter(f => getFileCategory(f) === '이미지').length,
+    압축: files.filter(f => getFileCategory(f) === '압축').length,
+    기타: files.filter(f => getFileCategory(f) === '기타').length,
+  };
 
 
   const getFileIcon = (type) => {
@@ -104,10 +144,10 @@ export default function MyStudyFilesPage({ params }) {
   };
 
   const handleSelectAll = () => {
-    if (selectedFiles.length === files.length) {
+    if (selectedFiles.length === filteredFiles.length && filteredFiles.length > 0) {
       setSelectedFiles([]);
     } else {
-      setSelectedFiles(files.map((f) => f.id));
+      setSelectedFiles(filteredFiles.map((f) => f.id));
     }
   };
 
@@ -201,7 +241,7 @@ export default function MyStudyFilesPage({ params }) {
                   }`}
                   onClick={() => setActiveFilter(filter)}
                 >
-                  {filter}
+                  {filter} ({fileCounts[filter]})
                 </button>
               ))}
             </div>
@@ -229,14 +269,14 @@ export default function MyStudyFilesPage({ params }) {
           {/* 파일 목록 */}
           <div className={styles.fileListSection}>
             <div className={styles.fileListHeader}>
-              <h3 className={styles.sectionLabel}>📄 파일 ({files.length})</h3>
+              <h3 className={styles.sectionLabel}>📄 파일 ({filteredFiles.length})</h3>
             </div>
 
             {filesLoading ? (
               <div style={{ textAlign: 'center', padding: '2rem' }}>파일 로딩 중...</div>
-            ) : files.length === 0 ? (
+            ) : filteredFiles.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
-                첫 파일을 업로드해보세요! 📤
+                {activeFilter === '전체' ? '첫 파일을 업로드해보세요! 📤' : `${activeFilter} 파일이 없습니다.`}
               </div>
             ) : (
               <>
@@ -245,7 +285,7 @@ export default function MyStudyFilesPage({ params }) {
                   <div className={styles.tableCheckbox}>
                     <input
                       type="checkbox"
-                      checked={selectedFiles.length === files.length && files.length > 0}
+                      checked={selectedFiles.length === filteredFiles.length && filteredFiles.length > 0}
                       onChange={handleSelectAll}
                     />
                   </div>
@@ -257,7 +297,7 @@ export default function MyStudyFilesPage({ params }) {
                 </div>
 
                 {/* 파일 행 */}
-                {files.map((file) => (
+                {filteredFiles.map((file) => (
                   <div key={file.id} className={styles.fileRow}>
                     <div className={styles.fileCheckbox}>
                       <input
