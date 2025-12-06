@@ -450,7 +450,9 @@ export function useCreateNotice() {
   return useMutation({
     mutationFn: ({ studyId, data }) => api.post(`/api/studies/${studyId}/notices`, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
+      queryClient.invalidateQueries({
+        queryKey: ['studies', variables.studyId, 'notices'],
+      })
     },
   })
 }
@@ -458,10 +460,11 @@ export function useCreateNotice() {
 export function useUpdateNotice() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, noticeId, data }) => api.put(`/api/studies/${studyId}/notices/${noticeId}`, data),
+    mutationFn: ({ studyId, noticeId, data }) => api.patch(`/api/studies/${studyId}/notices/${noticeId}`, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
-      queryClient.invalidateQueries(['studies', variables.studyId, 'notices', variables.noticeId])
+      queryClient.invalidateQueries({
+        queryKey: ['studies', variables.studyId, 'notices'],
+      })
     },
   })
 }
@@ -471,7 +474,9 @@ export function useDeleteNotice() {
   return useMutation({
     mutationFn: ({ studyId, noticeId }) => api.delete(`/api/studies/${studyId}/notices/${noticeId}`),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
+      queryClient.invalidateQueries({
+        queryKey: ['studies', variables.studyId, 'notices'],
+      })
     },
   })
 }
@@ -479,9 +484,12 @@ export function useDeleteNotice() {
 export function useTogglePinNotice() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, noticeId }) => api.post(`/api/studies/${studyId}/notices/${noticeId}/toggle-pin`),
+    mutationFn: ({ studyId, noticeId }) => api.post(`/api/studies/${studyId}/notices/${noticeId}/pin`),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['studies', variables.studyId, 'notices'])
+      // notices로 시작하는 모든 쿼리 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['studies', variables.studyId, 'notices'],
+      })
     },
   })
 }

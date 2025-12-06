@@ -71,6 +71,7 @@ export async function POST(request, context) {
           { status: 400 }
         )
       }
+      // LEFT 상태인 경우: 다시 가입 가능 - 아래에서 update로 처리
     }
 
     // 4. 정원 확인
@@ -97,16 +98,30 @@ export async function POST(request, context) {
     // 7. 자동 승인 여부에 따른 처리
     if (study.autoApprove) {
       // 자동 승인: 바로 멤버로 추가
-      const member = await prisma.studyMember.create({
-        data: {
-          studyId,
-          userId,
-          role: 'MEMBER',
-          status: 'ACTIVE',
-          joinedAt: new Date(),
-          approvedAt: new Date()
-        }
-      })
+      let member
+      if (existingMember && existingMember.status === 'LEFT') {
+        // LEFT 상태 -> ACTIVE로 업데이트 (재가입)
+        member = await prisma.studyMember.update({
+          where: { id: existingMember.id },
+          data: {
+            role: 'MEMBER',
+            status: 'ACTIVE',
+            joinedAt: new Date(),
+            approvedAt: new Date()
+          }
+        })
+      } else {
+        member = await prisma.studyMember.create({
+          data: {
+            studyId,
+            userId,
+            role: 'MEMBER',
+            status: 'ACTIVE',
+            joinedAt: new Date(),
+            approvedAt: new Date()
+          }
+        })
+      }
 
       return NextResponse.json({
         success: true,
@@ -118,16 +133,30 @@ export async function POST(request, context) {
       }, { status: 201 })
     } else {
       // 수동 승인: PENDING 상태로 생성
-      const member = await prisma.studyMember.create({
-        data: {
-          studyId,
-          userId,
-          role: 'MEMBER',
-          status: 'PENDING',
-          joinedAt: new Date(),
-          // 가입 신청 정보는 별도 필드가 없으면 memo 등에 저장하거나 JoinRequest 테이블 사용
-        }
-      })
+      let member
+      if (existingMember && existingMember.status === 'LEFT') {
+        // LEFT 상태 -> PENDING으로 업데이트 (재가입 신청)
+        member = await prisma.studyMember.update({
+          where: { id: existingMember.id },
+          data: {
+            role: 'MEMBER',
+            status: 'PENDING',
+            joinedAt: new Date(),
+            approvedAt: null
+          }
+        })
+      } else {
+        member = await prisma.studyMember.create({
+          data: {
+            studyId,
+            userId,
+            role: 'MEMBER',
+            status: 'PENDING',
+            joinedAt: new Date(),
+            // 가입 신청 정보는 별도 필드가 없으면 memo 등에 저장하거나 JoinRequest 테이블 사용
+          }
+        })
+      }
 
       // JoinRequest 테이블이 있다면 추가 정보 저장
       try {

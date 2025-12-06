@@ -8,6 +8,7 @@ export async function POST(request, { params }) {
 
   const result = await requireStudyMember(studyId, 'ADMIN')
   if (result instanceof NextResponse) return result
+  if (result && typeof result.json === 'function') return result
 
   try {
     const notice = await prisma.notice.findUnique({
@@ -16,7 +17,7 @@ export async function POST(request, { params }) {
 
     if (!notice || notice.studyId !== studyId) {
       return NextResponse.json(
-        { error: "공지사항을 찾을 수 없습니다" },
+        { success: false, error: "공지사항을 찾을 수 없습니다" },
         { status: 404 }
       )
     }
@@ -26,6 +27,15 @@ export async function POST(request, { params }) {
       where: { id: noticeId },
       data: {
         isPinned: !notice.isPinned
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        }
       }
     })
 
