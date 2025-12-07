@@ -6,10 +6,18 @@
 
 ## 🎯 PPT 제작 바로가기
 
-### 👉 [slides/ALL-SLIDES.md](./slides/ALL-SLIDES.md)
+### ⭐ [GEMINI-CANVAS-PROMPT.md](./GEMINI-CANVAS-PROMPT.md) - Gemini Canvas용 (추천)
 
-**모든 슬라이드(17장)를 한 문서에 통합**한 파일입니다.
-PPT 제작 시 이 파일만 참고하시면 됩니다.
+**Gemini Canvas**로 슬라이드를 직접 생성할 수 있는 프롬프트입니다.
+슬라이드별로 하나씩 프롬프트를 입력하면 됩니다.
+
+### 📋 [PPT-PROMPT.md](./PPT-PROMPT.md) - Gamma/Canva용
+
+Gamma.app 또는 Canva에서 사용할 수 있는 프롬프트입니다.
+
+### 📄 [slides/ALL-SLIDES.md](./slides/ALL-SLIDES.md) - 전체 레이아웃 가이드
+
+모든 슬라이드(19장)의 상세 레이아웃 가이드입니다.
 
 ---
 
