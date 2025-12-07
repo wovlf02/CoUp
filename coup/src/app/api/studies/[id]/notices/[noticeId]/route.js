@@ -120,11 +120,11 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
     if (!body.content || !body.content.trim()) {
       throw StudyNoticeException.contentRequired({ studyId, noticeId });
     }
-    if (body.content.length < 10 || body.content.length > 10000) {
+    if (body.content.length > 10000) {
       throw StudyNoticeException.contentRequired({
         studyId,
         noticeId,
-        userMessage: '공지사항 내용은 10자 이상 10000자 이하로 입력해주세요'
+        userMessage: '공지사항 내용은 10000자 이하로 입력해주세요'
       });
     }
   }

@@ -127,10 +127,10 @@ export default function StudyTaskDetailModal({
             <>
               <button
                 className={styles.toggleButton}
-                onClick={() => onToggle(task.id)}
+                onClick={() => onToggle(task.id, NEXT_STATUS[task.status])}
                 disabled={isToggling}
               >
-                {task.status === 'DONE' ? '↩️ 미완료로 변경' : '✅ 완료 처리'}
+                {NEXT_STATUS_LABELS[task.status]}
               </button>
 
               <button

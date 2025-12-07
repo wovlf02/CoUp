@@ -103,8 +103,8 @@ export default function MyStudyTasksPage({ params }) {
     }
   };
 
-  // 할일 상태 토글 (완료/미완료)
-  const handleToggleTask = async (taskId) => {
+  // 할일 상태 변경 (다음 단계로)
+  const handleToggleTask = async (taskId, newStatus) => {
     if (!canManageTasks) {
       alert('할일 관리 권한이 없습니다. 방장 또는 관리자만 할일 상태를 변경할 수 있습니다.');
       return;
@@ -113,12 +113,20 @@ export default function MyStudyTasksPage({ params }) {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    const newStatus = task.status === 'DONE' ? 'TODO' : 'DONE';
+    // newStatus가 전달되지 않으면 다음 상태로 자동 설정
+    const nextStatusMap = {
+      TODO: 'IN_PROGRESS',
+      IN_PROGRESS: 'REVIEW',
+      REVIEW: 'DONE',
+      DONE: 'TODO'
+    };
+    const targetStatus = newStatus || nextStatusMap[task.status];
+
     try {
       await updateTaskMutation.mutateAsync({
         studyId,
         taskId,
-        data: { ...task, status: newStatus }
+        data: { status: targetStatus }
       });
     } catch (error) {
       alert('할일 상태 변경 실패: ' + error.message);

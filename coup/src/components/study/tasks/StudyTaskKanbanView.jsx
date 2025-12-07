@@ -123,18 +123,18 @@ export default function StudyTaskKanbanView({
                     )}
                   </div>
 
-                  {/* 빠른 완료 토글 (관리자만) */}
-                  {canManage && task.status !== 'DONE' && (
+                  {/* 빠른 상태 변경 (관리자만) */}
+                  {canManage && (
                     <button
                       className={styles.quickComplete}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onToggle(task.id);
+                        onToggle(task.id, NEXT_STATUS[task.status]);
                       }}
                       disabled={isToggling}
-                      title="완료 처리"
+                      title={task.status === 'DONE' ? '다시 열기' : '다음 단계로'}
                     >
-                      ✓
+                      {NEXT_STATUS_ICONS[task.status]}
                     </button>
                   )}
                 </div>

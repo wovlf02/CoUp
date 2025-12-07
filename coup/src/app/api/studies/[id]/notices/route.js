@@ -128,10 +128,10 @@ export const POST = withStudyErrorHandler(async (request, context) => {
     throw StudyNoticeException.contentRequired({ studyId });
   }
 
-  if (content.length < 10 || content.length > 10000) {
+  if (content.length > 10000) {
     throw StudyNoticeException.contentRequired({
       studyId,
-      userMessage: '공지사항 내용은 10자 이상 10000자 이하로 입력해주세요'
+      userMessage: '공지사항 내용은 10000자 이하로 입력해주세요'
     });
   }
 

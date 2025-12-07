@@ -591,7 +591,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/tasks/${id}`, data),
+    mutationFn: ({ id, data }) => api.patch(`/api/tasks/${id}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['tasks'])
       queryClient.invalidateQueries(['tasks', variables.id])
@@ -641,7 +641,7 @@ export function useCreateStudyTask() {
 export function useUpdateStudyTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, taskId, data }) => api.put(`/api/studies/${studyId}/tasks/${taskId}`, data),
+    mutationFn: ({ studyId, taskId, data }) => api.patch(`/api/studies/${studyId}/tasks/${taskId}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'tasks'])
     },

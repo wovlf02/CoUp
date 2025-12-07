@@ -64,16 +64,16 @@ export default function StudyTaskListView({
             key={task.id}
             className={`${styles.listRow} ${task.status === 'DONE' ? styles.completed : ''} ${isOverdue(task.dueDate, task.status) ? styles.overdue : ''}`}
           >
-            {/* 체크박스 (관리자만) */}
+            {/* 상태 변경 버튼 (관리자만) */}
             <div className={styles.colCheck}>
               {canManage ? (
                 <button
                   className={`${styles.checkbox} ${task.status === 'DONE' ? styles.checked : ''}`}
-                  onClick={() => onToggle(task.id)}
+                  onClick={() => onToggle(task.id, NEXT_STATUS[task.status])}
                   disabled={isToggling}
-                  title={task.status === 'DONE' ? '미완료로 변경' : '완료 처리'}
+                  title={task.status === 'DONE' ? '다시 열기' : '다음 단계로'}
                 >
-                  {task.status === 'DONE' && '✓'}
+                  {NEXT_STATUS_ICONS[task.status]}
                 </button>
               ) : (
                 <div className={`${styles.checkboxDisabled} ${task.status === 'DONE' ? styles.checked : ''}`}>
