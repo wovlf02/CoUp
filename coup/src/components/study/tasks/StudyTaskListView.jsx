@@ -16,6 +16,21 @@ const PRIORITY_LABELS = {
   HIGH: '높음'
 };
 
+// 다음 상태 정의
+const NEXT_STATUS = {
+  TODO: 'IN_PROGRESS',
+  IN_PROGRESS: 'REVIEW',
+  REVIEW: 'DONE',
+  DONE: 'TODO'
+};
+
+const NEXT_STATUS_ICONS = {
+  TODO: '▶',
+  IN_PROGRESS: '🔍',
+  REVIEW: '✓',
+  DONE: '↩'
+};
+
 export default function StudyTaskListView({
   tasks,
   onTaskClick,
@@ -112,27 +127,24 @@ export default function StudyTaskListView({
             <div className={styles.colAssignee}>
               {task.assignees && task.assignees.length > 0 ? (
                 <div className={styles.assignees}>
-                  {task.assignees.slice(0, 3).map((assignee, index) => (
-                    assignee?.avatar ? (
-                      <img
-                        key={index}
-                        src={assignee.avatar}
-                        alt={assignee?.name}
-                        className={styles.assigneeAvatar}
-                        title={assignee?.name}
-                      />
-                    ) : (
-                      <div
-                        key={index}
-                        className={styles.assigneeAvatarPlaceholder}
-                        title={assignee?.name}
-                      >
-                        {assignee?.name?.charAt(0) || '?'}
-                      </div>
-                    )
+                  {task.assignees.slice(0, 2).map((assignee, index) => (
+                    <div key={index} className={styles.assigneeItem}>
+                      {assignee?.avatar ? (
+                        <img
+                          src={assignee.avatar}
+                          alt={assignee?.name}
+                          className={styles.assigneeAvatar}
+                        />
+                      ) : (
+                        <div className={styles.assigneeAvatarPlaceholder}>
+                          {assignee?.name?.charAt(0) || '?'}
+                        </div>
+                      )}
+                      <span className={styles.assigneeName}>{assignee?.name}</span>
+                    </div>
                   ))}
-                  {task.assignees.length > 3 && (
-                    <span className={styles.moreCount}>+{task.assignees.length - 3}</span>
+                  {task.assignees.length > 2 && (
+                    <span className={styles.moreCount}>+{task.assignees.length - 2}</span>
                   )}
                 </div>
               ) : (

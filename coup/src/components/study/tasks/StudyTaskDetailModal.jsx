@@ -16,6 +16,21 @@ const PRIORITY_LABELS = {
   HIGH: '높음'
 };
 
+// 다음 상태 및 버튼 레이블 정의
+const NEXT_STATUS = {
+  TODO: 'IN_PROGRESS',
+  IN_PROGRESS: 'REVIEW',
+  REVIEW: 'DONE',
+  DONE: 'TODO'
+};
+
+const NEXT_STATUS_LABELS = {
+  TODO: '▶️ 진행 시작',
+  IN_PROGRESS: '🔍 검토 요청',
+  REVIEW: '✅ 완료 처리',
+  DONE: '↩️ 다시 열기'
+};
+
 export default function StudyTaskDetailModal({
   task,
   onClose,
