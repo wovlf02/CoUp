@@ -27,32 +27,46 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState(null)
   const [selectedTask, setSelectedTask] = useState(null)
 
-  // 실제 API 호출
-  const { data: tasksData, isLoading } = useTasks(filter)
+  // 실제 API 호출 - 필터 파라미터 변환
+  const apiParams = useMemo(() => {
+    const params = {}
+    if (filter.studyId) {
+      params.studyId = filter.studyId
+    }
+    if (filter.status && filter.status !== 'all') {
+      params.status = filter.status
+    }
+    if (filter.sortBy) {
+      params.sortBy = filter.sortBy
+    }
+    return params
+  }, [filter])
+
+  const { data: tasksData, isLoading } = useTasks(apiParams)
   const { data: statsData } = useTaskStats()
   const toggleTask = useToggleTask()
   const deleteTask = useDeleteTask()
 
-  const tasks = tasksData?.data || []
+  const tasks = useMemo(() => tasksData?.data || [], [tasksData])
   const taskStats = statsData?.data || null
 
+  // 클라이언트 측 추가 필터링 (이미 서버에서 필터링됨, 정렬만 추가)
   const filteredTasks = useMemo(() => {
-    let result = tasks
+    let result = [...tasks]
 
-    if (filter.studyId) {
-      result = result.filter(t => t.studyId === filter.studyId)
-    }
-
-    if (filter.status === 'incomplete') {
-      result = result.filter(t => !t.completed)
-    } else if (filter.status === 'completed') {
-      result = result.filter(t => t.completed)
-    }
-
-    result.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    result.sort((a, b) => {
+      if (filter.sortBy === 'deadline') {
+        return new Date(a.dueDate || '9999-12-31') - new Date(b.dueDate || '9999-12-31')
+      } else if (filter.sortBy === 'created') {
+        return new Date(b.createdAt) - new Date(a.createdAt)
+      } else if (filter.sortBy === 'study') {
+        return (a.study?.name || '').localeCompare(b.study?.name || '')
+      }
+      return 0
+    })
 
     return result
-  }, [tasks, filter])
+  }, [tasks, filter.sortBy])
 
   const groupedTasks = useMemo(() => {
     const urgent = []

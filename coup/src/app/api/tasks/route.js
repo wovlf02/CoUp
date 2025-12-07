@@ -10,8 +10,8 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const studyId = searchParams.get('studyId')
-    const status = searchParams.get('status') // TODO | IN_PROGRESS | REVIEW | DONE | all
-    const completed = searchParams.get('completed') // 'true' | 'false'
+    const status = searchParams.get('status') // TODO | IN_PROGRESS | REVIEW | DONE | all | incomplete | completed
+    let completed = searchParams.get('completed') // 'true' | 'false'
     const sortBy = searchParams.get('sortBy') || 'deadline' // deadline | priority | createdAt
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -25,8 +25,13 @@ export async function GET(request) {
       whereClause.studyId = studyId
     }
 
-    // status가 'all'이 아닌 경우만 필터 추가 (TODO, IN_PROGRESS, REVIEW, DONE만 유효)
-    if (status && status !== 'all') {
+    // status 파라미터 처리 (incomplete/completed는 completed 필드로 변환)
+    if (status === 'incomplete') {
+      completed = 'false'
+    } else if (status === 'completed') {
+      completed = 'true'
+    } else if (status && status !== 'all') {
+      // TODO, IN_PROGRESS, REVIEW, DONE 등 실제 상태값
       whereClause.status = status
     }
 
