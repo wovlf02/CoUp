@@ -20,9 +20,14 @@ export async function POST(request, { params }) {
 
     const { session } = result
 
-    // 3. 요청 본문 파싱
-    const body = await request.json()
-    const { reason } = body
+    // 3. 요청 본문 파싱 (선택적)
+    let reason = null
+    try {
+      const body = await request.json()
+      reason = body.reason
+    } catch {
+      // body가 없는 경우 무시
+    }
 
     // 4. 거절 사유 검증 (선택)
     if (reason) {

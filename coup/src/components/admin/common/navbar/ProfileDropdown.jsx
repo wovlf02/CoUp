@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
+import { useQueryClient } from '@tanstack/react-query'
 import Badge from '@/components/admin/ui/Badge'
 import styles from '../AdminNavbar.module.css'
 
@@ -24,8 +25,11 @@ export default function ProfileDropdown({
   setShowNotifications
 }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const handleLogout = async () => {
+    // React Query 캐시 전체 초기화 (이전 유저 데이터 제거)
+    queryClient.clear()
     await signOut({ callbackUrl: '/' })
   }
 

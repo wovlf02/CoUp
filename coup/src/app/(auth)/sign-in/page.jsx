@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signIn, signOut, useSession } from 'next-auth/react'
+import { useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import styles from '@/styles/auth/sign-in.module.css'
 
@@ -12,6 +13,7 @@ export default function SignInPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, status } = useSession()
+  const queryClient = useQueryClient()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
 
   // 중복 실행 방지
@@ -58,6 +60,9 @@ export default function SignInPage() {
             console.warn('⚠️ Invalid session detected:', data.error)
             console.log('🔄 Signing out completely...')
 
+            // React Query 캐시 전체 초기화
+            queryClient.clear()
+
             // NextAuth signOut으로 세션 완전 제거
             await signOut({
               redirect: false // 리다이렉트 방지
@@ -78,7 +83,7 @@ export default function SignInPage() {
           isValidatingRef.current = false
         })
     }
-  }, [status, session?.user?.id, router])
+  }, [status, session?.user?.id, router, queryClient])
 
   // Form state
   const [email, setEmail] = useState('')

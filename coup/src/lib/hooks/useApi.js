@@ -5,10 +5,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 
 // ==================== 사용자 ====================
-export function useMe() {
+export function useMe(options = {}) {
   return useQuery({
     queryKey: ['user', 'me'],
     queryFn: () => api.get('/api/auth/me'),
+    enabled: options.enabled !== false,
+    ...options,
   })
 }
 
@@ -332,7 +334,8 @@ export function useRejectMember() {
 export function useRejectJoinRequest() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ studyId, requestId }) => api.post(`/api/studies/${studyId}/join-requests/${requestId}/reject`),
+    mutationFn: ({ studyId, requestId, reason }) =>
+      api.post(`/api/studies/${studyId}/join-requests/${requestId}/reject`, { reason }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['studies', variables.studyId, 'join-requests'])
     },
@@ -678,10 +681,12 @@ export function useTaskStats() {
 }
 
 // ==================== 알림 ====================
-export function useNotifications(params = {}) {
+export function useNotifications(params = {}, options = {}) {
   return useQuery({
     queryKey: ['notifications', params],
     queryFn: () => api.get('/api/notifications', params),
+    enabled: options.enabled !== false,
+    ...options,
   })
 }
 

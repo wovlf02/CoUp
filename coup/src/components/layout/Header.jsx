@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Header.module.css'
@@ -14,19 +15,22 @@ import { useMe, useNotifications, useMarkAllNotificationsAsRead } from '@/lib/ho
  * - 높이: 64px (Desktop), 56px (Mobile)
  */
 export default function Header({ onMenuToggle }) {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
 
-  // 최신 사용자 정보 가져오기
-  const { data: userData } = useMe()
+  const isAuthenticated = status === 'authenticated' && !!session?.user
+
+  // 최신 사용자 정보 가져오기 (로그인 상태일 때만)
+  const { data: userData } = useMe({ enabled: isAuthenticated })
   const user = userData?.user || session?.user
 
-  // React Query로 알림 데이터 가져오기 (자동 동기화)
-  const { data: notificationsData } = useNotifications({ limit: 5 })
+  // React Query로 알림 데이터 가져오기 (로그인 상태일 때만)
+  const { data: notificationsData } = useNotifications({ limit: 5 }, { enabled: isAuthenticated })
   const markAllReadMutation = useMarkAllNotificationsAsRead()
 
   const notifications = notificationsData?.data || []
@@ -41,6 +45,8 @@ export default function Header({ onMenuToggle }) {
   }
 
   const handleLogout = async () => {
+    // React Query 캐시 전체 초기화 (이전 유저 데이터 제거)
+    queryClient.clear()
     await signOut({ redirect: false })
     router.push('/')
   }
@@ -101,7 +107,7 @@ export default function Header({ onMenuToggle }) {
             >
               <span className={styles.searchResultIcon}>🔍</span>
               <span className={styles.searchResultText}>
-                "{searchQuery}" 검색하기
+                &ldquo;{searchQuery}&rdquo; 검색하기
               </span>
             </button>
           </div>

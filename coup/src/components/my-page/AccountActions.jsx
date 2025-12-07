@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
+import { useQueryClient } from '@tanstack/react-query'
 import DeleteAccountModal from './DeleteAccountModal'
 import styles from './AccountActions.module.css'
 
@@ -10,12 +11,15 @@ export default function AccountActions() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const handleLogout = async () => {
     if (!confirm('로그아웃 하시겠습니까?')) return
 
     try {
       setIsLoggingOut(true)
+      // React Query 캐시 전체 초기화 (이전 유저 데이터 제거)
+      queryClient.clear()
       await signOut({
         callbackUrl: '/',
         redirect: true

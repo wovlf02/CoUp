@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
+import { useQueryClient } from '@tanstack/react-query';
 import styles from './AccountDeletion.module.css';
 
 export default function AccountDeletion({ user }) {
@@ -11,6 +12,7 @@ export default function AccountDeletion({ user }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(null);
+  const queryClient = useQueryClient();
 
   // 토스트 표시 함수
   const showToast = (message, type = 'success') => {
@@ -64,6 +66,8 @@ export default function AccountDeletion({ user }) {
       showToast('계정이 삭제되었습니다. 로그아웃합니다...', 'success');
 
       setTimeout(async () => {
+        // React Query 캐시 전체 초기화
+        queryClient.clear();
         await signOut({ callbackUrl: '/auth/signin?deleted=true' });
       }, 2000);
 

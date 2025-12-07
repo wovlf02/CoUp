@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
+import { useQueryClient } from '@tanstack/react-query'
 import DeleteAccountModal from './DeleteAccountModal'
 import styles from './SettingsTab.module.css'
 
@@ -41,12 +42,15 @@ function SettingsGroup({ title, icon, children }) {
 export default function SettingsTab() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const queryClient = useQueryClient()
 
   // 로그아웃
   const handleLogout = async () => {
     if (!confirm('로그아웃 하시겠습니까?')) return
     setIsLoggingOut(true)
     try {
+      // React Query 캐시 전체 초기화 (이전 유저 데이터 제거)
+      queryClient.clear()
       await signOut({ callbackUrl: '/', redirect: true })
     } catch {
       alert('로그아웃에 실패했습니다')
@@ -64,6 +68,8 @@ export default function SettingsTab() {
       if (!response.ok) throw new Error('계정 삭제 실패')
       alert('계정이 삭제되었습니다')
       setShowDeleteModal(false)
+      // React Query 캐시 전체 초기화
+      queryClient.clear()
       await signOut({ callbackUrl: '/', redirect: true })
     } catch {
       alert('계정 삭제에 실패했습니다. 다시 시도해주세요.')
