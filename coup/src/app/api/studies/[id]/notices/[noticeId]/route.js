@@ -8,7 +8,6 @@ import {
 import { requireStudyMember } from "@/lib/auth-helpers"
 import { StudyNoticeException, StudyPermissionException } from '@/lib/exceptions/study'
 import { StudyLogger } from '@/lib/logging/studyLogger'
-import { invalidateNoticesCache } from "@/lib/cache-helpers"
 
 /**
  * GET /api/studies/[id]/notices/[noticeId]
@@ -60,13 +59,10 @@ export const GET = withStudyErrorHandler(async (request, context) => {
     }
   });
 
-  // 5. 캐시 무효화 (조회수 변경 반영)
-  invalidateNoticesCache(studyId);
-
-  // 6. 로깅
+  // 5. 로깅
   StudyLogger.logNoticeView(noticeId, studyId, result.session.user.id);
 
-  // 7. 응답 (업데이트된 조회수 포함)
+  // 6. 응답 (업데이트된 조회수 포함)
   return createSuccessResponse(updatedNotice);
 });
 
@@ -149,14 +145,10 @@ export const PATCH = withStudyErrorHandler(async (request, context) => {
     }
   });
 
-  // 7. 캐시 무효화
-  invalidateNoticesCache(`${studyId}_p1_l10_pinall`);
-  invalidateNoticesCache(`${studyId}_p1_l20_pinall`);
-
-  // 8. 로깅
+  // 7. 로깅
   StudyLogger.logNoticeUpdate(noticeId, studyId, session.user.id, body);
 
-  // 9. 응답
+  // 8. 응답
   return createSuccessResponse(updated, '공지사항이 수정되었습니다');
 });
 
@@ -179,11 +171,7 @@ export const DELETE = withStudyErrorHandler(async (request, context) => {
   });
 
   if (!notice) {
-    throw StudyFeatureException.noticeTitleMissing({
-      noticeId,
-      studyId,
-      userMessage: '공지사항을 찾을 수 없습니다'
-    });
+    throw StudyNoticeException.noticeNotFound(noticeId, { studyId });
   }
 
   if (notice.studyId !== studyId) {
@@ -202,14 +190,10 @@ export const DELETE = withStudyErrorHandler(async (request, context) => {
     where: { id: noticeId }
   });
 
-  // 5. 캐시 무효화
-  invalidateNoticesCache(`${studyId}_p1_l10_pinall`);
-  invalidateNoticesCache(`${studyId}_p1_l20_pinall`);
-
-  // 6. 로깅
+  // 5. 로깅
   StudyLogger.logNoticeDelete(noticeId, studyId, session.user.id);
 
-  // 7. 응답
+  // 6. 응답
   return createSuccessResponse(null, '공지사항이 삭제되었습니다');
 });
 

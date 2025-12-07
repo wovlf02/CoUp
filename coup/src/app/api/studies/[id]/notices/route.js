@@ -11,7 +11,6 @@ import { StudyNoticeException } from '@/lib/exceptions/study'
 import { StudyLogger } from '@/lib/logging/studyLogger'
 import { validateAndSanitize } from "@/lib/utils/input-sanitizer"
 import { validateSecurityThreats, logSecurityEvent } from "@/lib/utils/xss-sanitizer"
-import { getCachedNotices, setCachedNotices, invalidateNoticesCache } from "@/lib/cache-helpers"
 
 /**
  * GET /api/studies/[id]/notices
@@ -32,30 +31,13 @@ export const GET = withStudyErrorHandler(async (request, context) => {
   const skip = (page - 1) * limit;
   const pinned = searchParams.get('pinned'); // 'true' | 'false'
 
-  // 3. 캐시 키 생성
-  const cacheKey = `${studyId}_p${page}_l${limit}_pin${pinned || 'all'}`;
-
-  // 4. 캐시 확인 (첫 페이지만)
-  if (page === 1 && !pinned) {
-    const cached = getCachedNotices(cacheKey);
-    if (cached) {
-      StudyLogger.logNoticeList(studyId, { page, limit, pinned, cached: true });
-      return NextResponse.json({
-        success: true,
-        data: cached.notices,
-        pagination: cached.pagination,
-        cached: true
-      });
-    }
-  }
-
-  // 5. where 조건 생성
+  // 3. where 조건 생성
   let whereClause = { studyId };
   if (pinned === 'true') {
     whereClause.isPinned = true;
   }
 
-  // 6. 비즈니스 로직 - 데이터 조회
+  // 4. 비즈니스 로직 - 데이터 조회 (캐시 미사용 - 항상 최신 데이터)
   const [total, notices] = await Promise.all([
     prisma.notice.count({ where: whereClause }),
     prisma.notice.findMany({
@@ -85,15 +67,10 @@ export const GET = withStudyErrorHandler(async (request, context) => {
     totalPages: Math.ceil(total / limit)
   };
 
-  // 7. 첫 페이지 캐싱
-  if (page === 1 && !pinned) {
-    setCachedNotices(cacheKey, { notices, pagination });
-  }
-
-  // 8. 로깅
+  // 5. 로깅
   StudyLogger.logNoticeList(studyId, { page, limit, pinned, total, cached: false });
 
-  // 9. 응답
+  // 6. 응답
   return createPaginatedResponse(notices, total, page, limit);
 });
 
@@ -233,14 +210,10 @@ export const POST = withStudyErrorHandler(async (request, context) => {
     }))
   });
 
-  // 10. 캐시 무효화
-  invalidateNoticesCache(`${studyId}_p1_l10_pinall`);
-  invalidateNoticesCache(`${studyId}_p1_l20_pinall`);
-
-  // 11. 로깅
+  // 10. 로깅
   StudyLogger.logNoticeCreate(notice.id, studyId, session.user.id, sanitizedData);
 
-  // 12. 응답
+  // 11. 응답
   return createSuccessResponse(notice, '공지사항이 작성되었습니다', 201);
 });
 

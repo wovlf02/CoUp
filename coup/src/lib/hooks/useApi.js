@@ -451,7 +451,10 @@ export function useCreateNotice() {
     mutationFn: ({ studyId, data }) => api.post(`/api/studies/${studyId}/notices`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['studies', variables.studyId, 'notices'],
+        predicate: (query) => {
+          const key = query.queryKey
+          return key[0] === 'studies' && key[1] === variables.studyId && key[2] === 'notices'
+        }
       })
     },
   })
@@ -463,7 +466,10 @@ export function useUpdateNotice() {
     mutationFn: ({ studyId, noticeId, data }) => api.patch(`/api/studies/${studyId}/notices/${noticeId}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['studies', variables.studyId, 'notices'],
+        predicate: (query) => {
+          const key = query.queryKey
+          return key[0] === 'studies' && key[1] === variables.studyId && key[2] === 'notices'
+        }
       })
     },
   })
@@ -475,7 +481,10 @@ export function useDeleteNotice() {
     mutationFn: ({ studyId, noticeId }) => api.delete(`/api/studies/${studyId}/notices/${noticeId}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['studies', variables.studyId, 'notices'],
+        predicate: (query) => {
+          const key = query.queryKey
+          return key[0] === 'studies' && key[1] === variables.studyId && key[2] === 'notices'
+        }
       })
     },
   })
@@ -486,9 +495,12 @@ export function useTogglePinNotice() {
   return useMutation({
     mutationFn: ({ studyId, noticeId }) => api.post(`/api/studies/${studyId}/notices/${noticeId}/pin`),
     onSuccess: (_, variables) => {
-      // notices로 시작하는 모든 쿼리 무효화
+      // notices 관련 모든 쿼리 무효화 (params 포함한 쿼리도)
       queryClient.invalidateQueries({
-        queryKey: ['studies', variables.studyId, 'notices'],
+        predicate: (query) => {
+          const key = query.queryKey
+          return key[0] === 'studies' && key[1] === variables.studyId && key[2] === 'notices'
+        }
       })
     },
   })

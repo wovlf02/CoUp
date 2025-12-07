@@ -47,7 +47,24 @@ export function setCachedNotices(studyId, data) {
  * @param {string} studyId - 스터디 ID
  */
 export function invalidateNoticesCache(studyId) {
-  noticeCache.delete(studyId)
+  console.log(`[Cache] Invalidating cache for studyId: ${studyId}`)
+  console.log(`[Cache] Current cache keys: ${Array.from(noticeCache.keys()).join(', ')}`)
+
+  // studyId로 시작하는 모든 캐시 키 삭제 (페이지네이션 등)
+  const keysToDelete = Array.from(noticeCache.keys()).filter(key => {
+    // 정확히 일치하거나 studyId_로 시작하는 키
+    const shouldDelete = key === studyId || key.startsWith(`${studyId}_`)
+    if (shouldDelete) {
+      console.log(`[Cache] Will delete key: ${key}`)
+    }
+    return shouldDelete
+  })
+
+  keysToDelete.forEach(key => {
+    noticeCache.delete(key)
+  })
+
+  console.log(`[Cache] Deleted ${keysToDelete.length} entries. Remaining: ${noticeCache.size}`)
 }
 
 /**
