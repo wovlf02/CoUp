@@ -209,11 +209,17 @@ export const authConfig = {
             logAuthError('authorize - lastLoginAt 업데이트', dbError, { userId: user.id })
           }
 
+          // avatar가 base64 데이터인 경우 null로 설정 (URL만 허용)
+          let avatarUrl = null
+          if (user.avatar && !user.avatar.startsWith('data:')) {
+            avatarUrl = user.avatar
+          }
+
           const result = {
             id: user.id,
             email: user.email,
             name: user.name,
-            image: user.avatar,
+            image: avatarUrl,
             role: user.role,
             status: user.status,
             provider: user.provider,
@@ -223,7 +229,7 @@ export const authConfig = {
             restrictedUntil: user.restrictedUntil,
           }
 
-          console.log('✅ [AUTH] authorize 완료, 반환값:', result)
+          console.log('✅ [AUTH] authorize 완료, 반환값:', { ...result, image: result.image ? 'URL' : null })
           return result
 
         } catch (error) {
@@ -269,7 +275,7 @@ export const authConfig = {
           token.id = user.id
           token.email = user.email
           token.name = user.name
-          token.image = user.image
+          // image는 JWT에 저장하지 않음 (세션에서 DB 조회)
           token.role = user.role
           token.status = user.status
           token.provider = user.provider
@@ -288,7 +294,7 @@ export const authConfig = {
         // 세션 업데이트 시 (update 호출 시)
         if (trigger === "update" && session) {
           token.name = session.name || token.name
-          token.image = session.image || token.image
+          // image는 JWT에 저장하지 않음
         }
 
         return token
