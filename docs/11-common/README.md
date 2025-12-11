@@ -1,455 +1,756 @@
-# 공통 컴포넌트
+# 공통 컴포넌트 도메인 (Common)
 
 ## 개요
 
-전역에서 사용되는 레이아웃, UI 컴포넌트, 유틸리티 등입니다.
+CoUp 프로젝트의 공통 컴포넌트 도메인은 애플리케이션 전반에서 재사용되는 UI 컴포넌트와 유틸리티를 제공합니다.
+일관된 사용자 경험과 코드 재사용성을 위해 설계되었습니다.
 
-## 레이아웃 컴포넌트
+### 주요 특징
+
+- **재사용성**: 여러 페이지에서 공통으로 사용되는 컴포넌트
+- **일관성**: 통일된 디자인 시스템 적용
+- **접근성**: ARIA 레이블 및 키보드 네비게이션 지원
+- **반응형**: 모바일/데스크톱 대응
+
+---
+
+## 컴포넌트 구조
 
 ```
-src/components/layout/
-├── ConditionalLayout.jsx   # 조건부 레이아웃
-├── Header.jsx              # 상단 헤더
-├── MainLayout.jsx          # 메인 레이아웃
-└── Sidebar.jsx             # 사이드바
-```
-
-### Header
-
-상단 헤더 컴포넌트입니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `onMenuToggle` | Function | 모바일 메뉴 토글 |
-
-**기능:**
-- 로고
-- 글로벌 검색
-- 알림 드롭다운
-- 프로필 메뉴
-- 모바일 햄버거 메뉴
-
-**높이:**
-- Desktop: 64px
-- Mobile: 56px
-
-### Sidebar
-
-좌측 네비게이션 사이드바입니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `isAdmin` | Boolean | 관리자 모드 |
-| `isOpen` | Boolean | 모바일 열림 상태 |
-| `onClose` | Function | 닫기 핸들러 |
-
-**일반 사용자 메뉴:**
-| 아이콘 | 메뉴 | 경로 |
-|--------|------|------|
-| 🏠 | 대시보드 | `/dashboard` |
-| 🔍 | 스터디 탐색 | `/studies` |
-| 👥 | 내 스터디 | `/my-studies` |
-| 📋 | 할 일 | `/tasks` |
-| 🔔 | 알림 | `/notifications` |
-| 👤 | 마이페이지 | `/me` |
-
-**관리자 메뉴:**
-| 아이콘 | 메뉴 | 경로 |
-|--------|------|------|
-| 📊 | 대시보드 | `/admin` |
-| 👥 | 사용자 관리 | `/admin/users` |
-| 📚 | 스터디 관리 | `/admin/studies` |
-| ⚠️ | 신고 관리 | `/admin/reports` |
-| 📈 | 통계 분석 | `/admin/analytics` |
-| ⚙️ | 시스템 설정 | `/admin/settings` |
-
-**너비:**
-- Desktop: 15%
-- Tablet: 12%
-- Mobile: 햄버거 메뉴
-
-### MainLayout
-
-메인 레이아웃 래퍼입니다.
-
-```jsx
-<MainLayout>
-  {/* Header + Sidebar + Content */}
-</MainLayout>
-```
-
-### ConditionalLayout
-
-경로에 따라 레이아웃을 조건부로 렌더링합니다.
-
-```jsx
-// 인증 페이지는 레이아웃 없이 렌더링
-// 일반 페이지는 MainLayout 적용
+src/components/
+├── common/                    # 공통 컴포넌트
+│   ├── RestrictionBanner.jsx  # 활동 제한 배너
+│   └── RestrictionBanner.module.css
+│
+├── ui/                        # 기본 UI 컴포넌트
+│   ├── index.js               # 통합 export
+│   ├── ConnectionBanner.js    # 연결 상태 배너
+│   ├── EmptyState.js          # 빈 상태 표시
+│   ├── ErrorToast.js          # 에러 토스트
+│   ├── LoadingSpinner.js      # 로딩 스피너
+│   └── MessageError.js        # 메시지 에러
+│
+├── layout/                    # 레이아웃 컴포넌트
+│   ├── Header.jsx             # 헤더
+│   ├── Footer.jsx             # 푸터
+│   ├── Sidebar.jsx            # 사이드바
+│   └── Navigation.jsx         # 네비게이션
+│
+├── Providers.js               # 전역 Provider 래퍼
+└── ScrollToTop.jsx            # 스크롤 상단 이동
 ```
 
 ---
 
-## 랜딩 페이지 컴포넌트
+## 공통 컴포넌트 (common/)
 
-```
-src/components/landing/
-├── CTASection.jsx       # CTA 섹션
-├── Features.jsx         # 기능 소개
-├── Hero.jsx             # 히어로 섹션
-├── HowItWorks.jsx       # 사용 방법
-├── LandingFooter.jsx    # 푸터
-├── LandingHeader.jsx    # 헤더
-└── Testimonials.jsx     # 사용자 후기
-```
+### 1. RestrictionBanner (활동 제한 배너)
 
-### Hero
+**파일 위치:** `src/components/common/RestrictionBanner.jsx`
 
-메인 히어로 섹션입니다.
-
-**콘텐츠:**
-- 메인 타이틀: "함께, 더 높이."
-- 서브타이틀: "당신의 성장을 위한 스터디 허브"
-- CTA 버튼: 지금 시작하기, 스터디 둘러보기
-- 스크롤 인디케이터
-
-### Features
-
-주요 기능 소개 섹션입니다.
-
-### HowItWorks
-
-사용 방법 단계 설명입니다.
-
-### Testimonials
-
-사용자 후기 섹션입니다.
-
-### CTASection
-
-행동 유도 섹션입니다.
-
-### LandingHeader
-
-랜딩 페이지 전용 헤더입니다.
-
-### LandingFooter
-
-랜딩 페이지 푸터입니다.
-
----
-
-## UI 컴포넌트
-
-```
-src/components/ui/
-├── ConnectionBanner.js   # 연결 상태 배너
-├── EmptyState.js         # 빈 상태
-├── ErrorToast.js         # 에러 토스트
-├── index.js              # 모듈 export
-├── LoadingSpinner.js     # 로딩 스피너
-└── MessageError.js       # 메시지 에러
-```
-
-### ConnectionBanner
-
-네트워크 연결 상태 배너입니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `isConnected` | Boolean | 연결 상태 |
-| `onReconnect` | Function | 재연결 핸들러 |
-
-### EmptyState
-
-데이터가 없을 때 빈 상태를 표시합니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `icon` | String | 이모지 아이콘 |
-| `title` | String | 제목 |
-| `description` | String | 설명 |
-| `actionLabel` | String | 버튼 텍스트 |
-| `onAction` | Function | 버튼 클릭 핸들러 |
-
-### ErrorToast
-
-에러 토스트 알림입니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `error` | Object | 에러 정보 |
-| `onClose` | Function | 닫기 핸들러 |
-
-### LoadingSpinner
-
-로딩 스피너입니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `size` | String | sm, md, lg |
-| `color` | String | 색상 |
-
-### MessageError
-
-메시지 전송 실패 표시입니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `error` | Object | 에러 정보 |
-| `onRetry` | Function | 재시도 핸들러 |
-| `onDelete` | Function | 삭제 핸들러 |
-
----
-
-## 공통 컴포넌트 (common)
-
-```
-src/components/common/
-├── RestrictionBanner.jsx   # 활동 제한 배너
-└── RestrictionBanner.module.css
-```
-
-### RestrictionBanner
-
-사용자 활동 제한 시 표시되는 배너입니다.
-
-**표시 정보:**
-- 제한된 활동 목록
-- 제한 해제 일시
-- 문의하기 링크
-
----
-
-## 마이페이지 컴포넌트
-
-```
-src/components/my-page/
-├── AccountActions.jsx      # 계정 관련 액션
-├── ActivityStats.jsx       # 활동 통계
-├── DeleteAccountModal.jsx  # 계정 삭제 모달
-├── ErrorState.jsx          # 에러 상태
-├── HeroProfile.jsx         # 프로필 히어로
-├── LoadingState.jsx        # 로딩 상태
-├── MyStudiesList.jsx       # 내 스터디 목록
-├── OverviewTab.jsx         # 개요 탭
-├── ProfileEditForm.jsx     # 프로필 수정 폼
-├── ProfileSection.jsx      # 프로필 섹션
-├── QuickStats.jsx          # 빠른 통계
-├── SettingsTab.jsx         # 설정 탭
-├── StudiesTab.jsx          # 스터디 탭
-└── TabNavigation.jsx       # 탭 네비게이션
-```
-
-### TabNavigation
-
-마이페이지 탭 네비게이션입니다.
-
-| 탭 | 설명 |
-|----|------|
-| 개요 | 활동 요약, 통계 |
-| 스터디 | 내 스터디 목록 |
-| 설정 | 계정 설정 |
-
-### ProfileEditForm
-
-프로필 수정 폼입니다.
-
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| `name` | String | 이름 |
-| `avatar` | File | 프로필 이미지 |
-| `bio` | String | 자기소개 |
-
-### ActivityStats
-
-활동 통계 위젯입니다.
-
-| 통계 | 설명 |
-|------|------|
-| 가입한 스터디 | 현재 참여 중인 스터디 수 |
-| 완료한 할일 | 완료 처리된 할일 수 |
-| 작성한 메시지 | 채팅 메시지 수 |
-| 활동 일수 | 연속 활동 일수 |
-
-### DeleteAccountModal
-
-계정 삭제 확인 모달입니다.
-
----
-
-## Context
-
-```
-src/contexts/
-├── SettingsContext.js   # 앱 설정 Context
-└── SocketContext.js     # Socket.IO Context
-```
-
-### SettingsContext
-
-앱 전역 설정을 관리합니다.
+사용자 계정에 적용된 활동 제한을 알리는 배너입니다.
 
 ```javascript
-// 사용법
-const { settings, updateSettings } = useSettings()
+interface RestrictionBannerProps {
+  // Props 없음 - useRestriction 훅으로 상태 관리
+}
 
-// 설정 항목
-{
-  theme: 'light' | 'dark',
-  language: 'ko' | 'en',
-  notifications: {
-    push: true,
-    email: true
-  }
+// 내부 상태 (useRestriction 훅)
+interface RestrictionState {
+  isRestricted: boolean;
+  restrictedActions: RestrictedAction[];
+  restrictedUntil: DateTime | null;
+}
+
+type RestrictedAction = 
+  | 'STUDY_CREATE'    // 스터디 생성 제한
+  | 'STUDY_JOIN'      // 스터디 가입 제한
+  | 'MESSAGE';        // 메시지 전송 제한
+```
+
+**사용 예시:**
+
+```jsx
+import RestrictionBanner from '@/components/common/RestrictionBanner';
+
+export default function DashboardLayout({ children }) {
+  return (
+    <div>
+      <RestrictionBanner />
+      {children}
+    </div>
+  );
 }
 ```
 
-### SocketContext
+**표시 정보:**
 
-Socket.IO 연결을 관리합니다.
+| 정보 | 설명 |
+|------|------|
+| 제한된 활동 | 스터디 생성, 스터디 가입, 메시지 전송 등 |
+| 해제 예정일 | 제한 해제 날짜/시간 또는 "영구" |
 
-```javascript
-// 사용법
-const { socket, isConnected } = useSocket()
+**스타일링:**
 
-// 이벤트 리스닝
-socket.on('event', handler)
+```css
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+  border-left: 4px solid #ffc107;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
 
-// 이벤트 발신
-socket.emit('event', data)
+.icon {
+  flex-shrink: 0;
+  color: #856404;
+}
+
+.title {
+  font-weight: 600;
+  color: #856404;
+}
+
+.details {
+  font-size: 0.875rem;
+  color: #856404;
+}
 ```
 
 ---
 
-## Hooks
+## UI 컴포넌트 (ui/)
+
+### 1. ConnectionBanner (연결 상태 배너)
+
+**파일 위치:** `src/components/ui/ConnectionBanner.js`
+
+실시간 연결 상태(소켓)를 표시하는 배너입니다.
+
+```javascript
+interface ConnectionBannerProps {
+  isConnected: boolean;
+  onReconnect?: () => void;
+}
+```
+
+**상태별 표시:**
+
+| 상태 | 색상 | 메시지 |
+|------|------|--------|
+| 연결됨 | 초록색 | "연결됨" |
+| 연결 끊김 | 빨간색 | "연결이 끊어졌습니다. 재연결 중..." |
+| 재연결 중 | 노란색 | "재연결 시도 중..." |
+
+### 2. EmptyState (빈 상태 표시)
+
+**파일 위치:** `src/components/ui/EmptyState.js`
+
+데이터가 없을 때 표시하는 빈 상태 컴포넌트입니다.
+
+```javascript
+interface EmptyStateProps {
+  icon?: ReactNode;           // 아이콘
+  title: string;              // 제목
+  description?: string;       // 설명
+  action?: {                  // 액션 버튼
+    label: string;
+    onClick: () => void;
+  };
+}
+```
+
+**사용 예시:**
+
+```jsx
+import { EmptyState } from '@/components/ui';
+
+function StudyList({ studies }) {
+  if (studies.length === 0) {
+    return (
+      <EmptyState
+        icon="📚"
+        title="스터디가 없습니다"
+        description="첫 번째 스터디를 만들어보세요!"
+        action={{
+          label: "스터디 만들기",
+          onClick: () => router.push('/studies/create')
+        }}
+      />
+    );
+  }
+  
+  return <StudyGrid studies={studies} />;
+}
+```
+
+### 3. ErrorToast (에러 토스트)
+
+**파일 위치:** `src/components/ui/ErrorToast.js`
+
+에러 발생 시 표시하는 토스트 알림입니다.
+
+```javascript
+interface ErrorToastProps {
+  message: string;
+  type?: 'error' | 'warning' | 'info' | 'success';
+  duration?: number;          // 자동 닫힘 시간 (ms)
+  onClose?: () => void;
+}
+```
+
+**타입별 스타일:**
+
+| 타입 | 아이콘 | 색상 |
+|------|--------|------|
+| `error` | ❌ | 빨간색 (#EF4444) |
+| `warning` | ⚠️ | 노란색 (#F59E0B) |
+| `info` | ℹ️ | 파란색 (#3B82F6) |
+| `success` | ✅ | 초록색 (#10B981) |
+
+### 4. LoadingSpinner (로딩 스피너)
+
+**파일 위치:** `src/components/ui/LoadingSpinner.js`
+
+로딩 상태를 표시하는 스피너입니다.
+
+```javascript
+interface LoadingSpinnerProps {
+  size?: 'small' | 'medium' | 'large';
+  color?: string;
+  text?: string;              // 로딩 텍스트
+  fullScreen?: boolean;       // 전체 화면 오버레이
+}
+```
+
+**크기별 사이즈:**
+
+| 크기 | 직경 |
+|------|------|
+| `small` | 16px |
+| `medium` | 32px |
+| `large` | 48px |
+
+**사용 예시:**
+
+```jsx
+import { LoadingSpinner } from '@/components/ui';
+
+function DataLoader({ isLoading, children }) {
+  if (isLoading) {
+    return <LoadingSpinner size="large" text="데이터를 불러오는 중..." />;
+  }
+  return children;
+}
+```
+
+### 5. MessageError (메시지 에러)
+
+**파일 위치:** `src/components/ui/MessageError.js`
+
+인라인 에러 메시지 표시 컴포넌트입니다.
+
+```javascript
+interface MessageErrorProps {
+  message: string;
+  onRetry?: () => void;
+}
+```
+
+---
+
+## 레이아웃 컴포넌트 (layout/)
+
+### 1. Header (헤더)
+
+**파일 위치:** `src/components/layout/Header.jsx`
+
+사이트 상단 헤더 컴포넌트입니다.
+
+```javascript
+interface HeaderProps {
+  user?: User | null;
+  showSearch?: boolean;
+  transparent?: boolean;
+}
+```
+
+**포함 요소:**
+
+- 로고
+- 네비게이션 메뉴
+- 검색 바 (선택적)
+- 알림 버튼
+- 사용자 프로필 드롭다운
+
+### 2. Sidebar (사이드바)
+
+**파일 위치:** `src/components/layout/Sidebar.jsx`
+
+페이지 사이드바 컴포넌트입니다.
+
+```javascript
+interface SidebarProps {
+  items: SidebarItem[];
+  collapsed?: boolean;
+  onCollapse?: () => void;
+}
+
+interface SidebarItem {
+  icon: ReactNode;
+  label: string;
+  href: string;
+  badge?: number;
+  subItems?: SidebarItem[];
+}
+```
+
+---
+
+## 전역 Provider
+
+### Providers.js
+
+**파일 위치:** `src/components/Providers.js`
+
+애플리케이션 전역 Provider를 래핑합니다.
+
+```javascript
+'use client';
+
+import { SessionProvider } from 'next-auth/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SocketProvider } from '@/contexts/SocketContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,  // 5분
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+export default function Providers({ children, session }) {
+  return (
+    <SessionProvider session={session}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <SocketProvider>
+            {children}
+          </SocketProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </SessionProvider>
+  );
+}
+```
+
+### Provider 구조
 
 ```
-src/hooks/
-├── index.js             # 모듈 export
-├── useRestriction.js    # 활동 제한 Hook
-└── useSettingsUtils.js  # 설정 유틸 Hook
+Providers
+├── SessionProvider (NextAuth)
+│   └── QueryClientProvider (TanStack Query)
+│       └── ThemeProvider (테마)
+│           └── SocketProvider (Socket.IO)
+│               └── children
 ```
+
+---
+
+## ScrollToTop 컴포넌트
+
+**파일 위치:** `src/components/ScrollToTop.jsx`
+
+스크롤 상단 이동 버튼입니다.
+
+```javascript
+interface ScrollToTopProps {
+  showAt?: number;            // 표시 임계값 (px)
+  smooth?: boolean;           // 부드러운 스크롤
+}
+```
+
+**동작:**
+
+1. 스크롤이 임계값(기본 300px)을 넘으면 버튼 표시
+2. 클릭 시 페이지 상단으로 스크롤
+3. 부드러운 애니메이션 지원
+
+---
+
+## 커스텀 훅
 
 ### useRestriction
 
-사용자 활동 제한 상태를 확인합니다.
+**파일 위치:** `src/hooks/useRestriction.js`
+
+사용자의 활동 제한 상태를 관리하는 훅입니다.
 
 ```javascript
-const { isRestricted, restrictedActions, restrictedUntil } = useRestriction()
+function useRestriction() {
+  const { data: session } = useSession();
+  
+  const isRestricted = useMemo(() => {
+    if (!session?.user) return false;
+    return session.user.restrictedActions?.length > 0;
+  }, [session]);
 
-// 특정 활동 제한 여부
-const canCreateStudy = !isRestricted('create_study')
+  const restrictedActions = session?.user?.restrictedActions || [];
+  const restrictedUntil = session?.user?.restrictedUntil;
+
+  return {
+    isRestricted,
+    restrictedActions,
+    restrictedUntil,
+    canPerformAction: (action) => !restrictedActions.includes(action)
+  };
+}
 ```
 
-### useSettingsUtils
-
-설정 관련 유틸리티입니다.
-
----
-
-## Providers
-
-```
-src/app/providers.js
-src/components/Providers.js
-```
-
-앱 전역 Provider를 구성합니다.
+**사용 예시:**
 
 ```jsx
-<SessionProvider>
-  <QueryClientProvider>
-    <SocketProvider>
-      <SettingsProvider>
-        {children}
-      </SettingsProvider>
-    </SocketProvider>
-  </QueryClientProvider>
-</SessionProvider>
+import { useRestriction } from '@/hooks/useRestriction';
+
+function CreateStudyButton() {
+  const { canPerformAction } = useRestriction();
+  
+  if (!canPerformAction('STUDY_CREATE')) {
+    return (
+      <Button disabled title="스터디 생성이 제한되었습니다">
+        스터디 만들기
+      </Button>
+    );
+  }
+  
+  return <Button onClick={handleCreate}>스터디 만들기</Button>;
+}
 ```
 
 ---
 
-## 유틸리티
+## 스타일링 가이드
 
+### CSS 모듈 사용
+
+```jsx
+import styles from './Component.module.css';
+
+export default function Component() {
+  return <div className={styles.container}>...</div>;
+}
 ```
-src/utils/
-├── clsx.js          # 클래스 유틸
-├── file.js          # 파일 유틸
-├── format.js        # 포맷 유틸
-├── studyColors.js   # 스터디 색상
-└── time.js          # 시간 유틸
+
+### 공통 변수 (CSS Variables)
+
+```css
+:root {
+  /* 색상 */
+  --color-primary: #6366F1;
+  --color-secondary: #8B5CF6;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+  
+  /* 배경 */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-tertiary: #F3F4F6;
+  
+  /* 텍스트 */
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  
+  /* 간격 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* 반경 */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+  
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* 트랜지션 */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+}
 ```
 
-### clsx
+### 반응형 브레이크포인트
 
-조건부 클래스 결합 유틸리티입니다.
+```css
+/* 모바일 우선 */
+@media (min-width: 640px) { /* sm */ }
+@media (min-width: 768px) { /* md */ }
+@media (min-width: 1024px) { /* lg */ }
+@media (min-width: 1280px) { /* xl */ }
+@media (min-width: 1536px) { /* 2xl */ }
+```
+
+---
+
+## 접근성 (A11y)
+
+### ARIA 레이블
+
+```jsx
+<button
+  aria-label="메뉴 열기"
+  aria-expanded={isOpen}
+  aria-controls="menu-dropdown"
+>
+  <MenuIcon />
+</button>
+
+<div
+  id="menu-dropdown"
+  role="menu"
+  aria-hidden={!isOpen}
+>
+  {/* 메뉴 항목 */}
+</div>
+```
+
+### 키보드 네비게이션
+
+```jsx
+function DropdownMenu({ items }) {
+  const handleKeyDown = (e) => {
+    switch (e.key) {
+      case 'ArrowDown':
+        focusNext();
+        break;
+      case 'ArrowUp':
+        focusPrev();
+        break;
+      case 'Escape':
+        closeMenu();
+        break;
+      case 'Enter':
+      case ' ':
+        selectItem();
+        break;
+    }
+  };
+
+  return (
+    <ul role="menu" onKeyDown={handleKeyDown}>
+      {items.map(item => (
+        <li key={item.id} role="menuitem" tabIndex={0}>
+          {item.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 포커스 관리
+
+```jsx
+import { useRef, useEffect } from 'react';
+
+function Modal({ isOpen, onClose, children }) {
+  const modalRef = useRef(null);
+  
+  useEffect(() => {
+    if (isOpen) {
+      // 모달 열릴 때 포커스 이동
+      modalRef.current?.focus();
+      
+      // ESC 키로 닫기
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') onClose();
+      };
+      document.addEventListener('keydown', handleEsc);
+      return () => document.removeEventListener('keydown', handleEsc);
+    }
+  }, [isOpen, onClose]);
+
+  return (
+    <div
+      ref={modalRef}
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+    >
+      {children}
+    </div>
+  );
+}
+```
+
+---
+
+## 에러 경계
+
+### ErrorBoundary 컴포넌트
+
+```jsx
+'use client';
+
+import { Component } from 'react';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught:', error, errorInfo);
+    // 에러 리포팅 서비스로 전송
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-fallback">
+          <h2>문제가 발생했습니다</h2>
+          <p>{this.state.error?.message}</p>
+          <button onClick={() => this.setState({ hasError: false })}>
+            다시 시도
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;
+```
+
+---
+
+## 테스트
+
+### 컴포넌트 테스트
 
 ```javascript
-import { clsx } from '@/utils/clsx'
+import { render, screen, fireEvent } from '@testing-library/react';
+import EmptyState from './EmptyState';
 
-// 사용법
-className={clsx(
-  styles.button,
-  isActive && styles.active,
-  disabled && styles.disabled
-)}
+describe('EmptyState', () => {
+  it('제목을 표시한다', () => {
+    render(<EmptyState title="데이터 없음" />);
+    expect(screen.getByText('데이터 없음')).toBeInTheDocument();
+  });
+
+  it('액션 버튼 클릭 시 콜백을 호출한다', () => {
+    const handleClick = jest.fn();
+    render(
+      <EmptyState
+        title="테스트"
+        action={{ label: '추가', onClick: handleClick }}
+      />
+    );
+    
+    fireEvent.click(screen.getByText('추가'));
+    expect(handleClick).toHaveBeenCalled();
+  });
+});
 ```
 
-### format
-
-포맷팅 유틸리티입니다.
+### 접근성 테스트
 
 ```javascript
-// 숫자 포맷
-formatNumber(1000) // "1,000"
+import { axe, toHaveNoViolations } from 'jest-axe';
 
-// 날짜 포맷
-formatDate(date) // "2025년 12월 11일"
+expect.extend(toHaveNoViolations);
 
-// 상대 시간
-formatRelativeTime(date) // "3분 전"
+describe('접근성 테스트', () => {
+  it('EmptyState에 접근성 위반이 없어야 한다', async () => {
+    const { container } = render(<EmptyState title="테스트" />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+});
 ```
 
-### time
+---
 
-시간 관련 유틸리티입니다.
+## 사용 패턴
 
-```javascript
-// 시간 차이 계산
-getTimeDiff(date1, date2)
+### 조건부 렌더링
 
-// D-day 계산
-calculateDday(targetDate) // "D-3"
+```jsx
+function DataView({ data, isLoading, error }) {
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
-// 지속 시간 포맷
-formatDuration(seconds) // "01:23:45"
+  if (error) {
+    return <MessageError message={error.message} onRetry={refetch} />;
+  }
+
+  if (!data || data.length === 0) {
+    return <EmptyState title="데이터가 없습니다" />;
+  }
+
+  return <DataList data={data} />;
+}
 ```
 
-### file
+### 복합 컴포넌트 패턴
 
-파일 관련 유틸리티입니다.
+```jsx
+function Card({ children }) {
+  return <div className={styles.card}>{children}</div>;
+}
 
-```javascript
-// 파일 크기 포맷
-formatFileSize(bytes) // "1.5 MB"
+Card.Header = function CardHeader({ children }) {
+  return <div className={styles.header}>{children}</div>;
+};
 
-// 파일 확장자
-getFileExtension(filename) // "pdf"
+Card.Body = function CardBody({ children }) {
+  return <div className={styles.body}>{children}</div>;
+};
 
-// MIME 타입 확인
-isImageFile(mimeType) // true/false
+Card.Footer = function CardFooter({ children }) {
+  return <div className={styles.footer}>{children}</div>;
+};
+
+// 사용
+<Card>
+  <Card.Header>제목</Card.Header>
+  <Card.Body>내용</Card.Body>
+  <Card.Footer>푸터</Card.Footer>
+</Card>
 ```
 
-### studyColors
+---
 
-스터디 색상 유틸리티입니다.
+## 파일 명명 규칙
 
-```javascript
-// 카테고리별 색상
-getCategoryColor('programming') // '#6366F1'
-
-// 랜덤 색상
-getRandomColor()
-```
+| 유형 | 규칙 | 예시 |
+|------|------|------|
+| 컴포넌트 | PascalCase | `EmptyState.jsx` |
+| 스타일 | kebab-case + .module | `empty-state.module.css` |
+| 훅 | camelCase with use | `useRestriction.js` |
+| 유틸리티 | camelCase | `formatDate.js` |
+| 상수 | UPPER_SNAKE_CASE | `CONSTANTS.js` |
 
