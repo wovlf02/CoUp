@@ -52,7 +52,7 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=postgres  # ⚠️ 프로덕션: 강력한 비밀번호 사용!
       - POSTGRES_DB=coup
     volumes:
       - postgres_data:/var/lib/postgresql/data
